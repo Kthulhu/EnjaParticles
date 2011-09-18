@@ -46,10 +46,6 @@ set (test_SOURCES
     main.cpp
     )
 
-set (test_outer_SOURCES
-    main_outer.cpp
-    )
-
 set (test_multi_SOURCES
     main_multi.cpp
     )
@@ -69,7 +65,6 @@ ADD_DEFINITIONS(-g )
 
 INCLUDE_DIRECTORIES(${test_INCLUDES})
 ADD_EXECUTABLE(sph.x ${test_SOURCES})
-ADD_EXECUTABLE(outer.x ${test_outer_SOURCES})
 ADD_EXECUTABLE(multi.x ${test_multi_SOURCES})
 ADD_EXECUTABLE(simple.x ${test_simple_SOURCES})
 ADD_EXECUTABLE(flock.x ${test_flock_SOURCES})
@@ -96,9 +91,6 @@ TARGET_LINK_LIBRARIES (sph.x
     ${LINK_LIBS}
 )
 
-TARGET_LINK_LIBRARIES (outer.x
-    ${LINK_LIBS}
-)
 
 TARGET_LINK_LIBRARIES (multi.x
     ${LINK_LIBS}
@@ -113,7 +105,6 @@ TARGET_LINK_LIBRARIES (flock.x
 )
 #IF(WIN32)
 install (TARGETS sph.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS outer.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS multi.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS simple.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS flock.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
