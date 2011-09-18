@@ -156,7 +156,7 @@ namespace rtps
         printf("platforms.size(): %zd\n", platforms.size());
 
         deviceUsed = 0;
-        err = platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+        err = platforms[1].getDevices(CL_DEVICE_TYPE_GPU, &devices);
         printf("getDevices: %s\n", oclErrorString(err));
         printf("devices.size(): %zd\n", devices.size());
         //const char* s = devices[0].getInfo<CL_DEVICE_EXTENSIONS>().c_str();
@@ -198,7 +198,7 @@ namespace rtps
         {
             CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(), 
             CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(), 
-            CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[0])(),
+            CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[1])(),
             0
         };
         //cl_context cxGPUContext = clCreateContext(props, 1, &cdDevices[uiDeviceUsed], NULL, NULL, &err);
@@ -215,7 +215,7 @@ namespace rtps
         {
             CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(), 
             CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(), 
-            CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[0])(),
+            CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[1])(),
             0
         };
         //cl_context cxGPUContext = clCreateContext(props, 1, &cdDevices[uiDeviceUsed], NULL, NULL, &err);
