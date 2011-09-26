@@ -156,7 +156,23 @@ namespace rtps
         printf("platforms.size(): %zd\n", platforms.size());
 
         deviceUsed = 0;
-        err = platforms[1].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+        int platformNum = 0;
+        try{
+                err = platforms[platformNum].getDevices(CL_DEVICE_TYPE_GPU, &devices);    
+        }catch(cl::Error er)
+        {
+            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            try{
+                if(platforms.size()==2)
+                        err = platforms[++platformNum].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+            }
+            catch(cl::Error er2)
+            {
+                printf("ERROR: %s(%s)\n", er2.what(), oclErrorString(er2.err()));
+            }
+        
+        }
+        
         printf("getDevices: %s\n", oclErrorString(err));
         printf("devices.size(): %zd\n", devices.size());
         //const char* s = devices[0].getInfo<CL_DEVICE_EXTENSIONS>().c_str();
@@ -215,7 +231,7 @@ namespace rtps
         {
             CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(), 
             CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(), 
-            CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[1])(),
+            CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[platformNum])(),
             0
         };
         //cl_context cxGPUContext = clCreateContext(props, 1, &cdDevices[uiDeviceUsed], NULL, NULL, &err);

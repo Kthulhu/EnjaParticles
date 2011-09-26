@@ -158,6 +158,8 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/boids
     ####
 
+    # Rigidbody dynamics.
+    ${rtpslib_SOURCE_DIR}/system/common/MeshToParticles
     
     # neighbors
     #${rtpslib_SOURCE_DIR}/system/flock/Prep

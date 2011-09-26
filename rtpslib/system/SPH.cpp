@@ -37,8 +37,6 @@
 
 #include "common/Hose.h"
 
-
-
 //for random
 #include<time.h>
 
@@ -144,6 +142,7 @@ namespace rtps
 		// ADD Cloud timers later. 
         string lt_file = settings->GetSettingAs<string>("lt_cl");
         //lifetime = Lifetime(sph_source_dir, ps->cli, timers["lifetime_gpu"], lt_file);
+        m2p = MeshToParticles(sph_source_dir, ps->cli, timers["meshtoparticles_gpu"]);
 #endif
 
     }
@@ -534,6 +533,7 @@ namespace rtps
         timers["integrate"] = new EB::Timer("Integration function", time_offset);
         timers["leapfrog_gpu"] = new EB::Timer("LeapFrog Integration GPU kernel execution", time_offset);
         timers["euler_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset);
+        timers["meshtoparticles_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset); 
         //timers["lifetime_gpu"] = new EB::Timer("Lifetime GPU kernel execution", time_offset);
         //timers["prep_gpu"] = new EB::Timer("Prep GPU kernel execution", time_offset);
 		return 0;
@@ -1028,5 +1028,12 @@ namespace rtps
 	}
 	//----------------------------------------------------------------------
 #endif
+    void SPH::addRigidBody(GLuint tex3d,float4 extent,float4 min,float world[16],int resolution)
+    {
+        cl::Image3DGL img(ps->cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
+        num += m2p.execute(num,img,extent,min,world,resolution,//debug
+                clf_debug,
+                cli_debug);
+    }
 
 }; //end namespace

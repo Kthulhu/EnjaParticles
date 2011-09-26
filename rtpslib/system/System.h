@@ -142,6 +142,11 @@ namespace rtps
         {
             return renderer;
         }
+        
+        virtual void addRigidBody(GLuint tex3d,float4 extent,float4 min,float world[16],int resolution)
+        {
+            return;
+        }
 
     protected:
         //number of particles

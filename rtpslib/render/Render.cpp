@@ -30,7 +30,7 @@
 
 #include "Render.h"
 #include "util.h"
-#include "stb_image.h" 
+//#include "stb_image.h" 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h" 
 
@@ -715,7 +715,7 @@ namespace rtps
         //printf("path: %s\n", path.c_str());
 
         //Load an image with stb_image
-        int w,h,channels;
+        /*int w,h,channels;
         int force_channels = 0;
 
         unsigned char *im = stbi_load( texture_file.c_str(), &w, &h, &channels, force_channels );
@@ -750,7 +750,7 @@ namespace rtps
         }
 
         glBindTexture(GL_TEXTURE_2D,0);
-        free(im);
+        free(im);*/
         return 0; //success
     }
 

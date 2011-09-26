@@ -67,7 +67,7 @@ class OUTER;
 #include <sph/Lifetime.h>
 #include <sph/Euler.h>
 //#include <sph/CloudEuler.h>
-
+#include <common/MeshToParticles.h>
 //#include "../util.h"
 #include <Hose.h>
 
@@ -132,6 +132,8 @@ namespace rtps
 
         std::vector<float4> getDeletedPos();
         std::vector<float4> getDeletedVel();
+
+        void addRigidBody(GLuint tex3d, float4 extent, float4 min, float world[16], int resolution);
 
     protected:
         virtual void setRenderer();
@@ -261,6 +263,7 @@ namespace rtps
         LeapFrog leapfrog;
         Euler euler;
         //CloudEuler cloud_euler;
+        MeshToParticles m2p; 
 
 
         Lifetime lifetime;

@@ -25,7 +25,7 @@
 #ifndef _WPOLY6_CL_
 #define _WPOLY6_CL_
 
-//----------------------------------------------------------------------
+//----------------------------------w------------------------------------
 float Wpoly6(float4 r, float h, __constant struct SPHParams* params)
 {
     float r2 = r.x*r.x + r.y*r.y + r.z*r.z;  // dist_squared(r);

@@ -80,6 +80,7 @@ namespace rtps
         //execute the kernel and return the time it took in milliseconds using GPU timer
         //assumes null range for worksize offset and local worksize
         float execute(int ndrange);
+        float execute(cl::NDRange range);
         //later we will make more execute routines to give more options
         float execute(int ndrange, int workgroup_size);
 

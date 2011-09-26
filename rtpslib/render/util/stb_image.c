@@ -183,7 +183,6 @@
 #endif
 
 #define STBI_VERSION 1
-
 enum
 {
    STBI_default = 0, // only used for req_comp
@@ -4876,7 +4875,6 @@ int stbi_info_from_memory(stbi_uc const *buffer, int len, int *x, int *y, int *c
        return 1;
    return e("unknown image type", "Image not of any known type, or corrupt");
 }
-
 #endif // STBI_HEADER_FILE_ONLY
 
 /*

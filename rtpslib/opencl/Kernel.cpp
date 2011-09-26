@@ -74,6 +74,29 @@ namespace rtps
 
     }
 
+    float Kernel::execute(cl::NDRange range)
+    {
+        cl_ulong start, end;
+        float timing = -1.0f;
+
+        try
+        {
+            cl::Event event;
+            cli->err = cli->queue.enqueueNDRangeKernel(kernel, cl::NullRange, range, cl::NullRange, NULL, &event);
+            cli->queue.finish();
+            event.getProfilingInfo(CL_PROFILING_COMMAND_END, &end);
+            event.getProfilingInfo(CL_PROFILING_COMMAND_START, &start);
+            timing = (end - start) * 1.0e-6f;
+
+        }
+        catch (cl::Error er)
+        {
+            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+        }
+        return timing;
+
+    }
+
     float Kernel::execute(int ndrange, int worksize)
     {
         int global;
