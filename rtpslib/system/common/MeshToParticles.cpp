@@ -39,11 +39,13 @@ namespace rtps
         
     }
 
-    int MeshToParticles::execute(int num,
+    int MeshToParticles::execute(
+                    Buffer<float4>& pos,
+                    int num,
                     cl::Image3D posTex,
                     float4 extent,
                     float4 min,
-                    float world[16],
+                    float16 world,
                     int res,
                     //debug params
                     Buffer<float4>& clf_debug,
@@ -56,13 +58,14 @@ namespace rtps
         numVec.push_back(0);
         Buffer<int> newNum(cli,numVec);
         int iarg = 0;
+        k_meshtoparticles.setArg(iarg++, pos.getDevicePtr());
         k_meshtoparticles.setArg(iarg++, num);
         k_meshtoparticles.setArg(iarg++, posTex);
         k_meshtoparticles.setArg(iarg++, extent);
         k_meshtoparticles.setArg(iarg++, min);
         k_meshtoparticles.setArg(iarg++, world);
         k_meshtoparticles.setArg(iarg++, res);
-        k_meshtoparticles.setArg(iarg++, newNum);
+        k_meshtoparticles.setArg(iarg++, newNum.getDevicePtr());
 
 
         //printf("about to data structures\n");

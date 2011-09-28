@@ -14,13 +14,14 @@ const sampler_t samp = CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 //#pragma cl_khr_global_int32_base_atomics : enable
 //----------------------------------------------------------------------
 __kernel void meshToParticles(
-                            __constant int num,
-                            __read_only image_3d_t posTex,
-                            __constant float4 extent,
-                            __constnat float4 min,
-                            __constant float16 world,
-                            __constant int res,
-                            __global int newNum
+                            __global float4* pos,
+                            int num,
+                            read_only image3d_t posTex,
+                            float4 extent,
+                            float4 min,
+                            float16 world,
+                            int res,
+                            __global int* newNum
                             )
 {
     uint s = get_global_id(0);
@@ -32,13 +33,13 @@ __kernel void meshToParticles(
 
     uint4 vox = read_imageui(posTex, samp, (int4)(s,t,r,0));
     //If voxel contains a one it's inside the mesh otherwise it can be ignored.
-    if(any(vox))
+    if(vox.x>0)
     {
         atom_inc(newNum);
-        pos[num+newNum] = (float4)((s/(float)res)*extent.x+min.x,(t/(float)res)*extent.y+min.y,(r/(float)res)*extent.z+min.z,1.0);
-        pos[num+newNum].x = dot(world.s0123,pos[num+newNum]);
-        pos[num+newNum].x = dot(world.s4567,pos[num+newNum]);
-        pos[num+newNum].x = dot(world.s89AB,pos[num+newNum]);
+        pos[num+newNum[0]] = (float4)((s/(float)res)*extent.x+min.x,(t/(float)res)*extent.y+min.y,(r/(float)res)*extent.z+min.z,1.0);
+        pos[num+newNum[0]].x = dot(world.s0123,pos[num+newNum[0]]);
+        pos[num+newNum[0]].x = dot(world.s4567,pos[num+newNum[0]]);
+        pos[num+newNum[0]].x = dot(world.s89AB,pos[num+newNum[0]]);
     }
 }
 //----------------------------------------------------------------------

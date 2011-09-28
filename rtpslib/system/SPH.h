@@ -133,7 +133,7 @@ namespace rtps
         std::vector<float4> getDeletedPos();
         std::vector<float4> getDeletedVel();
 
-        void addRigidBody(GLuint tex3d, float4 extent, float4 min, float world[16], int resolution);
+        void addRigidBody(GLuint tex3d, float4 extent, float4 min, float16 world, int resolution);
 
     protected:
         virtual void setRenderer();

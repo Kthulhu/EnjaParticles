@@ -142,7 +142,7 @@ namespace rtps
 		// ADD Cloud timers later. 
         string lt_file = settings->GetSettingAs<string>("lt_cl");
         //lifetime = Lifetime(sph_source_dir, ps->cli, timers["lifetime_gpu"], lt_file);
-        m2p = MeshToParticles(sph_source_dir, ps->cli, timers["meshtoparticles_gpu"]);
+        m2p = MeshToParticles(common_source_dir, ps->cli, timers["meshtoparticles_gpu"]);
 #endif
 
     }
@@ -1028,12 +1028,21 @@ namespace rtps
 	}
 	//----------------------------------------------------------------------
 #endif
-    void SPH::addRigidBody(GLuint tex3d,float4 extent,float4 min,float world[16],int resolution)
+    void SPH::addRigidBody(GLuint tex3d,float4 extent,float4 min,float16 world,int resolution)
     {
+        glFinish();
         cl::Image3DGL img(ps->cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
-        num += m2p.execute(num,img,extent,min,world,resolution,//debug
+        std::vector<cl::Memory> objs;
+        objs.push_back(img);
+        ps->cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
+        ps->cli->queue.finish();
+        int tmpnum = m2p.execute(cl_position_s,num,img,extent,min,world,resolution,//debug
                 clf_debug,
                 cli_debug);
+        printf("tmpnum = %d\n",tmpnum);
+        num+=tmpnum;
+        ps->cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
+        ps->cli->queue.finish();
     }
 
 }; //end namespace

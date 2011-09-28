@@ -246,7 +246,11 @@ namespace rtps
 
     } float4;
 
-
+    //temporary
+    typedef struct float16
+    {
+        float m[16];
+    } float16;
     // size: 4*4 = 16 floats
     // shared memory = 65,536 bytes = 16,384 floats
     //               = 1024 triangles

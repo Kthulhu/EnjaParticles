@@ -38,11 +38,13 @@ namespace rtps
         public:
             MeshToParticles() { cli = NULL; timer = NULL; };
             MeshToParticles(std::string path, CL* cli, EB::Timer* timer);
-            int execute(int num,
+            int execute(
+                    Buffer<float4>& pos,
+                    int num,
                     cl::Image3D posTex,
                     float4 extent,
                     float4 min,
-                    float world[16],
+                    float16 world,
                     int res,
                     //debug params
                     Buffer<float4>& clf_debug,
