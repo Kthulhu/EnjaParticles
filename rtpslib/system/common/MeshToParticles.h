@@ -40,6 +40,8 @@ namespace rtps
             MeshToParticles(std::string path, CL* cli, EB::Timer* timer);
             int execute(
                     Buffer<float4>& pos,
+                    Buffer<float4>& color,
+                    Buffer<float4>& velocity,
                     int num,
                     cl::Image3D posTex,
                     float4 extent,

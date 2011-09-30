@@ -41,6 +41,8 @@ namespace rtps
 
     int MeshToParticles::execute(
                     Buffer<float4>& pos,
+                    Buffer<float4>& color,
+                    Buffer<float4>& velocity,
                     int num,
                     cl::Image3D posTex,
                     float4 extent,
@@ -59,6 +61,8 @@ namespace rtps
         Buffer<int> newNum(cli,numVec);
         int iarg = 0;
         k_meshtoparticles.setArg(iarg++, pos.getDevicePtr());
+        k_meshtoparticles.setArg(iarg++, color.getDevicePtr());
+        k_meshtoparticles.setArg(iarg++, velocity.getDevicePtr());
         k_meshtoparticles.setArg(iarg++, num);
         k_meshtoparticles.setArg(iarg++, posTex);
         k_meshtoparticles.setArg(iarg++, extent);
@@ -66,6 +70,12 @@ namespace rtps
         k_meshtoparticles.setArg(iarg++, world);
         k_meshtoparticles.setArg(iarg++, res);
         k_meshtoparticles.setArg(iarg++, newNum.getDevicePtr());
+        printf("extent (%f,%f,%f)\n",extent.x,extent.y,extent.z);
+        printf("min (%f,%f,%f)\n",min.x,min.y,min.z);
+        printf("world | %f\t%f\t%f\t%f |\n",world.m[0],world.m[1],world.m[2],world.m[3]);
+        printf("world | %f\t%f\t%f\t%f |\n",world.m[4],world.m[5],world.m[6],world.m[7]);
+        printf("world | %f\t%f\t%f\t%f |\n",world.m[8],world.m[9],world.m[10],world.m[11]);
+        printf("world | %f\t%f\t%f\t%f |\n",world.m[12],world.m[13],world.m[14],world.m[15]);
 
 
         //printf("about to data structures\n");

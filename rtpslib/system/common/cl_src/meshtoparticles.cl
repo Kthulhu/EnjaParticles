@@ -15,6 +15,8 @@ const sampler_t samp = CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 //----------------------------------------------------------------------
 __kernel void meshToParticles(
                             __global float4* pos,
+                            __global float4* color,
+                            __global float4* velocity,
                             int num,
                             read_only image3d_t posTex,
                             float4 extent,
@@ -35,11 +37,13 @@ __kernel void meshToParticles(
     //If voxel contains a one it's inside the mesh otherwise it can be ignored.
     if(vox.x>0)
     {
-        atom_inc(newNum);
-        pos[num+newNum[0]] = (float4)((s/(float)res)*extent.x+min.x,(t/(float)res)*extent.y+min.y,(r/(float)res)*extent.z+min.z,1.0);
-        pos[num+newNum[0]].x = dot(world.s0123,pos[num+newNum[0]]);
-        pos[num+newNum[0]].x = dot(world.s4567,pos[num+newNum[0]]);
-        pos[num+newNum[0]].x = dot(world.s89AB,pos[num+newNum[0]]);
+        int loc = atom_inc(newNum);
+        pos[num+loc] = (float4)((s/(float)res)*extent.x+min.x,(t/(float)res)*extent.y+min.y,(r/(float)res)*extent.z+min.z,1.0);
+        pos[num+loc].x = dot(world.s0123,pos[num+loc]);
+        pos[num+loc].y = dot(world.s4567,pos[num+loc]);
+        pos[num+loc].z = dot(world.s89AB,pos[num+loc]);
+        color[num+loc] = (float4)(1.0,0.0,0.0,1.0);
+        velocity[num+loc] = (float4)(0.0,0.0,0.0,0.0);
     }
 }
 //----------------------------------------------------------------------
