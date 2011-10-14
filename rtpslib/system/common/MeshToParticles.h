@@ -44,7 +44,7 @@ namespace rtps
                     Buffer<float4>& velocity,
                     int num,
                     cl::Image3D posTex,
-                    float4 extent,
+                    float scale,
                     float4 min,
                     float16 world,
                     int res,

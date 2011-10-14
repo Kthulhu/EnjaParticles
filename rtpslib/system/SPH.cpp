@@ -724,7 +724,7 @@ namespace rtps
 		#endif
 		//printf("GEE inside addBox, before addRect, scale= %f\n", scale);
 		//printf("GEE inside addBox, sphp.simulation_scale= %f\n", sphp.simulation_scale);
-		//printf("GEE addBox spacing = %f\n", spacing);
+		printf("GEE addBox spacing = %f\n", spacing);
         vector<float4> rect = addRect(nn, min, max, spacing, scale);
         float4 velo(0, 0, 0, 0);
         pushParticles(rect, velo, color);
@@ -887,6 +887,10 @@ namespace rtps
             case RTPSettings::RENDER:
                 renderer = new Render(pos_vbo,col_vbo,num,ps->cli, ps->settings);
                 break;
+            case RTPSettings::SPHERE3D_RENDER:
+                printf("new Sphere3DRender\n");
+                renderer = new Sphere3DRender(pos_vbo,col_vbo,num,ps->cli, ps->settings);
+                break;
             default:
                 //should be an error
                 renderer = new Render(pos_vbo,col_vbo,num,ps->cli, ps->settings);
@@ -1028,7 +1032,7 @@ namespace rtps
 	}
 	//----------------------------------------------------------------------
 #endif
-    void SPH::addRigidBody(GLuint tex3d,float4 extent,float4 min,float16 world,int resolution)
+    void SPH::addRigidBody(GLuint tex3d,float scale,float4 min,float16 world,int resolution)
     {
         glFinish();
         cl::Image3DGL img(ps->cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
@@ -1038,13 +1042,15 @@ namespace rtps
         ps->cli->queue.finish();
         cl_position_u.acquire();
         cl_color_u.acquire();
-        int tmpnum = m2p.execute(cl_position_u,cl_color_u,cl_velocity_u,num,img,extent,min,world,resolution,//debug
+        int tmpnum = m2p.execute(cl_position_u,cl_color_u,cl_velocity_u,num,img,scale,min,world,resolution,//debug
                 clf_debug,
                 cli_debug);
         printf("tmpnum = %d\n",tmpnum);
         num+=tmpnum;
+        settings->SetSetting("Number of Particles", num);
+        updateSPHP();
         renderer->setNum(num);
-        hash_and_sort();
+        //hash_and_sort();
         ps->cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
         ps->cli->queue.finish();
         cl_position_u.release();

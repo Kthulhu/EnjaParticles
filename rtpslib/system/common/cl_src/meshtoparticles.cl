@@ -19,11 +19,12 @@ __kernel void meshToParticles(
                             __global float4* velocity,
                             int num,
                             read_only image3d_t posTex,
-                            float4 extent,
+                            float scale,
                             float4 min,
                             float16 world,
                             int res,
                             __global int* newNum
+                            DEBUG_ARGS
                             )
 {
     uint s = get_global_id(0);
@@ -38,12 +39,13 @@ __kernel void meshToParticles(
     if(vox.x>0)
     {
         int loc = atom_inc(newNum);
-        pos[num+loc] = (float4)((s/(float)res)*extent.x+min.x,(t/(float)res)*extent.y+min.y,(r/(float)res)*extent.z+min.z,1.0);
+        pos[num+loc] = (float4)((s/(float)res)*scale+min.x,(t/(float)res)*scale+min.y,(r/(float)res)*scale+min.z,1.0);
         pos[num+loc].x = dot(world.s0123,pos[num+loc]);
         pos[num+loc].y = dot(world.s4567,pos[num+loc]);
         pos[num+loc].z = dot(world.s89AB,pos[num+loc]);
         color[num+loc] = (float4)(1.0,0.0,0.0,1.0);
         velocity[num+loc] = (float4)(0.0,0.0,0.0,0.0);
+        clf[num+loc] = pos[num+loc];
     }
 }
 //----------------------------------------------------------------------

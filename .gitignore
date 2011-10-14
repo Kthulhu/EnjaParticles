@@ -7,3 +7,4 @@ build/
 *.pyc
 *.blend1
 *.blend2
+/nbproject/private/

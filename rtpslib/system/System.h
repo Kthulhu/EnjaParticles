@@ -143,7 +143,7 @@ namespace rtps
             return renderer;
         }
         
-        virtual void addRigidBody(GLuint tex3d,float4 extent,float4 min,float16 world,int resolution)
+        virtual void addRigidBody(GLuint tex3d,float scale,float4 min,float16 world,int resolution)
         {
             return;
         }

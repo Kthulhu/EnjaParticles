@@ -45,7 +45,7 @@ namespace rtps
                     Buffer<float4>& velocity,
                     int num,
                     cl::Image3D posTex,
-                    float4 extent,
+                    float scale,
                     float4 min,
                     float16 world,
                     int res,
@@ -65,18 +65,21 @@ namespace rtps
         k_meshtoparticles.setArg(iarg++, velocity.getDevicePtr());
         k_meshtoparticles.setArg(iarg++, num);
         k_meshtoparticles.setArg(iarg++, posTex);
-        k_meshtoparticles.setArg(iarg++, extent);
+        k_meshtoparticles.setArg(iarg++, scale);
         k_meshtoparticles.setArg(iarg++, min);
         k_meshtoparticles.setArg(iarg++, world);
         k_meshtoparticles.setArg(iarg++, res);
         k_meshtoparticles.setArg(iarg++, newNum.getDevicePtr());
-        printf("extent (%f,%f,%f)\n",extent.x,extent.y,extent.z);
+        printf("scale (%f)\n",scale);
         printf("min (%f,%f,%f)\n",min.x,min.y,min.z);
         printf("world | %f\t%f\t%f\t%f |\n",world.m[0],world.m[1],world.m[2],world.m[3]);
         printf("world | %f\t%f\t%f\t%f |\n",world.m[4],world.m[5],world.m[6],world.m[7]);
         printf("world | %f\t%f\t%f\t%f |\n",world.m[8],world.m[9],world.m[10],world.m[11]);
         printf("world | %f\t%f\t%f\t%f |\n",world.m[12],world.m[13],world.m[14],world.m[15]);
 
+        // ONLY IF DEBUGGING
+        k_meshtoparticles.setArg(iarg++, clf_debug.getDevicePtr());
+        k_meshtoparticles.setArg(iarg++, cli_debug.getDevicePtr());
 
         //printf("about to data structures\n");
         try
@@ -92,63 +95,18 @@ namespace rtps
             printf("ERROR(meshtoparticles): %s(%s)\n", er.what(), oclErrorString(er.err()));
         }
 
-#if 0
-        //printMeshToParticlesDiagnostics();
-
-        printf("**************** MeshToParticles Diagnostics ****************\n");
-        int nbc = nb_cells + 1;
-        printf("nb_cells: %d\n", nbc); // nb grid cells?
-        printf("num: %d\n", num); // nb grid cells?
-        printf("cell indices, num particles: %d\n", num);
-
-        std::vector<unsigned int> is(nbc);
-        std::vector<unsigned int> ie(nbc);
-        std::vector<unsigned int> in(nbc);
-        std::vector<unsigned int> hhash(nbc);
-        
-        ci_end.copyToHost(ie);
-        ci_start.copyToHost(is);
-        indices.copyToHost(in);
-        hashes.copyToHost(hhash);
-
-        for(int i = 0; i < nbc; i++)
-        {
-            if (is[i] != -1)// && ie[i] != 0) // GE inserted comment
-            {
-                //nb = ie[i] - is[i];
-                //nb_particles += nb;
-                //if(is[i] < 8000 || ie[i] > 0) // GE put the comment
-                {
-					// in particle list
-                    printf("cell: %d indices start: %d indices stop: %d\n", i, is[i], ie[i]);
-					// hash is for cells (different number)
-                    //printf("cell: %d hash: %d, index: %d\n", i, hhash[i], in[i]);
-                }
-            }
-        }
-
-#endif
-
-#if 0
-        //print out elements from the sorted arrays
-#define DENS 0
-#define POS 1
-#define VEL 2
-
-            nbc = num+5;
-            std::vector<float4> poss(nbc);
-            std::vector<float4> dens(nbc);
-
+#if 1
             //svars.copyToHost(dens, DENS*sphp.max_num);
             //svars.copyToHost(poss, POS*sphp.max_num);
+            vector<float4> clf(num+numVec[0]);
+            clf_debug.copyToHost(clf);
 
             //for (int i=0; i < nbc; i++)
-            for (int i=0; i < 10; i++) 
+            for (int i=num; i < num+numVec[0]; i++) 
             {
-                poss[i] = poss[i] / sphp.simulation_scale;
                 //printf("-----\n");
-                //printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
-                printf("pos sorted: %f, %f, %f, %f\n", poss[i].x, poss[i].y, poss[i].z, poss[i].w);
+                printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
+                //printf("pos sorted: %f, %f, %f, %f\n", poss[i].x, poss[i].y, poss[i].z, poss[i].w);
                 //printf("dens sorted: %f, %f, %f, %f\n", dens[i].x, dens[i].y, dens[i].z, dens[i].w);
             }
 
