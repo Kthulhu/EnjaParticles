@@ -73,6 +73,8 @@ class OUTER;
 
 //#include <timege.h>
 #include <timer_eb.h>
+#define FLUID_PARTICLE 1
+#define RIGID_PARTICLE 1>>1
 
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
@@ -133,7 +135,7 @@ namespace rtps
         std::vector<float4> getDeletedPos();
         std::vector<float4> getDeletedVel();
 
-        void addRigidBody(GLuint tex3d, float scale, float4 min, float16 world, int resolution);
+        void addParticleShape(GLuint tex3d, float scale, float4 min, float16 world, int resolution);
 
     protected:
         virtual void setRenderer();
@@ -169,6 +171,7 @@ namespace rtps
         //Kernel k_scopy;
 
         std::vector<float4> positions;
+        std::vector<int> properties;
         std::vector<float4> colors;
         std::vector<float4> velocities;
         std::vector<float4> veleval;
@@ -176,6 +179,14 @@ namespace rtps
         std::vector<float>  densities;
         std::vector<float4> forces;
         std::vector<float4> xsphs;
+
+        //The following 4 data structures contain the properties necessary to keep track of
+        //rigid bodies. -ASY
+        std::vector<float4> rbCoMPosition;///The center of mass of a rigid body
+        std::vector<float4> rbQuaternion;///The quaternion which describes the rigid bodies orientation.
+        std::vector<int> rbIndex;///Index into the positions array where the rigid body particles start
+        std::vector<int> rbNumParticles;///Number of particles which describe the current rigid body.
+        
 
         Buffer<float4>      cl_position_u;
         Buffer<float4>      cl_position_s;
@@ -185,10 +196,19 @@ namespace rtps
         Buffer<float4>      cl_velocity_s;
         Buffer<float4>      cl_veleval_u;
         Buffer<float4>      cl_veleval_s;
+        Buffer<int>      cl_properties_u;
+        Buffer<int>      cl_properties_s;
 
         Buffer<float>       cl_density_s;
         Buffer<float4>      cl_force_s;
         Buffer<float4>      cl_xsph_s;
+
+        //The following 4 data structures contain the properties necessary to keep track of
+        //rigid bodies. -ASY
+        Buffer<float4> cl_rbCoMPosition;///OpenCL buffer for the center of mass of a rigid body
+        Buffer<float4> cl_rbQuaternion;///OpenCL buffer for the quaternion which describes the rigid bodies orientation.
+        Buffer<int> cl_rbIndex;///OpenCL buffer for index into the positions array where the rigid body particles start
+        Buffer<int> cl_rbNumParticles;///OpenCL buffer for number of particles which describe the current rigid body.
 
         //Neighbor Search related arrays
         //Buffer<float4>      	cl_vars_sorted;

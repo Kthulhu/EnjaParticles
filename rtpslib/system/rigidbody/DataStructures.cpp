@@ -22,37 +22,49 @@
 ****************************************************************************************/
 
 
-#include "CellIndices.h"
+#include "SPH.h"
 
 #include <string>
 
 namespace rtps
 {
 
-    CellIndices::CellIndices(std::string path, CL* cli_, EB::Timer* timer_)
+    DataStructures::DataStructures(CL* cli_, EB::Timer* timer_)
     {
         cli = cli_;
         timer = timer_;
-        //printf("create cellindices kernel\n");
-        path = path + "/cellindices.cl";
-        k_cellindices = Kernel(cli, path, "cellindices");
+        printf("create datastructures kernel\n");
+        std::string path(SPH_CL_SOURCE_DIR);
+        path = path + "/datastructures.cl";
+        k_datastructures = Kernel(cli, path, "datastructures");
         
     }
 
-    int CellIndices::execute(int num,
+    int DataStructures::execute(int num,
+                    //input
+                    Buffer<float4>& pos_u,
+                    Buffer<float4>& pos_s,
+                    Buffer<float4>& vel_u,
+                    Buffer<float4>& vel_s,
+                    Buffer<float4>& veleval_u,
+                    Buffer<float4>& veleval_s,
+                    //Buffer<float4>& uvars, 
+                    Buffer<float4>& color_u,
+                    //Buffer<float4>& svars, 
+                    Buffer<float4>& color_s,
+                    //output
                     Buffer<unsigned int>& hashes,
                     Buffer<unsigned int>& indices,
                     Buffer<unsigned int>& ci_start,
                     Buffer<unsigned int>& ci_end,
                     //params
+                    Buffer<SPHParams>& sphp,
                     Buffer<GridParams>& gp,
                     int nb_cells,               //we should be able to get this from the gp buffer
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
     {
-
-		//printf("*** enter CellIndices, num= %d\n", num);
 
         //-------------------
         // Set cl_cell indices to -1
@@ -63,31 +75,40 @@ namespace rtps
 
 
         int iarg = 0;
-        k_cellindices.setArg(iarg++, num);
-        k_cellindices.setArg(iarg++, hashes.getDevicePtr());
-        k_cellindices.setArg(iarg++, indices.getDevicePtr());
-        k_cellindices.setArg(iarg++, ci_start.getDevicePtr());
-        k_cellindices.setArg(iarg++, ci_end.getDevicePtr());
-        //k_cellindices.setArg(iarg++, cl_num_changed.getDevicePtr());
-        //k_cellindices.setArg(iarg++, sphp.getDevicePtr());
-        k_cellindices.setArg(iarg++, gp.getDevicePtr());
+        k_datastructures.setArg(iarg++, pos_u.getDevicePtr());
+        k_datastructures.setArg(iarg++, pos_s.getDevicePtr());
+        k_datastructures.setArg(iarg++, vel_u.getDevicePtr());
+        k_datastructures.setArg(iarg++, vel_s.getDevicePtr());
+        k_datastructures.setArg(iarg++, veleval_u.getDevicePtr());
+        k_datastructures.setArg(iarg++, veleval_s.getDevicePtr());
+        //k_datastructures.setArg(iarg++, uvars.getDevicePtr());
+        k_datastructures.setArg(iarg++, color_u.getDevicePtr());
+        //k_datastructures.setArg(iarg++, svars.getDevicePtr());
+        k_datastructures.setArg(iarg++, color_s.getDevicePtr());
+        k_datastructures.setArg(iarg++, hashes.getDevicePtr());
+        k_datastructures.setArg(iarg++, indices.getDevicePtr());
+        k_datastructures.setArg(iarg++, ci_start.getDevicePtr());
+        k_datastructures.setArg(iarg++, ci_end.getDevicePtr());
+        //k_datastructures.setArg(iarg++, cl_num_changed.getDevicePtr());
+        k_datastructures.setArg(iarg++, sphp.getDevicePtr());
+        k_datastructures.setArg(iarg++, gp.getDevicePtr());
 
         int workSize = 64;
         int nb_bytes = (workSize+1)*sizeof(int);
-        k_cellindices.setArgShared(iarg++, nb_bytes);
+        k_datastructures.setArgShared(iarg++, nb_bytes);
 
         
         //printf("about to data structures\n");
         try
         {
-            float gputime = k_cellindices.execute(num, workSize);
+            float gputime = k_datastructures.execute(num, workSize);
             if(gputime > 0)
                 timer->set(gputime);
 
         }
         catch (cl::Error er)
         {
-            printf("ERROR(cellindices): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(data structures): %s(%s)\n", er.what(), oclErrorString(er.err()));
         }
 
         //ps->cli->queue.finish();
@@ -97,43 +118,32 @@ namespace rtps
         //ci_end.copyToHost(num_changed, nb_cells);
        
         int nc = num_changed[0];
-		//printf("cell indices: (num_changed) nc= %d\n", nc);
         //printf("Num Changed: %d\n", nc);
 
         //if(num > 0 && nc < 0) { exit(0); }
         
 #if 0
-        //printCellIndicesDiagnostics();
+        //printDataStructuresDiagnostics();
 
-        printf("**************** CellIndices Diagnostics ****************\n");
+        printf("**************** DataStructures Diagnostics ****************\n");
         int nbc = nb_cells + 1;
-        printf("nb_cells: %d\n", nbc); // nb grid cells?
-        printf("num: %d\n", num); // nb grid cells?
-        printf("cell indices, num particles: %d\n", num);
+        printf("nb_cells: %d\n", nbc);
+        printf("num particles: %d\n", num);
 
         std::vector<unsigned int> is(nbc);
         std::vector<unsigned int> ie(nbc);
-        std::vector<unsigned int> in(nbc);
-        std::vector<unsigned int> hhash(nbc);
         
         ci_end.copyToHost(ie);
         ci_start.copyToHost(is);
-        indices.copyToHost(in);
-        hashes.copyToHost(hhash);
+
 
         for(int i = 0; i < nbc; i++)
         {
-            if (is[i] != -1)// && ie[i] != 0) // GE inserted comment
+            if (is[i] != -1)// && ie[i] != 0)
             {
                 //nb = ie[i] - is[i];
                 //nb_particles += nb;
-                //if(is[i] < 8000 || ie[i] > 0) // GE put the comment
-                {
-					// in particle list
-                    printf("cell: %d indices start: %d indices stop: %d\n", i, is[i], ie[i]);
-					// hash is for cells (different number)
-                    //printf("cell: %d hash: %d, index: %d\n", i, hhash[i], in[i]);
-                }
+                printf("cell: %d indices start: %d indices stop: %d\n", i, is[i], ie[i]);
             }
         }
 
@@ -150,10 +160,10 @@ namespace rtps
             std::vector<float4> dens(nbc);
 
             //svars.copyToHost(dens, DENS*sphp.max_num);
-            //svars.copyToHost(poss, POS*sphp.max_num);
+            svars.copyToHost(poss, POS*sphp.max_num);
 
-            //for (int i=0; i < nbc; i++)
-            for (int i=0; i < 10; i++) 
+            for (int i=0; i < nbc; i++)
+            //for (int i=0; i < 10; i++) 
             {
                 poss[i] = poss[i] / sphp.simulation_scale;
                 //printf("-----\n");

@@ -6,6 +6,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 project(test CXX)
 
+SET(CMAKE_BUILD_TYPE "Debug")
+
 #change this later
 SET( BASE_DIR ${test_SOURCE_DIR}/..)
 SET( RTPS_DIR ${test_SOURCE_DIR}/../rtpslib)
@@ -24,13 +26,6 @@ FIND_PACKAGE (GLUT)
 FIND_PACKAGE (OpenGL)
 FIND_PACKAGE (OPENCL)
 FIND_PACKAGE (GLEW)
-
-SET(CLOUD_COLLISION FALSE)
-IF(CLOUD_COLLISION)
-    ADD_DEFINITIONS("-DCLOUD_COLLISON")
-ELSE(CLOUD_COLLISION)
-
-ENDIF(CLOUD_COLLISION)
 
 set (test_INCLUDES
     ${RTPS_DIR}
@@ -59,15 +54,16 @@ set (test_flock_SOURCES
     main_flock.cpp
     )
 
-
-
-ADD_DEFINITIONS(-g )
+set (test_rigidbody_SOURCES
+    main_rigidbody.cpp
+    )
 
 INCLUDE_DIRECTORIES(${test_INCLUDES})
 ADD_EXECUTABLE(sph.x ${test_SOURCES})
 ADD_EXECUTABLE(multi.x ${test_multi_SOURCES})
 ADD_EXECUTABLE(simple.x ${test_simple_SOURCES})
 ADD_EXECUTABLE(flock.x ${test_flock_SOURCES})
+ADD_EXECUTABLE(rigidbody.x ${test_rigidbody_SOURCES})
 
 message("current build dir:\n")
 message("${BASE_DIR}/rtps/build")
@@ -103,11 +99,15 @@ TARGET_LINK_LIBRARIES (simple.x
 TARGET_LINK_LIBRARIES (flock.x
     ${LINK_LIBS}
 )
+TARGET_LINK_LIBRARIES (rigidbody.x
+    ${LINK_LIBS}
+)
 #IF(WIN32)
 install (TARGETS sph.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS multi.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS simple.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS flock.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+install (TARGETS rigidbody.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES MathFunctions.h DESTINATION include)
 
 #ENDIF(WIN32)

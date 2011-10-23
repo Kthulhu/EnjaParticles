@@ -55,7 +55,7 @@ namespace rtps
         //decide which system to use
         enum SysType
         {
-            Simple, SPH, FLOCK, OUTER
+            Simple, SPH, FLOCK, PARTICLE_RIGIDBODY
         };
         SysType system;
 

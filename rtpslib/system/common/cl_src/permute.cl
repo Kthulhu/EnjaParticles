@@ -1,5 +1,3 @@
-// This software contains source code provided by NVIDIA Corporation.
-// Specifically code from the CUDA 2.3 SDK "Particles" sample
 
 #ifndef _PERMUTE_
 #define _PERMUTE_

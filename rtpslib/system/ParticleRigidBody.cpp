@@ -1,5 +1,5 @@
 /****************************************************************************************
-* Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
+* Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes ParticleRigidBody fluid simulations.
 * version 1.0, September 14th 2011
 * 
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
@@ -30,22 +30,18 @@
 #include <string>
 
 #include "System.h"
-#include "SPH.h"
-//#include "../domain/UniformGrid.h"
+#include "ParticleRigidBody.h"
 #include "Domain.h"
 #include "IV.h"
-
-#include "common/Hose.h"
 
 //for random
 #include<time.h>
 
 namespace rtps
 {
-    using namespace sph;
 
 	//----------------------------------------------------------------------
-    SPH::SPH(RTPS *psfr, int n, int max_nb_in_cloud)
+    ParticleRigidBody::ParticleRigidBody(RTPS *psfr, int n, int max_nb_in_cloud)
     {
         //store the particle system framework
         ps = psfr;
@@ -65,33 +61,30 @@ namespace rtps
 
         grid = settings->grid;
 
-        std::vector<SPHParams> vparams(0);
-        vparams.push_back(sphp);
-        cl_sphp = Buffer<SPHParams>(ps->cli, vparams);
+        std::vector<ParticleRigidBodyParams> vparams(0);
+        vparams.push_back(prbp);
+        cl_prbp = Buffer<ParticleRigidBodyParams>(ps->cli, vparams);
 
         calculate();
-        updateSPHP();
+        updateParticleRigidBodyParams();
 
         //settings->printSettings();
 
         spacing = settings->GetSettingAs<float>("Spacing");
 
-        //SPH settings depend on number of particles used
-        //calculateSPHSettings();
+        //ParticleRigidBody settings depend on number of particles used
+        //calculateParticleRigidBodySettings();
         //set up the grid
         setupDomain();
 
-        integrator = LEAPFROG;
-        //integrator = EULER;
+        //integrator = LEAPFROG;
+        integrator = EULER;
 
 
         //*** end Initialization
 
         setupTimers();
 
-#ifdef CPU
-        printf("RUNNING ON THE CPU\n");
-#endif
 #ifdef GPU
         printf("RUNNING ON THE GPU\n");
 
@@ -100,18 +93,11 @@ namespace rtps
         prepareSorted();
         setRenderer();
 
-        ps->cli->addIncludeDir(sph_source_dir);
+        ps->cli->addIncludeDir(rigidbody_source_dir);
         ps->cli->addIncludeDir(common_source_dir);
 
-#ifdef CLOUD_COLLISION
-		// CLOUD INITIALIZATION
-		cloudInitialize();
-#endif
-
-
-
         //should be more cross platform
-        sph_source_dir = resource_path + "/" + std::string(SPH_CL_SOURCE_DIR);
+        rigidbody_source_dir = resource_path + "/" + std::string(PARTICLERIGIDBODY_CL_SOURCE_DIR);
         common_source_dir = resource_path + "/" + std::string(COMMON_CL_SOURCE_DIR);
 
         hash = Hash(common_source_dir, ps->cli, timers["hash_gpu"]);
@@ -120,37 +106,29 @@ namespace rtps
         cellindices = CellIndices(common_source_dir, ps->cli, timers["ci_gpu"] );
         permute = Permute( common_source_dir, ps->cli, timers["perm_gpu"] );
 
-        density = Density(sph_source_dir, ps->cli, timers["density_gpu"]);
-        force = Force(sph_source_dir, ps->cli, timers["force_gpu"]);
-        collision_wall = CollisionWall(sph_source_dir, ps->cli, timers["cw_gpu"]);
-        collision_tri = CollisionTriangle(sph_source_dir, ps->cli, timers["ct_gpu"], 2048); //TODO expose max_triangles as a parameter
+        force = Force(rigidbody_source_dir, ps->cli, timers["force_gpu"]);
 		
 
         //could generalize this to other integration methods later (leap frog, RK4)
         if (integrator == LEAPFROG)
         {
             //loadLeapFrog();
-            leapfrog = LeapFrog(sph_source_dir, ps->cli, timers["leapfrog_gpu"]);
+            leapfrog = LeapFrog(rigidbody_source_dir, ps->cli, timers["leapfrog_gpu"]);
         }
         else if (integrator == EULER)
         {
             //loadEuler();
-            euler = Euler(sph_source_dir, ps->cli, timers["euler_gpu"]);
+            euler = Euler(rigidbody_source_dir, ps->cli, timers["euler_gpu"]);
         }
 
-		// CLOUD Integrator
-		// ADD Cloud timers later. 
-        string lt_file = settings->GetSettingAs<string>("lt_cl");
-        //lifetime = Lifetime(sph_source_dir, ps->cli, timers["lifetime_gpu"], lt_file);
         m2p = MeshToParticles(common_source_dir, ps->cli, timers["meshtoparticles_gpu"]);
 #endif
 
     }
 
 	//----------------------------------------------------------------------
-    SPH::~SPH()
+    ParticleRigidBody::~ParticleRigidBody()
     {
-        printf("SPH destructor\n");
         if (pos_vbo && managed)
         {
             glBindBuffer(1, pos_vbo);
@@ -163,60 +141,26 @@ namespace rtps
             glDeleteBuffers(1, (GLuint*)&col_vbo);
             col_vbo = 0;
         }
-
-        Hose* hose;
-        int hs = hoses.size();  
-        for(int i = 0; i < hs; i++)
-        {
-            hose = hoses[i];
-            delete hose;
-
-        }
     }
 
 	//----------------------------------------------------------------------
-    void SPH::update()
+    void ParticleRigidBody::update()
     {
 		//printf("+++++++++++++ enter UPDATE()\n");
         //call kernels
-        //TODO: add timings
-#ifdef CPU
-        updateCPU();
-#endif
 #ifdef GPU
         updateGPU();
 #endif
     }
 
 	//----------------------------------------------------------------------
-    void SPH::updateCPU()
-    {
-        cpuDensity();
-        cpuPressure();
-        cpuViscosity();
-        cpuXSPH();
-        cpuCollision_wall();
-
-        if (integrator == EULER)
-        {
-            cpuEuler();
-        }
-        else if (integrator == LEAPFROG)
-        {
-            cpuLeapFrog();
-        }
-        glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
-        glBufferData(GL_ARRAY_BUFFER, num * sizeof(float4), &positions[0], GL_DYNAMIC_DRAW);
-    }
-
-	//----------------------------------------------------------------------
-    void SPH::updateGPU()
+    void ParticleRigidBody::updateGPU()
     {
 		//printf("**** enter updateGPU, num= %d\n", num);
 
         timers["update"]->start();
         glFinish();
-        if (settings->has_changed()) updateSPHP();
+        if (settings->has_changed()) updateParticleRigidBodyParams();
 
         //settings->printSettings();
 
@@ -226,13 +170,8 @@ namespace rtps
         //interval for all the other calls.
         //this does end up acquire/release everytime sprayHoses calls pushparticles
         //should just do try/except?
-        for (int i=0; i < sub_intervals; i++)
-        {
-            sprayHoses();
-        }
 
         cl_position_u.acquire();
-        cl_color_u.acquire();
 
         for (int i=0; i < sub_intervals; i++)
         {
@@ -247,16 +186,12 @@ namespace rtps
                 cl_sort_indices,
                 cl_cell_indices_start,
                 cl_cell_indices_end,
-                //cl_sphp,
                 cl_GridParams,
                 grid_params.nb_cells,
                 clf_debug,
                 cli_debug);
             timers["cellindices"]->stop();
 
-			//if (num > 0) exit(1); //GE
-
-       
 			//-----------------
             //printf("*** enter fluid permute, num= %d\n", num);
             timers["permute"]->start();
@@ -270,7 +205,7 @@ namespace rtps
                 cl_color_u,
                 cl_color_s,
                 cl_sort_indices,
-                //cl_sphp,
+                //cl_prbp,
                 cl_GridParams,
                 clf_debug,
                 cli_debug);
@@ -278,8 +213,6 @@ namespace rtps
 			//printf("exit after fluid permute\n");
 			//if (num > 0) exit(0);
  
-			// NUMBER OF CLOUD PARTICLES IS CONSTANT THROUGHOUT THE SIMULATION
-
 			//---------------------
             if (nc <= num && nc >= 0)
             {
@@ -302,9 +235,9 @@ namespace rtps
  
                 num = nc;
                 settings->SetSetting("Number of Particles", num);
-                //sphp.num = num;
-                updateSPHP();
-                renderer->setNum(sphp.num);
+                //prbp.num = num;
+                updateParticleRigidBodyParams();
+                renderer->setNum(prbp.num);
 
                 //need to copy sorted arrays into unsorted arrays
 //**** PREP(2)
@@ -318,34 +251,17 @@ namespace rtps
 
 
 			//-------------------------------------
-            //if(num >0) printf("density\n");
-            timers["density"]->start();
-            density.execute(   num,
-                //cl_vars_sorted,
-                cl_position_s,
-                cl_density_s,
-                cl_cell_indices_start,
-                cl_cell_indices_end,
-                cl_sphp,
-                cl_GridParamsScaled, // GE: Might have to fix this. Do not know. 
-                //cl_GridParams,
-                clf_debug,
-                cli_debug);
-            timers["density"]->stop();
-            
-			//-------------------------------------
             //if(num >0) printf("force\n");
+            //FIXME: Needs to calculate linear force and torque forces.
             timers["force"]->start();
             force.execute(   num,
                 //cl_vars_sorted,
                 cl_position_s,
-                cl_density_s,
                 cl_veleval_s,
-                cl_force_s,
-                cl_xsph_s,
+                cl_linear_force_s,
                 cl_cell_indices_start,
                 cl_cell_indices_end,
-                cl_sphp,
+                cl_prbp,
                 //cl_GridParams,
                 cl_GridParamsScaled,
                 clf_debug,
@@ -353,26 +269,17 @@ namespace rtps
 
             timers["force"]->stop();
 
-            collision();
-
-#ifdef CLOUD_COLLISION
-			cloudUpdate();
-#endif
             integrate(); // includes boundary force
+            //TODO: Segmented scan across all rigid body objects.
         }
 
-#ifdef CLOUD_COLLISION
-		cloudCleanup();
-#endif
-
         cl_position_u.release();
-        cl_color_u.release();
 
         timers["update"]->stop();
     }
 
 	//----------------------------------------------------------------------
-    void SPH::hash_and_sort()
+    void ParticleRigidBody::hash_and_sort()
     {
         //printf("hash\n");
         timers["hash"]->start();
@@ -381,7 +288,7 @@ namespace rtps
                 cl_position_u,
                 cl_sort_hashes,
                 cl_sort_indices,
-                //cl_sphp,
+                //cl_prbp,
                 cl_GridParams,
                 clf_debug,
                 cli_debug);
@@ -399,44 +306,7 @@ namespace rtps
         //timers["radix"]->stop();
     }
 
-	//----------------------------------------------------------------------
-    void SPH::collision()
-    {
-        //when implemented other collision routines can be chosen here
-        timers["collision_wall"]->start();
-        //collide_wall();
-        collision_wall.execute(num,
-                //cl_vars_sorted, 
-                cl_position_s,
-                cl_velocity_s,
-                cl_force_s,
-                cl_sphp,
-                //cl_GridParams,
-                cl_GridParamsScaled,
-                //debug
-                clf_debug,
-                cli_debug);
-
-        //k_collision_wall.execute(num, local_size);
-        timers["collision_wall"]->stop();
-
-        timers["collision_tri"]->start();
-        //collide_triangles();
-        collision_tri.execute(num,
-                settings->dt,
-                //cl_vars_sorted, 
-                cl_position_s,
-                cl_velocity_s,
-                cl_force_s,
-                cl_sphp,
-                //debug
-                clf_debug,
-                cli_debug);
-        timers["collision_tri"]->stop();
-    }
-	//----------------------------------------------------------------------
-
-    void SPH::integrate()
+    void ParticleRigidBody::integrate()
     {
         timers["integrate"]->start();
 
@@ -449,11 +319,14 @@ namespace rtps
                 cl_position_s,
                 cl_velocity_u,
                 cl_velocity_s,
-                cl_force_s,
+                cl_linear_force_s,
+                cl_torque_force_s,
+                cl_color_u,
+                cl_color_s,
                 //cl_vars_unsorted, 
                 //cl_vars_sorted, 
                 cl_sort_indices,
-                cl_sphp,
+                cl_prbp,
                 //debug
                 clf_debug,
                 cli_debug);
@@ -463,22 +336,22 @@ namespace rtps
         else if (integrator == LEAPFROG)
         {
             //leapfrog();
-             leapfrog.execute(num,
+            /*leapfrog.execute(num,
                 settings->dt,
                 cl_position_u,
                 cl_position_s,
                 cl_velocity_u,
                 cl_velocity_s,
                 cl_veleval_u,
-                cl_force_s,
-                cl_xsph_s,
+                cl_linear_force_s,
                 //cl_vars_unsorted, 
                 //cl_vars_sorted, 
                 cl_sort_indices,
-                cl_sphp,
+                cl_prbp,
                 //debug
                 clf_debug,
                 cli_debug);
+             */
         }
 
 		// Perhaps I am messed up by Courant condition if cloud point 
@@ -491,7 +364,7 @@ namespace rtps
 
 	// GE: WHY IS THIS NEEDED?
 	//----------------------------------------------------------------------
-    void SPH::call_prep(int stage)
+    void ParticleRigidBody::call_prep(int stage)
     {
 		// copy from sorted to unsorted arrays at the beginning of each 
 		// iteration
@@ -502,11 +375,10 @@ namespace rtps
             cl_position_u.copyFromBuffer(cl_position_s, 0, 0, num);
             cl_velocity_u.copyFromBuffer(cl_velocity_s, 0, 0, num);
             cl_veleval_u.copyFromBuffer(cl_veleval_s, 0, 0, num);
-            cl_color_u.copyFromBuffer(cl_color_s, 0, 0, num);
     }
 
 	//----------------------------------------------------------------------
-    int SPH::setupTimers()
+    int ParticleRigidBody::setupTimers()
     {
         //int print_freq = 20000;
         int print_freq = 1000; //one second
@@ -521,15 +393,8 @@ namespace rtps
         timers["perm_gpu"] = new EB::Timer("Permute GPU kernel execution", time_offset);
         timers["ds_gpu"] = new EB::Timer("DataStructures GPU kernel execution", time_offset);
         timers["bitonic"] = new EB::Timer("Bitonic Sort function", time_offset);
-        timers["density"] = new EB::Timer("Density function", time_offset);
-        timers["density_gpu"] = new EB::Timer("Density GPU kernel execution", time_offset);
         timers["force"] = new EB::Timer("Force function", time_offset);
         timers["force_gpu"] = new EB::Timer("Force GPU kernel execution", time_offset);
-        timers["collision_wall"] = new EB::Timer("Collision wall function", time_offset);
-        timers["cw_gpu"] = new EB::Timer("Collision Wall GPU kernel execution", time_offset);
-        timers["collision_tri"] = new EB::Timer("Collision triangles function", time_offset);
-        timers["ct_gpu"] = new EB::Timer("Collision Triangle GPU kernel execution", time_offset);
-        timers["collision_cloud"] = new EB::Timer("Collision cloud function", time_offset);
         timers["integrate"] = new EB::Timer("Integration function", time_offset);
         timers["leapfrog_gpu"] = new EB::Timer("LeapFrog Integration GPU kernel execution", time_offset);
         timers["euler_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset);
@@ -540,7 +405,7 @@ namespace rtps
     }
 
 	//----------------------------------------------------------------------
-    void SPH::printTimers()
+    void ParticleRigidBody::printTimers()
     {
         printf("Number of Particles: %d\n", num);
         timers.printAll();
@@ -552,18 +417,19 @@ namespace rtps
     }
 
 	//----------------------------------------------------------------------
-    void SPH::prepareSorted()
+    void ParticleRigidBody::prepareSorted()
     {
 //#include "sph/cl_src/cl_macros.h"
 
         positions.resize(max_num);
-        properties.resize(max_num);
+        //properties.resize(max_num);
         colors.resize(max_num);
-        forces.resize(max_num);
+        linearForce.resize(max_num);
+        torqueForce.resize(max_num);
+        centerOfMass.resize(max_num);
         velocities.resize(max_num);
         veleval.resize(max_num);
-        densities.resize(max_num);
-        xsphs.resize(max_num);
+        //densities.resize(max_num);
 
         //for reading back different values from the kernel
         std::vector<float4> error_check(max_num);
@@ -573,12 +439,13 @@ namespace rtps
 
         //float4 color = float4(0.0, 1.0, 0.0, 1.0f);
         //std::fill(colors.begin(), colors.end(),color);
-        std::fill(forces.begin(), forces.end(), float4(0.0f, 0.0f, 1.0f, 0.0f));
+        std::fill(linearForce.begin(), linearForce.end(), float4(0.0f, 0.0f, 1.0f, 0.0f));
+        std::fill(torqueForce.begin(), torqueForce.end(), float4(0.0f, 0.0f, 1.0f, 0.0f));
         std::fill(velocities.begin(), velocities.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(veleval.begin(), veleval.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
-        std::fill(densities.begin(), densities.end(), 0.0f);
-        std::fill(xsphs.begin(), xsphs.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+        //std::fill(densities.begin(), densities.end(), 0.0f);
+        //std::fill(xsphs.begin(), xsphs.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(error_check.begin(), error_check.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
         // VBO creation, TODO: should be abstracted to another class
@@ -601,11 +468,12 @@ namespace rtps
         cl_velocity_s = Buffer<float4>(ps->cli, velocities);
         cl_veleval_u = Buffer<float4>(ps->cli, veleval);
         cl_veleval_s = Buffer<float4>(ps->cli, veleval);
-        cl_density_s = Buffer<float>(ps->cli, densities);
-        cl_force_s = Buffer<float4>(ps->cli, forces);
-        cl_xsph_s = Buffer<float4>(ps->cli, xsphs);
-        cl_properties_u = Buffer<int>(ps->cli,properties);
-        cl_properties_s = Buffer<int>(ps->cli,properties);
+        //cl_density_s = Buffer<float>(ps->cli, densities);
+        cl_linear_force_s = Buffer<float4>(ps->cli, linearForce);
+        cl_torque_force_s = Buffer<float4>(ps->cli, torqueForce);
+        //cl_xsph_s = Buffer<float4>(ps->cli, xsphs);
+        //cl_properties_u = Buffer<int>(ps->cli,properties);
+        //cl_properties_s = Buffer<int>(ps->cli,properties);
 
         //cl_error_check= Buffer<float4>(ps->cli, error_check);
 
@@ -670,9 +538,9 @@ namespace rtps
      }
 
 	//----------------------------------------------------------------------
-    void SPH::setupDomain()
+    void ParticleRigidBody::setupDomain()
     {
-        grid->calculateCells(sphp.smoothing_distance / sphp.simulation_scale);
+        grid->calculateCells(prbp.smoothing_distance / prbp.simulation_scale);
 
         grid_params.grid_min = grid->getMin();
         grid_params.grid_max = grid->getMax();
@@ -697,7 +565,7 @@ namespace rtps
         grid_params.grid_inv_delta.w = 1.;
         */
 
-        float ss = sphp.simulation_scale;
+        float ss = prbp.simulation_scale;
 
         grid_params_scaled.grid_min = grid_params.grid_min * ss;
         grid_params_scaled.grid_max = grid_params.grid_max * ss;
@@ -716,17 +584,17 @@ namespace rtps
     }
 
 	//----------------------------------------------------------------------
-    int SPH::addBox(int nn, float4 min, float4 max, bool scaled, float4 color)
+    int ParticleRigidBody::addBox(int nn, float4 min, float4 max, bool scaled, float4 color)
     {
         float scale = 1.0f;
 		#if 0
         if (scaled)
         {
-            scale = sphp.simulation_scale;
+            scale = prbp.simulation_scale;
         }
 		#endif
 		//printf("GEE inside addBox, before addRect, scale= %f\n", scale);
-		//printf("GEE inside addBox, sphp.simulation_scale= %f\n", sphp.simulation_scale);
+		//printf("GEE inside addBox, prbp.simulation_scale= %f\n", prbp.simulation_scale);
 		printf("GEE addBox spacing = %f\n", spacing);
         vector<float4> rect = addRect(nn, min, max, spacing, scale);
         float4 velo(0, 0, 0, 0);
@@ -734,72 +602,19 @@ namespace rtps
         return rect.size();
     }
 
-    void SPH::addBall(int nn, float4 center, float radius, bool scaled)
+    void ParticleRigidBody::addBall(int nn, float4 center, float radius, bool scaled)
     {
         float scale = 1.0f;
         if (scaled)
         {
-            scale = sphp.simulation_scale;
+            scale = prbp.simulation_scale;
         }
         vector<float4> sphere = addSphere(nn, center, radius, spacing, scale);
         float4 velo(0, 0, 0, 0);
         pushParticles(sphere,velo);
     }
 
-	//----------------------------------------------------------------------
-    int SPH::addHose(int total_n, float4 center, float4 velocity, float radius, float4 color)
-    {
-        //in sph we just use sph spacing
-        radius *= spacing;
-        Hose *hose = new Hose(ps, total_n, center, velocity, radius, spacing, color);
-        hoses.push_back(hose);
-        //return the index
-        return hoses.size()-1;
-        //printf("size of hoses: %d\n", hoses.size());
-    }
-    void SPH::updateHose(int index, float4 center, float4 velocity, float radius, float4 color)
-    {
-        //we need to expose the vector of hoses somehow
-        //doesn't seem right to make user manage an index
-        //in sph we just use sph spacing
-        radius *= spacing;
-        hoses[index]->update(center, velocity, radius, spacing, color);
-        //printf("size of hoses: %d\n", hoses.size());
-    }
-    void SPH::refillHose(int index, int refill)
-    {
-        hoses[index]->refill(refill);
-    }
-
-
-
-    void SPH::sprayHoses()
-    {
-
-        std::vector<float4> parts;
-        for (int i = 0; i < hoses.size(); i++)
-        {
-            parts = hoses[i]->spray();
-            if (parts.size() > 0)
-                pushParticles(parts, hoses[i]->getVelocity(), hoses[i]->getColor());
-        }
-    }
-
-    void SPH::testDelete()
-    {
-
-        //cut = 1;
-        std::vector<float4> poss(40);
-        float4 posx(100.,100.,100.,1.);
-        std::fill(poss.begin(), poss.end(),posx);
-        //cl_vars_unsorted.copyToDevice(poss, max_num + 2);
-        cl_position_u.acquire();
-        cl_position_u.copyToDevice(poss);
-        cl_position_u.release();
-        ps->cli->queue.finish();
-    }
-	//----------------------------------------------------------------------
-    void SPH::pushParticles(vector<float4> pos, float4 velo, float4 color)
+    void ParticleRigidBody::pushParticles(vector<float4> pos, float4 velo, float4 color)
     {
         int nn = pos.size();
         std::vector<float4> vels(nn);
@@ -808,7 +623,7 @@ namespace rtps
 
     }
 	//----------------------------------------------------------------------
-    void SPH::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
+    void ParticleRigidBody::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
     {
         //cut = 1;
 
@@ -827,7 +642,6 @@ namespace rtps
         //printf("color: %f %f %f %f\n", color.x, color.y, color.z, color.w);
 
         std::fill(cols.begin(), cols.end(),color);
-        std::fill(properties.begin(),properties.end(),FLUID_PARTICLE);
         //float v = .5f;
         //float v = 0.0f;
         //float4 iv = float4(v, v, -v, 0.0f);
@@ -850,9 +664,9 @@ namespace rtps
         cl_color_u.copyToDevice(cols, num);
         cl_velocity_u.copyToDevice(vels, num);
 
-        //sphp.num = num+nn;
+        //prbp.num = num+nn;
         settings->SetSetting("Number of Particles", num+nn);
-        updateSPHP();
+        updateParticleRigidBodyParams();
 
         //cl_position.acquire();
         //cl_color_u.acquire();
@@ -869,14 +683,14 @@ namespace rtps
         renderer->setNum(num);
     }
 	//----------------------------------------------------------------------
-    void SPH::render()
+    void ParticleRigidBody::render()
     {
         renderer->render_box(grid->getBndMin(), grid->getBndMax());
         //renderer->render_table(grid->getBndMin(), grid->getBndMax());
         System::render();
     }
 	//----------------------------------------------------------------------
-    void SPH::setRenderer()
+    void ParticleRigidBody::setRenderer()
     {
         switch(ps->settings->getRenderType())
         {
@@ -905,7 +719,7 @@ namespace rtps
 		//renderer->setRTPS(
     }
 	//----------------------------------------------------------------------
-    void SPH::radix_sort()
+    void ParticleRigidBody::radix_sort()
     {
     try 
         {   
@@ -924,7 +738,7 @@ namespace rtps
 
     }
 	//----------------------------------------------------------------------
-    void SPH::bitonic_sort()
+    void ParticleRigidBody::bitonic_sort()
     {
         try
         {
@@ -1002,41 +816,41 @@ namespace rtps
     
 #ifdef CLOUD_COLLISION
 	//----------------------------------------------------------------------
-	void SPH::cloudInitialize()
+	void ParticleRigidBody::cloudInitialize()
 	{
 		int max_nb_in_cloud = 8192;  // 1 << 13
-		//printf("sphp scale= %f\n", sphp.simulation_scale); exit(1);
-		cloud = new CLOUD(ps, sphp, &cl_GridParams, &cl_GridParamsScaled, 
+		//printf("prbp scale= %f\n", prbp.simulation_scale); exit(1);
+		cloud = new CLOUD(ps, prbp, &cl_GridParams, &cl_GridParamsScaled, 
 		   &grid_params, &grid_params_scaled, max_nb_in_cloud);
 
-		// I can define cl_sphp later since I am using pointers
-		cloud->setSPHP(&cl_sphp);
+		// I can define cl_prbp later since I am using pointers
+		cloud->setParticleRigidBodyP(&cl_prbp);
 		//printf("grid_params nb_cells= %d\n", grid_params.nb_cells); exit(1);
 		//cloud->setGridParams(&cl_GridParams, &grid_params);
 		cloud->setRenderer(renderer); // cloud arrays in cloud/ must be created
 	}
 	//----------------------------------------------------------------------
-	void SPH::cloudUpdate()
+	void ParticleRigidBody::cloudUpdate()
 	{
             cloud->cloud_hash_and_sort();
             cloud->cellindicesExecute();
             cloud->permuteExecute();
 			if (num > 0) {
-				cloud->collision(cl_position_s, cl_velocity_s, cl_force_s, cl_sphp, num);
+				cloud->collision(cl_position_s, cl_velocity_s, cl_force_s, cl_prbp, num);
 ;
 			}
     		cloud->cloudVelocityExecute(); // before collision?
 			cloud->integrate();
 	}
 	//----------------------------------------------------------------------
-	void SPH::cloudCleanup()
+	void ParticleRigidBody::cloudCleanup()
 	{
 		// Cleanup afer iteration
 		;
 	}
 	//----------------------------------------------------------------------
 #endif
-    void SPH::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution)
+    void ParticleRigidBody::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution)
     {
         glFinish();
         cl::Image3DGL img(ps->cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
@@ -1052,13 +866,176 @@ namespace rtps
         printf("tmpnum = %d\n",tmpnum);
         num+=tmpnum;
         settings->SetSetting("Number of Particles", num);
-        updateSPHP();
+        updateParticleRigidBodyParams();
         renderer->setNum(num);
         //hash_and_sort();
         ps->cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
         ps->cli->queue.finish();
         cl_position_u.release();
         cl_color_u.release();
+    }
+    void ParticleRigidBody::calculate()
+    {
+        /*!
+        * The Particle Mass (and hence everything following) depends on the MAXIMUM number of particles in the system
+        */
+
+        float rho0 = 1000;                              //rest density [kg/m^3 ]
+        //float mass = (128*1024.0)/max_num * .0002;    //krog's way
+        float VP = 2 * .0262144 / max_num;              //Particle Volume [ m^3 ]
+        //float VP = .0262144 / 16000;                  //Particle Volume [ m^3 ]
+        float mass = rho0 * VP;                         //Particle Mass [ kg ]
+        //constant .87 is magic
+        float rest_distance = .87 * pow(VP, 1.f/3.f);   //rest distance between particles [ m ]
+        //float rest_distance = pow(VP, 1.f/3.f);     //rest distance between particles [ m ]
+        float smoothing_distance = 2.0f * rest_distance;//interaction radius
+
+
+        float4 dmin = grid->getBndMin();
+        float4 dmax = grid->getBndMax();
+        //printf("dmin: %f %f %f\n", dmin.x, dmin.y, dmin.z);
+        //printf("dmax: %f %f %f\n", dmax.x, dmax.y, dmax.z);
+        float domain_vol = (dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z);
+        //printf("domain volume: %f\n", domain_vol);
+
+
+        //ratio between particle radius in simulation coords and world coords
+        float simulation_scale = pow(.5f * VP * max_num / domain_vol, 1.f/3.f); 
+        //float simulation_scale = pow(VP * 16000/ domain_vol, 1.f/3.f); 
+
+		//int max_cloud_num = cloud->getMaxCloudNum();
+
+		// Cloud update (SHOULD NOT BE REQUIRED
+        //settings->SetSetting("Maximum Number of Cloud Particles", max_cloud_num);
+       
+        settings->SetSetting("Maximum Number of Particles", max_num);
+        settings->SetSetting("Mass", mass);
+        settings->SetSetting("Rest Distance", rest_distance);
+        settings->SetSetting("Smoothing Distance", smoothing_distance);
+        settings->SetSetting("Simulation Scale", simulation_scale);
+
+
+		// Why did Ian choose the 2nd line
+        float boundary_distance = .5f * rest_distance;
+        //float boundary_distance =  smoothing_distance;
+
+        settings->SetSetting("Boundary Distance", boundary_distance);
+        float spacing = rest_distance / simulation_scale;
+        settings->SetSetting("Spacing", spacing);
+ 
+
+        float pi = M_PI;
+        float h9 = pow(smoothing_distance, 9.f);
+        float h6 = pow(smoothing_distance, 6.f);
+        float h3 = pow(smoothing_distance, 3.f);
+        //Kernel Coefficients
+        settings->SetSetting("wpoly6", 315.f/64.0f/pi/h9 );
+        settings->SetSetting("wpoly6_d", -945.f/(32.0f*pi*h9) );  //doesn't seem right
+        settings->SetSetting("wpoly6_dd", -945.f/(32.0f*pi*h9) ); // laplacian
+        settings->SetSetting("wspiky", 15.f/pi/h6 );
+        settings->SetSetting("wspiky_d", -45.f/(pi*h6) );
+        settings->SetSetting("wspiky_dd", 15./(2.*pi*h3) );
+        settings->SetSetting("wvisc", 15./(2.*pi*h3) );
+        settings->SetSetting("wvisc_d", 15./(2.*pi*h3) ); //doesn't seem right
+        settings->SetSetting("wvisc_dd", 45./(pi*h6) );
+
+        //dynamic params
+        if(!settings->Exists("Gravity"))
+            settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
+        settings->SetSetting("Gas Constant", 15.0f);
+        settings->SetSetting("Viscosity", .01f);
+        settings->SetSetting("Velocity Limit", 600.0f);
+        settings->SetSetting("XParticleRigidBody Factor", .1f);
+        settings->SetSetting("Friction Kinetic", 0.0f);
+        settings->SetSetting("Friction Static", 0.0f);
+        settings->SetSetting("Boundary Stiffness", 20000.0f);
+        settings->SetSetting("Boundary Dampening", 256.0f);
+
+
+        //next 4 not used at the moment
+        settings->SetSetting("Restitution", 0.0f);
+        settings->SetSetting("Shear", 0.0f);
+        settings->SetSetting("Attraction", 0.0f);
+        settings->SetSetting("Spring", 0.0f);
+
+        //constants
+        settings->SetSetting("EPSILON", 1E-6);
+        settings->SetSetting("PI", M_PI);       //delicious
+
+        //CL parameters
+        settings->SetSetting("Number of Particles", 0);
+        settings->SetSetting("Number of Variables", 10); // for combined variables (vars_sorted, etc.) //TO be depracated
+        settings->SetSetting("Choice", 0); // which kind of calculation to invoke //TO be depracated
+
+
+		// CL Cloud parameters
+        settings->SetSetting("Number of Cloud Particles", 0);
+
+    }
+   
+
+
+	//----------------------------------------------------------------------
+    void ParticleRigidBody::updateParticleRigidBodyParams()
+    {
+
+        //update all the members of the prbp struct
+        //prbp.grid_min = this->settings->GetSettingAs<float4>; //settings->GetSettingAs doesn't support float4
+        //prbp.grid_max;
+        prbp.mass = settings->GetSettingAs<float>("Mass");
+        prbp.rest_distance = settings->GetSettingAs<float>("Rest Distance");
+        prbp.smoothing_distance = settings->GetSettingAs<float>("Smoothing Distance");
+        prbp.simulation_scale = settings->GetSettingAs<float>("Simulation Scale");
+
+		printf("prbp.simulation_scale= %f\n", prbp.simulation_scale);
+		printf("prbp.smoothing_distance= %f\n", prbp.smoothing_distance);
+        
+        //dynamic params
+        prbp.boundary_stiffness = settings->GetSettingAs<float>("Boundary Stiffness");
+        prbp.boundary_dampening = settings->GetSettingAs<float>("Boundary Dampening");
+        prbp.boundary_distance = settings->GetSettingAs<float>("Boundary Distance");
+        //prbp.K = settings->GetSettingAs<float>("Gas Constant");        //gas constant
+        //prbp.viscosity = settings->GetSettingAs<float>("Viscosity");
+        //prbp.velocity_limit = settings->GetSettingAs<float>("Velocity Limit");
+        //prbp.xsph_factor = settings->GetSettingAs<float>("XParticleRigidBody Factor");
+        prbp.gravity = settings->GetSettingAs<float>("Gravity"); // -9.8 m/sec^2
+        prbp.friction_coef = settings->GetSettingAs<float>("Friction");
+        prbp.restitution_coef = settings->GetSettingAs<float>("Restitution");
+
+        //next 3 not used at the moment
+        prbp.shear = settings->GetSettingAs<float>("Shear");
+        prbp.attraction = settings->GetSettingAs<float>("Attraction");
+        prbp.spring = settings->GetSettingAs<float>("Spring");
+        //prbp.surface_threshold;
+
+        //constants
+        prbp.EPSILON = settings->GetSettingAs<float>("EPSILON");
+        prbp.PI = settings->GetSettingAs<float>("PI");       //delicious
+        //Kernel Coefficients
+        prbp.wpoly6_coef = settings->GetSettingAs<float>("wpoly6");
+        prbp.wpoly6_d_coef = settings->GetSettingAs<float>("wpoly6_d");
+        prbp.wpoly6_dd_coef = settings->GetSettingAs<float>("wpoly6_dd"); // laplacian
+        prbp.wspiky_coef = settings->GetSettingAs<float>("wspiky");
+        prbp.wspiky_d_coef = settings->GetSettingAs<float>("wspiky_d");
+        prbp.wspiky_dd_coef = settings->GetSettingAs<float>("wspiky_dd");
+        prbp.wvisc_coef = settings->GetSettingAs<float>("wvisc");
+        prbp.wvisc_d_coef = settings->GetSettingAs<float>("wvisc_d");
+        prbp.wvisc_dd_coef = settings->GetSettingAs<float>("wvisc_dd");
+
+        //CL parameters
+        prbp.num = settings->GetSettingAs<int>("Number of Particles");
+        prbp.nb_vars = settings->GetSettingAs<int>("Number of Variables"); // for combined variables (vars_sorted, etc.)
+        prbp.choice = settings->GetSettingAs<int>("Choice"); // which kind of calculation to invoke
+        prbp.max_num = settings->GetSettingAs<int>("Maximum Number of Particles");
+        prbp.cloud_num = settings->GetSettingAs<int>("Number of Cloud Particles");
+        prbp.max_cloud_num = settings->GetSettingAs<int>("Maximum Number of Cloud Particles");
+
+        //update the OpenCL buffer
+        std::vector<ParticleRigidBodyParams> vparams(0);
+        vparams.push_back(prbp);
+        cl_prbp.copyToDevice(vparams);
+
+        settings->updated();
     }
 
 }; //end namespace
