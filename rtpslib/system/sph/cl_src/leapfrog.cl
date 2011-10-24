@@ -37,8 +37,9 @@ __kernel void leapfrog(
                       __global float4* veleval_u,
                       __global float4* force_s,
                       __global float4* xsph_s,
+                      __global float4* color_u,
+                      __global float4* color_s,
                       __global int* sort_indices,  
-                      //		__global float4* color,
                       __constant struct SPHParams* sphp, 
                       float dt)
 {
@@ -113,6 +114,7 @@ __kernel void leapfrog(
     
     vel_u[i] = vnext;
     veleval_u[i] = veval; 
+    color_u[i] = color_s[i];
     pos_u[i] = (float4)(p.xyz, 1.0f);  // for plotting
     
     

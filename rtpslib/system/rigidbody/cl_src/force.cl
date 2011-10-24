@@ -28,9 +28,9 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* veleval, __global float4* linear_force
+#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force
 //, __global float4* torque_force
-#define ARGV pos, veleval, linear_force 
+#define ARGV pos, vel, linear_force 
 
 /*----------------------------------------------------------------------*/
 
@@ -62,7 +62,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     float rlen = length(r);
 
     // is this particle within cutoff?
-    if (rlen < prbp->smoothing_distance)
+    if (rlen <= 2.*prbp->smoothing_distance)
     {
 
         //iej is 0 when we are looking at same particle
@@ -73,10 +73,10 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
 
-        float4 springForce = -prbp->boundary_stiffness*(2*prbp->smoothing_distance-rlen)*(r/rlen); 
+        float4 springForce = -prbp->boundary_stiffness*(2.*prbp->smoothing_distance-rlen)*(r/rlen); 
 
-        float4 veli = veleval[index_i]; // sorted
-        float4 velj = veleval[index_j];
+        float4 veli = vel[index_i]; // sorted
+        float4 velj = vel[index_j];
 
         float4 dampeningForce = prbp->boundary_dampening*(velj-veli);
         //force *= sphp->mass;// * idi * idj;

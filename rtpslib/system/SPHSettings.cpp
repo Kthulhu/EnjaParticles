@@ -74,6 +74,7 @@ namespace rtps
 
         settings->SetSetting("Boundary Distance", boundary_distance);
         float spacing = rest_distance / simulation_scale;
+        //float spacing = smoothing_distance / simulation_scale;
         settings->SetSetting("Spacing", spacing);
  
 

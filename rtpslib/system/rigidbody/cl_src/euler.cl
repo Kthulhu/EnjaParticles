@@ -44,13 +44,14 @@ __kernel void euler(
                    __global float4* color_s,
                    __global int* sort_indices,  
                    __constant struct ParticleRigidBodyParams* prbp, 
-                   float dt)
+                   float dt
+                    DEBUG_ARGS)
 {
     unsigned int i = get_global_id(0);
     int num = prbp->num;
     if (i >= num) return;
 
-    float4 p = pos_s[i];
+    float4 p = pos_s[i] * prbp->simulation_scale;
     float4 v = vel_s[i];
     float4 lf = linear_force_s[i];
     //float4 q = rot_s[i];
@@ -59,7 +60,7 @@ __kernel void euler(
 
     //external force is gravity
     //f.z += -9.8f;
-    lf.z+=prbp->gravity;
+    lf.y+=prbp->gravity;
 
     /*float speed = magnitude(f);
     if (speed > 600.0f) //velocity limit, need to pass in as struct
@@ -75,15 +76,20 @@ __kernel void euler(
     //w += dt*tf;
     //q += dt*w;
     //q /= sphp->simulation_scale;
-
+    /*vel_u[i] = v;
+    color_u[i] = color_s[i];
+    pos_u[i] = (float4)(p.xyz, 1.);  // for plotting
+    //clf[originalIndex] = (float4)(p.xyz, 1.);
+    //clf[originalIndex] = lf;
+    clf[i] = v;*/
     uint originalIndex = sort_indices[i];
 
     vel_u[originalIndex] = v;
     //avel_u[originalIndex] = w;
-    //unsorted_veleval(originalIndex) = v;
-    //float dens = density(i);
-    //unsorted_pos(originalIndex) = (float4)(p.xyz, dens);
     color_u[originalIndex] = color_s[i];
     pos_u[originalIndex] = (float4)(p.xyz, 1.);  // for plotting
-
+    
+    //clf[originalIndex] = (float4)(p.xyz, 1.);
+    //clf[originalIndex] = lf;
+    clf[originalIndex] = v;
 }

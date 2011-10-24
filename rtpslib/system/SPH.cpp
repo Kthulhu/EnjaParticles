@@ -472,6 +472,8 @@ namespace rtps
                 cl_veleval_u,
                 cl_force_s,
                 cl_xsph_s,
+                cl_color_u,
+                cl_color_s,
                 //cl_vars_unsorted, 
                 //cl_vars_sorted, 
                 cl_sort_indices,

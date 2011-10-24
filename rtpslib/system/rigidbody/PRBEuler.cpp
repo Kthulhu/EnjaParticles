@@ -70,9 +70,38 @@ namespace rtps
         k_euler.setArg(iargs++, indices.getDevicePtr());
         k_euler.setArg(iargs++, prbp.getDevicePtr());
         k_euler.setArg(iargs++, dt); //time step
+        k_euler.setArg(iargs++, clf_debug.getDevicePtr());
+        k_euler.setArg(iargs++, cli_debug.getDevicePtr());
 
         int local_size = 128;
         k_euler.execute(num, local_size);
+
+#if 0 //printouts    
+        //DEBUGING
+        
+        if(num > 0)// && choice == 0)
+        {
+            printf("============================================\n");
+            printf("***** PRINT euler output ******\n");
+            printf("num %d\n", num);
+
+            std::vector<int4> cli(num);
+            std::vector<float4> clf(num);
+            
+            cli_debug.copyToHost(cli);
+            clf_debug.copyToHost(clf);
+
+            for (int i=0; i < num; i++)
+            //for (int i=0; i < 10; i++) 
+            {
+                //printf("-----\n");
+                printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
+                //if(clf[i].w == 0.0) exit(0);
+                //printf("cli_debug: %d, %d, %d, %d\n", cli[i].x, cli[i].y, cli[i].z, cli[i].w);
+                //		printf("pos : %f, %f, %f, %f\n", pos[i].x, pos[i].y, pos[i].z, pos[i].w);
+            }
+        }
+#endif
 
     }
 }

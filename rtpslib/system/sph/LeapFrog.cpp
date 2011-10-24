@@ -48,6 +48,8 @@ namespace sph
                     Buffer<float4>& veleval_u,
                     Buffer<float4>& force_s,
                     Buffer<float4>& xsph_s,
+                    Buffer<float4>& color_u,
+                    Buffer<float4>& color_s,
                     //Buffer<float4>& uvars, 
                     //Buffer<float4>& svars, 
                     Buffer<unsigned int>& indices,
@@ -68,8 +70,9 @@ namespace sph
         k_leapfrog.setArg(iargs++, veleval_u.getDevicePtr());
         k_leapfrog.setArg(iargs++, force_s.getDevicePtr());
         k_leapfrog.setArg(iargs++, xsph_s.getDevicePtr());
+        k_leapfrog.setArg(iargs++, color_u.getDevicePtr());
+        k_leapfrog.setArg(iargs++, color_s.getDevicePtr());
         k_leapfrog.setArg(iargs++, indices.getDevicePtr());
-        //leapfrog.setArg(iargs++, color.getDevicePtr());
         k_leapfrog.setArg(iargs++, sphp.getDevicePtr());
         k_leapfrog.setArg(iargs++, dt); //time step
 
