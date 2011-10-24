@@ -22,38 +22,43 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_COLLISION_WALL_H_INCLUDED
-#define RTPS_COLLISION_WALL_H_INCLUDED
+#ifndef RTPS_PARTICLE_RIGIDBODY_FORCE_H_INCLUDED
+#define RTPS_PARTICLE_RIGIDBODY_FORCE_H_INCLUDED
 
 
 #include <CLL.h>
 #include <Buffer.h>
+#include <Kernel.h>
+#include <structs.h>
+#include <Domain.h>
+#include <timer_eb.h>
+#include "ParticleRigidBodyParams.h"
 
 
 namespace rtps
 {
-    class CollisionWall
+    class PRBForce
     {
         public:
-            CollisionWall() { cli = NULL; timer = NULL; };
-            CollisionWall(std::string path, CL* cli, EB::Timer* timer);
+            PRBForce() { cli = NULL; timer = NULL; };
+            PRBForce(std::string path, CL* cli, EB::Timer* timer);
             void execute(int num,
-                        Buffer<float4>& pos_s, 
-                        Buffer<float4>& vel_s, 
-                        Buffer<float4>& force_s, 
-                        //Buffer<float4>& svars, 
-                        //params
-                        Buffer<SPHParams>& sphp,
-                        Buffer<GridParams>& gp,
-                        //debug
-                        Buffer<float4>& clf_debug,
-                        Buffer<int4>& cli_debug);
-            
-           
+                    Buffer<float4>& pos_s,
+                    Buffer<float4>& veleval_s,
+                    Buffer<float4>& linear_force_s,
+                    //Buffer<float4>& torque_force_s,
+                    Buffer<unsigned int>& ci_start,
+                    Buffer<unsigned int>& ci_end,
+                    //params
+                    Buffer<ParticleRigidBodyParams>& prbp,
+                    Buffer<GridParams>& gp,
+                    //debug params
+                    Buffer<float4>& clf_debug,
+                    Buffer<int4>& cli_debug);
 
         private:
             CL* cli;
-            Kernel k_collision_wall;
+            Kernel k_force;
             EB::Timer* timer;
     };
 }

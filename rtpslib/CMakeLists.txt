@@ -33,7 +33,7 @@ ENDIF(WITH_OPENCL)
 ##### Source Paths ############################################################
 ADD_DEFINITIONS(-DSIMPLE_CL_SOURCE_DIR="cl_simple")
 ADD_DEFINITIONS(-DSPH_CL_SOURCE_DIR="cl_sph")
-ADD_DEFINITIONS(-DPARTICLERIGIDBODY_CL_SOURCE_DIR="cl_sph")
+ADD_DEFINITIONS(-DPARTICLE_RIGIDBODY_CL_SOURCE_DIR="cl_rigidbody")
 ADD_DEFINITIONS(-DFLOCK_CL_SOURCE_DIR="cl_flock")
 ADD_DEFINITIONS(-DCOMMON_CL_SOURCE_DIR="cl_common")
 ADD_DEFINITIONS(-DGLSL_BIN_DIR="shaders")
@@ -57,7 +57,7 @@ set (rtpslib_INCLUDES
     ${rtpslib_SOURCE_DIR}/system
     ${rtpslib_SOURCE_DIR}/system/sph
     ${rtpslib_SOURCE_DIR}/system/flock
-    ${rtpslib_SOURCE_DIR}/system/outer
+    ${rtpslib_SOURCE_DIR}/system/rigidbody
     ${rtpslib_SOURCE_DIR}/system/common
     ${rtpslib_SOURCE_DIR}/render
     ${rtpslib_SOURCE_DIR}/render/util
@@ -117,6 +117,9 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/SPH.cpp
     ${rtpslib_SOURCE_DIR}/system/SPHSettings.cpp
 
+	#ParticleRigidBody 
+    ${rtpslib_SOURCE_DIR}/system/ParticleRigidBody.cpp
+
     #cloud
     ${cloud_sources}
 
@@ -160,6 +163,16 @@ set (rtpslib_SOURCES
     ####
 
     # Rigidbody dynamics.
+    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBEuler
+    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBLeapFrog
+    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForce
+    #${rtpslib_SOURCE_DIR}/system/sph/Prep
+    #${rtpslib_SOURCE_DIR}/system/sph/Sort
+    #${rtpslib_SOURCE_DIR}/system/sph/CloudSort
+    #${rtpslib_SOURCE_DIR}/system/sph/Collision_wall
+    #${rtpslib_SOURCE_DIR}/system/sph/Collision_triangle
+
+
     ${rtpslib_SOURCE_DIR}/system/common/MeshToParticles
     
     # neighbors
@@ -238,6 +251,7 @@ ADD_SUBDIRECTORY(system/common)
 ADD_SUBDIRECTORY(system/simple)
 ADD_SUBDIRECTORY(system/sph)
 ADD_SUBDIRECTORY(system/flock)
+ADD_SUBDIRECTORY(system/rigidbody)
 
 MAKE_DIRECTORY(${rtpslib_BINARY_DIR}/shaders)
 FILE(COPY ${rtpslib_SOURCE_DIR}/render/shaders/ DESTINATION ${rtpslib_BINARY_DIR}/shaders/)

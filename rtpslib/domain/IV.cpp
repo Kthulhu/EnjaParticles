@@ -92,7 +92,7 @@ namespace rtps
          * Create a rectangle with at most num particles in it.
          *  The size of the return vector will be the actual number of particles used to fill the rectangle
          */
-        spacing *= 1.1f;
+        //spacing *= 1.1f;
 
 		//printf("GE inside addRect: scale= %f\n", scale);
 

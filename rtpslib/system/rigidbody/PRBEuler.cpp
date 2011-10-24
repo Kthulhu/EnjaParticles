@@ -21,53 +21,58 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 
-
-#ifndef RTPS_DATASTRUCTURES_H_INCLUDED
-#define RTPS_DATASTRUCTURES_H_INCLUDED
-
-
-#include <CLL.h>
-#include <Buffer.h>
-
+#include "PRBEuler.h"
 
 namespace rtps
 {
-    class DataStructures 
+    PRBEuler::PRBEuler(std::string path, CL* cli_, EB::Timer* timer_)
     {
-        public:
-            DataStructures() { cli = NULL; timer = NULL; };
-            DataStructures(CL* cli, EB::Timer* timer);
-            int execute(int num,
-                    //input
+        cli = cli_;
+        timer = timer_;
+ 
+        printf("create euler kernel\n");
+        path += "/euler.cl";
+        k_euler = Kernel(cli, path, "euler");
+    } 
+    
+    void PRBEuler::execute(int num,
+                    float dt,
                     Buffer<float4>& pos_u,
                     Buffer<float4>& pos_s,
                     Buffer<float4>& vel_u,
                     Buffer<float4>& vel_s,
-                    Buffer<float4>& veleval_u,
-                    Buffer<float4>& veleval_s,
+                    Buffer<float4>& linear_force_s,
+                    Buffer<float4>& torque_force_s,
+                    Buffer<float4>& color_u,
+                    Buffer<float4>& color_s,
 
                     //Buffer<float4>& uvars, 
-                    Buffer<float4>& color_u,
                     //Buffer<float4>& svars, 
-                    Buffer<float4>& color_s,
-                    //output
-                    Buffer<unsigned int>& hashes,
                     Buffer<unsigned int>& indices,
-                    Buffer<unsigned int>& ci_start,
-                    Buffer<unsigned int>& ci_stop,
                     //params
-                    Buffer<SPHParams>& sphp,
-                    Buffer<GridParams>& gp,
-                    int nb_cells,
+                    Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
                     Buffer<float4>& clf_debug,
-                    Buffer<int4>& cli_debug);
+                    Buffer<int4>& cli_debug)
+    {
 
-        private:
-            CL* cli;
-            Kernel k_datastructures;
-            EB::Timer* timer;
-    };
+        int iargs = 0;
+        //k_euler.setArg(iargs++, uvars.getDevicePtr());
+        //k_euler.setArg(iargs++, svars.getDevicePtr());
+        k_euler.setArg(iargs++, pos_u.getDevicePtr());
+        k_euler.setArg(iargs++, pos_s.getDevicePtr());
+        k_euler.setArg(iargs++, vel_u.getDevicePtr());
+        k_euler.setArg(iargs++, vel_s.getDevicePtr());
+        k_euler.setArg(iargs++, linear_force_s.getDevicePtr());
+        k_euler.setArg(iargs++, torque_force_s.getDevicePtr());
+        k_euler.setArg(iargs++, color_u.getDevicePtr());
+        k_euler.setArg(iargs++, color_s.getDevicePtr());
+        k_euler.setArg(iargs++, indices.getDevicePtr());
+        k_euler.setArg(iargs++, prbp.getDevicePtr());
+        k_euler.setArg(iargs++, dt); //time step
+
+        int local_size = 128;
+        k_euler.execute(num, local_size);
+
+    }
 }
-
-#endif

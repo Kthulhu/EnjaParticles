@@ -135,10 +135,10 @@ rtps::RTPS* ps;
 //#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
-#define NUM_PARTICLES 8192
+//#define NUM_PARTICLES 8192
 //#define NUM_PARTICLES 4096
 //#define NUM_PARTICLES 2048
-//#define NUM_PARTICLES 1024
+#define NUM_PARTICLES 1024
 //#define NUM_PARTICLES 256
 //
 //
@@ -247,8 +247,8 @@ int main(int argc, char** argv)
     ps->settings->SetSetting("XSPH Factor", .15f);
     ps->settings->SetSetting("Friction Kinetic", 0.0f);
     ps->settings->SetSetting("Friction Static", 0.0f);
-    ps->settings->SetSetting("Boundary Stiffness", 20000.0f);
-    ps->settings->SetSetting("Boundary Dampening", 256.0f);
+    ps->settings->SetSetting("Boundary Stiffness", 100.0f);
+    ps->settings->SetSetting("Boundary Dampening", 16.0f);
 
 
     //initialize the OpenGL scene for rendering
@@ -387,24 +387,26 @@ void appKeyboard(unsigned char key, int x, int y)
                 nn = 2048;
                 //test out of bounds (max)
                 //with max_num = 8192 this will have 2 particles in bounds and 18 out
-                min = float4(5.7, 5.7, 5.7, 1.0f);
-                max = float4(6.5, 6.5, 6.5, 1.0f);
+                //min = float4(5.7, 5.7, 5.7, 1.0f);
+                //max = float4(6.5, 6.5, 6.5, 1.0f);
 
                 //test negative bounds
                 //with max_num = 8192 this will have 8 particles in bounds and 12 out
-                min = float4(-1.5, -1.5, -1.0, 1.0f);
-                max = float4(1.0, 1.0, 1.0, 1.0f);
+                //min = float4(-1.5, -1.5, -1.0, 1.0f);
+                //max = float4(1.0, 1.0, 1.0, 1.0f);
 
 
                 //min = float4(15.8, 15.8, 15.8, 1.0f);
                 //max = float4(16.5, 16.5, 16.5, 1.0f);
 
-                min = float4(1.2, 1.2, 3.2, 1.0f);
-                max = float4(2., 2., 4., 1.0f);
+                //min = float4(1.2, 1.2, 3.2, 1.0f);
+                //max = float4(2., 2., 4., 1.0f);
 
 				// release particles symmetrically wrt center 
-                min = float4(2.0, 2.0, 3.2, 1.0f);
-                max = float4(3.0, 3.0, 4.0, 1.0f);
+                min = float4(1.0, 1.0, 1.0, 1.0f);
+                max = float4(4.0, 4.0, 4.0, 1.0f);
+                //min = float4(2.0, 2.0, 3.2, 1.0f);
+                //max = float4(3.0, 3.0, 4.0, 1.0f);
                 
                 //float4 color = float4(rand()/(10.*RAND_MAX), rand()/(RAND_MAX+1.0), rand()/(RAND_MAX+1.0), 0.2);
                 ps->system->addBox(nn, min, max, false, color);

@@ -27,6 +27,7 @@
 #include "system/Simple.h"
 #include "system/SPH.h"
 #include "system/FLOCK.h"
+#include "system/ParticleRigidBody.h"
 
 
 namespace rtps
@@ -97,6 +98,11 @@ printf("done with constructor\n");
         {
             printf("flock system\n");
             system = new FLOCK(this, settings->max_particles);
+        }
+        else if (settings->system == RTPSettings::PARTICLE_RIGIDBODY)
+        {
+            printf("*** particleRigidBody system 1  ***\n");
+            system = new ParticleRigidBody(this, settings->max_particles);
         }
 
         printf("created system in RTPS\n");

@@ -37,7 +37,7 @@ namespace rtps
 #endif
 
     //Struct which gets passed to OpenCL routines
-	typedef struct SPHParams
+	typedef struct ParticleRigidBodyParams
     {
         float mass;
         float rest_distance;
@@ -113,14 +113,6 @@ namespace rtps
 		;
         #pragma pack(pop)
 #endif
-
-
-    enum Integrator
-    {
-        EULER, LEAPFROG
-    };
-
-
 }
 
 #endif

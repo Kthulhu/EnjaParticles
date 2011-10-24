@@ -22,49 +22,51 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_PREP_H_INCLUDED
-#define RTPS_PREP_H_INCLUDED
+#ifndef RTPS_PARTICLE_RIGIDBODY_EULER_H_INCLUDED
+#define RTPS_PARTICLE_RIGIDBODY_EULER_H_INCLUDED
 
 
 #include <CLL.h>
 #include <Buffer.h>
+#include <Kernel.h>
+#include <timer_eb.h>
+#include "ParticleRigidBodyParams.h"
 
 
 namespace rtps
 {
-namespace sph
-{
-    class Prep 
+    class PRBEuler
     {
         public:
-            Prep() { cli = NULL; timer = NULL; };
-            Prep(CL* cli, EB::Timer* timer);
+            PRBEuler() { cli = NULL; timer = NULL; };
+            PRBEuler(std::string path, CL* cli, EB::Timer* timer);
             void execute(int num,
-                    int stage,
+                    float dt,
                     Buffer<float4>& pos_u,
                     Buffer<float4>& pos_s,
                     Buffer<float4>& vel_u,
                     Buffer<float4>& vel_s,
-                    Buffer<float4>& veleval_u,
-                    Buffer<float4>& veleval_s,
+                    Buffer<float4>& linear_force_s,
+                    Buffer<float4>& torque_force_s,
                     Buffer<float4>& color_u,
                     Buffer<float4>& color_s,
+
                     //Buffer<float4>& uvars, 
                     //Buffer<float4>& svars, 
                     Buffer<unsigned int>& indices,
                     //params
-                    Buffer<SPHParams>& sphp,
-                    //Buffer<GridParams>& gp,
+                    Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);
+            
+           
 
         private:
             CL* cli;
-            Kernel k_prep;
+            Kernel k_euler;
             EB::Timer* timer;
     };
-}
 }
 
 #endif

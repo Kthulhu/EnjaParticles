@@ -21,15 +21,11 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 
-
-#include "../SPH.h"
+#include "PRBLeapFrog.h"
 
 namespace rtps
 {
-namespace sph
-{
-
-    LeapFrog::LeapFrog(std::string path, CL* cli_, EB::Timer* timer_)
+    PRBLeapFrog::PRBLeapFrog(std::string path, CL* cli_, EB::Timer* timer_)
     {
         cli = cli_;
         timer = timer_;
@@ -39,7 +35,7 @@ namespace sph
         k_leapfrog = Kernel(cli, path, "leapfrog");
 
     } 
-    void LeapFrog::execute(int num,
+    void PRBLeapFrog::execute(int num,
                     float dt,
                     Buffer<float4>& pos_u,
                     Buffer<float4>& pos_s,
@@ -52,7 +48,7 @@ namespace sph
                     //Buffer<float4>& svars, 
                     Buffer<unsigned int>& indices,
                     //params
-                    Buffer<SPHParams>& sphp,
+                    Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
@@ -67,10 +63,9 @@ namespace sph
         k_leapfrog.setArg(iargs++, vel_s.getDevicePtr());
         k_leapfrog.setArg(iargs++, veleval_u.getDevicePtr());
         k_leapfrog.setArg(iargs++, force_s.getDevicePtr());
-        k_leapfrog.setArg(iargs++, xsph_s.getDevicePtr());
         k_leapfrog.setArg(iargs++, indices.getDevicePtr());
         //leapfrog.setArg(iargs++, color.getDevicePtr());
-        k_leapfrog.setArg(iargs++, sphp.getDevicePtr());
+        k_leapfrog.setArg(iargs++, prbp.getDevicePtr());
         k_leapfrog.setArg(iargs++, dt); //time step
 
         int local_size = 128;
@@ -79,7 +74,8 @@ namespace sph
             timer->set(gputime);
 
 
-} //namespace sph
+    }
+        
 
 #if 0
 #define DENS 0
@@ -120,53 +116,5 @@ namespace sph
         */
 
 
-    }
-
-    void SPH::cpuLeapFrog()
-    {
-        float h = ps->settings->dt;
-        for (int i = 0; i < num; i++)
-        {
-            float4 p = positions[i];
-            float4 v = velocities[i];
-            float4 f = forces[i];
-
-            //external force is gravity
-            f.z += -9.8f;
-
-            float speed = magnitude(f);
-            if (speed > 600.0f) //velocity limit, need to pass in as struct
-            {
-                f.x *= 600.0f/speed;
-                f.y *= 600.0f/speed;
-                f.z *= 600.0f/speed;
-            }
-
-            float4 vnext = v;
-            vnext.x += h*f.x;
-            vnext.y += h*f.y;
-            vnext.z += h*f.z;
-
-            float xsphfactor = .1f;
-            vnext.x += xsphfactor * xsphs[i].x;
-            vnext.y += xsphfactor * xsphs[i].y;
-            vnext.z += xsphfactor * xsphs[i].z;
-
-            float scale = sphp.simulation_scale;
-            p.x += h*vnext.x / scale;
-            p.y += h*vnext.y / scale;
-            p.z += h*vnext.z / scale;
-            p.w = 1.0f; //just in case
-
-            veleval[i].x = (v.x + vnext.x) *.5f;
-            veleval[i].y = (v.y + vnext.y) *.5f;
-            veleval[i].z = (v.z + vnext.z) *.5f;
-
-            velocities[i] = vnext;
-            positions[i] = p;
-
-        }
-        //printf("v.z %f p.z %f \n", velocities[0].z, positions[0].z);
-    }
 
 } //namespace rtps

@@ -21,100 +21,81 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 
+#include "PRBForce.h"
 
-#include "SPH.h"
-
-#include <string>
-using namespace std;
-
-namespace rtps
+namespace rtps 
 {
-#if 0 
-    //----------------------------------------------------------------------
 
     //----------------------------------------------------------------------
-    void SPH::loadNeighbors()
+    PRBForce::PRBForce(std::string path, CL* cli_, EB::Timer* timer_)
     {
-        printf("enter neighbor\n");
+        cli = cli_;
+        timer = timer_;
+     
+        printf("load force\n");
 
         try
         {
-            string path(SPH_CL_SOURCE_DIR);
-            path = path + "/neighbors.cl";
-            k_neighbors = Kernel(ps->cli, path, "neighbors");
-            printf("bigger problem\n");
+            path = path + "/force.cl";
+            k_force = Kernel(cli, path, "force_update");
         }
         catch (cl::Error er)
         {
-            printf("ERROR(neighborSearch): %s(%s)\n", er.what(), oclErrorString(er.err()));
-            exit(1);
+            printf("ERROR(Force): %s(%s)\n", er.what(), oclErrorString(er.err()));
         }
 
 
     }
     //----------------------------------------------------------------------
 
-    void SPH::neighborSearch(int choice)
-    {
+    void PRBForce::execute(int num,
+                    Buffer<float4>& pos_s,
+                    Buffer<float4>& veleval_s,
+                    Buffer<float4>& linear_force_s,
+                    //Buffer<float4>& torque_force_s,
+                    Buffer<unsigned int>& ci_start,
+                    Buffer<unsigned int>& ci_end,
+                    //params
+                    Buffer<ParticleRigidBodyParams>& prbp,
+                    Buffer<GridParams>& gp,
+                    //debug params
+                    Buffer<float4>& clf_debug,
+                    Buffer<int4>& cli_debug)
+    { 
         int iarg = 0;
-        k_neighbors.setArg(iarg++, cl_vars_sorted.getDevicePtr());
-        k_neighbors.setArg(iarg++, cl_cell_indices_start.getDevicePtr());
-        k_neighbors.setArg(iarg++, cl_cell_indices_end.getDevicePtr());
-        k_neighbors.setArg(iarg++, cl_GridParamsScaled.getDevicePtr());
-        //k_neighbors.setArg(iarg++, cl_FluidParams->getDevicePtr());
-        k_neighbors.setArg(iarg++, cl_sphp.getDevicePtr());
+        k_force.setArg(iarg++, pos_s.getDevicePtr());
+        k_force.setArg(iarg++, veleval_s.getDevicePtr());
+        k_force.setArg(iarg++, linear_force_s.getDevicePtr());
+        //k_force.setArg(iarg++, torque_force_s.getDevicePtr());
+        k_force.setArg(iarg++, ci_start.getDevicePtr());
+        k_force.setArg(iarg++, ci_end.getDevicePtr());
+        k_force.setArg(iarg++, gp.getDevicePtr());
+        k_force.setArg(iarg++, prbp.getDevicePtr());
 
         // ONLY IF DEBUGGING
-        k_neighbors.setArg(iarg++, clf_debug.getDevicePtr());
-        k_neighbors.setArg(iarg++, cli_debug.getDevicePtr());
-
-        // which == 0 : density update
-        // which == 1 : force update
-
-        /*
-        if (which == 0) ts_cl[TI_DENS]->start();
-        if (which == 1) ts_cl[TI_PRES]->start();
-        if (which == 2) ts_cl[TI_COL]->start();
-        if (which == 3) ts_cl[TI_COL_NORM]->start();
-        */
-
-        //Copy choice to SPHParams
-        settings->SetSetting("Choice", choice);
-        //sphp.choice = choice;
-        updateSPHP();
-        /*
-        std::vector<SPHParams> vsphp(0);
-        vsphp.push_back(sphp);
-        cl_SPHParams.copyToDevice(vsphp);
-        */
-
-#if 0
-        std::vector<int4> cli = cli_debug.copyToHost(2);
-        for (int i=0; i < 2; i++)
-        {
-            printf("cli_debug: %d\n", cli[i].w);
-        }
-#endif
+        k_force.setArg(iarg++, clf_debug.getDevicePtr());
+        k_force.setArg(iarg++, cli_debug.getDevicePtr());
 
         int local = 64;
         try
         {
-            k_neighbors.execute(num, local);
+            float gputime = k_force.execute(num, local);
+            if(gputime > 0)
+                timer->set(gputime);
+
         }
 
         catch (cl::Error er)
         {
-            printf("ERROR(neighbor %d): %s(%s)\n", choice, er.what(), oclErrorString(er.err()));
+            printf("ERROR(force ): %s(%s)\n", er.what(), oclErrorString(er.err()));
         }
-        ps->cli->queue.finish();
 
-#if 0 //printouts    
+#if 1 //printouts    
         //DEBUGING
         
         if(num > 0)// && choice == 0)
         {
             printf("============================================\n");
-            printf("which == %d *** \n", choice);
             printf("***** PRINT neighbors diagnostics ******\n");
             printf("num %d\n", num);
 
@@ -123,9 +104,6 @@ namespace rtps
             
             cli_debug.copyToHost(cli);
             clf_debug.copyToHost(clf);
-
-            std::vector<float4> poss(num);
-            std::vector<float4> dens(num);
 
             for (int i=0; i < num; i++)
             //for (int i=0; i < 10; i++) 
@@ -138,8 +116,8 @@ namespace rtps
             }
         }
 #endif
-
     }
-#endif
 
-} // namespace
+
+}
+

@@ -59,7 +59,7 @@ __kernel void euler(
 
     //external force is gravity
     //f.z += -9.8f;
-    lf.z+=prbp.gravity;
+    lf.z+=prbp->gravity;
 
     /*float speed = magnitude(f);
     if (speed > 600.0f) //velocity limit, need to pass in as struct
@@ -71,7 +71,7 @@ __kernel void euler(
     v += dt*lf;
     p += dt*v;
     p.w = 1.0f; //just in case
-    p.xyz /= sphp->simulation_scale;
+    p.xyz /= prbp->simulation_scale;
     //w += dt*tf;
     //q += dt*w;
     //q /= sphp->simulation_scale;

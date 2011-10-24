@@ -38,7 +38,7 @@
 #include <Buffer.h>
 
 #include <Domain.h>
-#include <SPHSettings.h>
+#include "ParticleRigidBodyParams.h"
 
 #include <util.h>
 
@@ -47,13 +47,14 @@
 #include <Radix.h>
 #include <CellIndices.h>
 #include <Permute.h> // contains CloudPermute
-#include <rigidbody/LeapFrog.h>
-#include <rigidbody/Lifetime.h>
-#include <rigidbody/Euler.h>
+#include <rigidbody/PRBLeapFrog.h>
+#include <rigidbody/PRBEuler.h>
+#include <rigidbody/PRBForce.h>
 #include <common/MeshToParticles.h>
-#include <Hose.h>
 #include <structs.h>
 
+//FIXME:needed for Integrator definition. This should be fixed and made more generic.
+#include <SPHSettings.h>
 #include <timer_eb.h>
 
 #ifdef WIN32
@@ -65,7 +66,6 @@
 #else
     #define RTPS_EXPORT
 #endif
-
 namespace rtps
 {
     class RTPS_EXPORT ParticleRigidBody : public System
@@ -88,7 +88,7 @@ namespace rtps
 
         virtual void render();
 
-        void loadTriangles(std::vector<Triangle> &triangles);
+        //void loadTriangles(std::vector<Triangle> &triangles);
 
         //void testDelete();
         //int cut; //for debugging DEBUG
@@ -197,8 +197,9 @@ namespace rtps
         Permute permute;
         //CollisionWall collision_wall;
         //CollisionTriangle collision_tri;
-        LeapFrog leapfrog;
-        Euler euler;
+        PRBLeapFrog leapfrog;
+        PRBEuler euler;
+        PRBForce force;
         MeshToParticles m2p; 
         //TODO: Need to implement Segmented scan for summing each rigid bodies particle
         //forces to find out the linear force and torque force on the center of mass.

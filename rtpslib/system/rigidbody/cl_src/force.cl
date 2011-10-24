@@ -28,16 +28,16 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* linear_force
+#define ARGS __global float4* pos, __global float4* veleval, __global float4* linear_force
 //, __global float4* torque_force
-#define ARGV pos, force, 
+#define ARGV pos, veleval, linear_force 
 
 /*----------------------------------------------------------------------*/
 
 #include "cl_macros.h"
 #include "cl_structs.h"
 //Contains all of the Smoothing Kernels for SPH
-#include "cl_kernels.h"
+//#include "cl_kernels.h"
 
 
 //----------------------------------------------------------------------
@@ -52,7 +52,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
                         DEBUG_ARGS
                        )
 {
-    int num = prbp->num;
+    //int num = prbp->num;
 
     // get the particle info (in the current grid) to test against
     float4 position_j = pos[index_j] * prbp->simulation_scale; 
@@ -62,7 +62,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     float rlen = length(r);
 
     // is this particle within cutoff?
-    if (rlen <= prbp->smoothing_distance)
+    if (rlen < prbp->smoothing_distance)
     {
 
         //iej is 0 when we are looking at same particle
@@ -82,6 +82,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         //force *= sphp->mass;// * idi * idj;
         //FIXME: I think mass should be a part of one of these formulas. -ASY
         pt->linear_force += (springForce+dampeningForce) * (float)iej;
+        //pt->linear_force += r;//debug
     }
 }
 
@@ -97,27 +98,27 @@ __kernel void force_update(
                        __global int*    cell_indexes_start,
                        __global int*    cell_indexes_end,
                        __constant struct GridParams* gp,
-                       __constant struct SPHParams* sphp 
+                       __constant struct ParticleRigidBodyParams* prbp 
                        DEBUG_ARGS
                        )
 {
     // particle index
-    int nb_vars = sphp->nb_vars;
-    int num = sphp->num;
+    int nb_vars = prbp->nb_vars;
+    int num = prbp->num;
     //int numParticles = get_global_size(0);
     //int num = get_global_size(0);
 
     int index = get_global_id(0);
     if (index >= num) return;
 
-    float4 position_i = pos[index] * sphp->simulation_scale;
+    float4 position_i = pos[index] * prbp->simulation_scale;
 
     // Do calculations on particles in neighboring cells
     PointData pt;
     zeroPoint(&pt);
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
+    IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ prbp DEBUG_ARGV);
     linear_force[index] = pt.linear_force; 
     clf[index].xyz = pt.linear_force.xyz;
 }

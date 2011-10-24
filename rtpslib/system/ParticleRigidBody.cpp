@@ -41,7 +41,7 @@ namespace rtps
 {
 
 	//----------------------------------------------------------------------
-    ParticleRigidBody::ParticleRigidBody(RTPS *psfr, int n, int max_nb_in_cloud)
+    ParticleRigidBody::ParticleRigidBody(RTPS *psfr, int n)
     {
         //store the particle system framework
         ps = psfr;
@@ -97,28 +97,28 @@ namespace rtps
         ps->cli->addIncludeDir(common_source_dir);
 
         //should be more cross platform
-        rigidbody_source_dir = resource_path + "/" + std::string(PARTICLERIGIDBODY_CL_SOURCE_DIR);
+        rigidbody_source_dir = resource_path + "/" + std::string(PARTICLE_RIGIDBODY_CL_SOURCE_DIR);
         common_source_dir = resource_path + "/" + std::string(COMMON_CL_SOURCE_DIR);
 
         hash = Hash(common_source_dir, ps->cli, timers["hash_gpu"]);
         bitonic = Bitonic<unsigned int>(common_source_dir, ps->cli );
-        radix = Radix<unsigned int>(common_source_dir, ps->cli, max_num, 128);
+        //radix = Radix<unsigned int>(common_source_dir, ps->cli, max_num, 128);
         cellindices = CellIndices(common_source_dir, ps->cli, timers["ci_gpu"] );
         permute = Permute( common_source_dir, ps->cli, timers["perm_gpu"] );
 
-        force = Force(rigidbody_source_dir, ps->cli, timers["force_gpu"]);
+        force = PRBForce(rigidbody_source_dir, ps->cli, timers["force_gpu"]);
 		
 
         //could generalize this to other integration methods later (leap frog, RK4)
         if (integrator == LEAPFROG)
         {
             //loadLeapFrog();
-            leapfrog = LeapFrog(rigidbody_source_dir, ps->cli, timers["leapfrog_gpu"]);
+            leapfrog = PRBLeapFrog(rigidbody_source_dir, ps->cli, timers["leapfrog_gpu"]);
         }
         else if (integrator == EULER)
         {
             //loadEuler();
-            euler = Euler(rigidbody_source_dir, ps->cli, timers["euler_gpu"]);
+            euler = PRBEuler(rigidbody_source_dir, ps->cli, timers["euler_gpu"]);
         }
 
         m2p = MeshToParticles(common_source_dir, ps->cli, timers["meshtoparticles_gpu"]);
@@ -172,6 +172,7 @@ namespace rtps
         //should just do try/except?
 
         cl_position_u.acquire();
+        cl_color_u.acquire();
 
         for (int i=0; i < sub_intervals; i++)
         {
@@ -214,7 +215,7 @@ namespace rtps
 			//if (num > 0) exit(0);
  
 			//---------------------
-            if (nc <= num && nc >= 0)
+            /*if (nc <= num && nc >= 0)
             {
                 //check if the number of particles has changed
                 //(this happens when particles go out of bounds,
@@ -247,7 +248,7 @@ namespace rtps
                                 //we've changed num and copied sorted to unsorted. skip this iteration and do next one
                 //this doesn't work because sorted force etc. are having an effect?
                 //continue; 
-            }
+            }*/
 
 
 			//-------------------------------------
@@ -257,7 +258,8 @@ namespace rtps
             force.execute(   num,
                 //cl_vars_sorted,
                 cl_position_s,
-                cl_veleval_s,
+                cl_velocity_s,
+                //cl_veleval_s,
                 cl_linear_force_s,
                 cl_cell_indices_start,
                 cl_cell_indices_end,
@@ -274,6 +276,7 @@ namespace rtps
         }
 
         cl_position_u.release();
+        cl_color_u.release();
 
         timers["update"]->stop();
     }
@@ -597,6 +600,10 @@ namespace rtps
 		//printf("GEE inside addBox, prbp.simulation_scale= %f\n", prbp.simulation_scale);
 		printf("GEE addBox spacing = %f\n", spacing);
         vector<float4> rect = addRect(nn, min, max, spacing, scale);
+        for(int i = 0; i<rect.size();i++)
+        {
+            printf("pos %d = (%f,%f,%f,%f)\n",rect[i].x,rect[i].y,rect[i].z,rect[i].w);
+        }
         float4 velo(0, 0, 0, 0);
         pushParticles(rect, velo, color);
         return rect.size();
@@ -920,7 +927,8 @@ namespace rtps
         //float boundary_distance =  smoothing_distance;
 
         settings->SetSetting("Boundary Distance", boundary_distance);
-        float spacing = rest_distance / simulation_scale;
+        //float spacing = rest_distance / simulation_scale;
+        float spacing = smoothing_distance / simulation_scale;
         settings->SetSetting("Spacing", spacing);
  
 
@@ -965,12 +973,6 @@ namespace rtps
         //CL parameters
         settings->SetSetting("Number of Particles", 0);
         settings->SetSetting("Number of Variables", 10); // for combined variables (vars_sorted, etc.) //TO be depracated
-        settings->SetSetting("Choice", 0); // which kind of calculation to invoke //TO be depracated
-
-
-		// CL Cloud parameters
-        settings->SetSetting("Number of Cloud Particles", 0);
-
     }
    
 
@@ -1027,8 +1029,6 @@ namespace rtps
         prbp.nb_vars = settings->GetSettingAs<int>("Number of Variables"); // for combined variables (vars_sorted, etc.)
         prbp.choice = settings->GetSettingAs<int>("Choice"); // which kind of calculation to invoke
         prbp.max_num = settings->GetSettingAs<int>("Maximum Number of Particles");
-        prbp.cloud_num = settings->GetSettingAs<int>("Number of Cloud Particles");
-        prbp.max_cloud_num = settings->GetSettingAs<int>("Maximum Number of Cloud Particles");
 
         //update the OpenCL buffer
         std::vector<ParticleRigidBodyParams> vparams(0);

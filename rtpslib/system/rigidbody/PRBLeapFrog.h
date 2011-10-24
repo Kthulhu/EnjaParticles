@@ -22,40 +22,50 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_PARTICLE_RIGIDBODY_FORCE_H_INCLUDED
-#define RTPS_PARTICLE_RIGIDBODY_FORCE_H_INCLUDED
+#ifndef RTPS_PARTICLE_RIGIDBODY_LEAPFROG_H_INCLUDED
+#define RTPS_PARTICLE_RIGIDBODY_LEAPFROG_H_INCLUDED
 
 
 #include <CLL.h>
+#include <Kernel.h>
 #include <Buffer.h>
+#include <timer_eb.h>
+#include "ParticleRigidBodyParams.h"
 
 
 namespace rtps
 {
-    class Force
+
+    class PRBLeapFrog
     {
         public:
-            Force() { cli = NULL; timer = NULL; };
-            Force(std::string path, CL* cli, EB::Timer* timer);
+            PRBLeapFrog() { cli = NULL; timer = NULL; };
+            PRBLeapFrog(std::string path, CL* cli, EB::Timer* timer);
             void execute(int num,
-                    Buffer<float4>& pos_s,
-                    Buffer<float4>& veleval_s,
-                    Buffer<float4>& linear_force_s,
-                    //Buffer<float4>& torque_force_s,
-                    Buffer<unsigned int>& ci_start,
-                    Buffer<unsigned int>& ci_end,
-                    //params
-                    Buffer<ParticleRigidBodyParams>& prbp,
-                    Buffer<GridParams>& gp,
-                    //debug params
-                    Buffer<float4>& clf_debug,
-                    Buffer<int4>& cli_debug);
+                        float dt,
+                        //input
+                        Buffer<float4>& pos_u,
+                        Buffer<float4>& pos_s,
+                        Buffer<float4>& vel_u,
+                        Buffer<float4>& vel_s,
+                        Buffer<float4>& veleval_u,
+                        Buffer<float4>& force_s,
+                        Buffer<float4>& xsph_s,
+                        //Buffer<float4>& uvars, 
+                        //Buffer<float4>& svars, 
+                        Buffer<unsigned int>& indices,
+                        //params
+                        Buffer<ParticleRigidBodyParams>& sphp,
+                        //debug
+                        Buffer<float4>& clf_debug,
+                        Buffer<int4>& cli_debug);
 
         private:
             CL* cli;
-            Kernel k_force;
+            Kernel k_leapfrog;
             EB::Timer* timer;
     };
+
 }
 
 #endif
