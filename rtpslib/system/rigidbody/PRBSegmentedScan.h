@@ -22,56 +22,44 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_PARTICLE_RIGIDBODY_EULER_H_INCLUDED
-#define RTPS_PARTICLE_RIGIDBODY_EULER_H_INCLUDED
+#ifndef RTPS_PARTICLE_RIGIDBODY_FORCE_H_INCLUDED
+#define RTPS_PARTICLE_RIGIDBODY_FORCE_H_INCLUDED
 
 
 #include <CLL.h>
 #include <Buffer.h>
 #include <Kernel.h>
+#include <structs.h>
+#include <Domain.h>
 #include <timer_eb.h>
 #include "ParticleRigidBodyParams.h"
 
 
 namespace rtps
 {
-    class PRBEuler
+    class PRBSegmentedScan
     {
         public:
-            PRBEuler() { cli = NULL; timer = NULL; };
-            PRBEuler(std::string path, CL* cli, EB::Timer* timer);
+            PRBSegmentedScan() { cli = NULL; timer = NULL; };
+            PRBSegmentedScan(std::string path, CL* cli, EB::Timer* timer);
             void execute(int num,
-                    float dt,
-                    /*Buffer<float4>& pos_u,
                     Buffer<float4>& pos_s,
-                    Buffer<float4>& vel_u,
-                    Buffer<float4>& vel_s,
+                    //Buffer<float4>& veleval_s,
+                    Buffer<int2>& particleIndex,
                     Buffer<float4>& linear_force_s,
-                    Buffer<float4>& torque_force_s,
-                    Buffer<float4>& color_u,
-                    Buffer<float4>& color_s,*/
                     Buffer<float4>& comLinearForce,
                     Buffer<float4>& comTorqueForce,
-                    Buffer<float4>& comVel,
-                    Buffer<float4>& comAngVel,
                     Buffer<float4>& comPos,
-                    Buffer<float4>& comRot,
                     int numRBs,
-
-                    //Buffer<float4>& uvars, 
-                    //Buffer<float4>& svars, 
-                    Buffer<unsigned int>& indices,
-                    //params
                     Buffer<ParticleRigidBodyParams>& prbp,
+                    Buffer<GridParams>& gp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);
-            
-           
 
         private:
             CL* cli;
-            Kernel k_euler;
+            Kernel k_segmented_scan;
             EB::Timer* timer;
     };
 }

@@ -136,7 +136,15 @@ namespace rtps
 
         std::vector<float4> linearForce;
         std::vector<float4> torqueForce;
-        std::vector<float4> centerOfMass;
+        
+        //Maps a string name to an index in the following arrays
+        //That allows for convenient lookup of rigid bodies. 
+        std::map<std::string,int> rbIndex;
+        std::vector<int2> rbParticleIndex;//first int is starting index. Second int is end index.
+        std::vector<float4> comPos;
+        std::vector<float4> comVel;
+        std::vector<float4> linearMomentum;
+        std::vector<float4> rotationalMomentum;
 
         Buffer<float4>      cl_position_u;
         Buffer<float4>      cl_position_s;
@@ -149,10 +157,13 @@ namespace rtps
 
         Buffer<float4>      cl_linear_force_s;
         Buffer<float4>      cl_linear_force_u;
-        Buffer<float4>      cl_torque_force_s;
-        Buffer<float4>      cl_torque_force_u;
-        Buffer<float4>      cl_center_of_mass_s;
-        Buffer<float4>      cl_center_of_mass_u;
+
+        Buffer<int2> cl_rbParticleIndex;
+        Buffer<float4> cl_comPos;
+        Buffer<float4> cl_comVel;
+        Buffer<float4> cl_comAngVel;
+        Buffer<float4> cl_comLinearForce;
+        Buffer<float4> cl_comTorqueFroce;
 
         //Neighbor Search related arrays
         Buffer<unsigned int>    cl_cell_indices_start;
@@ -167,6 +178,7 @@ namespace rtps
 
         Bitonic<unsigned int> bitonic;
         Radix<unsigned int> radix;
+
 
         //Parameter structs
         Buffer<ParticleRigidBodyParams>   cl_prbp;
@@ -203,7 +215,7 @@ namespace rtps
         MeshToParticles m2p; 
         //TODO: Need to implement Segmented scan for summing each rigid bodies particle
         //forces to find out the linear force and torque force on the center of mass.
-        //SegmentedScan sscan;
+        PRBSegmentedScan sscan;
 
         //float Wpoly6(float4 r, float h);
         //float Wspiky(float4 r, float h);

@@ -22,57 +22,30 @@
 ****************************************************************************************/
 
 
+#ifndef _SEGMENTED_SCAN_CL_
+#define _SEGMENTED_SCAN_CL_
+
 #include "cl_macros.h"
 #include "cl_structs.h"
 
-float magnitude(float4 vec)
+__kernel void sum(
+                    __global float4* pos_s,
+                    __global int2* particleIndex,
+                    __global float4* linear_force_s,
+                    __global float4* comLinearForce,
+                    __global float4* comTorqueForce,
+                    __global float4* comPos,
+                       DEBUG_ARGS
+                       )
 {
-    return sqrt(vec.x*vec.x + vec.y*vec.y + vec.z*vec.z);
-}       
-
-__kernel void euler(
-                   //__global float4* vars_unsorted, 
-                   //__global float4* vars_sorted, 
-                   //__global float4* positions,  // for VBO 
-                   __global float4* comLinearForce,
-                   __global float4* comTorqueForce,
-                   __global float4* comVel,
-                   __global float4* comAngVel,
-                   __global float4* comPos,
-                   __global float4* comRot, 
-                   __constant struct ParticleRigidBodyParams* prbp, 
-                   float dt
-                    DEBUG_ARGS)
-{
-    unsigned int i = get_global_id(0);
-
-    float4 p = comPos[i] ;
-    float4 v = comVel[i];
-    float4 lf = comLinearForce[i];
-    float4 q = comRot[i];
-    float4 w = comAngVel[i];
-    float4 tf = comTorqueForce[i];
-
-    //external force is gravity
-    //f.z += -9.8f;
-    lf.y+=prbp->gravity;
-
-    /*float speed = magnitude(f);
-    if (speed > 600.0f) //velocity limit, need to pass in as struct
+    int index = get_global_id(0);
+    int i = particleIndex[index].x;
+    int end = particleIndex[index].y;
+    for(;i<end;i++)
     {
-        f *= 600.0f/speed;
+        comLinearForce[index]+=linear_force_s[i];
+        comTorqueForce[index]+=cross((pos_s[i]-comPos[index]),linear_force_s);
     }
-     */
-
-    v += dt*lf;
-    p += dt*v;
-    p.w = 1.0f; //just in case
-    w += dt*tf;
-    q += dt*w;
-    comVel[i] = v;
-    comPos[i] = p;
-    comAngVel[i] = w;
-    comRot[i] = q;
-    
-    //clf[originalIndex] = v;
 }
+#endif
+

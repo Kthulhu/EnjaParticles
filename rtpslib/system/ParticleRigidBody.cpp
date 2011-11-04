@@ -429,9 +429,12 @@ namespace rtps
         colors.resize(max_num);
         linearForce.resize(max_num);
         torqueForce.resize(max_num);
-        centerOfMass.resize(max_num);
         velocities.resize(max_num);
         veleval.resize(max_num);
+        //FIXME: We are assuming that the maximum number of rigid bodies are max_num/4
+        //That means that we assume that each rigidbody is represented by no less than 4 particles
+        rbParticleIndex.resize(max_num/4);
+        comPos.resize(max_num/4);
         //densities.resize(max_num);
 
         //for reading back different values from the kernel
@@ -442,10 +445,12 @@ namespace rtps
 
         //float4 color = float4(0.0, 1.0, 0.0, 1.0f);
         //std::fill(colors.begin(), colors.end(),color);
-        std::fill(linearForce.begin(), linearForce.end(), float4(0.0f, 0.0f, 1.0f, 0.0f));
-        std::fill(torqueForce.begin(), torqueForce.end(), float4(0.0f, 0.0f, 1.0f, 0.0f));
+        std::fill(linearForce.begin(), linearForce.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+        std::fill(torqueForce.begin(), torqueForce.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(velocities.begin(), velocities.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(veleval.begin(), veleval.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+        std::fill(comPos.begin(), comPos.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+        std::fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
 
         //std::fill(densities.begin(), densities.end(), 0.0f);
         //std::fill(xsphs.begin(), xsphs.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
@@ -474,6 +479,12 @@ namespace rtps
         //cl_density_s = Buffer<float>(ps->cli, densities);
         cl_linear_force_s = Buffer<float4>(ps->cli, linearForce);
         cl_torque_force_s = Buffer<float4>(ps->cli, torqueForce);
+        cl_rbParticleIndex = Buffer<int2>(ps->cli,rbParticleIndex);
+        cl_comPos = Buffer<float4>(ps->cli,comPos);
+        cl_comVel = Buffer<float4>(ps->cli,comPos);
+        cl_linearMomentum = Buffer<float4>(ps->cli,comPos);
+        cl_rotationalMomentum = Buffer<float4>(ps->cli,comPos);
+
         //cl_xsph_s = Buffer<float4>(ps->cli, xsphs);
         //cl_properties_u = Buffer<int>(ps->cli,properties);
         //cl_properties_s = Buffer<int>(ps->cli,properties);
@@ -656,6 +667,13 @@ namespace rtps
         //std::fill(vels.begin(), vels.end(),iv);
 
 
+        //calculate center of mass.
+        float4 com(0.0f,0.0f,0.0f,0.0f);
+        for(int i = 0;i<pos.size();i++)
+        {
+            com+=pos[i];
+        }
+        com/=pos.size();
 #ifdef GPU
         glFinish();
         cl_position_u.acquire();
@@ -670,6 +688,9 @@ namespace rtps
         cl_position_u.copyToDevice(pos, num);
         cl_color_u.copyToDevice(cols, num);
         cl_velocity_u.copyToDevice(vels, num);
+        vector<float4> comVec;
+        comVec.push_back(com);
+        cl_comPos.copyToDevice(comVec,1);
 
         //prbp.num = num+nn;
         settings->SetSetting("Number of Particles", num+nn);

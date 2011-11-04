@@ -25,7 +25,7 @@ vec3 uvToEye(vec2 texCoord,float z)
 void main()
 {
 	//make this a uniform variable;
-	float maxDepth = 0.999;
+	float maxDepth = 0.999999;
 	//float maxDepth = 0.95;
 	float depth = texture2D(depthTex,gl_TexCoord[0].xy).x;
 	if(depth>maxDepth)

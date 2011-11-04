@@ -21,63 +21,83 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 
-#include "PRBEuler.h"
+#include "PRBSegmentedScan.h"
 
-namespace rtps
+namespace rtps 
 {
-    PRBEuler::PRBEuler(std::string path, CL* cli_, EB::Timer* timer_)
+
+    //----------------------------------------------------------------------
+    PRBSegmentedScan::PRBSegmentedScan(std::string path, CL* cli_, EB::Timer* timer_)
     {
         cli = cli_;
         timer = timer_;
- 
-        printf("create euler kernel\n");
-        path += "/euler.cl";
-        k_euler = Kernel(cli, path, "euler");
-    } 
-    
-    void PRBEuler::execute(int num,
-                    float dt,
-                    /*Buffer<float4>& pos_u,
+     
+        printf("load segmented scan\n");
+
+        try
+        {
+            path = path + "/segmented_scan.cl";
+            k_segmented_scan = Kernel(cli, path, "segmented_scan");
+        }
+        catch (cl::Error er)
+        {
+            printf("ERROR(PRBSegmentedScan): %s(%s)\n", er.what(), oclErrorString(er.err()));
+        }
+
+
+    }
+    //----------------------------------------------------------------------
+
+    void PRBSegmentedScan::execute(int num,
                     Buffer<float4>& pos_s,
-                    Buffer<float4>& vel_u,
-                    Buffer<float4>& vel_s,
+                    //Buffer<float4>& veleval_s,
+                    Buffer<int2>& particleIndex,
                     Buffer<float4>& linear_force_s,
-                    Buffer<float4>& torque_force_s,*/
                     Buffer<float4>& comLinearForce,
                     Buffer<float4>& comTorqueForce,
-                    Buffer<float4>& comVel,
-                    Buffer<float4>& comAngVel,
                     Buffer<float4>& comPos,
-                    Buffer<float4>& comRot,
                     int numRBs,
+                    //Buffer<float4>& torque_force_s,
+                    //Buffer<unsigned int>& ci_start,
+                    //Buffer<unsigned int>& ci_end,
                     //params
                     Buffer<ParticleRigidBodyParams>& prbp,
+                    Buffer<GridParams>& gp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
-    {
+    { 
+        int iarg = 0;
+        k_segmented_scan.setArg(iarg++, pos_s.getDevicePtr());
+        //k_segmented_scan.setArg(iarg++, veleval_s.getDevicePtr());
+        k_segmented_scan.setArg(iarg++, linear_force_s.getDevicePtr());
+        k_segmented_scan.setArg(iarg++, comLinearForce.getDevicePtr());
+        k_segmented_scan.setArg(iarg++, comTorqueForce.getDevicePtr());
+        k_segmented_scan.setArg(iarg++, comPos.getDevicePtr());
+        k_segmented_scan.setArg(iarg++,numRBs)
+        //k_segmented_scan.setArg(iarg++, torque_force_s.getDevicePtr());
+        //k_segmented_scan.setArg(iarg++, ci_start.getDevicePtr());
+        //k_segmented_scan.setArg(iarg++, ci_end.getDevicePtr());
+        k_segmented_scan.setArg(iarg++, gp.getDevicePtr());
+        k_segmented_scan.setArg(iarg++, prbp.getDevicePtr());
 
-        int iargs = 0;
-        //k_euler.setArg(iargs++, uvars.getDevicePtr());
-        //k_euler.setArg(iargs++, svars.getDevicePtr());
-        /*k_euler.setArg(iargs++, pos_u.getDevicePtr());
-        k_euler.setArg(iargs++, pos_s.getDevicePtr());
-        k_euler.setArg(iargs++, vel_u.getDevicePtr());
-        k_euler.setArg(iargs++, vel_s.getDevicePtr());
-        k_euler.setArg(iargs++, linear_force_s.getDevicePtr());
-        k_euler.setArg(iargs++, torque_force_s.getDevicePtr());*/
-        k_euler.setArg(iargs++,comLinearForce.getDevicePtr());
-        k_euler.setArg(iargs++,comTorqueForce.getDevicePtr());
-        k_euler.setArg(iargs++,comVel.getDevicePtr());
-        k_euler.setArg(iargs++,comAngVel.getDevicePtr());
-        k_euler.setArg(iargs++,comPos.getDevicePtr());
-        k_euler.setArg(iargs++, prbp.getDevicePtr());
-        k_euler.setArg(iargs++, dt); //time step
-        k_euler.setArg(iargs++, clf_debug.getDevicePtr());
-        k_euler.setArg(iargs++, cli_debug.getDevicePtr());
+        // ONLY IF DEBUGGING
+        k_segmented_scan.setArg(iarg++, clf_debug.getDevicePtr());
+        k_segmented_scan.setArg(iarg++, cli_debug.getDevicePtr());
 
-        int local_size = 128;
-        k_euler.execute(numRBs, local_size);
+        int local = 64;
+        try
+        {
+            float gputime = k_segmented_scan.execute(numRBs, local);
+            if(gputime > 0)
+                timer->set(gputime);
+
+        }
+
+        catch (cl::Error er)
+        {
+            printf("ERROR(PRBSegmentedScan): %s(%s)\n", er.what(), oclErrorString(er.err()));
+        }
 
 #if 0 //printouts    
         //DEBUGING
@@ -85,7 +105,7 @@ namespace rtps
         if(num > 0)// && choice == 0)
         {
             printf("============================================\n");
-            printf("***** PRINT euler output ******\n");
+            printf("***** PRINT neighbors diagnostics ******\n");
             printf("num %d\n", num);
 
             std::vector<int4> cli(num);
@@ -105,6 +125,8 @@ namespace rtps
             }
         }
 #endif
-
     }
+
+
 }
+

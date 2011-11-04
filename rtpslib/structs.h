@@ -56,6 +56,25 @@ namespace rtps
         }
     } float3;
 
+    typedef struct int2
+    {
+        int x, y;
+        int2()
+        {
+            x=0;
+            y=0;
+        }
+		int2(int x, int y)
+        {
+            this->x = x;
+            this->y = y;
+        }
+        int2(float x, float y)
+        {
+            this->x = (int)x;
+            this->y = (int)y;
+        }
+    };
     // GE: Sept. 8, 2010
     typedef struct int3
     {

@@ -9,12 +9,22 @@ uniform sampler2D depthTex;
 uniform float del_x;
 uniform float del_y;
 
+float linearizeDepth(float depth, float f, float n)
+{
+    return (2*n)/(f+n-depth*(f-n));
+}
+float nonlinearDepth(float depth, float f, float n)
+{
+    return ((-2*n)/depth+f+n)/(f-n);
+}
 //vec2 offset[KERNEL_SIZE];
 
 void main(void)
 {
 	float depth=texture2D(depthTex, gl_TexCoord[0].st).x;
-	float maxDepth=0.9999999;
+//	float depth=linearizeDepth(texture2D(depthTex, gl_TexCoord[0].st).x,1000.0,0.3);
+    float maxDepth=0.999999;
+    //float maxDepth=1.0;
 	//float threshold=0.01;
 	if(depth>maxDepth)
 	{
@@ -27,6 +37,7 @@ void main(void)
 	   for(int j=0; j<KERNEL_DIAMETER; j++ )
 	   {
 			float tmp = texture2D(depthTex,gl_TexCoord[0].st+vec2(float(i-(KERNEL_DIAMETER/2))*del_x,float(j-(KERNEL_DIAMETER/2))*del_y)).x;//texture2D(depthTex, gl_TexCoord[0].st + offset[(i*KERNEL_DIAMETER)+j]).x;
+			//float tmp = linearizeDepth(texture2D(depthTex,gl_TexCoord[0].st+vec2(float(i-(KERNEL_DIAMETER/2))*del_x,float(j-(KERNEL_DIAMETER/2))*del_y)).x,1000.0,0.3);
 			//if(tmp-depth>threshold)
 			//	tmp=depth;//+(sign(tmp-depth))*threshold;//continue;
 			sum += tmp * (1./(2.*pi*sigmasq))*exp(-(pow(float(i-(KERNEL_DIAMETER/2)),2.)+pow(float(j-(KERNEL_DIAMETER/2)),2.))/(2.*sigmasq));
@@ -35,6 +46,7 @@ void main(void)
    //if(sum<0.05)
 	//	sum=1.0;
    gl_FragData[0] = vec4(sum,sum,sum,1.0);
+   //sum = nonlinearDepth(sum,1000.0, 0.3);
    gl_FragDepth = sum;
 }
 /*uniform sampler2D depthTex; // the texture with the scene you want to blur
