@@ -42,12 +42,6 @@
 
 #include <util.h>
 
-#ifdef CLOUD_COLLISION
-#include "Cloud.h"
-#endif
-
-class OUTER;
-
 //#include <Prep.h>
 #include <Hash.h>
 #include <BitonicSort.h>
@@ -55,26 +49,19 @@ class OUTER;
 //#include <DataStructures.h>
 #include <CellIndices.h>
 #include <Permute.h> // contains CloudPermute
-//#include <CloudPermute.h> // contains CloudPermute
 #include <sph/Density.h>
 #include <sph/Force.h>
 #include <sph/Collision_wall.h>
 #include <sph/Collision_triangle.h>
-#ifdef CLOUD_COLLISION
-    #include <sph/Collision_cloud.h>
-#endif
 #include <sph/LeapFrog.h>
 #include <sph/Lifetime.h>
 #include <sph/Euler.h>
-//#include <sph/CloudEuler.h>
 #include <common/MeshToParticles.h>
 //#include "../util.h"
 #include <Hose.h>
 
 //#include <timege.h>
 #include <timer_eb.h>
-#define FLUID_PARTICLE 1
-#define RIGID_PARTICLE 1>>1
 
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
@@ -95,17 +82,6 @@ namespace rtps
     public:
         SPH(RTPS *ps, int num, int nb_in_cloud=0);
         ~SPH();
-
-#ifdef CLOUD_COLLISION
-		void cloudCleanup();
-		void cloudInitialize();
-		void cloudUpdate();
-#endif
-
-		// GE
-		void setOUTER(OUTER* outer) {
-			this->outer = outer;
-		}
 
         void update();
         //wrapper around IV.h addRect
@@ -171,7 +147,6 @@ namespace rtps
         //Kernel k_scopy;
 
         std::vector<float4> positions;
-        std::vector<int> properties;
         std::vector<float4> colors;
         std::vector<float4> velocities;
         std::vector<float4> veleval;
@@ -180,13 +155,6 @@ namespace rtps
         std::vector<float4> forces;
         std::vector<float4> xsphs;
 
-        //The following 4 data structures contain the properties necessary to keep track of
-        //rigid bodies. -ASY
-        std::vector<float4> rbCoMPosition;///The center of mass of a rigid body
-        std::vector<float4> rbQuaternion;///The quaternion which describes the rigid bodies orientation.
-        std::vector<int> rbIndex;///Index into the positions array where the rigid body particles start
-        std::vector<int> rbNumParticles;///Number of particles which describe the current rigid body.
-        
 
         Buffer<float4>      cl_position_u;
         Buffer<float4>      cl_position_s;
@@ -196,8 +164,6 @@ namespace rtps
         Buffer<float4>      cl_velocity_s;
         Buffer<float4>      cl_veleval_u;
         Buffer<float4>      cl_veleval_s;
-        Buffer<int>      cl_properties_u;
-        Buffer<int>      cl_properties_s;
 
         Buffer<float>       cl_density_s;
         Buffer<float4>      cl_force_s;
@@ -247,7 +213,6 @@ namespace rtps
         void cpuViscosity();
         void cpuXSPH();
         void cpuCollision_wall();
-        void cpuCollision_cloud();
         void cpuEuler();
         void cpuLeapFrog();
 
@@ -267,22 +232,17 @@ namespace rtps
         //DataStructures datastructures;
         CellIndices cellindices;
         Permute permute;
-        //CloudPermute cloud_permute; // for generality, keep separate (GE)
         void hash_and_sort();
-        void cloud_hash_and_sort();  // GE
         void bitonic_sort();
         void radix_sort();
-        void cloud_bitonic_sort();   // GE
         Density density;
         Force force;
         void collision();
         CollisionWall collision_wall;
         CollisionTriangle collision_tri;
-        //CollisionCloud collision_cloud;
         void integrate();
         LeapFrog leapfrog;
         Euler euler;
-        //CloudEuler cloud_euler;
         MeshToParticles m2p; 
 
 
@@ -299,16 +259,7 @@ namespace rtps
 
         //void sset_int(int n, int val, cl_mem xdst);
 
-		OUTER* outer;
-
 		Utils u;
-
-#ifdef CLOUD_COLLISION
-		CLOUD* cloud;
-		int nb_in_cloud; // nb of points in cloud
-
-		void printDevArray(Buffer<float4>& cl_cloud_position, char* msg, int nb_el, int nb_print);
-#endif
 
     };
 

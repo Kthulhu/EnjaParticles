@@ -132,13 +132,13 @@ rtps::RTPS* ps;
 //#define NUM_PARTICLES 262144
 //#define NUM_PARTICLES 131072
 //#define NUM_PARTICLES 65536
-//#define NUM_PARTICLES 32768
+#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
 //#define NUM_PARTICLES 8192
 //#define NUM_PARTICLES 4096
 //#define NUM_PARTICLES 2048
-#define NUM_PARTICLES 1024
+//#define NUM_PARTICLES 1024
 //#define NUM_PARTICLES 256
 //
 //
@@ -203,7 +203,7 @@ int main(int argc, char** argv)
     //default constructor
     //rtps::RTPSettings settings;
     //rtps::Domain grid = Domain(float4(-5,-.3,0,0), float4(2, 2, 12, 0));
-    rtps::Domain* grid = new Domain(float4(0,0,0,0), float4(5, 5, 5, 0));
+    rtps::Domain* grid = new Domain(float4(0,0,0,0), float4(10, 10, 10, 0));
     //grid->setBndMin( float4(1, 1, 1,0));
     //grid->setBndMax( float4(4, 4, 4, 0));
 
@@ -403,8 +403,8 @@ void appKeyboard(unsigned char key, int x, int y)
                 //max = float4(2., 2., 4., 1.0f);
 
 				// release particles symmetrically wrt center 
-                min = float4(1.0, 1.0, 1.0, 1.0f);
-                max = float4(4.0, 4.0, 4.0, 1.0f);
+                min = float4(6.0, 6.0, 6.0, 1.0f);
+                max = float4(9.0, 9.0, 9.0, 1.0f);
                 //min = float4(2.0, 2.0, 3.2, 1.0f);
                 //max = float4(3.0, 3.0, 4.0, 1.0f);
                 

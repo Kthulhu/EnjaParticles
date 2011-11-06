@@ -95,6 +95,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 __kernel void force_update(
                        //__global float4* vars_sorted,
                        ARGS,
+                       __global int* sort_indices,
                        __global int*    cell_indexes_start,
                        __global int*    cell_indexes_end,
                        __constant struct GridParams* gp,
@@ -119,8 +120,9 @@ __kernel void force_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ prbp DEBUG_ARGV);
-    linear_force[index] = pt.linear_force; 
-    clf[index].xyz = pt.linear_force.xyz;
+    
+    linear_force[sort_indices[index]] = pt.linear_force; 
+    clf[sort_indices[index]].xyz = pt.linear_force.xyz;
 }
 
 /*-------------------------------------------------------------- */

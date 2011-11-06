@@ -29,12 +29,12 @@
 #include "cl_structs.h"
 
 __kernel void sum(
-                    __global float4* pos_s,
+                    __global float4* pos_u,
                     __global int2* particleIndex,
                     __global float4* linear_force_s,
                     __global float4* comLinearForce,
                     __global float4* comTorqueForce,
-                    __global float4* comPos,
+                    __global float4* comPos
                        DEBUG_ARGS
                        )
 {
@@ -44,7 +44,7 @@ __kernel void sum(
     for(;i<end;i++)
     {
         comLinearForce[index]+=linear_force_s[i];
-        comTorqueForce[index]+=cross((pos_s[i]-comPos[index]),linear_force_s);
+        comTorqueForce[index].xyz+=cross((pos_u[i]-comPos[index]).xyz,linear_force_s[i].xyz);
     }
 }
 #endif

@@ -103,13 +103,6 @@ namespace rtps
         ps->cli->addIncludeDir(sph_source_dir);
         ps->cli->addIncludeDir(common_source_dir);
 
-#ifdef CLOUD_COLLISION
-		// CLOUD INITIALIZATION
-		cloudInitialize();
-#endif
-
-
-
         //should be more cross platform
         sph_source_dir = resource_path + "/" + std::string(SPH_CL_SOURCE_DIR);
         common_source_dir = resource_path + "/" + std::string(COMMON_CL_SOURCE_DIR);
@@ -355,15 +348,8 @@ namespace rtps
 
             collision();
 
-#ifdef CLOUD_COLLISION
-			cloudUpdate();
-#endif
             integrate(); // includes boundary force
         }
-
-#ifdef CLOUD_COLLISION
-		cloudCleanup();
-#endif
 
         cl_position_u.release();
         cl_color_u.release();
@@ -519,7 +505,6 @@ namespace rtps
         timers["cellindices"] = new EB::Timer("CellIndices function", time_offset);
         timers["ci_gpu"] = new EB::Timer("CellIndices GPU kernel execution", time_offset);
         timers["permute"] = new EB::Timer("Permute function", time_offset);
-        timers["cloud_permute"] = new EB::Timer("CloudPermute function", time_offset);
         timers["perm_gpu"] = new EB::Timer("Permute GPU kernel execution", time_offset);
         timers["ds_gpu"] = new EB::Timer("DataStructures GPU kernel execution", time_offset);
         timers["bitonic"] = new EB::Timer("Bitonic Sort function", time_offset);
@@ -531,7 +516,6 @@ namespace rtps
         timers["cw_gpu"] = new EB::Timer("Collision Wall GPU kernel execution", time_offset);
         timers["collision_tri"] = new EB::Timer("Collision triangles function", time_offset);
         timers["ct_gpu"] = new EB::Timer("Collision Triangle GPU kernel execution", time_offset);
-        timers["collision_cloud"] = new EB::Timer("Collision cloud function", time_offset);
         timers["integrate"] = new EB::Timer("Integration function", time_offset);
         timers["leapfrog_gpu"] = new EB::Timer("LeapFrog Integration GPU kernel execution", time_offset);
         timers["euler_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset);
@@ -556,10 +540,8 @@ namespace rtps
 	//----------------------------------------------------------------------
     void SPH::prepareSorted()
     {
-//#include "sph/cl_src/cl_macros.h"
 
         positions.resize(max_num);
-        properties.resize(max_num);
         colors.resize(max_num);
         forces.resize(max_num);
         velocities.resize(max_num);
@@ -606,10 +588,6 @@ namespace rtps
         cl_density_s = Buffer<float>(ps->cli, densities);
         cl_force_s = Buffer<float4>(ps->cli, forces);
         cl_xsph_s = Buffer<float4>(ps->cli, xsphs);
-        cl_properties_u = Buffer<int>(ps->cli,properties);
-        cl_properties_s = Buffer<int>(ps->cli,properties);
-
-        //cl_error_check= Buffer<float4>(ps->cli, error_check);
 
         
         //TODO make a helper constructor for buffer to make a cl_mem from a struct
@@ -829,7 +807,6 @@ namespace rtps
         //printf("color: %f %f %f %f\n", color.x, color.y, color.z, color.w);
 
         std::fill(cols.begin(), cols.end(),color);
-        std::fill(properties.begin(),properties.end(),FLUID_PARTICLE);
         //float v = .5f;
         //float v = 0.0f;
         //float4 iv = float4(v, v, -v, 0.0f);
@@ -1002,42 +979,6 @@ namespace rtps
 #endif
     }
     
-#ifdef CLOUD_COLLISION
-	//----------------------------------------------------------------------
-	void SPH::cloudInitialize()
-	{
-		int max_nb_in_cloud = 8192;  // 1 << 13
-		//printf("sphp scale= %f\n", sphp.simulation_scale); exit(1);
-		cloud = new CLOUD(ps, sphp, &cl_GridParams, &cl_GridParamsScaled, 
-		   &grid_params, &grid_params_scaled, max_nb_in_cloud);
-
-		// I can define cl_sphp later since I am using pointers
-		cloud->setSPHP(&cl_sphp);
-		//printf("grid_params nb_cells= %d\n", grid_params.nb_cells); exit(1);
-		//cloud->setGridParams(&cl_GridParams, &grid_params);
-		cloud->setRenderer(renderer); // cloud arrays in cloud/ must be created
-	}
-	//----------------------------------------------------------------------
-	void SPH::cloudUpdate()
-	{
-            cloud->cloud_hash_and_sort();
-            cloud->cellindicesExecute();
-            cloud->permuteExecute();
-			if (num > 0) {
-				cloud->collision(cl_position_s, cl_velocity_s, cl_force_s, cl_sphp, num);
-;
-			}
-    		cloud->cloudVelocityExecute(); // before collision?
-			cloud->integrate();
-	}
-	//----------------------------------------------------------------------
-	void SPH::cloudCleanup()
-	{
-		// Cleanup afer iteration
-		;
-	}
-	//----------------------------------------------------------------------
-#endif
     void SPH::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution)
     {
         glFinish();

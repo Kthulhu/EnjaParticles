@@ -49,9 +49,8 @@ namespace rtps
                     Buffer<float4>& comAngVel,
                     Buffer<float4>& comPos,
                     Buffer<float4>& comRot,
+            float4 gravity,
                     int numRBs,
-                    //params
-                    Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
@@ -71,30 +70,31 @@ namespace rtps
         k_euler.setArg(iargs++,comVel.getDevicePtr());
         k_euler.setArg(iargs++,comAngVel.getDevicePtr());
         k_euler.setArg(iargs++,comPos.getDevicePtr());
-        k_euler.setArg(iargs++, prbp.getDevicePtr());
+        k_euler.setArg(iargs++,comRot.getDevicePtr());
+        k_euler.setArg(iargs++, gravity);
         k_euler.setArg(iargs++, dt); //time step
         k_euler.setArg(iargs++, clf_debug.getDevicePtr());
         k_euler.setArg(iargs++, cli_debug.getDevicePtr());
 
-        int local_size = 128;
-        k_euler.execute(numRBs, local_size);
+        //int local_size = 128;
+        k_euler.execute(numRBs);//, local_size);
 
-#if 0 //printouts    
+#if 1 //printouts    
         //DEBUGING
         
-        if(num > 0)// && choice == 0)
+        if(numRBs > 0)// && choice == 0)
         {
             printf("============================================\n");
             printf("***** PRINT euler output ******\n");
-            printf("num %d\n", num);
+            printf("num %d\n", numRBs);
 
-            std::vector<int4> cli(num);
-            std::vector<float4> clf(num);
+            std::vector<int4> cli(numRBs);
+            std::vector<float4> clf(numRBs);
             
             cli_debug.copyToHost(cli);
             clf_debug.copyToHost(clf);
 
-            for (int i=0; i < num; i++)
+            for (int i=0; i < numRBs; i++)
             //for (int i=0; i < 10; i++) 
             {
                 //printf("-----\n");

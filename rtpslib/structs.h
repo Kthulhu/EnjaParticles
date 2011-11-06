@@ -74,7 +74,7 @@ namespace rtps
             this->x = (int)x;
             this->y = (int)y;
         }
-    };
+    } int2;
     // GE: Sept. 8, 2010
     typedef struct int3
     {

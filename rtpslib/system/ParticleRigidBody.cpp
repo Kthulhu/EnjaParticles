@@ -28,6 +28,7 @@
 #include <sstream>
 #include <iomanip>
 #include <string>
+#include <limits.h>
 
 #include "System.h"
 #include "ParticleRigidBody.h"
@@ -107,6 +108,8 @@ namespace rtps
         permute = Permute( common_source_dir, ps->cli, timers["perm_gpu"] );
 
         force = PRBForce(rigidbody_source_dir, ps->cli, timers["force_gpu"]);
+        sscan = PRBSegmentedScan(rigidbody_source_dir, ps->cli, timers["segmented_scan_gpu"]);
+        updateParticles = PRBUpdateParticles(rigidbody_source_dir, ps->cli, timers["update_particles_gpu"]);
 		
 
         //could generalize this to other integration methods later (leap frog, RK4)
@@ -260,7 +263,8 @@ namespace rtps
                 cl_position_s,
                 cl_velocity_s,
                 //cl_veleval_s,
-                cl_linear_force_s,
+                cl_linear_force_u,
+                cl_sort_indices,
                 cl_cell_indices_start,
                 cl_cell_indices_end,
                 cl_prbp,
@@ -270,9 +274,40 @@ namespace rtps
                 cli_debug);
 
             timers["force"]->stop();
+            timers["segmented_scan"]->start();
+            sscan.execute(num,
+                    cl_position_u,
+                    cl_rbParticleIndex,
+                    cl_linear_force_u,
+                    cl_comLinearForce,
+                    cl_comTorqueForce,
+                    cl_comPos,
+                    rbParticleIndex.size(),
+                    //Buffer<float4>& torque_force_s,
+                    //Buffer<unsigned int>& ci_start,
+                    //Buffer<unsigned int>& ci_end,
+                    //debug params
+                    clf_debug,
+                    cli_debug);
+            timers["segmented_scan"]->stop();
 
             integrate(); // includes boundary force
-            //TODO: Segmented scan across all rigid body objects.
+            timers["update_particles"]->start();
+            updateParticles.execute(rbParticleIndex.size(),
+                    cl_position_u,
+                    cl_position_l,
+                    cl_velocity_u,
+                    cl_rbParticleIndex,
+                    cl_comPos,
+                    cl_comRot,
+                    cl_comVel,
+                    cl_comAngVel,
+                    //debug params
+                    clf_debug,
+                    cli_debug);
+            timers["update_particles"]->start();
+
+            
         }
 
         cl_position_u.release();
@@ -318,18 +353,14 @@ namespace rtps
             //euler();
             euler.execute(num,
                 settings->dt,
-                cl_position_u,
-                cl_position_s,
-                cl_velocity_u,
-                cl_velocity_s,
-                cl_linear_force_s,
-                cl_torque_force_s,
-                cl_color_u,
-                cl_color_s,
-                //cl_vars_unsorted, 
-                //cl_vars_sorted, 
-                cl_sort_indices,
-                cl_prbp,
+                cl_comLinearForce,
+                cl_comTorqueForce,
+                cl_comVel,
+                cl_comAngVel,
+                cl_comPos,
+                cl_comRot,
+                    float4(0.0,0.0,prbp.gravity,0.0),
+                rbParticleIndex.size(),
                 //debug
                 clf_debug,
                 cli_debug);
@@ -346,7 +377,7 @@ namespace rtps
                 cl_velocity_u,
                 cl_velocity_s,
                 cl_veleval_u,
-                cl_linear_force_s,
+                cl_linear_force_u,
                 //cl_vars_unsorted, 
                 //cl_vars_sorted, 
                 cl_sort_indices,
@@ -401,7 +432,10 @@ namespace rtps
         timers["integrate"] = new EB::Timer("Integration function", time_offset);
         timers["leapfrog_gpu"] = new EB::Timer("LeapFrog Integration GPU kernel execution", time_offset);
         timers["euler_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset);
-        timers["meshtoparticles_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset); 
+        timers["segmented_scan"] = new EB::Timer("Segmented scan function", time_offset); 
+        timers["segmented_scan_gpu"] = new EB::Timer("Segmented scan GPU kernel execution", time_offset); 
+        timers["update_particles"] = new EB::Timer("Update Particles function", time_offset); 
+        timers["update_particles_gpu"] = new EB::Timer("Update Particles GPU kernel execution", time_offset); 
         //timers["lifetime_gpu"] = new EB::Timer("Lifetime GPU kernel execution", time_offset);
         //timers["prep_gpu"] = new EB::Timer("Prep GPU kernel execution", time_offset);
 		return 0;
@@ -435,6 +469,7 @@ namespace rtps
         //That means that we assume that each rigidbody is represented by no less than 4 particles
         rbParticleIndex.resize(max_num/4);
         comPos.resize(max_num/4);
+        comRot.resize(max_num/4);
         //densities.resize(max_num);
 
         //for reading back different values from the kernel
@@ -450,6 +485,7 @@ namespace rtps
         std::fill(velocities.begin(), velocities.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(veleval.begin(), veleval.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(comPos.begin(), comPos.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+        std::fill(comRot.begin(), comRot.end(), float4(1.0f, 0.0f, 0.0f, 0.0f));
         std::fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
 
         //std::fill(densities.begin(), densities.end(), 0.0f);
@@ -468,6 +504,7 @@ namespace rtps
         //vbo buffers
         cl_position_u = Buffer<float4>(ps->cli, pos_vbo);
         cl_position_s = Buffer<float4>(ps->cli, positions);
+        cl_position_l = Buffer<float4>(ps->cli, positions);
         cl_color_u = Buffer<float4>(ps->cli, col_vbo);
         cl_color_s = Buffer<float4>(ps->cli, colors);
 
@@ -477,14 +514,14 @@ namespace rtps
         cl_veleval_u = Buffer<float4>(ps->cli, veleval);
         cl_veleval_s = Buffer<float4>(ps->cli, veleval);
         //cl_density_s = Buffer<float>(ps->cli, densities);
-        cl_linear_force_s = Buffer<float4>(ps->cli, linearForce);
-        cl_torque_force_s = Buffer<float4>(ps->cli, torqueForce);
+        cl_linear_force_u = Buffer<float4>(ps->cli, linearForce);
         cl_rbParticleIndex = Buffer<int2>(ps->cli,rbParticleIndex);
         cl_comPos = Buffer<float4>(ps->cli,comPos);
+        cl_comRot = Buffer<float4>(ps->cli,comRot);
         cl_comVel = Buffer<float4>(ps->cli,comPos);
-        cl_linearMomentum = Buffer<float4>(ps->cli,comPos);
-        cl_rotationalMomentum = Buffer<float4>(ps->cli,comPos);
-
+        cl_comAngVel = Buffer<float4>(ps->cli,comPos);
+        cl_comLinearForce = Buffer<float4>(ps->cli,comPos);
+        cl_comTorqueForce = Buffer<float4>(ps->cli,comPos);
         //cl_xsph_s = Buffer<float4>(ps->cli, xsphs);
         //cl_properties_u = Buffer<int>(ps->cli,properties);
         //cl_properties_s = Buffer<int>(ps->cli,properties);
@@ -515,7 +552,6 @@ namespace rtps
 
         std::vector<unsigned int> keys(max_num);
         //to get around limits of bitonic sort only handling powers of 2
-#include "limits.h"
         std::fill(keys.begin(), keys.end(), INT_MAX);
         cl_sort_indices  = Buffer<unsigned int>(ps->cli, keys);
         cl_sort_hashes   = Buffer<unsigned int>(ps->cli, keys);
@@ -548,6 +584,7 @@ namespace rtps
 
 		printf("keys.size= %d\n", keys.size()); // 
 		printf("gcells.size= %d\n", gcells.size()); // 1729
+        rbParticleIndex.resize(0);
 		//exit(1);
      }
 
@@ -613,7 +650,7 @@ namespace rtps
         vector<float4> rect = addRect(nn, min, max, spacing, scale);
         for(int i = 0; i<rect.size();i++)
         {
-            printf("pos %d = (%f,%f,%f,%f)\n",rect[i].x,rect[i].y,rect[i].z,rect[i].w);
+            printf("pos %d = (%f,%f,%f,%f)\n",i,rect[i].x,rect[i].y,rect[i].z,rect[i].w);
         }
         float4 velo(0, 0, 0, 0);
         pushParticles(rect, velo, color);
@@ -674,6 +711,18 @@ namespace rtps
             com+=pos[i];
         }
         com/=pos.size();
+        com.w=1.0f;
+        rbParticleIndex.push_back(int2(num,num+nn));
+        vector<float4> pos_l;
+        for(int i = 0;i<pos.size();i++)
+        {
+            float4 tmp = pos[i]-com;
+            tmp.w = 1.0f;
+            pos_l.push_back(tmp);
+            //char tmpchar[32];
+            //sprintf(tmpchar,"pos_l[%d]",i);
+            //tmp.print(tmpchar);
+        }
 #ifdef GPU
         glFinish();
         cl_position_u.acquire();
@@ -688,22 +737,18 @@ namespace rtps
         cl_position_u.copyToDevice(pos, num);
         cl_color_u.copyToDevice(cols, num);
         cl_velocity_u.copyToDevice(vels, num);
+        cl_position_l.copyToDevice(pos_l,num);
         vector<float4> comVec;
         comVec.push_back(com);
-        cl_comPos.copyToDevice(comVec,1);
+        cl_comPos.copyToDevice(comVec,rbParticleIndex.size()-1);
+        //cl_rbParticleIndex.copyToDevice(rbParticleIndex,rbParticleIndex.size()-1,);
+        cl_rbParticleIndex.copyToDevice(rbParticleIndex);
+        com.print("Center of Mass");
+        printf("particle index start = %d end = %d\n",rbParticleIndex.back().x,rbParticleIndex.back().y);
 
-        //prbp.num = num+nn;
         settings->SetSetting("Number of Particles", num+nn);
         updateParticleRigidBodyParams();
 
-        //cl_position.acquire();
-        //cl_color_u.acquire();
-        //reprep the unsorted (packed) array to account for new particles
-        //might need to do it conditionally if particles are added or subtracted
-        // -- no longer needed: april, enjalot
-        //printf("about to prep\n");
-        //call_prep(1);
-        //printf("done with prep\n");
         cl_position_u.release();
         cl_color_u.release();
 #endif

@@ -22,8 +22,8 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_PARTICLE_RIGIDBODY_FORCE_H_INCLUDED
-#define RTPS_PARTICLE_RIGIDBODY_FORCE_H_INCLUDED
+#ifndef RTPS_PARTICLE_RIGIDBODY_SEGMENTED_SCAN_H_INCLUDED
+#define RTPS_PARTICLE_RIGIDBODY_SEGMENTED_SCAN_H_INCLUDED
 
 
 #include <CLL.h>
@@ -43,16 +43,14 @@ namespace rtps
             PRBSegmentedScan() { cli = NULL; timer = NULL; };
             PRBSegmentedScan(std::string path, CL* cli, EB::Timer* timer);
             void execute(int num,
-                    Buffer<float4>& pos_s,
+                    Buffer<float4>& pos_u,
                     //Buffer<float4>& veleval_s,
                     Buffer<int2>& particleIndex,
-                    Buffer<float4>& linear_force_s,
+                    Buffer<float4>& linear_force_u,
                     Buffer<float4>& comLinearForce,
                     Buffer<float4>& comTorqueForce,
                     Buffer<float4>& comPos,
                     int numRBs,
-                    Buffer<ParticleRigidBodyParams>& prbp,
-                    Buffer<GridParams>& gp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);

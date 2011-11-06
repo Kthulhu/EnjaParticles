@@ -56,13 +56,8 @@ namespace rtps
                     Buffer<float4>& comAngVel,
                     Buffer<float4>& comPos,
                     Buffer<float4>& comRot,
+                    float4 gravity,
                     int numRBs,
-
-                    //Buffer<float4>& uvars, 
-                    //Buffer<float4>& svars, 
-                    Buffer<unsigned int>& indices,
-                    //params
-                    Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);

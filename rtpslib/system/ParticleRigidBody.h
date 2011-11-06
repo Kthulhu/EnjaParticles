@@ -50,6 +50,8 @@
 #include <rigidbody/PRBLeapFrog.h>
 #include <rigidbody/PRBEuler.h>
 #include <rigidbody/PRBForce.h>
+#include <rigidbody/PRBSegmentedScan.h>
+#include <rigidbody/PRBUpdateParticles.h>
 #include <common/MeshToParticles.h>
 #include <structs.h>
 
@@ -142,12 +144,17 @@ namespace rtps
         std::map<std::string,int> rbIndex;
         std::vector<int2> rbParticleIndex;//first int is starting index. Second int is end index.
         std::vector<float4> comPos;
-        std::vector<float4> comVel;
-        std::vector<float4> linearMomentum;
-        std::vector<float4> rotationalMomentum;
+        std::vector<float4> comRot;
 
+        //FIXME: Should find a more efficient way of doing this. For now
+        //I will have 3 position buffers for particles. One holds unsorted global
+        //positions, another holds sorted global positions, and a third holds 
+        //unsorted local positions.
         Buffer<float4>      cl_position_u;
         Buffer<float4>      cl_position_s;
+        Buffer<float4>      cl_position_l;
+        Buffer<float4>      cl_static_position_u;
+        Buffer<float4>      cl_static_position_s;
         Buffer<float4>      cl_color_u;
         Buffer<float4>      cl_color_s;
         Buffer<float4>      cl_velocity_u;
@@ -155,15 +162,15 @@ namespace rtps
         Buffer<float4>      cl_veleval_u;
         Buffer<float4>      cl_veleval_s;
 
-        Buffer<float4>      cl_linear_force_s;
         Buffer<float4>      cl_linear_force_u;
 
         Buffer<int2> cl_rbParticleIndex;
         Buffer<float4> cl_comPos;
+        Buffer<float4> cl_comRot;
         Buffer<float4> cl_comVel;
         Buffer<float4> cl_comAngVel;
         Buffer<float4> cl_comLinearForce;
-        Buffer<float4> cl_comTorqueFroce;
+        Buffer<float4> cl_comTorqueForce;
 
         //Neighbor Search related arrays
         Buffer<unsigned int>    cl_cell_indices_start;
@@ -216,6 +223,7 @@ namespace rtps
         //TODO: Need to implement Segmented scan for summing each rigid bodies particle
         //forces to find out the linear force and torque force on the center of mass.
         PRBSegmentedScan sscan;
+        PRBUpdateParticles updateParticles;
 
         //float Wpoly6(float4 r, float h);
         //float Wspiky(float4 r, float h);

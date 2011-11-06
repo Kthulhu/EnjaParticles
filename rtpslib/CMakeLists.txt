@@ -67,18 +67,6 @@ set (rtpslib_INCLUDES
     #${rtpslib_SOURCE_DIR}/opencl/bitonic_sort/src
 )    
 
-IF(CLOUD_COLLISION)
-    SET(cloud_sources 
-    ${rtpslib_SOURCE_DIR}/system/Cloud.cpp
-
-    ${rtpslib_SOURCE_DIR}/system/sph/CloudVelocity
-    ${rtpslib_SOURCE_DIR}/system/sph/CloudEuler
-    ${rtpslib_SOURCE_DIR}/system/sph/Collision_cloud
-    ${rtpslib_SOURCE_DIR}/system/common/CloudPermute
-    )
-ENDIF(CLOUD_COLLISION)
-
-
 #library source files (don't explicitly give file extension, inferred from source type)
 set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/RTPS
@@ -120,16 +108,11 @@ set (rtpslib_SOURCES
 	#ParticleRigidBody 
     ${rtpslib_SOURCE_DIR}/system/ParticleRigidBody.cpp
 
-    #cloud
-    ${cloud_sources}
-
-
     ${rtpslib_SOURCE_DIR}/system/sph/Euler
     ${rtpslib_SOURCE_DIR}/system/sph/LeapFrog
     ${rtpslib_SOURCE_DIR}/system/sph/Lifetime
     #${rtpslib_SOURCE_DIR}/system/sph/Prep
     #${rtpslib_SOURCE_DIR}/system/sph/Sort
-    #${rtpslib_SOURCE_DIR}/system/sph/CloudSort
     ${rtpslib_SOURCE_DIR}/system/sph/Density
     ${rtpslib_SOURCE_DIR}/system/sph/Force
     ${rtpslib_SOURCE_DIR}/system/sph/Collision_wall
@@ -166,9 +149,10 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBEuler
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBLeapFrog
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForce
+    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBSegmentedScan
+    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBUpdateParticles
     #${rtpslib_SOURCE_DIR}/system/sph/Prep
     #${rtpslib_SOURCE_DIR}/system/sph/Sort
-    #${rtpslib_SOURCE_DIR}/system/sph/CloudSort
     #${rtpslib_SOURCE_DIR}/system/sph/Collision_wall
     #${rtpslib_SOURCE_DIR}/system/sph/Collision_triangle
 
@@ -181,7 +165,6 @@ set (rtpslib_SOURCES
     #${rtpslib_SOURCE_DIR}/system/flock/Hash
     #${rtpslib_SOURCE_DIR}/system/flock/BitonicSort
     #${rtpslib_SOURCE_DIR}/system/flock/DataStructures
-    #${rtpslib_SOURCE_DIR}/system/flock/CloudDataStructures
     #${rtpslib_SOURCE_DIR}/system/flock/Neighbors
     #${rtpslib_SOURCE_DIR}/particle
     )

@@ -40,7 +40,7 @@ __kernel void euler(
                    __global float4* comAngVel,
                    __global float4* comPos,
                    __global float4* comRot, 
-                   __constant struct ParticleRigidBodyParams* prbp, 
+        float4 gravity,
                    float dt
                     DEBUG_ARGS)
 {
@@ -55,7 +55,7 @@ __kernel void euler(
 
     //external force is gravity
     //f.z += -9.8f;
-    lf.y+=prbp->gravity;
+    lf+=gravity;
 
     /*float speed = magnitude(f);
     if (speed > 600.0f) //velocity limit, need to pass in as struct
@@ -67,12 +67,17 @@ __kernel void euler(
     v += dt*lf;
     p += dt*v;
     p.w = 1.0f; //just in case
-    w += dt*tf;
-    q += dt*w;
+    w += dt*tf.xyz;
+    w.w = 0;
+    float wMag = length(w.xyz);
+    float wDt= length(w.xyz*dt);
+    float3 a = (w.xyz/wMag)*sin(wDt/2.0);
+    float4 dq = (float4)(cos(wDt/2.0),a.x,a.y,a.z);
+    q = cross(dq,q);
     comVel[i] = v;
     comPos[i] = p;
     comAngVel[i] = w;
     comRot[i] = q;
     
-    //clf[originalIndex] = v;
+    clf[i] = p;
 }

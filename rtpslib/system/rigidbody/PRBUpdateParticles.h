@@ -22,41 +22,41 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_CLOUD_EULER_H_INCLUDED
-#define RTPS_CLOUD_EULER_H_INCLUDED
+#ifndef RTPS_PARTICLE_RIGIDBODY_UPDATE_PARTICLES_H_INCLUDED
+#define RTPS_PARTICLE_RIGIDBODY_UPDATE_PARTICLES_H_INCLUDED
 
 
 #include <CLL.h>
 #include <Buffer.h>
+#include <Kernel.h>
+#include <structs.h>
+#include <Domain.h>
+#include <timer_eb.h>
+
 
 namespace rtps
 {
-    class CloudEuler
+    class PRBUpdateParticles
     {
         public:
-            CloudEuler() { cli = NULL; timer = NULL; };
-            CloudEuler(std::string path, CL* cli, EB::Timer* timer);
-            void execute(int num,
-                        float dt,
-                        Buffer<float4>& pos_u,
-                        Buffer<float4>& pos_s,
-                        Buffer<float4>& normal_u,
-                        Buffer<float4>& normal_s,
-                        Buffer<float4>& velocity_u,
-                        Buffer<float4>& velocity_s,
-						//float4 vel,
-                        Buffer<unsigned int>& indices,
-                        //params
-                        Buffer<SPHParams>& sphp,
-                        //debug
-                        Buffer<float4>& clf_debug,
-                        Buffer<int4>& cli_debug);
-            
-           
+            PRBUpdateParticles() { cli = NULL; timer = NULL; };
+            PRBUpdateParticles(std::string path, CL* cli, EB::Timer* timer);
+            void execute(int numRBs,
+                    Buffer<float4>& pos_u,
+                    Buffer<float4>& pos_l,
+                    Buffer<float4>& velocity_u,
+                    Buffer<int2>& particleIndex,
+                    Buffer<float4>& comPos,
+                    Buffer<float4>& comRot,
+                    Buffer<float4>& comVel,
+                    Buffer<float4>& comAngVel,
+                    //debug params
+                    Buffer<float4>& clf_debug,
+                    Buffer<int4>& cli_debug);
 
         private:
             CL* cli;
-            Kernel k_cloud_euler;
+            Kernel k_update_particles;
             EB::Timer* timer;
     };
 }
