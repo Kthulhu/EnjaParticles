@@ -31,7 +31,7 @@ ENDIF(WITH_OPENCL)
 ##############################################################################
 
 ##### Source Paths ############################################################
-ADD_DEFINITIONS(-DSIMPLE_CL_SOURCE_DIR="cl_simple")
+#ADD_DEFINITIONS(-DSIMPLE_CL_SOURCE_DIR="cl_simple")
 ADD_DEFINITIONS(-DSPH_CL_SOURCE_DIR="cl_sph")
 ADD_DEFINITIONS(-DPARTICLE_RIGIDBODY_CL_SOURCE_DIR="cl_rigidbody")
 ADD_DEFINITIONS(-DFLOCK_CL_SOURCE_DIR="cl_flock")
@@ -97,9 +97,9 @@ set (rtpslib_SOURCES
 	
     
     # Simple
-    ${rtpslib_SOURCE_DIR}/system/Simple.cpp
-    ${rtpslib_SOURCE_DIR}/system/simple/ForceField
-    ${rtpslib_SOURCE_DIR}/system/simple/Euler
+    #${rtpslib_SOURCE_DIR}/system/Simple.cpp
+    #${rtpslib_SOURCE_DIR}/system/simple/ForceField
+    #${rtpslib_SOURCE_DIR}/system/simple/Euler
     	
 	# SPH
     ${rtpslib_SOURCE_DIR}/system/SPH.cpp
@@ -231,7 +231,7 @@ add_custom_target(doc DEPENDS ${DOXYGEN_OUTPUT})
 
 
 ADD_SUBDIRECTORY(system/common)
-ADD_SUBDIRECTORY(system/simple)
+#ADD_SUBDIRECTORY(system/simple)
 ADD_SUBDIRECTORY(system/sph)
 ADD_SUBDIRECTORY(system/flock)
 ADD_SUBDIRECTORY(system/rigidbody)

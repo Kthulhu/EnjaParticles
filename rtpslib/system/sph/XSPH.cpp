@@ -27,7 +27,7 @@
 namespace rtps
 {
 
-    void SPH::cpuXSPH()
+    /*void SPH::cpuXSPH()
     {
 
         float scale = sphp.simulation_scale;
@@ -93,7 +93,7 @@ namespace rtps
             xsphs[i].z = f.z;
         }
 
-    }
+    }*/
 
 
 }

@@ -38,7 +38,7 @@ namespace rtps
 
     }
 
-    void SPH::cpuViscosity()
+    /*void SPH::cpuViscosity()
     {
 
         float scale = sphp.simulation_scale;
@@ -99,7 +99,7 @@ namespace rtps
             forces[i].z += f.z;
         }
 
-    }
+    }*/
 
 
 }

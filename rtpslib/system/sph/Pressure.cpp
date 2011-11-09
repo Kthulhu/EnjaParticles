@@ -47,7 +47,7 @@ namespace rtps
     
      */
 
-    void SPH::cpuPressure()
+    /*void SPH::cpuPressure()
     {
 
         float scale = sphp.simulation_scale;
@@ -79,11 +79,10 @@ namespace rtps
                     if (r2/re2 <= 4.f)
                     {
                         //from tim's code
-                        /*
-                        float Pi = 1.013E5*(pow(density[i]/1000.0f, 7.0f) - 1.0f);
-                        float Pj = 1.013E5*(pow(density[j]/1000.0f, 7.0f) - 1.0f);
-                        float kern = sphp->mass * Wij * (Pi + Pj) / (density[i] * density[j]);
-                        */
+                        //float Pi = 1.013E5*(pow(density[i]/1000.0f, 7.0f) - 1.0f);
+                        //float Pj = 1.013E5*(pow(density[j]/1000.0f, 7.0f) - 1.0f);
+                        //float kern = sphp->mass * Wij * (Pi + Pj) / (density[i] * density[j]);
+                        
                         //from simple SPH in Krog's thesis
                         float Pi = sphp.K*(densities[i] - 1000.0f); //rest density
                         float Pj = sphp.K*(densities[j] - 1000.0f); //rest density
@@ -102,7 +101,7 @@ namespace rtps
             forces[i] = f;
 
         }
-    }
+    }*/
 
 
 

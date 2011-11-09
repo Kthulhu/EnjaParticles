@@ -32,6 +32,19 @@
 #include "../render/SSFRender.h"
 #include "../render/Sphere3DRender.h"
 
+#include <RTPS.h>
+#include <Kernel.h>
+#include <Buffer.h>
+#include <Domain.h>
+#include <common/Hash.h>
+#include <common/BitonicSort.h>
+#include <common/Radix.h>
+#include <common/CellIndices.h>
+#include <common/Permute.h> 
+
+#include <common/MeshToParticles.h>
+#include <timer_eb.h>
+
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
         #define RTPS_EXPORT __declspec(dllexport)
@@ -45,12 +58,15 @@
 #include<stdio.h>
 namespace rtps
 {
-
+    class RTPS;
     class RTPS_EXPORT System
     {
     public:
-        virtual void update() = 0;
+        virtual void update(){
+            //Do update for simple system here. -ASY
+        };
 
+        System(RTPS *psfr, int num);
         virtual ~System()
         {
             delete renderer;
@@ -147,8 +163,45 @@ namespace rtps
         {
             return;
         }
-
+        virtual void setupDomain(float cell_size, float sim_scale);
+        virtual void prepareSorted();
+        virtual int setupTimers();
     protected:
+                //the particle system framework
+        RTPS* ps;
+        RTPSettings* settings;
+
+        EB::TimerList timers;
+
+        //SPHSettings* sphsettings;
+        GridParams grid_params;
+        GridParams grid_params_scaled;
+
+        Buffer<float4>      cl_position_u;
+        Buffer<float4>      cl_position_s;
+        Buffer<float4>      cl_color_u;
+        Buffer<float4>      cl_color_s;
+        Buffer<float4>      cl_velocity_u;
+        Buffer<float4>      cl_velocity_s;
+        Buffer<float4>      cl_force_s;
+
+        Buffer<unsigned int>    cl_cell_indices_start;
+        Buffer<unsigned int>    cl_cell_indices_end;
+        //Two arrays for bitonic sort (sort not done in place)
+        //should be moved to within bitonic
+        Buffer<unsigned int>    cl_sort_output_hashes;
+        Buffer<unsigned int>    cl_sort_output_indices;
+        Buffer<unsigned int>    cl_sort_hashes;
+        Buffer<unsigned int>    cl_sort_indices;
+        Buffer<GridParams>  cl_GridParams;
+        Buffer<GridParams>  cl_GridParamsScaled;
+
+        Buffer<float4>      clf_debug;  //just for debugging cl files
+        Buffer<int4>        cli_debug;  //just for debugging cl files
+        Bitonic<unsigned int> bitonic;
+        Radix<unsigned int> radix;
+        
+        float spacing; //Particle rest distance in world coordinates
         //number of particles
         int num;  // USED FOR WHAT? 
         //maximum number of particles (for array allocation)
@@ -157,8 +210,6 @@ namespace rtps
 
         GLuint pos_vbo;
         GLuint col_vbo;
-        //flag is true if the system's constructor creates the VBOs for the system
-        bool managed;
 
         Domain* grid;
 
@@ -166,6 +217,15 @@ namespace rtps
 
         std::string resource_path;
         std::string common_source_dir;
+
+        Hash hash;
+        CellIndices cellindices;
+        Permute permute;
+        MeshToParticles m2p; 
+
+        void hash_and_sort();
+        void bitonic_sort();
+        void radix_sort();
 
         virtual void setRenderer()
         {

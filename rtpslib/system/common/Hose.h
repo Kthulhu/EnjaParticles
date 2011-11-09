@@ -25,10 +25,15 @@
 #ifndef HOSE_H_INCLUDED
 #define HOSE_H_INCLUDED
 
-#include <RTPS.h>
-//#include "../../RTPS.h"
-//#include "../../structs.h"
+//defines a few handy utility functions
+#include <util.h>
+//defines useful structs like float3 and float4
+#include <structs.h>
+//OpenCL API
+#include <CLL.h>
+#include <timer_eb.h>
 #include <vector>
+#include <IV.h>
 
 #include "../../rtps_common.h"
 using namespace std;
@@ -40,7 +45,7 @@ namespace rtps
 class RTPS_EXPORT Hose
 {
 public:
-    Hose(RTPS *ps, int total_n, float4 center, float4 velocity, float radius, float spacing, float4 color);
+    Hose(float dt, int total_n, float4 center, float4 velocity, float radius, float spacing, float4 color);
     //~Hose();
 
     void update(float4 center, float4 velocity, float radius, float spacing, float4 color);
@@ -68,9 +73,7 @@ private:
     int em;             //how many calls to spray before emitting
     int em_count;       //what call we are on
 
-    //we need the timestep and spacing from the settings
-    RTPS *ps;
-
+    float dt;
 };
 
 //std::vector<float4> addDisc(int num, float4 center, float4 u, float4 v, float radius, float spacing);

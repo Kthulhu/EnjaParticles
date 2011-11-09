@@ -133,7 +133,7 @@ namespace rtps
 
 
 
-    void SPH::cpuCollision_wall()
+    /*void SPH::cpuCollision_wall()
     {
 
         float4* vel;
@@ -152,11 +152,10 @@ namespace rtps
             float4 p = positions[i];
             float4 v = vel[i];
             float4 f = forces[i];
-            /*
-            v.x *= scale;
-            v.y *= scale;
-            v.z *= scale;
-            */
+            //v.x *= scale;
+            //v.y *= scale;
+            //v.z *= scale;
+        
             float4 r_f = float4(0.f, 0.f, 0.f, 0.f);
             float4 f_f = float4(0.f, 0.f, 0.f, 0.f);
             float4 crf = float4(0.f, 0.f, 0.f, 0.f);
@@ -250,7 +249,7 @@ namespace rtps
             forces[i].z += r_f.z + f_f.z;
         }
 
-    }
+    }*/
 
 
 

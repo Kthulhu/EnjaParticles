@@ -1,9 +1,15 @@
 #ifndef RTPS_RADIX_SORT_H
 #define RTPS_RADIX_SORT_H
 
-#include "CLL.h"
-#include "Kernel.h"
-#include "Buffer.h"
+//defines a few handy utility functions
+#include <util.h>
+//defines useful structs like float3 and float4
+#include <structs.h>
+//OpenCL API
+#include <CLL.h>
+#include <Kernel.h>
+#include <Buffer.h>
+#include <timer_eb.h>
 
 #include <vector>
 using namespace std;

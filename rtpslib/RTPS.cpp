@@ -23,11 +23,11 @@
 
 
 #include "GL/glew.h"
-#include "RTPS.h"
-#include "system/Simple.h"
-#include "system/SPH.h"
-#include "system/FLOCK.h"
-#include "system/ParticleRigidBody.h"
+#include <RTPS.h>
+//#include "system/Simple.h"
+#include <system/SPH.h>
+#include <system/FLOCK.h>
+#include <system/ParticleRigidBody.h>
 
 
 namespace rtps
@@ -85,7 +85,8 @@ printf("done with constructor\n");
         if (settings->system == RTPSettings::Simple)
         {
             printf("simple system\n");
-            system = new Simple(this, settings->max_particles);
+            system = new System(this, settings->max_particles);
+            //system = new Simple(this, settings->max_particles);
         }
         else if (settings->system == RTPSettings::SPH)
         {

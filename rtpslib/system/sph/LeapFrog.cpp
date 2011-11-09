@@ -125,7 +125,7 @@ namespace sph
 
     }
 
-    void SPH::cpuLeapFrog()
+    /*void SPH::cpuLeapFrog()
     {
         float h = ps->settings->dt;
         for (int i = 0; i < num; i++)
@@ -170,6 +170,6 @@ namespace sph
 
         }
         //printf("v.z %f p.z %f \n", velocities[0].z, positions[0].z);
-    }
+    }*/
 
 } //namespace rtps

@@ -46,9 +46,9 @@ set (test_multi_SOURCES
     )
 
 
-set (test_simple_SOURCES
-    main_simple.cpp
-    )
+#set (test_simple_SOURCES
+#    main_simple.cpp
+#    )
 
 set (test_flock_SOURCES
     main_flock.cpp
@@ -61,7 +61,7 @@ set (test_rigidbody_SOURCES
 INCLUDE_DIRECTORIES(${test_INCLUDES})
 ADD_EXECUTABLE(sph.x ${test_SOURCES})
 ADD_EXECUTABLE(multi.x ${test_multi_SOURCES})
-ADD_EXECUTABLE(simple.x ${test_simple_SOURCES})
+#ADD_EXECUTABLE(simple.x ${test_simple_SOURCES})
 ADD_EXECUTABLE(flock.x ${test_flock_SOURCES})
 ADD_EXECUTABLE(rigidbody.x ${test_rigidbody_SOURCES})
 
@@ -92,9 +92,9 @@ TARGET_LINK_LIBRARIES (multi.x
     ${LINK_LIBS}
 )
 
-TARGET_LINK_LIBRARIES (simple.x
-    ${LINK_LIBS}
-)
+#TARGET_LINK_LIBRARIES (simple.x
+#    ${LINK_LIBS}
+#)
 
 TARGET_LINK_LIBRARIES (flock.x
     ${LINK_LIBS}
@@ -105,7 +105,7 @@ TARGET_LINK_LIBRARIES (rigidbody.x
 #IF(WIN32)
 install (TARGETS sph.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS multi.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS simple.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+#install (TARGETS simple.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS flock.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS rigidbody.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES MathFunctions.h DESTINATION include)

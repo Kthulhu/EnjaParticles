@@ -141,7 +141,7 @@ namespace rtps
     }
 
 
-    void SPH::cpuDensity()
+    /*void SPH::cpuDensity()
     {
         float h = sphp.smoothing_distance;
         //stuff from Tim's code (need to match #s to papers)
@@ -186,13 +186,6 @@ namespace rtps
                         //float hr2 = (h*h - r2);
                         //float Wij = alpha * hr2*hr2*hr2;
                         float Wij = Wpoly6(r, h);
-                        /*
-                        if(i == j)
-                        {
-                            printf("rlen: %f\n", rlen);
-                            printf("Wij = %f\n", Wij);
-                        }
-                        */
                         //printf("%f ", Wij);
                         densities[i] += sphp.mass * Wij;
                     }
@@ -203,6 +196,6 @@ namespace rtps
             //sum_densities += densities[i];
         }
         //printf("CPU: sum_densities = %f\n", sum_densities);
-    }
+    }*/
 
 }

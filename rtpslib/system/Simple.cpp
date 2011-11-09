@@ -111,7 +111,7 @@ namespace rtps
 
     Simple::~Simple()
     {
-        if (pos_vbo && managed)
+        if (pos_vbo)// && managed)
         {
             glBindBuffer(1, pos_vbo);
             glDeleteBuffers(1, (GLuint*)&pos_vbo);

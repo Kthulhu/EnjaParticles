@@ -25,10 +25,16 @@
 #ifndef RTPS_PERMUTE_H_INCLUDED
 #define RTPS_PERMUTE_H_INCLUDED
 
-
-#include <RTPS.h>
-//#include <CLL.h>
+//defines a few handy utility functions
+#include <util.h>
+//defines useful structs like float3 and float4
+#include <structs.h>
+//OpenCL API
+#include <CLL.h>
 #include <Buffer.h>
+#include <Kernel.h>
+#include <Domain.h>
+#include <timer_eb.h>
 
 
 namespace rtps

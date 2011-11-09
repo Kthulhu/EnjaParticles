@@ -42,7 +42,7 @@ namespace rtps
 {
 
 	//----------------------------------------------------------------------
-    ParticleRigidBody::ParticleRigidBody(RTPS *psfr, int n)
+    ParticleRigidBody::ParticleRigidBody(RTPS *psfr, int n) :System(psfr,n)
     {
         //store the particle system framework
         ps = psfr;
@@ -132,13 +132,13 @@ namespace rtps
 	//----------------------------------------------------------------------
     ParticleRigidBody::~ParticleRigidBody()
     {
-        if (pos_vbo && managed)
+        if (pos_vbo)// && managed)
         {
             glBindBuffer(1, pos_vbo);
             glDeleteBuffers(1, (GLuint*)&pos_vbo);
             pos_vbo = 0;
         }
-        if (col_vbo && managed)
+        if (col_vbo)// && managed)
         {
             glBindBuffer(1, col_vbo);
             glDeleteBuffers(1, (GLuint*)&col_vbo);
@@ -493,7 +493,7 @@ namespace rtps
         std::fill(error_check.begin(), error_check.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
         // VBO creation, TODO: should be abstracted to another class
-        managed = true;
+        //managed = true;
         printf("positions: %zd, %zd, %zd\n", positions.size(), sizeof(float4), positions.size()*sizeof(float4));
         pos_vbo = createVBO(&positions[0], positions.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         printf("pos vbo: %d\n", pos_vbo);

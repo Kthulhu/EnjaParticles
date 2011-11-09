@@ -26,8 +26,13 @@
 #define RTPS_MESHTOPARTICLES_H_INCLUDED
 
 
-#include <RTPS.h>
-//#include <CLL.h>
+//defines a few handy utility functions
+#include <util.h>
+//defines useful structs like float3 and float4
+#include <structs.h>
+//OpenCL API
+#include <CLL.h>
+#include <timer_eb.h>
 #include <Buffer.h>
 
 

@@ -29,10 +29,10 @@
 namespace rtps
 {
 
-Hose::Hose(RTPS *ps, int total_n, float4 center, float4 velocity, float radius, float spacing, float4 color)
+Hose::Hose(float dt, int total_n, float4 center, float4 velocity, float radius, float spacing, float4 color)
 {
     printf("Constructor!\n");
-    this->ps = ps;
+    this->dt = dt;
     this->total_n = total_n;
     this->center = center;
     this->velocity = velocity;
@@ -100,7 +100,6 @@ void Hose::calc_em()
  */
     //em = 0;
     //em_count = 0;
-    float dt = ps->settings->dt;
     float magv = magnitude(velocity);
     //printf("magv: %f\n", magv);
     //em = (int) (1 + spacing/dt/magv/8.);
@@ -120,7 +119,7 @@ std::vector<float4> Hose::spray()
     {
         //std::vector<float4> addDisc(int num, float4 center, float4 u, float4 v, float radius, float spacing);
         //particles = addDisc(n_count, center, u, w, radius, spacing);
-        float4 v = velocity * ps->settings->dt;
+        float4 v = velocity * dt;
         particles = addDiscRandom(n_count, center, v, u, w, radius, spacing);
         n_count -= particles.size();
         em_count = 0;

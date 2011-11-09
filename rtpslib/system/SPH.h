@@ -32,23 +32,13 @@
 
 #include <string>
 
-#include <RTPS.h>
-#include <System.h>
-#include <Kernel.h>
-#include <Buffer.h>
 
-#include <Domain.h>
+#include <System.h>
 #include <SPHSettings.h>
 
 #include <util.h>
 
-//#include <Prep.h>
-#include <Hash.h>
-#include <BitonicSort.h>
-#include <Radix.h>
-//#include <DataStructures.h>
-#include <CellIndices.h>
-#include <Permute.h> // contains CloudPermute
+
 #include <sph/Density.h>
 #include <sph/Force.h>
 #include <sph/Collision_wall.h>
@@ -56,12 +46,9 @@
 #include <sph/LeapFrog.h>
 #include <sph/Lifetime.h>
 #include <sph/Euler.h>
-#include <common/MeshToParticles.h>
 //#include "../util.h"
 #include <Hose.h>
 
-//#include <timege.h>
-#include <timer_eb.h>
 
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
@@ -80,7 +67,7 @@ namespace rtps
     class RTPS_EXPORT SPH : public System
     {
     public:
-        SPH(RTPS *ps, int num, int nb_in_cloud=0);
+        SPH(RTPS *ps, int num, int nb_in_cloud);
         ~SPH();
 
         void update();
@@ -102,7 +89,6 @@ namespace rtps
         void testDelete();
         int cut; //for debugging DEBUG
 
-        EB::TimerList timers;
         int setupTimers();
         void printTimers();
         void pushParticles(vector<float4> pos, float4 velo, float4 color=float4(1.0, 0.0, 0.0, 1.0));
@@ -112,21 +98,14 @@ namespace rtps
         std::vector<float4> getDeletedVel();
 
         void addParticleShape(GLuint tex3d, float scale, float4 min, float16 world, int resolution);
+        void prepareSorted();
 
     protected:
         virtual void setRenderer();
     private:
-        //the particle system framework
-        RTPS* ps;
-        RTPSettings* settings;
 
-        //SPHSettings* sphsettings;
-        SPHParams sphp;
-        GridParams grid_params;
-        GridParams grid_params_scaled;
         Integrator integrator;
-        float spacing; //Particle rest distance in world coordinates
-
+        SPHParams sphp;
         std::string sph_source_dir;
         int nb_var;
 
@@ -139,76 +118,32 @@ namespace rtps
 
         //needs to be called when particles are added
         void calculateSPHSettings();
-        void setupDomain();
-        void prepareSorted();
+
         //void popParticles();
 
         //This should be in OpenCL classes
         //Kernel k_scopy;
 
-        std::vector<float4> positions;
+        /*std::vector<float4> positions;
         std::vector<float4> colors;
         std::vector<float4> velocities;
         std::vector<float4> veleval;
 
         std::vector<float>  densities;
         std::vector<float4> forces;
-        std::vector<float4> xsphs;
+        std::vector<float4> xsphs;*/
 
-
-        Buffer<float4>      cl_position_u;
-        Buffer<float4>      cl_position_s;
-        Buffer<float4>      cl_color_u;
-        Buffer<float4>      cl_color_s;
-        Buffer<float4>      cl_velocity_u;
-        Buffer<float4>      cl_velocity_s;
         Buffer<float4>      cl_veleval_u;
         Buffer<float4>      cl_veleval_s;
 
         Buffer<float>       cl_density_s;
-        Buffer<float4>      cl_force_s;
         Buffer<float4>      cl_xsph_s;
-
-        //The following 4 data structures contain the properties necessary to keep track of
-        //rigid bodies. -ASY
-        Buffer<float4> cl_rbCoMPosition;///OpenCL buffer for the center of mass of a rigid body
-        Buffer<float4> cl_rbQuaternion;///OpenCL buffer for the quaternion which describes the rigid bodies orientation.
-        Buffer<int> cl_rbIndex;///OpenCL buffer for index into the positions array where the rigid body particles start
-        Buffer<int> cl_rbNumParticles;///OpenCL buffer for number of particles which describe the current rigid body.
-
-        //Neighbor Search related arrays
-        //Buffer<float4>      	cl_vars_sorted;
-        //Buffer<float4>      	cl_vars_unsorted;
-        //Buffer<float4>      	cl_cells; // positions in Ian code
-        Buffer<unsigned int>    cl_cell_indices_start;
-        Buffer<unsigned int>    cl_cell_indices_end;
-        //Buffer<int>           cl_vars_sort_indices;
-        Buffer<unsigned int>    cl_sort_hashes;
-        Buffer<unsigned int>    cl_sort_indices;
-        //Buffer<unsigned int>  cl_unsort;
-        //Buffer<unsigned int>  cl_sort;
-
-        //Buffer<Triangle>    cl_triangles;
-
-        //Two arrays for bitonic sort (sort not done in place)
-        //should be moved to within bitonic
-        Buffer<unsigned int>         cl_sort_output_hashes;
-        Buffer<unsigned int>         cl_sort_output_indices;
-
-        Bitonic<unsigned int> bitonic;
-        Radix<unsigned int> radix;
 
         //Parameter structs
         Buffer<SPHParams>   cl_sphp;
-        Buffer<GridParams>  cl_GridParams;
-        Buffer<GridParams>  cl_GridParamsScaled;
-
-        Buffer<float4>      clf_debug;  //just for debugging cl files
-        Buffer<int4>        cli_debug;  //just for debugging cl files
-
-
+        
         //CPU functions
-        void cpuDensity();
+        /*void cpuDensity();
         void cpuPressure();
         void cpuViscosity();
         void cpuXSPH();
@@ -216,7 +151,7 @@ namespace rtps
         void cpuEuler();
         void cpuLeapFrog();
 
-        void updateCPU();
+        void updateCPU();*/
         void updateGPU();
 
         //calculate the various parameters that depend on max_num of particles
@@ -228,13 +163,7 @@ namespace rtps
         //Nearest Neighbors search related functions
         //Prep prep;
         void call_prep(int stage);
-        Hash hash;
-        //DataStructures datastructures;
-        CellIndices cellindices;
-        Permute permute;
-        void hash_and_sort();
-        void bitonic_sort();
-        void radix_sort();
+
         Density density;
         Force force;
         void collision();
@@ -243,8 +172,6 @@ namespace rtps
         void integrate();
         LeapFrog leapfrog;
         Euler euler;
-        MeshToParticles m2p; 
-
 
         Lifetime lifetime;
 

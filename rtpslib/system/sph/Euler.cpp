@@ -70,7 +70,7 @@ namespace rtps
 
     }
 
-    void SPH::cpuEuler()
+    /*void SPH::cpuEuler()
     {
         float h = ps->settings->dt;
         for (int i = 0; i < num; i++)
@@ -111,6 +111,6 @@ namespace rtps
             positions[i] = p;
         }
         //printf("v.z %f p.z %f \n", velocities[0].z, positions[0].z);
-    }
+    }*/
 
 }
