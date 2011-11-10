@@ -85,7 +85,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(data structures): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(data structures): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
         

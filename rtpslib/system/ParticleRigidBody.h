@@ -42,17 +42,11 @@
 
 #include <util.h>
 
-#include <Hash.h>
-#include <BitonicSort.h>
-#include <Radix.h>
-#include <CellIndices.h>
-#include <Permute.h> // contains CloudPermute
 #include <rigidbody/PRBLeapFrog.h>
 #include <rigidbody/PRBEuler.h>
 #include <rigidbody/PRBForce.h>
 #include <rigidbody/PRBSegmentedScan.h>
 #include <rigidbody/PRBUpdateParticles.h>
-#include <common/MeshToParticles.h>
 #include <structs.h>
 
 //FIXME:needed for Integrator definition. This should be fixed and made more generic.
@@ -77,16 +71,6 @@ namespace rtps
         ~ParticleRigidBody();
 
         void update();
-        //wrapper around IV.h addRect
-        //int addBox(int nn, float4 min, float4 max, bool scaled, float4 color=float4(1.0f, 0.0f, 0.0f, 1.0f));
-        //wrapper around IV.h addSphere
-        //void addBall(int nn, float4 center, float radius, bool scaled);
-
-        //wrapper around Hose.h 
-        //int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
-        //void updateHose(int index, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
-        //void refillHose(int index, int refill);
-        //void sprayHoses();
 
         virtual void render();
 
@@ -95,74 +79,45 @@ namespace rtps
         //void testDelete();
         //int cut; //for debugging DEBUG
 
-        EB::TimerList timers;
         int setupTimers();
-        void printTimers();
-        void pushParticles(vector<float4> pos, float4 velo, float4 color=float4(1.0, 0.0, 0.0, 1.0));
         void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0));
 
         std::vector<float4> getDeletedPos();
         std::vector<float4> getDeletedVel();
 
-        int addBox(int nn, float4 min, float4 max, bool scaled, float4 color=float4(1.0f, 0.0f, 0.0f, 1.0f));
-        //wrapper around IV.h addSphere
-        void addBall(int nn, float4 center, float radius, bool scaled); 
-        void addParticleShape(GLuint tex3d, float scale, float4 min, float16 world, int resolution);
-
-    protected:
-        virtual void setRenderer();
     private:
-        //the particle system framework
-        RTPS* ps;
-        RTPSettings* settings;
-
+       
         ParticleRigidBodyParams prbp;
-        GridParams grid_params;
-        GridParams grid_params_scaled;
         Integrator integrator;
-        float spacing; //Particle rest distance in world coordinates
 
         std::string rigidbody_source_dir;
-        int nb_var;
 
         std::vector<float4> deleted_pos;
         std::vector<float4> deleted_vel;
 
-        void setupDomain();
         void prepareSorted();
 
-        std::vector<float4> positions;
-        std::vector<float4> colors;
-        std::vector<float4> velocities;
-        std::vector<float4> veleval;
+        /*std::vector<float4> veleval;
 
         std::vector<float4> linearForce;
-        std::vector<float4> torqueForce;
+        std::vector<float4> torqueForce;*/
         
         //Maps a string name to an index in the following arrays
         //That allows for convenient lookup of rigid bodies. 
         std::map<std::string,int> rbIndex;
         std::vector<int2> rbParticleIndex;//first int is starting index. Second int is end index.
-        std::vector<float4> comPos;
-        std::vector<float4> comRot;
+        /*std::vector<float4> comPos;
+        std::vector<float4> comRot;*/
 
         //FIXME: Should find a more efficient way of doing this. For now
         //I will have 3 position buffers for particles. One holds unsorted global
         //positions, another holds sorted global positions, and a third holds 
-        //unsorted local positions.
-        Buffer<float4>      cl_position_u;
-        Buffer<float4>      cl_position_s;
+        //unsorted local positions(per_rigid_body).
         Buffer<float4>      cl_position_l;
         Buffer<float4>      cl_static_position_u;
         Buffer<float4>      cl_static_position_s;
-        Buffer<float4>      cl_color_u;
-        Buffer<float4>      cl_color_s;
-        Buffer<float4>      cl_velocity_u;
-        Buffer<float4>      cl_velocity_s;
         Buffer<float4>      cl_veleval_u;
         Buffer<float4>      cl_veleval_s;
-
-        Buffer<float4>      cl_linear_force_u;
 
         Buffer<int2> cl_rbParticleIndex;
         Buffer<float4> cl_comPos;
@@ -172,29 +127,8 @@ namespace rtps
         Buffer<float4> cl_comLinearForce;
         Buffer<float4> cl_comTorqueForce;
 
-        //Neighbor Search related arrays
-        Buffer<unsigned int>    cl_cell_indices_start;
-        Buffer<unsigned int>    cl_cell_indices_end;
-        Buffer<unsigned int>    cl_sort_hashes;
-        Buffer<unsigned int>    cl_sort_indices;
-
-        //Two arrays for bitonic sort (sort not done in place)
-        //should be moved to within bitonic
-        Buffer<unsigned int>         cl_sort_output_hashes;
-        Buffer<unsigned int>         cl_sort_output_indices;
-
-        Bitonic<unsigned int> bitonic;
-        Radix<unsigned int> radix;
-
-
         //Parameter structs
         Buffer<ParticleRigidBodyParams>   cl_prbp;
-        Buffer<GridParams>  cl_GridParams;
-        Buffer<GridParams>  cl_GridParamsScaled;
-
-        Buffer<float4>      clf_debug;  //just for debugging cl files
-        Buffer<int4>        cli_debug;  //just for debugging cl files
-
 
         void updateGPU();
         //calculate the various parameters that depend on max_num of particles
@@ -204,18 +138,8 @@ namespace rtps
 
         //Nearest Neighbors search related functions
         void call_prep(int stage);
-        void hash_and_sort();
-        void bitonic_sort();
-        void radix_sort();
-        void collision();
         void integrate();
 
-        //Opencl kerenel classes
-        Hash hash;
-        CellIndices cellindices;
-        Permute permute;
-        //CollisionWall collision_wall;
-        //CollisionTriangle collision_tri;
         PRBLeapFrog leapfrog;
         PRBEuler euler;
         PRBForce force;
@@ -224,10 +148,6 @@ namespace rtps
         //forces to find out the linear force and torque force on the center of mass.
         PRBSegmentedScan sscan;
         PRBUpdateParticles updateParticles;
-
-        //float Wpoly6(float4 r, float h);
-        //float Wspiky(float4 r, float h);
-        //float Wviscosity(float4 r, float h);
 
 		Utils u;
     };

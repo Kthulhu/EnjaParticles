@@ -71,11 +71,7 @@ namespace rtps
         ~SPH();
 
         void update();
-        //wrapper around IV.h addRect
-        int addBox(int nn, float4 min, float4 max, bool scaled, float4 color=float4(1.0f, 0.0f, 0.0f, 1.0f));
-        //wrapper around IV.h addSphere
-        void addBall(int nn, float4 center, float radius, bool scaled);
-
+        
         //wrapper around Hose.h 
         int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
         void updateHose(int index, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
@@ -86,31 +82,22 @@ namespace rtps
 
         void loadTriangles(std::vector<Triangle> &triangles);
 
-        void testDelete();
         int cut; //for debugging DEBUG
 
         int setupTimers();
-        void printTimers();
-        void pushParticles(vector<float4> pos, float4 velo, float4 color=float4(1.0, 0.0, 0.0, 1.0));
         void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0));
 
         std::vector<float4> getDeletedPos();
         std::vector<float4> getDeletedVel();
 
-        void addParticleShape(GLuint tex3d, float scale, float4 min, float16 world, int resolution);
         void prepareSorted();
 
-    protected:
-        virtual void setRenderer();
     private:
 
         Integrator integrator;
         SPHParams sphp;
         std::string sph_source_dir;
         int nb_var;
-
-        std::vector<float4> deleted_pos;
-        std::vector<float4> deleted_vel;
 
 
         //keep track of hoses

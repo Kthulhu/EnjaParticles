@@ -87,7 +87,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(cellindices): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(cellindices): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
         //ps->cli->queue.finish();

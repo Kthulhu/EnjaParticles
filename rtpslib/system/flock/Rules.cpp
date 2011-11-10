@@ -46,7 +46,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(rules): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(rules): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
     }
 
@@ -102,12 +102,12 @@ namespace rtps
 
         catch (cl::Error er)
         {
-            printf("ERROR(rules): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(rules): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
     }
 
     //----------------------------------------------------------------------
-    void FLOCK::cpuRules()
+    /*void FLOCK::cpuRules()
     {
         
 	    float spacing1 = spacing;
@@ -243,5 +243,5 @@ namespace rtps
             }
 
         }
-    }
+    }*/
 } 

@@ -92,7 +92,7 @@ namespace sph
         }
         catch (cl::Error er)
         {
-            printf("ERROR(prep): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(prep): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
             exit(1);
         }
 

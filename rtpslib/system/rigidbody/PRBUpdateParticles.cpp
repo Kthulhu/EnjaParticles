@@ -41,7 +41,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(Update Particles): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(Update Particles): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 
@@ -86,7 +86,7 @@ namespace rtps
 
         catch (cl::Error er)
         {
-            printf("ERROR(Update Particles): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(Update Particles): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 #if 0 //printouts    

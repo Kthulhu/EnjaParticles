@@ -41,7 +41,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(Force): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(Force): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 
@@ -89,7 +89,7 @@ namespace rtps
 
         catch (cl::Error er)
         {
-            printf("ERROR(force ): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 #if 0 //printouts    

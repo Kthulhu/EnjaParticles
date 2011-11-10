@@ -33,16 +33,16 @@
 #include "../render/Sphere3DRender.h"
 
 #include <RTPS.h>
-#include <Kernel.h>
-#include <Buffer.h>
-#include <Domain.h>
-#include <common/Hash.h>
-#include <common/BitonicSort.h>
-#include <common/Radix.h>
-#include <common/CellIndices.h>
-#include <common/Permute.h> 
+#include <opencl/Kernel.h>
+#include <opencl/Buffer.h>
+#include <domain/Domain.h>
+#include <system/common/Hash.h>
+#include <system/common/BitonicSort.h>
+#include <system/common/Radix.h>
+#include <system/common/CellIndices.h>
+#include <system/common/Permute.h> 
 
-#include <common/MeshToParticles.h>
+#include <system/common/MeshToParticles.h>
 #include <timer_eb.h>
 
 #ifdef WIN32
@@ -64,14 +64,10 @@ namespace rtps
     public:
         virtual void update(){
             //Do update for simple system here. -ASY
-        };
-
-        System(RTPS *psfr, int num);
-        virtual ~System()
-        {
-            delete renderer;
         }
 
+        System(RTPS *psfr, int num);
+        virtual ~System();
         virtual Domain* getGrid()
         {
             return grid;
@@ -109,14 +105,9 @@ namespace rtps
         };
 */
 
-        virtual int addBox(int nn, float4 min, float4 max, bool scaled, float4 color=float4(1., 0., 0., 1.))
-        {
-            return 0;
-        };
+        virtual int addBox(int nn, float4 min, float4 max, bool scaled, float4 color=float4(1., 0., 0., 1.));
 
-        virtual void addBall(int nn, float4 center, float radius, bool scaled, float4 color=float4(1., 0., 0., 1.))
-        {
-        };
+        virtual void addBall(int nn, float4 center, float radius, bool scaled, float4 color=float4(1., 0., 0., 1.));
         virtual int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1., 0., 0., 1.))
         {
             return 0;
@@ -136,11 +127,8 @@ namespace rtps
         virtual void sprayHoses()
         {
         };
-        virtual void testDelete()
-        {
-        };
 
-
+        virtual void testDelete();
         virtual void loadTriangles(std::vector<Triangle> &triangles)
         {
         };
@@ -149,20 +137,16 @@ namespace rtps
         };
 
 
-        virtual void printTimers()
-        {
-            renderer->printTimers();
-        };
+        virtual void printTimers();
 
         virtual Render* getRenderer()
         {
             return renderer;
         }
         
-        virtual void addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution)
-        {
-            return;
-        }
+        void pushParticles(vector<float4> pos, float4 velo, float4 color=float4(1.0, 0.0, 0.0, 1.0));
+        virtual void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0)){return;}
+        virtual void addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution);
         virtual void setupDomain(float cell_size, float sim_scale);
         virtual void prepareSorted();
         virtual int setupTimers();
@@ -172,6 +156,9 @@ namespace rtps
         RTPSettings* settings;
 
         EB::TimerList timers;
+
+        std::vector<float4> deleted_pos;
+        std::vector<float4> deleted_vel;
 
         //SPHSettings* sphsettings;
         GridParams grid_params;
@@ -203,7 +190,7 @@ namespace rtps
         
         float spacing; //Particle rest distance in world coordinates
         //number of particles
-        int num;  // USED FOR WHAT? 
+        int num;
         //maximum number of particles (for array allocation)
         int max_num;
         //maximum number of outer particles (for array allocation)
@@ -226,13 +213,7 @@ namespace rtps
         void hash_and_sort();
         void bitonic_sort();
         void radix_sort();
-
-        virtual void setRenderer()
-        {
-            //delete renderer;
-            //renderer = render;
-        }
-
+        virtual void setRenderer();
     };
 
 }

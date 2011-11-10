@@ -73,11 +73,10 @@ namespace rtps
 #ifdef GPU
         printf("RUNNING ON THE GPU\n");
         prepareSorted();
-        
-        ps->cli->addIncludeDir(sph_source_dir);
 
         //should be more cross platform
         sph_source_dir = resource_path + "/" + std::string(SPH_CL_SOURCE_DIR);
+        ps->cli->addIncludeDir(sph_source_dir);
 
         density = Density(sph_source_dir, ps->cli, timers["density_gpu"]);
         force = Force(sph_source_dir, ps->cli, timers["force_gpu"]);
@@ -97,24 +96,13 @@ namespace rtps
             euler = Euler(sph_source_dir, ps->cli, timers["euler_gpu"]);
         }
 #endif
+        renderer->setParticleRadius(spacing);
     }
 
 	//----------------------------------------------------------------------
     SPH::~SPH()
     {
         printf("SPH destructor\n");
-        if (pos_vbo)// && managed)
-        {
-            glBindBuffer(1, pos_vbo);
-            glDeleteBuffers(1, (GLuint*)&pos_vbo);
-            pos_vbo = 0;
-        }
-        if (col_vbo)// && managed)
-        {
-            glBindBuffer(1, col_vbo);
-            glDeleteBuffers(1, (GLuint*)&col_vbo);
-            col_vbo = 0;
-        }
 
         Hose* hose;
         int hs = hoses.size();  
@@ -427,13 +415,9 @@ namespace rtps
 	//----------------------------------------------------------------------
     int SPH::setupTimers()
     {
-        //int print_freq = 20000;
-        int print_freq = 1000; //one second
         int time_offset = 5;
         timers["density"] = new EB::Timer("Density function", time_offset);
         timers["density_gpu"] = new EB::Timer("Density GPU kernel execution", time_offset);
-        timers["force"] = new EB::Timer("Force function", time_offset);
-        timers["force_gpu"] = new EB::Timer("Force GPU kernel execution", time_offset);
         timers["collision_wall"] = new EB::Timer("Collision wall function", time_offset);
         timers["cw_gpu"] = new EB::Timer("Collision Wall GPU kernel execution", time_offset);
         timers["collision_tri"] = new EB::Timer("Collision triangles function", time_offset);
@@ -445,21 +429,8 @@ namespace rtps
     }
 
 	//----------------------------------------------------------------------
-    void SPH::printTimers()
-    {
-        printf("Number of Particles: %d\n", num);
-        timers.printAll();
-        std::ostringstream oss; 
-        oss << "sph_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num; 
-        //printf("oss: %s\n", (oss.str()).c_str());
-
-        timers.writeToFile(oss.str()); 
-    }
-
-	//----------------------------------------------------------------------
     void SPH::prepareSorted()
     {
-        System::prepareSorted();
 
         vector<float4> f4vec(max_num);
         vector<float> fvec(max_num);
@@ -473,7 +444,6 @@ namespace rtps
         cl_force_s = Buffer<float4>(ps->cli, f4vec);
         cl_xsph_s = Buffer<float4>(ps->cli, f4vec);
 
-        
         //TODO make a helper constructor for buffer to make a cl_mem from a struct
         //Setup Grid Parameter structs
         std::vector<GridParams> gparams(0);
@@ -484,40 +454,19 @@ namespace rtps
         std::vector<GridParams> sgparams(0);
         sgparams.push_back(grid_params_scaled);
         cl_GridParamsScaled = Buffer<GridParams>(ps->cli, sgparams);
+        // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
+        // That is a problem since the number of
+        // occupied cells could be much less than the number of grid elements.
+        printf("%d\n", grid_params.nb_cells);
+        std::vector<unsigned int> gcells(grid_params.nb_cells+1);
+        int minus = 0xffffffff;
+        std::fill(gcells.begin(), gcells.end(), 666);
+
+        cl_cell_indices_start = Buffer<unsigned int>(ps->cli, gcells);
+        cl_cell_indices_end   = Buffer<unsigned int>(ps->cli, gcells);
+        //printf("gp.nb_points= %d\n", gp.nb_points); exit(0);
+
      }
-
-
-
-	//----------------------------------------------------------------------
-    int SPH::addBox(int nn, float4 min, float4 max, bool scaled, float4 color)
-    {
-        float scale = 1.0f;
-		#if 0
-        if (scaled)
-        {
-            scale = sphp.simulation_scale;
-        }
-		#endif
-		//printf("GEE inside addBox, before addRect, scale= %f\n", scale);
-		//printf("GEE inside addBox, sphp.simulation_scale= %f\n", sphp.simulation_scale);
-		printf("GEE addBox spacing = %f\n", spacing);
-        vector<float4> rect = addRect(nn, min, max, spacing, scale);
-        float4 velo(0, 0, 0, 0);
-        pushParticles(rect, velo, color);
-        return rect.size();
-    }
-
-    void SPH::addBall(int nn, float4 center, float radius, bool scaled)
-    {
-        float scale = 1.0f;
-        if (scaled)
-        {
-            scale = sphp.simulation_scale;
-        }
-        vector<float4> sphere = addSphere(nn, center, radius, spacing, scale);
-        float4 velo(0, 0, 0, 0);
-        pushParticles(sphere,velo);
-    }
 
 	//----------------------------------------------------------------------
     int SPH::addHose(int total_n, float4 center, float4 velocity, float radius, float4 color)
@@ -544,8 +493,6 @@ namespace rtps
         hoses[index]->refill(refill);
     }
 
-
-
     void SPH::sprayHoses()
     {
 
@@ -554,10 +501,42 @@ namespace rtps
         {
             parts = hoses[i]->spray();
             if (parts.size() > 0)
-                pushParticles(parts, hoses[i]->getVelocity(), hoses[i]->getColor());
+                System::pushParticles(parts, hoses[i]->getVelocity(), hoses[i]->getColor());
         }
     }
 
+	//----------------------------------------------------------------------
+    void SPH::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
+    {
+        int nn = pos.size();
+        if (num + nn > max_num)
+        {
+			printf("pushParticles: exceeded max nb(%d) of particles allowed\n", max_num);
+            return;
+        }
+        std::vector<float4> cols(nn);
+        //printf("color: %f %f %f %f\n", color.x, color.y, color.z, color.w);
+
+        std::fill(cols.begin(), cols.end(),color);
+
+#ifdef GPU
+        glFinish();
+        cl_position_u.acquire();
+        cl_color_u.acquire();
+
+		// Allocate max_num particles on the GPU. That wastes memory, but is useful. 
+		// There should be a way to update this during the simulation. 
+        cl_position_u.copyToDevice(pos, num);
+        cl_color_u.copyToDevice(cols, num);
+        cl_velocity_u.copyToDevice(vels, num);
+        settings->SetSetting("Number of Particles", num+nn);
+        updateSPHP();
+        cl_position_u.release();
+        cl_color_u.release();
+#endif
+        num += nn;  //keep track of number of particles we use
+        renderer->setNum(num);
+    }
 	//----------------------------------------------------------------------
     void SPH::render()
     {

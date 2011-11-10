@@ -1,9 +1,9 @@
 #ifndef RTPS_BITONIC_SORT_H
 #define RTPS_BITONIC_SORT_H
 
-#include "CLL.h"
-#include "../opencl/Kernel.h"
-#include "../opencl/Buffer.h"
+#include <opencl/CLL.h>
+#include <opencl/Kernel.h>
+#include <opencl/Buffer.h>
 //#include "../opencl/Scopy.h"
 
 #ifndef uint

@@ -43,11 +43,13 @@
 namespace rtps
 {
 	//----------------------------------------------------------------------
-    System::System(RTPS rtps, int n)
+    System::System(RTPS *psfr, int n)
     {
-        ps = rtps
+        ps = psfr;
         max_num = n;
         num = 0;
+
+        settings = ps->settings;
 
 		// I should be able to not specify this, but GPU restrictions ...
 
@@ -59,21 +61,21 @@ namespace rtps
 
         grid = settings->grid;
 
-        //*** end Initialization
         setupTimers();
-
+        //*** end Initialization
 #ifdef CPU
         printf("RUNNING ON THE CPU\n");
 #endif
 #ifdef GPU
         printf("RUNNING ON THE GPU\n");
+        prepareSorted();
 
         setRenderer();
 
-        ps->cli->addIncludeDir(common_source_dir);
-
         //should be more cross platform
         common_source_dir = resource_path + "/" + std::string(COMMON_CL_SOURCE_DIR);
+        ps->cli->addIncludeDir(common_source_dir);
+        printf("%s\n",common_source_dir.c_str());
 
         hash = Hash(common_source_dir, ps->cli, timers["hash_gpu"]);
         bitonic = Bitonic<unsigned int>(common_source_dir, ps->cli );
@@ -88,14 +90,14 @@ namespace rtps
 	//----------------------------------------------------------------------
     System::~System()
     {
-        printf("SPH destructor\n");
-        if (pos_vbo && managed)
+        printf("System destructor\n");
+        if (pos_vbo)//&& managed)
         {
             glBindBuffer(1, pos_vbo);
             glDeleteBuffers(1, (GLuint*)&pos_vbo);
             pos_vbo = 0;
         }
-        if (col_vbo && managed)
+        if (col_vbo)// && managed)
         {
             glBindBuffer(1, col_vbo);
             glDeleteBuffers(1, (GLuint*)&col_vbo);
@@ -152,27 +154,9 @@ namespace rtps
         //timers["radix"]->stop();
     }
 
-	// GE: WHY IS THIS NEEDED?
-	//----------------------------------------------------------------------
-    void System::call_prep(int stage)
-    {
-		// copy from sorted to unsorted arrays at the beginning of each 
-		// iteration
-		// copy from cl_position_s to cl_position_u
-		// Only called if number of fluid particles changes from one iteration
-		// to the other
-
-            cl_position_u.copyFromBuffer(cl_position_s, 0, 0, num);
-            cl_velocity_u.copyFromBuffer(cl_velocity_s, 0, 0, num);
-            cl_veleval_u.copyFromBuffer(cl_veleval_s, 0, 0, num);
-            cl_color_u.copyFromBuffer(cl_color_s, 0, 0, num);
-    }
-
 	//----------------------------------------------------------------------
     int System::setupTimers()
     {
-        //int print_freq = 20000;
-        int print_freq = 1000; //one second
         int time_offset = 5;
         timers["update"] = new EB::Timer("Update loop", time_offset);
         timers["hash"] = new EB::Timer("Hash function", time_offset);
@@ -181,8 +165,11 @@ namespace rtps
         timers["ci_gpu"] = new EB::Timer("CellIndices GPU kernel execution", time_offset);
         timers["permute"] = new EB::Timer("Permute function", time_offset);
         timers["perm_gpu"] = new EB::Timer("Permute GPU kernel execution", time_offset);
+        timers["force"] = new EB::Timer("Force function", time_offset);
+        timers["force_gpu"] = new EB::Timer("Force GPU kernel execution", time_offset);
         timers["ds_gpu"] = new EB::Timer("DataStructures GPU kernel execution", time_offset);
         timers["bitonic"] = new EB::Timer("Bitonic Sort function", time_offset);
+        timers["radix"] = new EB::Timer("Radix Sort function", time_offset);
 		return 0;
     }
 
@@ -194,8 +181,8 @@ namespace rtps
         std::ostringstream oss; 
         oss << "sph_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num; 
         //printf("oss: %s\n", (oss.str()).c_str());
-
         timers.writeToFile(oss.str()); 
+        renderer->printTimers();
     }
 
 	//----------------------------------------------------------------------
@@ -205,7 +192,6 @@ namespace rtps
         std::fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
         // VBO creation, TODO: should be abstracted to another class
-        managed = true;
         pos_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         printf("pos vbo: %d\n", pos_vbo);
         col_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
@@ -226,7 +212,7 @@ namespace rtps
         std::fill(cliv.begin(), cliv.end(),int4(0.0f, 0.0f, 0.0f, 0.0f));
         clf_debug = Buffer<float4>(ps->cli, f4vec);
         cli_debug = Buffer<int4>(ps->cli, cliv);
-
+        
 
         std::vector<unsigned int> keys(max_num);
         //to get around limits of bitonic sort only handling powers of 2
@@ -234,39 +220,17 @@ namespace rtps
         cl_sort_indices  = Buffer<unsigned int>(ps->cli, keys);
         cl_sort_hashes   = Buffer<unsigned int>(ps->cli, keys);
 
-        // for debugging. Store neighbors of indices
-        // change nb of neighbors in cl_macro.h as well
-        //cl_index_neigh = Buffer<int>(ps->cli, max_num*50);
-
-        // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
-        // That is a problem since the number of
-        // occupied cells could be much less than the number of grid elements.
-        printf("%d\n", grid_params.nb_cells);
-        std::vector<unsigned int> gcells(grid_params.nb_cells+1);
-        int minus = 0xffffffff;
-        std::fill(gcells.begin(), gcells.end(), 666);
-
-        cl_cell_indices_start = Buffer<unsigned int>(ps->cli, gcells);
-        cl_cell_indices_end   = Buffer<unsigned int>(ps->cli, gcells);
-        //printf("gp.nb_points= %d\n", gp.nb_points); exit(0);
-
         // For bitonic sort. Remove when bitonic sort no longer used
         // Currently, there is an error in the Radix Sort (just run both
         // sorts and compare outputs visually
         cl_sort_output_hashes = Buffer<unsigned int>(ps->cli, keys);
         cl_sort_output_indices = Buffer<unsigned int>(ps->cli, keys);
 
-		// Eventually, if I must sort every iteration, I can reuse these arrays. 
-		// Due to potentially, large grid, this is very expensive, and one could run 
-		// out of memory on CPU and GPU. 
-
 		printf("keys.size= %d\n", keys.size()); // 
-		printf("gcells.size= %d\n", gcells.size()); // 1729
-		//exit(1);
      }
 
 	//----------------------------------------------------------------------
-    void System:setupDomain(float cell_size, float sim_scale)
+    void System::setupDomain(float cell_size, float sim_scale)
     {
         grid->calculateCells(cell_size);
 
@@ -321,13 +285,9 @@ namespace rtps
         return rect.size();
     }
 
-    void System::addBall(int nn, float4 center, float radius, bool scaled)
+    void System::addBall(int nn, float4 center, float radius, bool scaled, float4 color)
     {
         float scale = 1.0f;
-        if (scaled)
-        {
-            scale = sphp.simulation_scale;
-        }
         vector<float4> sphere = addSphere(nn, center, radius, spacing, scale);
         float4 velo(0, 0, 0, 0);
         pushParticles(sphere,velo);
@@ -355,37 +315,7 @@ namespace rtps
         pushParticles(pos, vels, color);
 
     }
-	//----------------------------------------------------------------------
-    void System::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
-    {
-        int nn = pos.size();
-        if (num + nn > max_num)
-        {
-			printf("pushParticles: exceeded max nb(%d) of particles allowed\n", max_num);
-            return;
-        }
-        std::vector<float4> cols(nn);
-        //printf("color: %f %f %f %f\n", color.x, color.y, color.z, color.w);
 
-        std::fill(cols.begin(), cols.end(),color);
-
-#ifdef GPU
-        glFinish();
-        cl_position_u.acquire();
-        cl_color_u.acquire();
-
-		// Allocate max_num particles on the GPU. That wastes memory, but is useful. 
-		// There should be a way to update this during the simulation. 
-        cl_position_u.copyToDevice(pos, num);
-        cl_color_u.copyToDevice(cols, num);
-        cl_velocity_u.copyToDevice(vels, num);
-
-        cl_position_u.release();
-        cl_color_u.release();
-#endif
-        num += nn;  //keep track of number of particles we use
-        renderer->setNum(num);
-    }
     void System::setRenderer()
     {
         switch(ps->settings->getRenderType())
@@ -401,7 +331,7 @@ namespace rtps
             case RTPSettings::RENDER:
                 renderer = new Render(pos_vbo,col_vbo,num,ps->cli, ps->settings);
                 break;
-            case RTPSettings::SystemERE3D_RENDER:
+            case RTPSettings::SPHERE3D_RENDER:
                 printf("new Sphere3DRender\n");
                 renderer = new Sphere3DRender(pos_vbo,col_vbo,num,ps->cli, ps->settings);
                 break;
@@ -411,7 +341,6 @@ namespace rtps
                 break;
         }
         //renderer->setParticleRadius(spacing*0.5);
-        renderer->setParticleRadius(spacing);
 		//renderer->setRTPS(
     }
 	//----------------------------------------------------------------------
@@ -429,7 +358,7 @@ namespace rtps
         }   
         catch (cl::Error er) 
         {   
-            printf("ERROR(radix sort): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(radix sort): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }   
 
     }
@@ -460,7 +389,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(bitonic sort): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(bitonic sort): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
             exit(0);
         }
 
@@ -509,5 +438,28 @@ namespace rtps
 
 #endif
     }
-
+    void System::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution)
+    {
+        glFinish();
+        cl::Image3DGL img(ps->cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
+        std::vector<cl::Memory> objs;
+        objs.push_back(img);
+        ps->cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
+        ps->cli->queue.finish();
+        cl_position_u.acquire();
+        cl_color_u.acquire();
+        int tmpnum = m2p.execute(cl_position_u,cl_color_u,cl_velocity_u,num,img,scale,min,world,resolution,//debug
+                clf_debug,
+                cli_debug);
+        printf("tmpnum = %d\n",tmpnum);
+        num+=tmpnum;
+        settings->SetSetting("Number of Particles", num);
+        //updateParticleRigidBodyParams();
+        renderer->setNum(num);
+        //hash_and_sort();
+        ps->cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
+        ps->cli->queue.finish();
+        cl_position_u.release();
+        cl_color_u.release();
+    }
 }; //end namespace

@@ -42,7 +42,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(Density): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(Density): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 
@@ -88,7 +88,7 @@ namespace rtps
 
         catch (cl::Error er)
         {
-            printf("ERROR(density): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(density): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 #if 0 //printouts    

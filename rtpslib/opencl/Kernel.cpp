@@ -68,7 +68,7 @@ namespace rtps
         catch (cl::Error er)
         {
             printf("err: work group size: %d\n", ndrange);
-            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR: %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
         return timing;
 
@@ -91,7 +91,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR: %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
         return timing;
 
@@ -134,7 +134,7 @@ namespace rtps
         catch (cl::Error er)
         {
             printf("err: global %d, local %d\n", global, worksize);
-            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR: %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
         return timing;
 
@@ -149,7 +149,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR: %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
     }
 

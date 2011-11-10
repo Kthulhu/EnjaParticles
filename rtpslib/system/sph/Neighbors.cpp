@@ -46,7 +46,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(neighborSearch): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(neighborSearch): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
             exit(1);
         }
 
@@ -104,7 +104,7 @@ namespace rtps
 
         catch (cl::Error er)
         {
-            printf("ERROR(neighbor %d): %s(%s)\n", choice, er.what(), oclErrorString(er.err()));
+            printf("ERROR(neighbor %d): %s(%s)\n", choice, er.what(), CL::oclErrorString(er.err()));
         }
         ps->cli->queue.finish();
 

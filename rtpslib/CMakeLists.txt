@@ -95,6 +95,7 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/common/CellIndices
     ${rtpslib_SOURCE_DIR}/system/common/Permute
 	
+    ${rtpslib_SOURCE_DIR}/system/System
     
     # Simple
     #${rtpslib_SOURCE_DIR}/system/Simple.cpp
@@ -111,8 +112,6 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/sph/Euler
     ${rtpslib_SOURCE_DIR}/system/sph/LeapFrog
     ${rtpslib_SOURCE_DIR}/system/sph/Lifetime
-    #${rtpslib_SOURCE_DIR}/system/sph/Prep
-    #${rtpslib_SOURCE_DIR}/system/sph/Sort
     ${rtpslib_SOURCE_DIR}/system/sph/Density
     ${rtpslib_SOURCE_DIR}/system/sph/Force
     ${rtpslib_SOURCE_DIR}/system/sph/Collision_wall
@@ -131,15 +130,6 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/FLOCKSettings.cpp
     ${rtpslib_SOURCE_DIR}/system/flock/EulerIntegration
     ${rtpslib_SOURCE_DIR}/system/flock/Rules
-    #${rtpslib_SOURCE_DIR}/system/flock/ComputeRules
-    #${rtpslib_SOURCE_DIR}/system/flock/AverageRules
-    #${rtpslib_SOURCE_DIR}/system/flock/LeapFrog
-    #${rtpslib_SOURCE_DIR}/system/flock/Density
-    #${rtpslib_SOURCE_DIR}/system/flock/Pressure
-    #${rtpslib_SOURCE_DIR}/system/flock/Viscosity
-    #${rtpslib_SOURCE_DIR}/system/flock/XFLOCK
-    #${rtpslib_SOURCE_DIR}/system/flock/Collision_wall
-    #${rtpslib_SOURCE_DIR}/system/flock/Collision_triangle
 
     # Added by GE
     ${rtpslib_SOURCE_DIR}/system/boids
@@ -151,22 +141,9 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForce
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBSegmentedScan
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBUpdateParticles
-    #${rtpslib_SOURCE_DIR}/system/sph/Prep
-    #${rtpslib_SOURCE_DIR}/system/sph/Sort
-    #${rtpslib_SOURCE_DIR}/system/sph/Collision_wall
-    #${rtpslib_SOURCE_DIR}/system/sph/Collision_triangle
 
 
     ${rtpslib_SOURCE_DIR}/system/common/MeshToParticles
-    
-    # neighbors
-    #${rtpslib_SOURCE_DIR}/system/flock/Prep
-    ${rtpslib_SOURCE_DIR}/system/flock/Sort
-    #${rtpslib_SOURCE_DIR}/system/flock/Hash
-    #${rtpslib_SOURCE_DIR}/system/flock/BitonicSort
-    #${rtpslib_SOURCE_DIR}/system/flock/DataStructures
-    #${rtpslib_SOURCE_DIR}/system/flock/Neighbors
-    #${rtpslib_SOURCE_DIR}/particle
     )
 
 IF (WIN32)

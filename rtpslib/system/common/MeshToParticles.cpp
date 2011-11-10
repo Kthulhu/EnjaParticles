@@ -25,6 +25,7 @@
 #include "MeshToParticles.h"
 
 #include <string>
+#include <vector>
 
 namespace rtps
 {
@@ -92,13 +93,13 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(meshtoparticles): %s(%s)\n", er.what(), oclErrorString(er.err()));
+            printf("ERROR(meshtoparticles): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 #if 1
             //svars.copyToHost(dens, DENS*sphp.max_num);
             //svars.copyToHost(poss, POS*sphp.max_num);
-            vector<float4> clf(num+numVec[0]);
+            std::vector<float4> clf(num+numVec[0]);
             clf_debug.copyToHost(clf);
 
             //for (int i=0; i < nbc; i++)

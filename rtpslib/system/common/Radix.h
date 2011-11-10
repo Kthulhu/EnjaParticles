@@ -6,9 +6,10 @@
 //defines useful structs like float3 and float4
 #include <structs.h>
 //OpenCL API
-#include <CLL.h>
-#include <Kernel.h>
-#include <Buffer.h>
+#include <opencl/CLL.h>
+#include <opencl/Buffer.h>
+#include <opencl/Kernel.h>
+#include <domain/Domain.h>
 #include <timer_eb.h>
 
 #include <vector>

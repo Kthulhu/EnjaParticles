@@ -286,7 +286,7 @@ namespace rtps
     // Helper function to get error string
     // From NVIDIA
     // *********************************************************************
-    const char* oclErrorString(cl_int error)
+    const char* CL::oclErrorString(cl_int error)
     {
         static const char* errorString[] = {
             "CL_SUCCESS",
@@ -372,7 +372,7 @@ namespace rtps
     //! @return the id 
     //! @param clSelectedPlatformID         OpenCL platform ID
     //////////////////////////////////////////////////////////////////////////////
-    cl_int oclGetPlatformID(cl_platform_id* clSelectedPlatformID)
+    cl_int CL::oclGetPlatformID(cl_platform_id* clSelectedPlatformID)
     {
         char chBuffer[1024];
         cl_uint num_platforms;

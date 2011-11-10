@@ -132,7 +132,7 @@ namespace rtps {
         cli = cli_debug.copyToHost(num);
     }
     catch (cl::Error er) {
-        printf("ERROR(triangle): %s(%s)\n", er.what(), oclErrorString(er.err()));
+        printf("ERROR(triangle): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
     }
 
 

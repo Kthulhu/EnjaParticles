@@ -62,7 +62,7 @@ namespace rtps
         /*
         cl_depth = Buffer<float>(cli,gl_tex["depth"],1);
 
-        //printf("OpenCL error is %s\n",oclErrorString(cli->err));
+        //printf("OpenCL error is %s\n",CL::oclErrorString(cli->err));
         std::string path(GLSL_BIN_DIR);
         path += "/curvature_flow.cl";
         k_curvature_flow = Kernel(cli, path, "curvature_flow");

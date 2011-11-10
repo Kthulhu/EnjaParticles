@@ -86,7 +86,7 @@ namespace rtps
 
     }
 
-    void FLOCK::cpuEulerIntegration()
+  /*  void FLOCK::cpuEulerIntegration()
     {
         float w_sep = flock_params.w_sep;   
         float w_aln = flock_params.w_align;
@@ -158,6 +158,6 @@ namespace rtps
             positions[i] = pi; // flock_params.simulation_scale;
             positions[i].w = 1.0f;	
         }
-    }
+    }*/
 
 }

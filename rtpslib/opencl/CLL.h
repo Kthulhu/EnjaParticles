@@ -44,8 +44,8 @@ namespace rtps
 
 
     //NVIDIA helper functions    
-    RTPS_EXPORT const char* oclErrorString(cl_int error);
-    RTPS_EXPORT cl_int oclGetPlatformID(cl_platform_id* clSelectedPlatformID);
+    //RTPS_EXPORT const char* oclErrorString(cl_int error);
+    //RTPS_EXPORT cl_int oclGetPlatformID(cl_platform_id* clSelectedPlatformID);
 
     class RTPS_EXPORT CL
     {
@@ -84,7 +84,8 @@ namespace rtps
         //TODO add oclErrorString to the class
         //move from util.h/cpp
         //
-
+        static const char* oclErrorString(cl_int error);
+        static cl_int oclGetPlatformID(cl_platform_id* clSelectedPlatformID);
     private:
         std::string inc_dir;
     };

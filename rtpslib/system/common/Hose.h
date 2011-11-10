@@ -30,10 +30,10 @@
 //defines useful structs like float3 and float4
 #include <structs.h>
 //OpenCL API
-#include <CLL.h>
+#include <opencl/CLL.h>
+#include <domain/IV.h>
 #include <timer_eb.h>
 #include <vector>
-#include <IV.h>
 
 #include "../../rtps_common.h"
 using namespace std;
