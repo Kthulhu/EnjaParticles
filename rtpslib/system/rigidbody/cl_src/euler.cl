@@ -24,6 +24,7 @@
 
 #include "cl_macros.h"
 #include "cl_structs.h"
+#include "Quaternion.h"
 
 float magnitude(float4 vec)
 {
@@ -49,7 +50,7 @@ __kernel void euler(
     float4 p = comPos[i] ;
     float4 v = comVel[i];
     float4 lf = comLinearForce[i];
-    float4 q = comRot[i];
+    Quaternion q = comRot[i];
     float4 w = comAngVel[i];
     float4 tf = comTorqueForce[i];
 
@@ -67,17 +68,21 @@ __kernel void euler(
     v += dt*lf;
     p += dt*v;
     p.w = 1.0f; //just in case
-    w += dt*tf.xyz;
-    w.w = 0;
-    float wMag = length(w.xyz);
-    float wDt= length(w.xyz*dt);
-    float3 a = (w.xyz/wMag)*sin(wDt/2.0);
-    float4 dq = (float4)(cos(wDt/2.0),a.x,a.y,a.z);
-    q = cross(dq,q);
+    w.xyz += dt*tf.xyz;
+    //float wMag = length(w.xyz);
+    //float wDt= length(w.xyz*dt);
+    //prevents nan error from divide-by-zero
+    //float3 a = wMag==0.0?(float3)(0.0,0.0,0.0):(w.xyz/wMag)*sin(wDt/2.0);
+    //float4 dq = (float4)(cos(wDt/2.0),a.x,a.y,a.z);
+    Quaternion dq = qtSet(w,sqrt(dot3F4(w*dt,w*dt)));
+    q = qtMul(dq,q);
+    //FIXME: quaternion multiplication is not the cross product. Need to fix this.
+    //q = cross(dq,q);
+    //q = q
     comVel[i] = v;
     comPos[i] = p;
     comAngVel[i] = w;
     comRot[i] = q;
     
-    clf[i] = p;
+    clf[i] = q;
 }

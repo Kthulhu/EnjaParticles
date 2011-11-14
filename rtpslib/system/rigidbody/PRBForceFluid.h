@@ -22,34 +22,47 @@
 ****************************************************************************************/
 
 
-#ifndef _SEGMENTED_SCAN_CL_
-#define _SEGMENTED_SCAN_CL_
+#ifndef RTPS_PARTICLE_RIGIDBODY_FORCE_FLUID_H_INCLUDED
+#define RTPS_PARTICLE_RIGIDBODY_FORCE_FLUID_H_INCLUDED
 
-#include "cl_macros.h"
-#include "cl_structs.h"
 
-__kernel void sum(
-                    __global float4* pos_u,
-                    __global int2* particleIndex,
-                    __global float4* linear_force_s,
-                    __global float4* comLinearForce,
-                    __global float4* comTorqueForce,
-                    __global float4* comPos
-                       DEBUG_ARGS
-                       )
+#include <CLL.h>
+#include <Buffer.h>
+#include <Kernel.h>
+#include <structs.h>
+#include <Domain.h>
+#include <timer_eb.h>
+#include "ParticleRigidBodyParams.h"
+
+
+namespace rtps
 {
-    int index = get_global_id(0);
-    int i = particleIndex[index].x;
-    int end = particleIndex[index].y;
-    comLinearForce[index]=linear_force_s[i];
-    comTorqueForce[index].xyz=cross((pos_u[i]-comPos[index]).xyz,linear_force_s[i++].xyz);
-    for(;i<end;i++)
+    class PRBForceFluid
     {
-        comLinearForce[index]+=linear_force_s[i];
-        comTorqueForce[index].xyz+=cross((pos_u[i]-comPos[index]).xyz,linear_force_s[i].xyz);
-        //clf[i].xyz=pos_u[i].xyz;
-        //clf[i].xyz=(pos_u[i]-comPos[index]).xyz;
-    }
-}
-#endif
+        public:
+            PRBForceFluid() { cli = NULL; timer = NULL; };
+            PRBForceFluid(std::string path, CL* cli, EB::Timer* timer);
+            void execute(int num,
+                    Buffer<float4>& pos_s,
+                    Buffer<float4>& veleval_s,
+                    Buffer<float4>& linear_force_s,
+                    Buffer<float4>& fluid_pos_s,
+                    Buffer<float4>& fluid_velocity_s,
+                    Buffer<unsigned int>& indices,
+                    Buffer<unsigned int>& ci_start,
+                    Buffer<unsigned int>& ci_end,
+                    //params
+                    Buffer<ParticleRigidBodyParams>& prbp,
+                    Buffer<GridParams>& gp,
+                    //debug params
+                    Buffer<float4>& clf_debug,
+                    Buffer<int4>& cli_debug);
 
+        private:
+            CL* cli;
+            Kernel k_force_fluid;
+            EB::Timer* timer;
+    };
+}
+
+#endif

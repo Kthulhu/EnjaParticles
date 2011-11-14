@@ -36,7 +36,8 @@
 
 #include "cl_macros.h"
 #include "cl_structs.h"
-__inline__ float16 quatToRot(float4 quat)
+#include "Quaternion.h"
+/*__inline__ float16 quatToRot(float4 quat)
 {
     float a2 = quat.x*quat.x;
     float b2 = quat.y*quat.y;
@@ -52,8 +53,7 @@ __inline__ float16 quatToRot(float4 quat)
                         2.0*(bc+ad),a2-b2+c2-d2,2.0*(cd-ab), 0.0,
                         2.0*(bd-ac),2.0*(cd+ab),a2-b2-c2+d2, 0.0,
                         0.0, 0.0, 0.0, 1.0);
-}
-//Contains all of the Smoothing Kernels for SPH
+}*/
 __kernel void update_particles(
                     __global float4* pos_u,
                     __global float4* pos_l,
@@ -69,7 +69,7 @@ __kernel void update_particles(
     int index = get_global_id(0);
     int i = particleIndex[index].x;
     int end = particleIndex[index].y;
-    float16 m = quatToRot(comRot[i]); 
+    float16 m = qtGetRotationMatrix(comRot[index]); 
     for(;i<end;i++)
     {
         float3 rotPos =(float3)(dot(m.s012,pos_l[i].xyz),dot(m.s456,pos_l[i].xyz),dot(m.s89a,pos_l[i].xyz));
@@ -77,8 +77,17 @@ __kernel void update_particles(
         pos_u[i].xyz=rotPos+comPos[index].xyz;
         pos_u[i].w = 1.0;
         velocity_u[i].xyz = comVel[index].xyz + cross(comAngVel[index].xyz,pos_l[i].xyz);
-        //clf[i]=(float4)(rotPos,1.0);
+        //clf[i]=pos_l[i];
+        //clf[i]=pos_u[i];
+        //clf[i].xyz=rotPos;
+        //clf[i].xyz=cross(comAngVel[index].xyz,pos_l[i].xyz);
+        //clf[i].xyz=comAngVel[index].xyz;
     }
+    clf[index]=comRot[index];
+    //clf[index*4]=m.s0123;
+    //clf[index*4+1]=m.s4567;
+    //clf[index*4+2]=m.s89ab;
+    //clf[index*4+3]=m.scdef;
 }
 /*-------------------------------------------------------------- */
 #endif

@@ -145,7 +145,8 @@ rtps::RTPS* ps;
 //#define NUM_PARTICLES 4000
 //#define NUM_PARTICLES 100000
 
-#define DT .003f
+//#define DT .003f
+#define DT .03f
 
 // contorl 
 //float4 color = float4(0.5, 0.3, 0.73, .05);

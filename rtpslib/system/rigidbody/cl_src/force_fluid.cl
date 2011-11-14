@@ -28,9 +28,9 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force
+#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global float4* pos_j, __global float4* vel_j
 //, __global float4* torque_force
-#define ARGV pos, vel, linear_force 
+#define ARGV pos, vel, linear_force, pos_j, vel_j 
 
 /*----------------------------------------------------------------------*/
 
@@ -55,14 +55,14 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     //int num = prbp->num;
 
     // get the particle info (in the current grid) to test against
-    float4 position_j = pos[index_j] * prbp->simulation_scale; 
+    float4 position_j = pos_j[index_j] * prbp->simulation_scale; 
     float4 r = (position_i - position_j); 
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
 
     // is this particle within cutoff?
-    if (rlen <= prbp->smoothing_distance)
+    if (rlen <= 2.*prbp->smoothing_distance)
     {
 
         //iej is 0 when we are looking at same particle
@@ -73,10 +73,10 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
 
-        float4 springForce = -prbp->boundary_stiffness*(prbp->smoothing_distance-rlen)*(r/rlen); 
+        float4 springForce = -prbp->boundary_stiffness*(2.*prbp->smoothing_distance-rlen)*(r/rlen); 
 
         float4 veli = vel[index_i]; // sorted
-        float4 velj = vel[index_j];
+        float4 velj = vel_j[index_j];
 
         float4 dampeningForce = prbp->boundary_dampening*(velj-veli);
         //force *= sphp->mass;// * idi * idj;
@@ -104,6 +104,7 @@ __kernel void force_update(
                        )
 {
     // particle index
+    int nb_vars = prbp->nb_vars;
     int num = prbp->num;
     //int numParticles = get_global_size(0);
     //int num = get_global_size(0);
@@ -120,7 +121,7 @@ __kernel void force_update(
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ prbp DEBUG_ARGV);
     
-    linear_force[sort_indices[index]] = pt.linear_force; 
+    linear_force[sort_indices[index]] += pt.linear_force; 
     clf[sort_indices[index]].xyz = pt.linear_force.xyz;
 }
 

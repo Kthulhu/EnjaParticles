@@ -21,68 +21,72 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 
-#include "PRBSegmentedScan.h"
+
+#include <SPH.h>
 
 namespace rtps 
 {
 
     //----------------------------------------------------------------------
-    PRBSegmentedScan::PRBSegmentedScan(std::string path, CL* cli_, EB::Timer* timer_)
+    RigidBodyForce::RigidBodyForce(std::string path, CL* cli_, EB::Timer* timer_)
     {
         cli = cli_;
         timer = timer_;
      
-        printf("load segmented scan\n");
+        printf("load rigidbody force\n");
 
         try
         {
-            path = path + "/segmented_scan.cl";
-            k_segmented_scan = Kernel(cli, path, "sum");
+            path = path + "/rigidbody_force.cl";
+            k_rigidbody_force = Kernel(cli, path, "force_update");
         }
         catch (cl::Error er)
         {
-            printf("ERROR(PRBSegmentedScan): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
+            printf("ERROR(RigidBodyForce): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 
     }
     //----------------------------------------------------------------------
 
-    void PRBSegmentedScan::execute(int num,
-                    Buffer<float4>& pos_u,
-                    //Buffer<float4>& veleval_s,
-                    Buffer<int2>& particleIndex,
-                    Buffer<float4>& linear_force_u,
-                    Buffer<float4>& comLinearForce,
-                    Buffer<float4>& comTorqueForce,
-                    Buffer<float4>& comPos,
-                    int numRBs,
-                    //Buffer<float4>& torque_force_s,
-                    //Buffer<unsigned int>& ci_start,
-                    //Buffer<unsigned int>& ci_end,
+    void RigidBodyForce::execute(int num,
+                    Buffer<float4>& pos_s,
+                    Buffer<float4>& veleval_s,
+                    Buffer<float4>& force_s,
+                    Buffer<float4>& rb_pos_s,
+                    Buffer<float4>& rb_velocity_s,
+                    Buffer<unsigned int>& ci_start,
+                    Buffer<unsigned int>& ci_end,
+                    //params
+                    Buffer<SPHParams>& sphp,
+                    Buffer<GridParams>& gp,
+                    float stiffness,
+                    float dampening,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
     { 
         int iarg = 0;
-        k_segmented_scan.setArg(iarg++, pos_u.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, particleIndex.getDevicePtr());
-        //k_segmented_scan.setArg(iarg++, veleval_s.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, linear_force_u.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, comLinearForce.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, comTorqueForce.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, comPos.getDevicePtr());
-        //k_segmented_scan.setArg(iarg++, torque_force_s.getDevicePtr());
-        //k_segmented_scan.setArg(iarg++, ci_start.getDevicePtr());
-        //k_segmented_scan.setArg(iarg++, ci_end.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, pos_s.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, veleval_s.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, force_s.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, rb_pos_s.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, rb_velocity_s.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, stiffness);
+        k_rigidbody_force.setArg(iarg++, dampening);
+        k_rigidbody_force.setArg(iarg++, ci_start.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, ci_end.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, gp.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, sphp.getDevicePtr());
+
         // ONLY IF DEBUGGING
-        k_segmented_scan.setArg(iarg++, clf_debug.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, cli_debug.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, clf_debug.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, cli_debug.getDevicePtr());
 
         int local = 64;
         try
         {
-            float gputime = k_segmented_scan.execute(numRBs);//, local);
+            float gputime = k_rigidbody_force.execute(num, local);
             if(gputime > 0)
                 timer->set(gputime);
 
@@ -90,15 +94,17 @@ namespace rtps
 
         catch (cl::Error er)
         {
-            printf("ERROR(PRBSegmentedScan): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
+            printf("ERROR(rigidbody force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 #if 0 //printouts    
         //DEBUGING
+        
         if(num > 0)// && choice == 0)
         {
             printf("============================================\n");
-            printf("***** PRINT Segmented Scan diagnostics ******\n");
+            printf("which == %d *** \n", choice);
+            printf("***** PRINT neighbors diagnostics ******\n");
             printf("num %d\n", num);
 
             std::vector<int4> cli(num);
@@ -106,6 +112,9 @@ namespace rtps
             
             cli_debug.copyToHost(cli);
             clf_debug.copyToHost(clf);
+
+            std::vector<float4> poss(num);
+            std::vector<float4> dens(num);
 
             for (int i=0; i < num; i++)
             //for (int i=0; i < 10; i++) 

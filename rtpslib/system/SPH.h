@@ -43,6 +43,7 @@
 #include <sph/Force.h>
 #include <sph/Collision_wall.h>
 #include <sph/Collision_triangle.h>
+#include <sph/RigidBodyForce.h>
 #include <sph/LeapFrog.h>
 #include <sph/Lifetime.h>
 #include <sph/Euler.h>
@@ -156,6 +157,7 @@ namespace rtps
         void collision();
         CollisionWall collision_wall;
         CollisionTriangle collision_tri;
+        RigidBodyForce forceRB;
         void integrate();
         LeapFrog leapfrog;
         Euler euler;

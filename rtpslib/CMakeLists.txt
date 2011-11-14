@@ -106,14 +106,13 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/SPH.cpp
     ${rtpslib_SOURCE_DIR}/system/SPHSettings.cpp
 
-	#ParticleRigidBody 
-    ${rtpslib_SOURCE_DIR}/system/ParticleRigidBody.cpp
 
     ${rtpslib_SOURCE_DIR}/system/sph/Euler
     ${rtpslib_SOURCE_DIR}/system/sph/LeapFrog
     ${rtpslib_SOURCE_DIR}/system/sph/Lifetime
     ${rtpslib_SOURCE_DIR}/system/sph/Density
     ${rtpslib_SOURCE_DIR}/system/sph/Force
+    ${rtpslib_SOURCE_DIR}/system/sph/RigidBodyForce
     ${rtpslib_SOURCE_DIR}/system/sph/Collision_wall
     ${rtpslib_SOURCE_DIR}/system/sph/Collision_triangle
 
@@ -135,10 +134,13 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/boids
     ####
 
+    #ParticleRigidBody 
+    ${rtpslib_SOURCE_DIR}/system/ParticleRigidBody.cpp
     # Rigidbody dynamics.
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBEuler
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBLeapFrog
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForce
+    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForceFluid
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBSegmentedScan
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBUpdateParticles
 

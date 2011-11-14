@@ -21,68 +21,71 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 
-#include "PRBSegmentedScan.h"
+#include "PRBForceFluid.h"
 
 namespace rtps 
 {
 
     //----------------------------------------------------------------------
-    PRBSegmentedScan::PRBSegmentedScan(std::string path, CL* cli_, EB::Timer* timer_)
+    PRBForceFluid::PRBForceFluid(std::string path, CL* cli_, EB::Timer* timer_)
     {
         cli = cli_;
         timer = timer_;
      
-        printf("load segmented scan\n");
+        printf("load force_fluid\n");
 
         try
         {
-            path = path + "/segmented_scan.cl";
-            k_segmented_scan = Kernel(cli, path, "sum");
+            path = path + "/force_fluid.cl";
+            k_force_fluid = Kernel(cli, path, "force_update");
         }
         catch (cl::Error er)
         {
-            printf("ERROR(PRBSegmentedScan): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
+            printf("ERROR(Force Fluid): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 
     }
     //----------------------------------------------------------------------
 
-    void PRBSegmentedScan::execute(int num,
-                    Buffer<float4>& pos_u,
-                    //Buffer<float4>& veleval_s,
-                    Buffer<int2>& particleIndex,
-                    Buffer<float4>& linear_force_u,
-                    Buffer<float4>& comLinearForce,
-                    Buffer<float4>& comTorqueForce,
-                    Buffer<float4>& comPos,
-                    int numRBs,
+    void PRBForceFluid::execute(int num,
+                    Buffer<float4>& pos_s,
+                    Buffer<float4>& veleval_s,
+                    Buffer<float4>& linear_force_s,
+                    Buffer<float4>& fluid_pos_s,
+                    Buffer<float4>& fluid_velocity_s,
                     //Buffer<float4>& torque_force_s,
-                    //Buffer<unsigned int>& ci_start,
-                    //Buffer<unsigned int>& ci_end,
+                    Buffer<unsigned int>& indices,
+                    Buffer<unsigned int>& ci_start,
+                    Buffer<unsigned int>& ci_end,
+                    //params
+                    Buffer<ParticleRigidBodyParams>& prbp,
+                    Buffer<GridParams>& gp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
     { 
         int iarg = 0;
-        k_segmented_scan.setArg(iarg++, pos_u.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, particleIndex.getDevicePtr());
-        //k_segmented_scan.setArg(iarg++, veleval_s.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, linear_force_u.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, comLinearForce.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, comTorqueForce.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, comPos.getDevicePtr());
-        //k_segmented_scan.setArg(iarg++, torque_force_s.getDevicePtr());
-        //k_segmented_scan.setArg(iarg++, ci_start.getDevicePtr());
-        //k_segmented_scan.setArg(iarg++, ci_end.getDevicePtr());
+        k_force_fluid.setArg(iarg++, pos_s.getDevicePtr());
+        k_force_fluid.setArg(iarg++, veleval_s.getDevicePtr());
+        k_force_fluid.setArg(iarg++, linear_force_s.getDevicePtr());
+        k_force_fluid.setArg(iarg++, fluid_pos_s.getDevicePtr());
+        k_force_fluid.setArg(iarg++, fluid_velocity_s.getDevicePtr());
+        //k_force_fluid.setArg(iarg++, torque_force_s.getDevicePtr());
+        k_force_fluid.setArg(iarg++, indices.getDevicePtr());
+        k_force_fluid.setArg(iarg++, ci_start.getDevicePtr());
+        k_force_fluid.setArg(iarg++, ci_end.getDevicePtr());
+        k_force_fluid.setArg(iarg++, gp.getDevicePtr());
+        k_force_fluid.setArg(iarg++, prbp.getDevicePtr());
+
         // ONLY IF DEBUGGING
-        k_segmented_scan.setArg(iarg++, clf_debug.getDevicePtr());
-        k_segmented_scan.setArg(iarg++, cli_debug.getDevicePtr());
+        k_force_fluid.setArg(iarg++, clf_debug.getDevicePtr());
+        k_force_fluid.setArg(iarg++, cli_debug.getDevicePtr());
 
         int local = 64;
         try
         {
-            float gputime = k_segmented_scan.execute(numRBs);//, local);
+            float gputime = k_force_fluid.execute(num, local);
             if(gputime > 0)
                 timer->set(gputime);
 
@@ -90,15 +93,16 @@ namespace rtps
 
         catch (cl::Error er)
         {
-            printf("ERROR(PRBSegmentedScan): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
+            printf("ERROR(force_fluid ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
 #if 0 //printouts    
         //DEBUGING
+        
         if(num > 0)// && choice == 0)
         {
             printf("============================================\n");
-            printf("***** PRINT Segmented Scan diagnostics ******\n");
+            printf("***** PRINT neighbors diagnostics ******\n");
             printf("num %d\n", num);
 
             std::vector<int4> cli(num);

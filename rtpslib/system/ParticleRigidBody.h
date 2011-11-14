@@ -45,6 +45,7 @@
 #include <rigidbody/PRBLeapFrog.h>
 #include <rigidbody/PRBEuler.h>
 #include <rigidbody/PRBForce.h>
+#include <rigidbody/PRBForceFluid.h>
 #include <rigidbody/PRBSegmentedScan.h>
 #include <rigidbody/PRBUpdateParticles.h>
 #include <structs.h>
@@ -114,8 +115,6 @@ namespace rtps
         //positions, another holds sorted global positions, and a third holds 
         //unsorted local positions(per_rigid_body).
         Buffer<float4>      cl_position_l;
-        Buffer<float4>      cl_static_position_u;
-        Buffer<float4>      cl_static_position_s;
         Buffer<float4>      cl_veleval_u;
         Buffer<float4>      cl_veleval_s;
 
@@ -140,9 +139,13 @@ namespace rtps
         void call_prep(int stage);
         void integrate();
 
+        Buffer<float4>      cl_static_position_u;
+        Buffer<float4>      cl_static_position_s;
+
         PRBLeapFrog leapfrog;
         PRBEuler euler;
         PRBForce force;
+        PRBForceFluid forceFluid;
         MeshToParticles m2p; 
         //TODO: Need to implement Segmented scan for summing each rigid bodies particle
         //forces to find out the linear force and torque force on the center of mass.

@@ -81,6 +81,7 @@ namespace rtps
         rigidbody_source_dir = resource_path + "/" + std::string(PARTICLE_RIGIDBODY_CL_SOURCE_DIR);
         ps->cli->addIncludeDir(rigidbody_source_dir);
         force = PRBForce(rigidbody_source_dir, ps->cli, timers["force_gpu"]);
+        forceFluid = PRBForceFluid(rigidbody_source_dir, ps->cli, timers["force_fluid_gpu"]);
         sscan = PRBSegmentedScan(rigidbody_source_dir, ps->cli, timers["segmented_scan_gpu"]);
         updateParticles = PRBUpdateParticles(rigidbody_source_dir, ps->cli, timers["update_particles_gpu"]);
 		
@@ -234,8 +235,30 @@ namespace rtps
                 cl_GridParamsScaled,
                 clf_debug,
                 cli_debug);
-
             timers["force"]->stop();
+            for(int j = 0;j<interactionSystem.size();j++)
+            {
+                //Naievely assume it is an sph system for now.
+                //Need to come up with a good way to interact.
+                timers["force_fluid"]->start();
+                forceFluid.execute(   num,
+                    //cl_vars_sorted,
+                    cl_position_s,
+                    cl_velocity_s,
+                    cl_force_s,
+                    interactionSystem[j]->getPositionBuffer(),
+                    interactionSystem[j]->getVelocityBuffer(),
+                    cl_sort_indices,
+                    interactionSystem[j]->getCellStartBuffer(),
+                    interactionSystem[j]->getCellEndBuffer(),
+                    cl_prbp,
+                    //cl_GridParams,
+                    cl_GridParamsScaled,
+                    clf_debug,
+                    cli_debug);
+                timers["force_fluid"]->stop();
+            }
+
             timers["segmented_scan"]->start();
             sscan.execute(num,
                     cl_position_u,
@@ -346,6 +369,8 @@ namespace rtps
     int ParticleRigidBody::setupTimers()
     {
         int time_offset = 5;
+        timers["force_fluid"] = new EB::Timer("Force Fluid function", time_offset);
+        timers["force_fluid_gpu"] = new EB::Timer("Force Fluid GPU kernel execution", time_offset);
         timers["integrate"] = new EB::Timer("Integration function", time_offset);
         timers["leapfrog_gpu"] = new EB::Timer("LeapFrog Integration GPU kernel execution", time_offset);
         timers["euler_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset);
@@ -368,7 +393,7 @@ namespace rtps
 
         std::fill(f4Vec.begin(), f4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(rbf4Vec.begin(), rbf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
-        std::fill(rotf4Vec.begin(), rotf4Vec.end(), float4(1.0f, 0.0f, 0.0f, 0.0f));
+        std::fill(rotf4Vec.begin(), rotf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 1.0f));
         std::fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
 
         cl_position_l = Buffer<float4>(ps->cli, f4Vec);
@@ -476,6 +501,7 @@ namespace rtps
         cl_rbParticleIndex.copyToDevice(rbParticleIndex);
         com.print("Center of Mass");
         printf("particle index start = %d end = %d\n",rbParticleIndex.back().x,rbParticleIndex.back().y);
+        printf("rbParticleIndex.size() = %d\n",rbParticleIndex.size());
 
         settings->SetSetting("Number of Particles", num+nn);
         updateParticleRigidBodyParams();
@@ -484,6 +510,7 @@ namespace rtps
         cl_color_u.release();
 #endif
         num += nn;  //keep track of number of particles we use
+        printf("num = %d\n",num);
         renderer->setNum(num);
     }
 	//----------------------------------------------------------------------
@@ -541,7 +568,7 @@ namespace rtps
 
         settings->SetSetting("Boundary Distance", boundary_distance);
         //float spacing = rest_distance / simulation_scale;
-        float spacing = (rest_distance / simulation_scale);
+        float spacing = 2.*(smoothing_distance / simulation_scale);
         printf("Spacing = %f\n",spacing);
         settings->SetSetting("Spacing", spacing);
  

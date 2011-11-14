@@ -150,6 +150,16 @@ namespace rtps
         virtual void setupDomain(float cell_size, float sim_scale);
         virtual void prepareSorted();
         virtual int setupTimers();
+        void addInteractionSystem(System* interact)
+        {
+            interactionSystem.push_back(interact);
+        }
+        Buffer<float4>& getVelocityBuffer() {return cl_velocity_s;}
+        Buffer<float4>& getColorBuffer() {return cl_color_s;}
+        Buffer<float4>& getPositionBuffer() {return cl_position_s;}
+        Buffer<unsigned int>& getCellStartBuffer() {return cl_cell_indices_start;}
+        Buffer<unsigned int>& getCellEndBuffer() {return cl_cell_indices_end;}
+        RTPSettings* getSettings() {return settings;}
     protected:
                 //the particle system framework
         RTPS* ps;
@@ -209,6 +219,7 @@ namespace rtps
         CellIndices cellindices;
         Permute permute;
         MeshToParticles m2p; 
+        vector<System*> interactionSystem;
 
         void hash_and_sort();
         void bitonic_sort();

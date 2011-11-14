@@ -115,8 +115,8 @@ void rotate_img(GLubyte* img, int size);
 void *font = GLUT_BITMAP_8_BY_13;
 
 rtps::CL* cli;
-rtps::RTPS* ps1;
-rtps::RTPS* ps2;
+rtps::RTPS* sph;
+rtps::RTPS* rb;
 
 //#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
@@ -129,7 +129,8 @@ rtps::RTPS* ps2;
 //#define NUM_PARTICLES 2048
 //#define NUM_PARTICLES 1024
 //#define NUM_PARTICLES 256
-#define DT .001f
+#define DT .003f
+//#define DT .015f
 
 
 
@@ -183,26 +184,16 @@ int main(int argc, char** argv)
 
     printf("before we call enjas functions\n");
 
-
+    cli = new CL();
     //default constructor
     //rtps::RTPSettings settings;
     //rtps::Domain grid = Domain(float4(-5,-.3,0,0), float4(2, 2, 12, 0));
-    rtps::Domain* grid = new Domain(float4(0,0,0,0), float4(5, 5, 5, 0));
+    rtps::Domain* grid = new Domain(float4(0,0,0,0), float4(10, 10, 10, 0));
     //rtps::Domain grid = Domain(float4(0,0,0,0), float4(2, 2, 2, 0));
     rtps::RTPSettings *settings = new rtps::RTPSettings(rtps::RTPSettings::SPH, NUM_PARTICLES, DT, grid);
+    
 
-    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    settings->setRenderType(RTPSettings::RENDER);
-    //settings->setRenderType(RTPSettings::SPRITE_RENDER);
-   /* settings->setRadiusScale(1.0);
-    settings->setBlurScale(1.0);
-    settings->setUseGLSL(1);
-    settings->SetSetting("render_texture", "firejet_blast.png");
-    settings->SetSetting("render_frag_shader", "sprite_tex_frag.glsl");
-    settings->SetSetting("render_use_alpha", true);
-    settings->SetSetting("render_alpha_function", "add");
-    settings->SetSetting("lt_increment", -.004);
-    settings->SetSetting("lt_cl", "lifetime.cl");*/
+    //should be argv[0]
 #ifdef WIN32
     settings->SetSetting("rtps_path", ".");
 #else
@@ -211,47 +202,72 @@ int main(int argc, char** argv)
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-
-    cli = new CL();
-    ps1 = new rtps::RTPS(settings, cli);
-
-    rtps::RTPSettings *settings2 = new rtps::RTPSettings(rtps::RTPSettings::SPH, NUM_PARTICLES, DT, grid);
-
     //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    settings2->setRenderType(RTPSettings::RENDER);
-    //settings->setRenderType(RTPSettings::SPRITE_RENDER);
-   /* settings->setRadiusScale(1.0);
+    settings->setRenderType(RTPSettings::RENDER);
+    //settings.setRenderType(RTPSettings::SPRITE_RENDER);
+    settings->setRadiusScale(0.4);
     settings->setBlurScale(1.0);
     settings->setUseGLSL(1);
-    settings->SetSetting("render_texture", "firejet_blast.png");
-    settings->SetSetting("render_frag_shader", "sprite_tex_frag.glsl");
-    settings->SetSetting("render_use_alpha", true);
-    settings->SetSetting("render_alpha_function", "add");
-    settings->SetSetting("lt_increment", -.004);
-    settings->SetSetting("lt_cl", "lifetime.cl");*/
+
+    settings->SetSetting("sub_intervals", 1);
+
+    sph = new rtps::RTPS(settings,cli);
+    //ps = new rtps::RTPS();
+
+    sph->settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
+    sph->settings->SetSetting("Gas Constant", 1.0f);
+    sph->settings->SetSetting("Viscosity", .001f);
+    sph->settings->SetSetting("Velocity Limit", 600.0f);
+    sph->settings->SetSetting("XSPH Factor", .15f);
+    sph->settings->SetSetting("Friction Kinetic", 0.0f);
+    sph->settings->SetSetting("Friction Static", 0.0f);
+    sph->settings->SetSetting("Boundary Stiffness", 20000.0f);
+    sph->settings->SetSetting("Boundary Dampening", 256.0f);
+
+
+    rtps::Domain* grid2 = new Domain(float4(0,0,0,0), float4(10, 10, 10, 0));
+    rtps::RTPSettings* rb_settings = new rtps::RTPSettings(rtps::RTPSettings::PARTICLE_RIGIDBODY, NUM_PARTICLES, DT, grid2);
+    
+
+    //should be argv[0]
 #ifdef WIN32
-    settings2->SetSetting("rtps_path", ".");
+    rb_settings->SetSetting("rtps_path", ".");
 #else
-    settings2->SetSetting("rtps_path", "./bin");
+    rb_settings->SetSetting("rtps_path", "./bin");
     //settings->SetSetting("rtps_path", argv[0]);
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-    ps2 = new rtps::RTPS(settings2, cli);
+    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
+    rb_settings->setRenderType(RTPSettings::RENDER);
+    //settings.setRenderType(RTPSettings::SPRITE_RENDER);
+    rb_settings->setRadiusScale(0.4);
+    rb_settings->setBlurScale(1.0);
+    rb_settings->setUseGLSL(1);
 
-    ps1->settings->SetSetting("Gravity", -.8f); // -9.8 m/sec^2
-    ps1->settings->SetSetting("Gas Constant", 15.0f);
-    ps1->settings->SetSetting("Viscosity", .1f);
-    ps1->settings->SetSetting("Velocity Limit", 600.0f);
-    ps1->settings->SetSetting("XSPH Factor", .1f);
+    rb_settings->SetSetting("sub_intervals", 1);
+    //settings->SetSetting("render_texture", "firejet_blast.png");
+    //settings->SetSetting("render_frag_shader", "sprite_tex_frag.glsl");
+    //settings->SetSetting("render_use_alpha", true);
+    //settings->SetSetting("render_use_alpha", false);
+    //settings->SetSetting("render_alpha_function", "add");
+    //settings->SetSetting("lt_increment", -.00);
+    //settings->SetSetting("lt_cl", "lifetime.cl");
 
-    ps2->settings->SetSetting("Gravity", .8f); // -9.8 m/sec^2
-    ps2->settings->SetSetting("Gas Constant", 50.0f);
-    ps2->settings->SetSetting("Viscosity", .001f);
-    ps2->settings->SetSetting("Velocity Limit", 600.0f);
-    ps2->settings->SetSetting("XSPH Factor", .3f);
+    rb = new rtps::RTPS(rb_settings,cli);
+    //ps = new rtps::RTPS();
 
 
+    rb->settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
+    rb->settings->SetSetting("Velocity Limit", 600.0f);
+    rb->settings->SetSetting("Friction Kinetic", 0.0f);
+    rb->settings->SetSetting("Friction Static", 0.0f);
+    rb->settings->SetSetting("Boundary Stiffness", 10.f);
+    rb->settings->SetSetting("Boundary Dampening", 5.f);
+    rb->settings->SetSetting("Restitution",0.5f);
+
+    sph->system->addInteractionSystem(rb->system);
+    rb->system->addInteractionSystem(sph->system);
     //initialize the OpenGL scene for rendering
     init_gl();
 
@@ -284,8 +300,9 @@ void appRender()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
-        ps2->render();
-        ps1->render();
+        sph->render();
+        rb->render();
+        //ps3->render();
         draw_collision_boxes();
         if(render_movie)
         {
@@ -314,17 +331,20 @@ void appKeyboard(unsigned char key, int x, int y)
     switch (key)
     {
         case 'e': //dam break
+        {
             nn = 16384;
             min = float4(.1, .1, .1, 1.0f);
             max = float4(3.9, 3.9, 3.9, 1.0f);
-            ps1->system->addBox(nn, min, max, false);
+            float4 col1 = float4(0., 0., 1., 1.);
+            sph->system->addBox(nn, min, max, false,col1);
             //ps2->system->addBox(nn, min, max, false);
             return;
+        }
         case 'p': //print timers
-            printf("System 1 timers:\n");
-            ps1->system->printTimers();
-            printf("System 2 timers:\n");
-            ps2->system->printTimers();
+            printf("SPH timers:\n");
+            sph->system->printTimers();
+            printf("RB timers:\n");
+            rb->system->printTimers();
             return;
         case '\033': // escape quits
         case '\015': // Enter quits    
@@ -335,8 +355,8 @@ void appKeyboard(unsigned char key, int x, int y)
             return;
         case 'b':
             printf("deleting willy nilly\n");
-            ps1->system->testDelete();
-            ps2->system->testDelete();
+            sph->system->testDelete();
+            rb->system->testDelete();
             return;
         case 'h':
         {
@@ -347,12 +367,10 @@ void appKeyboard(unsigned char key, int x, int y)
             //float4 velocity(2., 5., -.8, 0);
             float4 velocity(0., 0., 2., 0);
             //sph sets spacing and multiplies by radius value
-            float4 col1 = float4(1., 1., 1., 1.);
-            float4 col2 = float4(0., 0., 0., 1.);
+            float4 col1 = float4(0., 0., 1., 1.);
 
 
-            ps1->system->addHose(5000, center, velocity, 5, col1);
-            ps2->system->addHose(5000, center, velocity, 5, col2);
+            sph->system->addHose(5000, center, velocity, 5, col1);
             return;
 		}
         case 'n':
@@ -373,8 +391,7 @@ void appKeyboard(unsigned char key, int x, int y)
                 make_cube(triangles, cen, cw);
                 cen = float4(3.5, 3.5, cw-.1, 1.0f);
                 make_cube(triangles, cen, cw);
-                ps1->system->loadTriangles(triangles);
-                ps2->system->loadTriangles(triangles);
+                sph->system->loadTriangles(triangles);
                 return;
             }
         case 'r': //drop a rectangle
@@ -394,25 +411,22 @@ void appKeyboard(unsigned char key, int x, int y)
 
                 //min = float4(15.8, 15.8, 15.8, 1.0f);
                 //max = float4(16.5, 16.5, 16.5, 1.0f);
+                min = float4(6.0, 6.0, 6.0, 1.0f);
+                max = float4(9.0, 9.0, 9.0, 1.0f);
 
-                min = float4(1.2, 1.2, 1.2, 1.0f);
-                max = float4(2., 2., 2., 1.0f);
+                float4 col1 = float4(1., 0., 0., 1.);
 
-                float4 col1 = float4(0., 1., 1., 1.);
-                float4 col2 = float4(0., 0., 0., 1.);
-
-                ps1->system->addBox(nn, min, max, false, col1);
-                ps2->system->addBox(nn, min, max, false, col2);
+                rb->system->addBox(nn, min, max, false, col1);
                 return;
             }
         case 'o':
-            ps1->system->getRenderer()->writeBuffersToDisk();
+            sph->system->getRenderer()->writeBuffersToDisk();
             return;
         case 'c':
-            ps1->system->getRenderer()->setDepthSmoothing(Render::NO_SHADER);
+            sph->system->getRenderer()->setDepthSmoothing(Render::NO_SHADER);
             return;
         case 'C':
-            ps1->system->getRenderer()->setDepthSmoothing(Render::BILATERAL_GAUSSIAN_SHADER);
+            sph->system->getRenderer()->setDepthSmoothing(Render::BILATERAL_GAUSSIAN_SHADER);
             return;
         case 'w':
             translate_z -= 0.1;
@@ -467,8 +481,8 @@ void init_gl()
     glClearColor(.6, .6, .6, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    ps1->system->getRenderer()->setWindowDimensions(window_width,window_height);
-    ps2->system->getRenderer()->setWindowDimensions(window_width,window_height);
+    sph->system->getRenderer()->setWindowDimensions(window_width,window_height);
+    rb->system->getRenderer()->setWindowDimensions(window_width,window_height);
     //glTranslatef(0, 10, 0);
     /*
     gluLookAt(  0,10,0,
@@ -486,8 +500,9 @@ void init_gl()
 void timerCB(int ms)
 {
     glutTimerFunc(ms, timerCB, ms);
-    ps1->update();
-    ps2->update();
+    sph->update();
+    rb->update();
+    //ps3->update();
     glutPostRedisplay();
 }
 
@@ -495,8 +510,8 @@ void timerCB(int ms)
 void appDestroy()
 {
 
-    delete ps1;
-    delete ps2;
+    delete rb;
+    delete sph;
     delete cli;
 
 
@@ -623,8 +638,8 @@ void resizeWindow(int w, int h)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     //gluPerspective(fov, aspect, nearZ, farZ);
-    ps1->system->getRenderer()->setWindowDimensions(w,h);
-    ps2->system->getRenderer()->setWindowDimensions(w,h);
+    sph->system->getRenderer()->setWindowDimensions(w,h);
+    rb->system->getRenderer()->setWindowDimensions(w,h);
     window_width = w;
     window_height = h;
     delete[] image;
@@ -653,8 +668,8 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
-        ps1->render();
-        ps2->render();
+        sph->render();
+        rb->render();
         draw_collision_boxes();
     }
     glPopMatrix();
@@ -681,8 +696,8 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
-        ps1->render();
-        ps2->render();
+        sph->render();
+        rb->render();
         draw_collision_boxes();
     }
     glPopMatrix();

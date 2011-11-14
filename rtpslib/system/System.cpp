@@ -79,7 +79,7 @@ namespace rtps
 
         hash = Hash(common_source_dir, ps->cli, timers["hash_gpu"]);
         bitonic = Bitonic<unsigned int>(common_source_dir, ps->cli );
-        radix = Radix<unsigned int>(common_source_dir, ps->cli, max_num, 128);
+        //radix = Radix<unsigned int>(common_source_dir, ps->cli, max_num, 128);
         cellindices = CellIndices(common_source_dir, ps->cli, timers["ci_gpu"] );
         permute = Permute( common_source_dir, ps->cli, timers["perm_gpu"] );
         m2p = MeshToParticles(common_source_dir, ps->cli, timers["meshtoparticles_gpu"]);

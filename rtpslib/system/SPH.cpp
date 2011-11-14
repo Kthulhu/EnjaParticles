@@ -78,6 +78,7 @@ namespace rtps
         sph_source_dir = resource_path + "/" + std::string(SPH_CL_SOURCE_DIR);
         ps->cli->addIncludeDir(sph_source_dir);
 
+        forceRB = RigidBodyForce(sph_source_dir, ps->cli, timers["force_rigidbody_gpu"]);
         density = Density(sph_source_dir, ps->cli, timers["density_gpu"]);
         force = Force(sph_source_dir, ps->cli, timers["force_gpu"]);
         collision_wall = CollisionWall(sph_source_dir, ps->cli, timers["cw_gpu"]);
@@ -294,7 +295,29 @@ namespace rtps
             timers["force"]->stop();
 
             collision();
-
+            for(int j = 0;j<interactionSystem.size();j++)
+            {
+                //Naievely assume it is an rb system for now.
+                //Need to come up with a good way to interact.
+                timers["force_rigidbody"]->start();
+                forceRB.execute(   num,
+                    //cl_vars_sorted,
+                    cl_position_s,
+                    cl_velocity_s,
+                    cl_force_s,
+                    interactionSystem[j]->getPositionBuffer(),
+                    interactionSystem[j]->getVelocityBuffer(),
+                    interactionSystem[j]->getCellStartBuffer(),
+                    interactionSystem[j]->getCellEndBuffer(),
+                    cl_sphp,
+                    //cl_GridParams,
+                    cl_GridParamsScaled,
+                    interactionSystem[j]->getSettings()->GetSettingAs<float>("Boundary Stiffness"),
+                    interactionSystem[j]->getSettings()->GetSettingAs<float>("Boundary Dampening"),
+                    clf_debug,
+                    cli_debug);
+                timers["force_rigidbody"]->stop();
+            }
             integrate(); // includes boundary force
         }
 
@@ -416,6 +439,8 @@ namespace rtps
     int SPH::setupTimers()
     {
         int time_offset = 5;
+        timers["force_rigidbody"] = new EB::Timer("Force Rigid Body function", time_offset);
+        timers["force_rigidbody_gpu"] = new EB::Timer("Force Rigid Body GPU kernel execution", time_offset);
         timers["density"] = new EB::Timer("Density function", time_offset);
         timers["density_gpu"] = new EB::Timer("Density GPU kernel execution", time_offset);
         timers["collision_wall"] = new EB::Timer("Collision wall function", time_offset);

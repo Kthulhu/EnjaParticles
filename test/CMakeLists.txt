@@ -58,12 +58,17 @@ set (test_rigidbody_SOURCES
     main_rigidbody.cpp
     )
 
+set (test_rb_sph_SOURCES
+    main_rb_sph.cpp
+    )
+
 INCLUDE_DIRECTORIES(${test_INCLUDES})
 ADD_EXECUTABLE(sph.x ${test_SOURCES})
 ADD_EXECUTABLE(multi.x ${test_multi_SOURCES})
 #ADD_EXECUTABLE(simple.x ${test_simple_SOURCES})
 ADD_EXECUTABLE(flock.x ${test_flock_SOURCES})
 ADD_EXECUTABLE(rigidbody.x ${test_rigidbody_SOURCES})
+ADD_EXECUTABLE(rb_sph.x ${test_rb_sph_SOURCES})
 
 message("current build dir:\n")
 message("${BASE_DIR}/rtps/build")
@@ -102,12 +107,16 @@ TARGET_LINK_LIBRARIES (flock.x
 TARGET_LINK_LIBRARIES (rigidbody.x
     ${LINK_LIBS}
 )
+TARGET_LINK_LIBRARIES (rb_sph.x
+    ${LINK_LIBS}
+)
 #IF(WIN32)
 install (TARGETS sph.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS multi.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (TARGETS simple.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS flock.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS rigidbody.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+install (TARGETS rb_sph.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES MathFunctions.h DESTINATION include)
 
 #ENDIF(WIN32)

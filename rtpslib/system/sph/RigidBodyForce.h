@@ -22,34 +22,43 @@
 ****************************************************************************************/
 
 
-#ifndef _SEGMENTED_SCAN_CL_
-#define _SEGMENTED_SCAN_CL_
+#ifndef RTPS_RIGIDBODY_FORCE_H_INCLUDED
+#define RTPS_RIGIDBODY_FORCE_H_INCLUDED
 
-#include "cl_macros.h"
-#include "cl_structs.h"
 
-__kernel void sum(
-                    __global float4* pos_u,
-                    __global int2* particleIndex,
-                    __global float4* linear_force_s,
-                    __global float4* comLinearForce,
-                    __global float4* comTorqueForce,
-                    __global float4* comPos
-                       DEBUG_ARGS
-                       )
+#include <CLL.h>
+#include <Buffer.h>
+
+
+namespace rtps
 {
-    int index = get_global_id(0);
-    int i = particleIndex[index].x;
-    int end = particleIndex[index].y;
-    comLinearForce[index]=linear_force_s[i];
-    comTorqueForce[index].xyz=cross((pos_u[i]-comPos[index]).xyz,linear_force_s[i++].xyz);
-    for(;i<end;i++)
+    class RigidBodyForce
     {
-        comLinearForce[index]+=linear_force_s[i];
-        comTorqueForce[index].xyz+=cross((pos_u[i]-comPos[index]).xyz,linear_force_s[i].xyz);
-        //clf[i].xyz=pos_u[i].xyz;
-        //clf[i].xyz=(pos_u[i]-comPos[index]).xyz;
-    }
-}
-#endif
+        public:
+            RigidBodyForce() { cli = NULL; timer = NULL; };
+            RigidBodyForce(std::string path, CL* cli, EB::Timer* timer);
+            void execute(int num,
+                    Buffer<float4>& pos_s, 
+                    Buffer<float4>& veleval_s, 
+                    Buffer<float4>& force_s, 
+                    Buffer<float4>& rb_pos_s,
+                    Buffer<float4>& rb_velocity_s,
+                    Buffer<unsigned int>& ci_start,
+                    Buffer<unsigned int>& ci_end,
+                    //params
+                    Buffer<SPHParams>& sphp,
+                    Buffer<GridParams>& gp,
+                    float stiffness,
+                    float dampening,
+                    //debug params
+                    Buffer<float4>& clf_debug,
+                    Buffer<int4>& cli_debug);
 
+        private:
+            CL* cli;
+            Kernel k_rigidbody_force;
+            EB::Timer* timer;
+    };
+}
+
+#endif
