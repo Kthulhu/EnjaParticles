@@ -28,7 +28,7 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force
+#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force/*, __global float* spring_coef, __global float* dampening_coef*/
 //, __global float4* torque_force
 #define ARGV pos, vel, linear_force 
 
@@ -56,13 +56,13 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 
     // get the particle info (in the current grid) to test against
     float4 position_j = pos[index_j] * prbp->simulation_scale; 
-    float4 r = (position_i - position_j); 
+    float4 r = (position_j - position_i); 
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
 
     // is this particle within cutoff?
-    if (rlen <= prbp->smoothing_distance)
+    if (rlen <= 2.*prbp->smoothing_distance)
     {
 
         //iej is 0 when we are looking at same particle
@@ -73,7 +73,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
 
-        float4 springForce = -prbp->boundary_stiffness*(prbp->smoothing_distance-rlen)*(r/rlen); 
+        float4 springForce = -prbp->boundary_stiffness*(2.*prbp->smoothing_distance-rlen)*(r/rlen); 
 
         float4 veli = vel[index_i]; // sorted
         float4 velj = vel[index_j];

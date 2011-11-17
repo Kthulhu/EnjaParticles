@@ -56,7 +56,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 
     // get the particle info (in the current grid) to test against
     float4 position_j = pos_j[index_j] * prbp->simulation_scale; 
-    float4 r = (position_i - position_j); 
+    float4 r = (position_j - position_i); 
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);

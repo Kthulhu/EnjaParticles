@@ -121,14 +121,15 @@ rtps::RTPS* rb;
 //#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
 //#define NUM_PARTICLES 65536
-//#define NUM_PARTICLES 32768
+#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
-#define NUM_PARTICLES 8192
+//#define NUM_PARTICLES 8192
 //#define NUM_PARTICLES 4096
 //#define NUM_PARTICLES 2048
 //#define NUM_PARTICLES 1024
 //#define NUM_PARTICLES 256
+//#define DT .003f
 #define DT .003f
 //#define DT .015f
 
@@ -202,8 +203,8 @@ int main(int argc, char** argv)
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    settings->setRenderType(RTPSettings::RENDER);
+    settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
+    //settings->setRenderType(RTPSettings::RENDER);
     //settings.setRenderType(RTPSettings::SPRITE_RENDER);
     settings->setRadiusScale(0.4);
     settings->setBlurScale(1.0);
@@ -226,7 +227,7 @@ int main(int argc, char** argv)
 
 
     rtps::Domain* grid2 = new Domain(float4(0,0,0,0), float4(10, 10, 10, 0));
-    rtps::RTPSettings* rb_settings = new rtps::RTPSettings(rtps::RTPSettings::PARTICLE_RIGIDBODY, NUM_PARTICLES, DT, grid2);
+    rtps::RTPSettings* rb_settings = new rtps::RTPSettings(rtps::RTPSettings::PARTICLE_RIGIDBODY, NUM_PARTICLES, DT , grid2);
     
 
     //should be argv[0]
@@ -262,8 +263,11 @@ int main(int argc, char** argv)
     rb->settings->SetSetting("Velocity Limit", 600.0f);
     rb->settings->SetSetting("Friction Kinetic", 0.0f);
     rb->settings->SetSetting("Friction Static", 0.0f);
-    rb->settings->SetSetting("Boundary Stiffness", 10.f);
-    rb->settings->SetSetting("Boundary Dampening", 5.f);
+    rb->settings->SetSetting("Boundary Stiffness", 20000.0f);
+    rb->settings->SetSetting("Boundary Dampening", 256.0f);
+    //rb->settings->SetSetting("Boundary Stiffness", 5.f);
+    //rb->settings->SetSetting("Boundary Dampening", 2.f);
+    rb->settings->SetSetting("Penetration Factor", .2f);
     rb->settings->SetSetting("Restitution",0.5f);
 
     sph->system->addInteractionSystem(rb->system);
@@ -416,7 +420,7 @@ void appKeyboard(unsigned char key, int x, int y)
 
                 float4 col1 = float4(1., 0., 0., 1.);
 
-                rb->system->addBox(nn, min, max, false, col1);
+                rb->system->addBox(nn, min, max, false, col1,100.0f);
                 return;
             }
         case 'o':

@@ -77,13 +77,13 @@ __kernel void update_particles(
         pos_u[i].xyz=rotPos+comPos[index].xyz;
         pos_u[i].w = 1.0;
         velocity_u[i].xyz = comVel[index].xyz + cross(comAngVel[index].xyz,pos_l[i].xyz);
-        //clf[i]=pos_l[i];
+        clf[i]=velocity_u[i];
         //clf[i]=pos_u[i];
         //clf[i].xyz=rotPos;
         //clf[i].xyz=cross(comAngVel[index].xyz,pos_l[i].xyz);
         //clf[i].xyz=comAngVel[index].xyz;
     }
-    clf[index]=comRot[index];
+    //clf[index]=comRot[index];
     //clf[index*4]=m.s0123;
     //clf[index*4+1]=m.s4567;
     //clf[index*4+2]=m.s89ab;

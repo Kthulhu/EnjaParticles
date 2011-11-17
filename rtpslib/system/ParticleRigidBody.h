@@ -81,7 +81,7 @@ namespace rtps
         //int cut; //for debugging DEBUG
 
         int setupTimers();
-        void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0));
+        void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0), float mass = 0.0);
 
         std::vector<float4> getDeletedPos();
         std::vector<float4> getDeletedVel();
@@ -119,6 +119,7 @@ namespace rtps
         Buffer<float4>      cl_veleval_s;
 
         Buffer<int2> cl_rbParticleIndex;
+        Buffer<float> cl_rbMass;
         Buffer<float4> cl_comPos;
         Buffer<float4> cl_comRot;
         Buffer<float4> cl_comVel;

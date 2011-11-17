@@ -311,7 +311,7 @@ void appKeyboard(unsigned char key, int x, int y)
                 min = float4(.1, .1, .1, 1.0f);
                 max = float4(3.9, 3.9, 3.9, 1.0f);
                 //float4 color = float4(0.1, 0.1, 0.3, .01);
-                ps->system->addBox(nn, min, max, false,color);
+                ps->system->addBox(nn, min, max, false,color,10.f);
                 return;
             }
         case 'p': //print timers
@@ -410,7 +410,7 @@ void appKeyboard(unsigned char key, int x, int y)
                 //max = float4(3.0, 3.0, 4.0, 1.0f);
                 
                 //float4 color = float4(rand()/(10.*RAND_MAX), rand()/(RAND_MAX+1.0), rand()/(RAND_MAX+1.0), 0.2);
-                ps->system->addBox(nn, min, max, false, color);
+                ps->system->addBox(nn, min, max, false, color,10.0f);
                 return;
             }
 

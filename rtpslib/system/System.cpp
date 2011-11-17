@@ -267,7 +267,7 @@ namespace rtps
         grid_params_scaled.print();
     }
     //----------------------------------------------------------------------
-    int System::addBox(int nn, float4 min, float4 max, bool scaled, float4 color)
+    int System::addBox(int nn, float4 min, float4 max, bool scaled, float4 color, float mass)
     {
         float scale = 1.0f;
 		#if 0
@@ -281,16 +281,16 @@ namespace rtps
 		printf("GEE addBox spacing = %f\n", spacing);
         vector<float4> rect = addRect(nn, min, max, spacing, scale);
         float4 velo(0, 0, 0, 0);
-        pushParticles(rect, velo, color);
+        pushParticles(rect, velo, color, mass);
         return rect.size();
     }
 
-    void System::addBall(int nn, float4 center, float radius, bool scaled, float4 color)
+    void System::addBall(int nn, float4 center, float radius, bool scaled, float4 color, float mass)
     {
         float scale = 1.0f;
         vector<float4> sphere = addSphere(nn, center, radius, spacing, scale);
         float4 velo(0, 0, 0, 0);
-        pushParticles(sphere,velo);
+        pushParticles(sphere,velo,color, mass);
     }
 
     void System::testDelete()
@@ -307,12 +307,12 @@ namespace rtps
         ps->cli->queue.finish();
     }
 	//----------------------------------------------------------------------
-    void System::pushParticles(vector<float4> pos, float4 velo, float4 color)
+    void System::pushParticles(vector<float4> pos, float4 velo, float4 color, float mass)
     {
         int nn = pos.size();
         std::vector<float4> vels(nn);
         std::fill(vels.begin(), vels.end(), velo);
-        pushParticles(pos, vels, color);
+        pushParticles(pos, vels, color, mass);
 
     }
 
@@ -438,7 +438,7 @@ namespace rtps
 
 #endif
     }
-    void System::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution)
+    void System::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution, float mass)
     {
         glFinish();
         cl::Image3DGL img(ps->cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);

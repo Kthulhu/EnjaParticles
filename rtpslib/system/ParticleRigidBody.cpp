@@ -171,6 +171,10 @@ namespace rtps
                 cl_veleval_s,
                 cl_color_u,
                 cl_color_s,
+                /*cl_spring_coef_u,
+                cl_spring_coef_s,
+                cl_dampening_coef_u,
+                cl_dampening_coef_s,*/
                 cl_sort_indices,
                 //cl_prbp,
                 cl_GridParams,
@@ -227,6 +231,8 @@ namespace rtps
                 cl_velocity_s,
                 //cl_veleval_s,
                 cl_force_s,
+                //cl_spring_coef_s,
+                //cl_dampening_coef_s,
                 cl_sort_indices,
                 cl_cell_indices_start,
                 cl_cell_indices_end,
@@ -313,9 +319,11 @@ namespace rtps
                 cl_comAngVel,
                 cl_comPos,
                 cl_comRot,
+                cl_rbMass,
                     float4(0.0,0.0,prbp.gravity,0.0),
                 rbParticleIndex.size(),
                 //debug
+                cl_prbp,
                 clf_debug,
                 cli_debug);
 
@@ -390,10 +398,12 @@ namespace rtps
         rbParticleIndex.resize(max_num/4);
         vector<float4> rbf4Vec(max_num/4);
         vector<float4> rotf4Vec(max_num/4);
+        vector<float> rbfVec(max_num/4);
 
         std::fill(f4Vec.begin(), f4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(rbf4Vec.begin(), rbf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(rotf4Vec.begin(), rotf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 1.0f));
+        std::fill(rbfVec.begin(), rbfVec.end(),0.0f);
         std::fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
 
         cl_position_l = Buffer<float4>(ps->cli, f4Vec);
@@ -402,6 +412,7 @@ namespace rtps
         //cl_density_s = Buffer<float>(ps->cli, densities);
         cl_force_s = Buffer<float4>(ps->cli, f4Vec);
         cl_rbParticleIndex = Buffer<int2>(ps->cli,rbParticleIndex);
+        cl_rbMass = Buffer<float>(ps->cli,rbfVec);
         cl_comPos = Buffer<float4>(ps->cli,rbf4Vec);
         cl_comRot = Buffer<float4>(ps->cli,rotf4Vec);
         cl_comVel = Buffer<float4>(ps->cli,rbf4Vec);
@@ -434,7 +445,7 @@ namespace rtps
      }
 
 	//----------------------------------------------------------------------
-    void ParticleRigidBody::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
+    void ParticleRigidBody::pushParticles(vector<float4> pos, vector<float4> vels, float4 color, float mass)
     {
         //cut = 1;
 
@@ -459,7 +470,21 @@ namespace rtps
         //float4 iv = float4(0, v, -.1, 0.0f);
         //std::fill(vels.begin(), vels.end(),iv);
 
+        float spring = settings->GetSettingAs<float>("Penetration Factor")*settings->GetSettingAs<float>("Velocity Limit")*(mass/nn)/prbp.smoothing_distance;
+        float ln_res =log(settings->GetSettingAs<float>("Restitution")); 
+        
+        float dampening = -2.*ln_res*(sqrt((spring*(mass/nn))/((ln_res*ln_res)+(M_PI*M_PI))));
+        //spring = -spring;
+        std::vector<float> spring_co(nn);
+        std::vector<float> dampening_co(nn);
+        std::fill(spring_co.begin(), spring_co.end(),spring);
+        std::fill(dampening_co.begin(), dampening_co.end(),dampening);
 
+        printf("spring = %f\n",spring);
+        printf("dampening = %f\n",dampening);
+        printf("restitution = %f\n",settings->GetSettingAs<float>("Restitution"));
+        settings->SetSetting("Boundary Stiffness", spring);
+        settings->SetSetting("Boundary Dampening", dampening);
         //calculate center of mass.
         float4 com(0.0f,0.0f,0.0f,0.0f);
         for(int i = 0;i<pos.size();i++)
@@ -494,9 +519,14 @@ namespace rtps
         cl_color_u.copyToDevice(cols, num);
         cl_velocity_u.copyToDevice(vels, num);
         cl_position_l.copyToDevice(pos_l,num);
+        /*cl_spring_coef_u.copyToDevice(spring_co, num);
+        cl_dampening_coef_u.copyToDevice(dampening_co, num);*/
         vector<float4> comVec;
         comVec.push_back(com);
         cl_comPos.copyToDevice(comVec,rbParticleIndex.size()-1);
+        vector<float> rbm;
+        rbm.push_back(mass);
+        cl_rbMass.copyToDevice(rbm,rbParticleIndex.size()-1);
         //cl_rbParticleIndex.copyToDevice(rbParticleIndex,rbParticleIndex.size()-1,);
         cl_rbParticleIndex.copyToDevice(rbParticleIndex);
         com.print("Center of Mass");
@@ -573,22 +603,6 @@ namespace rtps
         settings->SetSetting("Spacing", spacing);
  
 
-        float pi = M_PI;
-        float h9 = pow(smoothing_distance, 9.f);
-        float h6 = pow(smoothing_distance, 6.f);
-        float h3 = pow(smoothing_distance, 3.f);
-        //Kernel Coefficients
-        settings->SetSetting("wpoly6", 315.f/64.0f/pi/h9 );
-        settings->SetSetting("wpoly6_d", -945.f/(32.0f*pi*h9) );  //doesn't seem right
-        settings->SetSetting("wpoly6_dd", -945.f/(32.0f*pi*h9) ); // laplacian
-        settings->SetSetting("wspiky", 15.f/pi/h6 );
-        settings->SetSetting("wspiky_d", -45.f/(pi*h6) );
-        settings->SetSetting("wspiky_dd", 15./(2.*pi*h3) );
-        settings->SetSetting("wvisc", 15./(2.*pi*h3) );
-        settings->SetSetting("wvisc_d", 15./(2.*pi*h3) ); //doesn't seem right
-        settings->SetSetting("wvisc_dd", 45./(pi*h6) );
-
-        //dynamic params
         if(!settings->Exists("Gravity"))
             settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
         settings->SetSetting("Gas Constant", 15.0f);
@@ -597,15 +611,6 @@ namespace rtps
         settings->SetSetting("XParticleRigidBody Factor", .1f);
         settings->SetSetting("Friction Kinetic", 0.0f);
         settings->SetSetting("Friction Static", 0.0f);
-        settings->SetSetting("Boundary Stiffness", 20000.0f);
-        settings->SetSetting("Boundary Dampening", 256.0f);
-
-
-        //next 4 not used at the moment
-        settings->SetSetting("Restitution", 0.0f);
-        settings->SetSetting("Shear", 0.0f);
-        settings->SetSetting("Attraction", 0.0f);
-        settings->SetSetting("Spring", 0.0f);
 
         //constants
         settings->SetSetting("EPSILON", 1E-6);

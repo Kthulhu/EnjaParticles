@@ -74,7 +74,7 @@ namespace rtps
         void update();
         
         //wrapper around Hose.h 
-        int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
+        int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f), float mass = 0.0f);
         void updateHose(int index, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
         void refillHose(int index, int refill);
         void sprayHoses();
@@ -86,7 +86,7 @@ namespace rtps
         int cut; //for debugging DEBUG
 
         int setupTimers();
-        void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0));
+        void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0),float mass = 0.0f);
 
         std::vector<float4> getDeletedPos();
         std::vector<float4> getDeletedVel();

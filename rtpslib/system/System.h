@@ -105,10 +105,10 @@ namespace rtps
         };
 */
 
-        virtual int addBox(int nn, float4 min, float4 max, bool scaled, float4 color=float4(1., 0., 0., 1.));
+        virtual int addBox(int nn, float4 min, float4 max, bool scaled, float4 color=float4(1., 0., 0., 1.),float mass = 0.0f);
 
-        virtual void addBall(int nn, float4 center, float radius, bool scaled, float4 color=float4(1., 0., 0., 1.));
-        virtual int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1., 0., 0., 1.))
+        virtual void addBall(int nn, float4 center, float radius, bool scaled, float4 color=float4(1., 0., 0., 1.), float mass = 0.0f);
+        virtual int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1., 0., 0., 1.), float mass = 0.0f)
         {
             return 0;
         };
@@ -144,9 +144,9 @@ namespace rtps
             return renderer;
         }
         
-        void pushParticles(vector<float4> pos, float4 velo, float4 color=float4(1.0, 0.0, 0.0, 1.0));
-        virtual void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0)){return;}
-        virtual void addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution);
+        void pushParticles(vector<float4> pos, float4 velo, float4 color=float4(1.0, 0.0, 0.0, 1.0),float mass = 0.0f);
+        virtual void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0),float mass = 0.0f){return;}
+        virtual void addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution,float mass = 0.0f);
         virtual void setupDomain(float cell_size, float sim_scale);
         virtual void prepareSorted();
         virtual int setupTimers();
@@ -157,6 +157,8 @@ namespace rtps
         Buffer<float4>& getVelocityBuffer() {return cl_velocity_s;}
         Buffer<float4>& getColorBuffer() {return cl_color_s;}
         Buffer<float4>& getPositionBuffer() {return cl_position_s;}
+        Buffer<float>& getSpringCoefBuffer() {return cl_spring_coef_s;}
+        Buffer<float>& getDampeningCoefBuffer() {return cl_dampening_coef_s;}
         Buffer<unsigned int>& getCellStartBuffer() {return cl_cell_indices_start;}
         Buffer<unsigned int>& getCellEndBuffer() {return cl_cell_indices_end;}
         RTPSettings* getSettings() {return settings;}
@@ -181,6 +183,8 @@ namespace rtps
         Buffer<float4>      cl_velocity_u;
         Buffer<float4>      cl_velocity_s;
         Buffer<float4>      cl_force_s;
+        //Buffer<float4>      cl_mass_u;
+        //Buffer<float4>      cl_mass_s;
 
         Buffer<unsigned int>    cl_cell_indices_start;
         Buffer<unsigned int>    cl_cell_indices_end;
@@ -192,6 +196,11 @@ namespace rtps
         Buffer<unsigned int>    cl_sort_indices;
         Buffer<GridParams>  cl_GridParams;
         Buffer<GridParams>  cl_GridParamsScaled;
+
+        Buffer<float>      cl_spring_coef_u;
+        Buffer<float>      cl_spring_coef_s;
+        Buffer<float>      cl_dampening_coef_u;
+        Buffer<float>      cl_dampening_coef_s;
 
         Buffer<float4>      clf_debug;  //just for debugging cl files
         Buffer<int4>        cli_debug;  //just for debugging cl files

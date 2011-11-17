@@ -89,7 +89,7 @@ namespace rtps
             printf("ERROR(Update Particles): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-#if 0 //printouts    
+#if 1 //printouts    
         //DEBUGING
        int num = 16; 
         if(num > 0)// && choice == 0)

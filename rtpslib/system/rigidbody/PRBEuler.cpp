@@ -49,8 +49,10 @@ namespace rtps
                     Buffer<float4>& comAngVel,
                     Buffer<float4>& comPos,
                     Buffer<float4>& comRot,
+                    Buffer<float>& rbMass,
             float4 gravity,
                     int numRBs,
+                    Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
@@ -71,8 +73,10 @@ namespace rtps
         k_euler.setArg(iargs++,comAngVel.getDevicePtr());
         k_euler.setArg(iargs++,comPos.getDevicePtr());
         k_euler.setArg(iargs++,comRot.getDevicePtr());
+        k_euler.setArg(iargs++,rbMass.getDevicePtr());
         k_euler.setArg(iargs++, gravity);
         k_euler.setArg(iargs++, dt); //time step
+        k_euler.setArg(iargs++, prbp.getDevicePtr());
         k_euler.setArg(iargs++, clf_debug.getDevicePtr());
         k_euler.setArg(iargs++, cli_debug.getDevicePtr());
 

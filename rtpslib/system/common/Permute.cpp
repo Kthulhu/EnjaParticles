@@ -50,6 +50,10 @@ namespace rtps
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& color_u,
                     Buffer<float4>& color_s,
+                    /*Buffer<float>& spring_coef_u,
+                    Buffer<float>& spring_coef_s,
+                    Buffer<float>& dampening_coef_u,
+                    Buffer<float>& dampening_coef_s,*/
                     Buffer<unsigned int>& indices,
                     //params
                     //Buffer<SPHParams>& sphp,
@@ -70,6 +74,10 @@ namespace rtps
         k_permute.setArg(iarg++, veleval_s.getDevicePtr());
         k_permute.setArg(iarg++, color_u.getDevicePtr());
         k_permute.setArg(iarg++, color_s.getDevicePtr());
+        /*k_permute.setArg(iarg++, spring_coef_u.getDevicePtr());
+        k_permute.setArg(iarg++, spring_coef_u_s.getDevicePtr());
+        k_permute.setArg(iarg++, dampening_coef_u.getDevicePtr());
+        k_permute.setArg(iarg++, dampening_coef_s.getDevicePtr());*/
         k_permute.setArg(iarg++, indices.getDevicePtr());
 
         int workSize = 64;

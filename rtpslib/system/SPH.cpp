@@ -494,7 +494,7 @@ namespace rtps
      }
 
 	//----------------------------------------------------------------------
-    int SPH::addHose(int total_n, float4 center, float4 velocity, float radius, float4 color)
+    int SPH::addHose(int total_n, float4 center, float4 velocity, float radius, float4 color, float mass)
     {
         //in sph we just use sph spacing
         radius *= spacing;
@@ -531,7 +531,7 @@ namespace rtps
     }
 
 	//----------------------------------------------------------------------
-    void SPH::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
+    void SPH::pushParticles(vector<float4> pos, vector<float4> vels, float4 color, float mass)
     {
         int nn = pos.size();
         if (num + nn > max_num)
