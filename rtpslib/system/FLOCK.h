@@ -68,8 +68,9 @@ public:
     FLOCK(RTPS *ps, int num);
     ~FLOCK();
 
-    // update call for CPU and GPU
     void update();
+    //void interact();
+    void integrate();
     
     //wrapper around Hose.h 
     int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
@@ -135,16 +136,13 @@ private:
     void calculate();
 
     //copy the FLOCK  parameter struct to the GPU
-    void updateFLOCKP();
+    void updateParams();
 
     //Nearest Neighbors search related functions
     void call_prep(int stage);
     
     Rules rules;
     EulerIntegration euler_integration;
-    
-    void integrate();
-   
 };
 
 }

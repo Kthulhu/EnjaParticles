@@ -65,6 +65,14 @@ namespace rtps
         virtual void update(){
             //Do update for simple system here. -ASY
         }
+        virtual void interact(){
+        }
+        virtual void integrate(){
+            
+        }
+        virtual void postProcess(){
+
+        }
 
         System(RTPS *psfr, int num);
         virtual ~System();
@@ -89,11 +97,7 @@ namespace rtps
             return col_vbo;
         }
 
-        virtual void render()
-        {
-            renderer->render();
-        }
-
+        virtual void render();
 /*
         template <typename RT>
         virtual RT GetSettingAs(std::string key, std::string defaultval = "0") 
@@ -162,6 +166,8 @@ namespace rtps
         Buffer<unsigned int>& getCellStartBuffer() {return cl_cell_indices_start;}
         Buffer<unsigned int>& getCellEndBuffer() {return cl_cell_indices_end;}
         RTPSettings* getSettings() {return settings;}
+        virtual void acquireGLBuffers();
+        virtual void releaseGLBuffers();
     protected:
                 //the particle system framework
         RTPS* ps;
@@ -183,6 +189,7 @@ namespace rtps
         Buffer<float4>      cl_velocity_u;
         Buffer<float4>      cl_velocity_s;
         Buffer<float4>      cl_force_s;
+        Buffer<float4>      cl_active_cells;
         //Buffer<float4>      cl_mass_u;
         //Buffer<float4>      cl_mass_s;
 
@@ -212,10 +219,14 @@ namespace rtps
         int num;
         //maximum number of particles (for array allocation)
         int max_num;
-        //maximum number of outer particles (for array allocation)
+        //Used for debug views of a specific particle;
+        unsigned int activeParticle;
 
         GLuint pos_vbo;
         GLuint col_vbo;
+        GLuint velocity_vbo;
+        GLuint force_vbo;
+        GLuint active_cells_vbo;
 
         Domain* grid;
 
@@ -233,6 +244,7 @@ namespace rtps
         void hash_and_sort();
         void bitonic_sort();
         void radix_sort();
+        virtual void updateParams(){};
         virtual void setRenderer();
     };
 

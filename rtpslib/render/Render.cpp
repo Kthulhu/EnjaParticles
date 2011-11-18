@@ -72,6 +72,15 @@ namespace rtps
         //blending = settings->getUseAlphaBlending();
         blending = settings->GetSettingAs<bool>("render_use_alpha");
         setupTimers();
+        string vert = shader_source_dir;
+        string frag = shader_source_dir;
+        string geom = shader_source_dir;
+        vert+="/vector_vert.glsl";
+        frag+="/vector_frag.glsl";
+        geom+="/vector_geom.glsl";
+        GLenum geom_param[] = {GL_GEOMETRY_INPUT_TYPE_EXT, GL_GEOMETRY_OUTPUT_TYPE_EXT};
+        GLint geom_value[] = {GL_POINTS, GL_LINE_STRIP}; 
+        glsl_program[VECTOR_SHADER] = compileShaders(vert.c_str(),frag.c_str(),geom.c_str(),geom_param,geom_value,2);
     }
 
     //----------------------------------------------------------------------
@@ -391,11 +400,11 @@ namespace rtps
     }
 	//----------------------------------------------------------------------
 
-    void Render::render_box(float4 min, float4 max)
+    void Render::render_box(float4 min, float4 max, float4 color)
     {
 
         glEnable(GL_DEPTH_TEST);
-        glColor4f(.0f, 1.0f, .0f, 1.0f);
+        glColor4f(color.x, color.y, color.z, color.w);
         //draw grid
         glBegin(GL_LINES);
         //1st face
@@ -558,7 +567,7 @@ namespace rtps
 
         if (geometry_file)
         {
-            geometry_shader_source = file_contents(fragment_file,&frag_size);
+            geometry_shader_source = file_contents(geometry_file,&geom_size);
             if (!geometry_shader_source)
             {
                 printf("Geometry shader file not found or is empty! Cannot compile shader");
@@ -775,6 +784,30 @@ namespace rtps
         particle_radius = pradius;
     }
 
+    void Render::renderVelocityVector(GLuint velocity_vbo)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, velocity_vbo);
+        glColorPointer(4, GL_FLOAT, 0, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
+        glVertexPointer(4, GL_FLOAT, 0, 0);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+
+        glUseProgram(glsl_program[VECTOR_SHADER]);
+        //Need to disable these for blender
+        glDisableClientState(GL_NORMAL_ARRAY);
+        glDrawArrays(GL_POINTS, 0, num);
+        glUseProgram(0);
+
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+    }
+    void Render::renderForceVector(GLuint force_vbo)
+    {
+
+    }
 }
 
 

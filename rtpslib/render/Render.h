@@ -92,7 +92,7 @@ namespace rtps
         };
         enum ShaderType
         {
-            NO_SHADER,SPHERE_SHADER, DEPTH_SHADER, GAUSSIAN_X_SHADER, GAUSSIAN_Y_SHADER, BILATERAL_GAUSSIAN_SHADER, NORMAL_SHADER, CURVATURE_FLOW_SHADER, MIKEP_SHADER, COPY_TO_FB
+            NO_SHADER,SPHERE_SHADER, DEPTH_SHADER, GAUSSIAN_X_SHADER, GAUSSIAN_Y_SHADER, BILATERAL_GAUSSIAN_SHADER, NORMAL_SHADER, CURVATURE_FLOW_SHADER, MIKEP_SHADER, COPY_TO_FB, VECTOR_SHADER
         };
 
         void setNum(int nn)
@@ -114,9 +114,11 @@ namespace rtps
         void perspectiveProjection();
         void fullscreenQuad();
 
-        void render_box(float4 min, float4 max); //put in render utils
+        void render_box(float4 min, float4 max, float4 color=float4(0.0f,1.0f,0.0f,1.0f)); //put in render utils
         void render_table(float4 min, float4 max); //put in render utils
 
+        void renderVelocityVector(GLuint velocity_vbo);
+        void renderForceVector(GLuint force_vbo);
 
         void writeBuffersToDisk();
         void writeFramebufferTextures();

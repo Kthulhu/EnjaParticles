@@ -53,7 +53,7 @@ FLOCK::FLOCK(RTPS *psfr, int n):System(psfr,n)
     cl_FLOCKParameters= Buffer<FLOCKParameters>(ps->cli, vparams);
 
     calculate();
-    updateFLOCKP();
+    updateParams();
 
     spacing = settings->GetSettingAs<float>("Spacing");
 
@@ -112,7 +112,7 @@ void FLOCK::update()
 /*void FLOCK::updateCPU()
 {
     if(settings->has_changed())
-        updateFLOCKP();
+        updateParams();
     
     cpuRules();
     cpuEulerIntegration();
@@ -141,10 +141,9 @@ void FLOCK::updateGPU()
 #endif
 
     timers["update"]->start();
-    glFinish();
 
     if(settings->has_changed())
-        updateFLOCKP();
+        updateParams();
 
     //sub-intervals
     int sub_intervals = 1;  //should be a setting
@@ -154,8 +153,6 @@ void FLOCK::updateGPU()
         sprayHoses();
     }
 
-    cl_position_u.acquire();
-    cl_color_u.acquire();
     
     for(int i=0; i < sub_intervals; i++)
     {
@@ -203,7 +200,7 @@ void FLOCK::updateGPU()
             num = nc;
             settings->SetSetting("Number of Particles", num);
             
-            updateFLOCKP();
+            updateParams();
             renderer->setNum(flock_params.num);
             
             //need to copy sorted arrays into unsorted arrays
@@ -235,14 +232,9 @@ void FLOCK::updateGPU()
         
         timers["rules"]->stop();
         
-        timers["integrate"]->start();
-        integrate();
-        timers["integrate"]->stop();
 
     }
 
-    cl_position_u.release();
-    cl_color_u.release();
 
     timers["update"]->stop();
 }
@@ -250,6 +242,7 @@ void FLOCK::updateGPU()
 //----------------------------------------------------------------------
 void FLOCK::integrate()
 {
+    timers["integrate"]->start();
     euler_integration.execute(num,
         settings->dt,
         settings->two_dimensional,
@@ -290,6 +283,7 @@ void FLOCK::integrate()
     }
 #endif
 
+        timers["integrate"]->stop();
 }
 
 //----------------------------------------------------------------------
@@ -410,7 +404,7 @@ void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
     cl_velocity_u.copyToDevice(vels, num);
 
     settings->SetSetting("Number of Particles", num+nn);
-    updateFLOCKP();
+    updateParams();
 
     num += nn;  //keep track of number of particles we use
     
@@ -430,4 +424,8 @@ void FLOCK::render()
     renderer->render_box(grid->getBndMin(), grid->getBndMax());
     System::render();
 }
+/*void FLOCK::interact()
+{
+    
+}*/
 }

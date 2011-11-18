@@ -72,7 +72,8 @@ namespace rtps
         ~SPH();
 
         void update();
-        
+        void interact();
+        void integrate();
         //wrapper around Hose.h 
         int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f), float mass = 0.0f);
         void updateHose(int index, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
@@ -145,7 +146,7 @@ namespace rtps
         //calculate the various parameters that depend on max_num of particles
         void calculate();
         //copy the SPH parameter struct to the GPU
-        void updateSPHP();
+        void updateParams();
 		//void pushCloudParticles(vector<float4>& pos, vector<float4>& normals);
 
         //Nearest Neighbors search related functions
@@ -158,7 +159,6 @@ namespace rtps
         CollisionWall collision_wall;
         CollisionTriangle collision_tri;
         RigidBodyForce forceRB;
-        void integrate();
         LeapFrog leapfrog;
         Euler euler;
 

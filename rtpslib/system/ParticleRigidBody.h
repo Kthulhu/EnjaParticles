@@ -72,6 +72,9 @@ namespace rtps
         ~ParticleRigidBody();
 
         void update();
+        void interact();
+        void integrate();
+        void postProcess();
 
         virtual void render();
 
@@ -134,11 +137,10 @@ namespace rtps
         //calculate the various parameters that depend on max_num of particles
         void calculate();
         //copy the SPH parameter struct to the GPU
-        void updateParticleRigidBodyParams();
+        void updateParams();
 
         //Nearest Neighbors search related functions
         void call_prep(int stage);
-        void integrate();
 
         Buffer<float4>      cl_static_position_u;
         Buffer<float4>      cl_static_position_s;

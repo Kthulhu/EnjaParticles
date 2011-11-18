@@ -54,7 +54,7 @@ namespace rtps
         cl_sphp = Buffer<SPHParams>(ps->cli, vparams);
 
         calculate();
-        updateSPHP();
+        updateParams();
 
         //settings->printSettings();
 
@@ -156,8 +156,7 @@ namespace rtps
 		//printf("**** enter updateGPU, num= %d\n", num);
 
         timers["update"]->start();
-        glFinish();
-        if (settings->has_changed()) updateSPHP();
+        if (settings->has_changed()) updateParams();
 
         //settings->printSettings();
 
@@ -171,9 +170,6 @@ namespace rtps
         {
             sprayHoses();
         }
-
-        cl_position_u.acquire();
-        cl_color_u.acquire();
 
         for (int i=0; i < sub_intervals; i++)
         {
@@ -244,7 +240,7 @@ namespace rtps
                 num = nc;
                 settings->SetSetting("Number of Particles", num);
                 //sphp.num = num;
-                updateSPHP();
+                updateParams();
                 renderer->setNum(sphp.num);
 
                 //need to copy sorted arrays into unsorted arrays
@@ -295,34 +291,9 @@ namespace rtps
             timers["force"]->stop();
 
             collision();
-            for(int j = 0;j<interactionSystem.size();j++)
-            {
-                //Naievely assume it is an rb system for now.
-                //Need to come up with a good way to interact.
-                timers["force_rigidbody"]->start();
-                forceRB.execute(   num,
-                    //cl_vars_sorted,
-                    cl_position_s,
-                    cl_velocity_s,
-                    cl_force_s,
-                    interactionSystem[j]->getPositionBuffer(),
-                    interactionSystem[j]->getVelocityBuffer(),
-                    interactionSystem[j]->getCellStartBuffer(),
-                    interactionSystem[j]->getCellEndBuffer(),
-                    cl_sphp,
-                    //cl_GridParams,
-                    cl_GridParamsScaled,
-                    interactionSystem[j]->getSettings()->GetSettingAs<float>("Boundary Stiffness"),
-                    interactionSystem[j]->getSettings()->GetSettingAs<float>("Boundary Dampening"),
-                    clf_debug,
-                    cli_debug);
-                timers["force_rigidbody"]->stop();
-            }
-            integrate(); // includes boundary force
+
         }
 
-        cl_position_u.release();
-        cl_color_u.release();
 
         timers["update"]->stop();
     }
@@ -367,7 +338,6 @@ namespace rtps
     void SPH::integrate()
     {
         timers["integrate"]->start();
-
         if (integrator == EULER)
         {
             //euler();
@@ -548,16 +518,17 @@ namespace rtps
         glFinish();
         cl_position_u.acquire();
         cl_color_u.acquire();
-
+        cl_velocity_u.acquire();
 		// Allocate max_num particles on the GPU. That wastes memory, but is useful. 
 		// There should be a way to update this during the simulation. 
         cl_position_u.copyToDevice(pos, num);
         cl_color_u.copyToDevice(cols, num);
         cl_velocity_u.copyToDevice(vels, num);
         settings->SetSetting("Number of Particles", num+nn);
-        updateSPHP();
+        updateParams();
         cl_position_u.release();
         cl_color_u.release();
+        cl_velocity_u.release();
 #endif
         num += nn;  //keep track of number of particles we use
         renderer->setNum(num);
@@ -568,5 +539,31 @@ namespace rtps
         renderer->render_box(grid->getBndMin(), grid->getBndMax());
         //renderer->render_table(grid->getBndMin(), grid->getBndMax());
         System::render();
+    }
+    void SPH::interact()
+    {
+            for(int j = 0;j<interactionSystem.size();j++)
+            {
+                //Naievely assume it is an rb system for now.
+                //Need to come up with a good way to interact.
+                timers["force_rigidbody"]->start();
+                forceRB.execute(   num,
+                    //cl_vars_sorted,
+                    cl_position_s,
+                    cl_velocity_s,
+                    cl_force_s,
+                    interactionSystem[j]->getPositionBuffer(),
+                    interactionSystem[j]->getVelocityBuffer(),
+                    interactionSystem[j]->getCellStartBuffer(),
+                    interactionSystem[j]->getCellEndBuffer(),
+                    cl_sphp,
+                    //cl_GridParams,
+                    cl_GridParamsScaled,
+                    interactionSystem[j]->getSettings()->GetSettingAs<float>("Boundary Stiffness"),
+                    interactionSystem[j]->getSettings()->GetSettingAs<float>("Boundary Dampening"),
+                    clf_debug,
+                    cli_debug);
+                timers["force_rigidbody"]->stop();
+            }
     }
 }; //end namespace

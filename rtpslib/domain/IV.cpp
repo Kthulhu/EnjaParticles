@@ -40,7 +40,7 @@ namespace rtps
          *  The size of the return vector will be the actual number of particles used to fill the rectangle
 		 * normals are pointing upwards
          */
-        spacing *= 1.1f;
+        //spacing *= 1.1f;
 
 
 		//min.print("addplane min");
@@ -92,7 +92,7 @@ namespace rtps
          * Create a rectangle with at most num particles in it.
          *  The size of the return vector will be the actual number of particles used to fill the rectangle
          */
-        spacing *= 1.1f;
+        //spacing *= 1.1f;
 
 		//printf("GE inside addRect: scale= %f\n", scale);
 
@@ -163,7 +163,7 @@ namespace rtps
          * Create a sphere with at most num particles in it.
          *  The size of the return vector will be the actual number of particles used to fill the rectangle
          */
-        spacing *= 1.9f;
+        //spacing *= 1.9f;
         float xmin = (center.x - radius) / scale;
         float xmax = (center.x + radius) / scale;
         float ymin = (center.y - radius) / scale;
@@ -199,7 +199,7 @@ namespace rtps
     {
 
         printf("num: %d\n", num);
-        spacing *= 1.999f; //should probably just figure out whats up with my spacing
+        //spacing *= 1.999f; //should probably just figure out whats up with my spacing
         printf("spacing: %f\n", spacing);
 
         float4 umin = -radius*u;
@@ -246,7 +246,7 @@ namespace rtps
         //srand ( time(NULL) );
 
         printf("num: %d\n", num);
-        spacing *= 1.1f; //should probably just figure out whats up with my spacing
+        //spacing *= 1.1f; //should probably just figure out whats up with my spacing
         printf("spacing: %f\n", spacing);
         float pert = .1f*spacing;   //amount of perterbation
         float vpert = 100.f;
@@ -302,7 +302,7 @@ namespace rtps
         srand(time(NULL));	
 
         printf("random num: %f\n", rand()/(float) RAND_MAX);
-        spacing *= 1.1f;
+        //spacing *= 1.1f;
     min.print("Box min: ");
     max.print("Box max: ");
         float xmin = min.x  / scale;
@@ -338,7 +338,7 @@ namespace rtps
      */
         srand(time(NULL));	
         
-        spacing *= 1.1;
+        //spacing *= 1.1;
 
         float xmin = (center.x - radius)  / scale;
         float xmax = (center.x + radius)  / scale;
@@ -389,7 +389,7 @@ namespace rtps
 	{
 		printf("GE inside addHollowSphere: scale= %f\n", scale);
 
-        spacing *= 1.9f;
+        //spacing *= 1.9f;
         float xmin = (center.x - radius_out) / scale;
         float xmax = (center.x + radius_out) / scale;
         float ymin = (center.y - radius_out) / scale;

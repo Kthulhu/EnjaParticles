@@ -42,7 +42,8 @@ __kernel void sum(
     int i = particleIndex[index].x;
     int end = particleIndex[index].y;
     comLinearForce[index]=linear_force_s[i];
-    comTorqueForce[index].xyz=cross((pos_u[i]-comPos[index]).xyz,linear_force_s[i++].xyz);
+    comTorqueForce[index].xyz=cross((pos_u[i]-comPos[index]).xyz,linear_force_s[i].xyz);
+    i++;
     for(;i<end;i++)
     {
         comLinearForce[index]+=linear_force_s[i];

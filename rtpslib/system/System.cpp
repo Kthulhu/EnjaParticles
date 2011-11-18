@@ -48,6 +48,7 @@ namespace rtps
         ps = psfr;
         max_num = n;
         num = 0;
+        activeParticle = 0;
 
         settings = ps->settings;
 
@@ -102,6 +103,24 @@ namespace rtps
             glBindBuffer(1, col_vbo);
             glDeleteBuffers(1, (GLuint*)&col_vbo);
             col_vbo = 0;
+        }
+        if (velocity_vbo)// && managed)
+        {
+            glBindBuffer(1, velocity_vbo);
+            glDeleteBuffers(1, (GLuint*)&velocity_vbo);
+            velocity_vbo = 0;
+        }
+        if (force_vbo)// && managed)
+        {
+            glBindBuffer(1, force_vbo);
+            glDeleteBuffers(1, (GLuint*)&force_vbo);
+            force_vbo = 0;
+        }
+        if (active_cells_vbo)// && managed)
+        {
+            glBindBuffer(1, active_cells_vbo);
+            glDeleteBuffers(1, (GLuint*)&active_cells_vbo);
+            active_cells_vbo = 0;
         }
     }
 
@@ -195,7 +214,13 @@ namespace rtps
         pos_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         printf("pos vbo: %d\n", pos_vbo);
         col_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        printf("col vbo: %d\n", col_vbo);
+        printf("color vbo: %d\n", col_vbo);
+        velocity_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        printf("velocity vbo: %d\n", velocity_vbo);
+        force_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        printf("force vbo: %d\n", force_vbo);
+        active_cells_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        printf("active_cells vbo: %d\n", active_cells_vbo);
         // end VBO creation
 
         //vbo buffers
@@ -203,9 +228,11 @@ namespace rtps
         cl_position_s = Buffer<float4>(ps->cli, f4vec);
         cl_color_u = Buffer<float4>(ps->cli, col_vbo);
         cl_color_s = Buffer<float4>(ps->cli, f4vec);
-        cl_velocity_u = Buffer<float4>(ps->cli, f4vec);
+        cl_velocity_u = Buffer<float4>(ps->cli, velocity_vbo);
         cl_velocity_s = Buffer<float4>(ps->cli, f4vec);
+        //cl_force_s = Buffer<float4>(ps->cli, force_vbo);
         cl_force_s = Buffer<float4>(ps->cli, f4vec);
+        cl_active_cells = Buffer<float4>(ps->cli, active_cells_vbo);
 
         //setup debug arrays
         std::vector<int4> cliv(max_num);
@@ -446,20 +473,40 @@ namespace rtps
         objs.push_back(img);
         ps->cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
         ps->cli->queue.finish();
-        cl_position_u.acquire();
-        cl_color_u.acquire();
+        acquireGLBuffers();
         int tmpnum = m2p.execute(cl_position_u,cl_color_u,cl_velocity_u,num,img,scale,min,world,resolution,//debug
                 clf_debug,
                 cli_debug);
         printf("tmpnum = %d\n",tmpnum);
         num+=tmpnum;
         settings->SetSetting("Number of Particles", num);
-        //updateParticleRigidBodyParams();
+        updateParams();
         renderer->setNum(num);
         //hash_and_sort();
         ps->cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
         ps->cli->queue.finish();
+        releaseGLBuffers(); 
+    }
+    void System::acquireGLBuffers()
+    {
+        cl_position_u.acquire();
+        cl_color_u.acquire();
+        cl_velocity_u.acquire();
+        //cl_force_s.acquire();
+        //cl_active_cells.acquire();
+    }
+    void System::releaseGLBuffers()
+    {
         cl_position_u.release();
         cl_color_u.release();
+        cl_velocity_u.release();
+        //cl_force_s.release();
+        //cl_active_cells.release();
+    }
+    void System::render()
+    {
+        renderer->render();
+        renderer->renderVelocityVector(velocity_vbo);
+//        renderer->renderForceVector(force_vbo);
     }
 }; //end namespace

@@ -92,7 +92,7 @@ namespace rtps
             printf("ERROR(force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-#if 0 //printouts    
+#if 1 //printouts    
         //DEBUGING
         
         if(num > 0)// && choice == 0)

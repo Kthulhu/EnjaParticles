@@ -74,7 +74,7 @@ namespace rtps{
         settings->SetSetting("Number of Particles", 0);
     }
 
-    void FLOCK::updateFLOCKP(){
+    void FLOCK::updateParams(){
         
         // CL SETTINGS
         flock_params.max_num = settings->GetSettingAs<int>("Maximum Number of Particles");
@@ -86,7 +86,7 @@ namespace rtps{
         flock_params.simulation_scale = settings->GetSettingAs<float>("Simulation Scale");
 
         // SPACING
-        spacing = settings->GetSettingAs<float>("Spacing");
+        spacing = 1.1f*settings->GetSettingAs<float>("Spacing");
 
         // BOID SETTINGS
         flock_params.min_dist = 0.5f * flock_params.smoothing_distance * settings->GetSettingAs<float>("Min Separation Distance");

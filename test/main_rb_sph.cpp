@@ -120,8 +120,8 @@ rtps::RTPS* rb;
 
 //#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
-//#define NUM_PARTICLES 65536
-#define NUM_PARTICLES 32768
+#define NUM_PARTICLES 65536
+//#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
 //#define NUM_PARTICLES 8192
@@ -203,8 +203,8 @@ int main(int argc, char** argv)
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-    settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    //settings->setRenderType(RTPSettings::RENDER);
+    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
+    settings->setRenderType(RTPSettings::RENDER);
     //settings.setRenderType(RTPSettings::SPRITE_RENDER);
     settings->setRadiusScale(0.4);
     settings->setBlurScale(1.0);
@@ -267,8 +267,8 @@ int main(int argc, char** argv)
     rb->settings->SetSetting("Boundary Dampening", 256.0f);
     //rb->settings->SetSetting("Boundary Stiffness", 5.f);
     //rb->settings->SetSetting("Boundary Dampening", 2.f);
-    rb->settings->SetSetting("Penetration Factor", .2f);
-    rb->settings->SetSetting("Restitution",0.5f);
+    rb->settings->SetSetting("Penetration Factor", .1f);
+    rb->settings->SetSetting("Restitution",0.9f);
 
     sph->system->addInteractionSystem(rb->system);
     rb->system->addInteractionSystem(sph->system);
@@ -420,7 +420,7 @@ void appKeyboard(unsigned char key, int x, int y)
 
                 float4 col1 = float4(1., 0., 0., 1.);
 
-                rb->system->addBox(nn, min, max, false, col1,100.0f);
+                rb->system->addBox(nn, min, max, false, col1,1000.0f);
                 return;
             }
         case 'o':
@@ -504,8 +504,20 @@ void init_gl()
 void timerCB(int ms)
 {
     glutTimerFunc(ms, timerCB, ms);
-    sph->update();
-    rb->update();
+    glFinish();
+    sph->system->acquireGLBuffers();
+    rb->system->acquireGLBuffers();
+    sph->system->update();
+    rb->system->update();
+    sph->system->interact();
+    rb->system->interact();
+    sph->system->integrate();
+    rb->system->integrate();
+    sph->system->postProcess();
+    rb->system->postProcess();
+    sph->system->releaseGLBuffers();
+    rb->system->releaseGLBuffers();
+
     //ps3->update();
     glutPostRedisplay();
 }

@@ -51,7 +51,7 @@ namespace rtps
         cl_prbp = Buffer<ParticleRigidBodyParams>(ps->cli, vparams);
 
         calculate();
-        updateParticleRigidBodyParams();
+        updateParams();
 
         //settings->printSettings();
 
@@ -125,8 +125,7 @@ namespace rtps
 		//printf("**** enter updateGPU, num= %d\n", num);
 
         timers["update"]->start();
-        glFinish();
-        if (settings->has_changed()) updateParticleRigidBodyParams();
+        if (settings->has_changed()) updateParams();
 
         //settings->printSettings();
 
@@ -136,9 +135,6 @@ namespace rtps
         //interval for all the other calls.
         //this does end up acquire/release everytime sprayHoses calls pushparticles
         //should just do try/except?
-
-        cl_position_u.acquire();
-        cl_color_u.acquire();
 
         for (int i=0; i < sub_intervals; i++)
         {
@@ -207,7 +203,7 @@ namespace rtps
                 num = nc;
                 settings->SetSetting("Number of Particles", num);
                 //prbp.num = num;
-                updateParticleRigidBodyParams();
+                updateParams();
                 renderer->setNum(prbp.num);
 
                 //need to copy sorted arrays into unsorted arrays
@@ -242,64 +238,8 @@ namespace rtps
                 clf_debug,
                 cli_debug);
             timers["force"]->stop();
-            for(int j = 0;j<interactionSystem.size();j++)
-            {
-                //Naievely assume it is an sph system for now.
-                //Need to come up with a good way to interact.
-                timers["force_fluid"]->start();
-                forceFluid.execute(   num,
-                    //cl_vars_sorted,
-                    cl_position_s,
-                    cl_velocity_s,
-                    cl_force_s,
-                    interactionSystem[j]->getPositionBuffer(),
-                    interactionSystem[j]->getVelocityBuffer(),
-                    cl_sort_indices,
-                    interactionSystem[j]->getCellStartBuffer(),
-                    interactionSystem[j]->getCellEndBuffer(),
-                    cl_prbp,
-                    //cl_GridParams,
-                    cl_GridParamsScaled,
-                    clf_debug,
-                    cli_debug);
-                timers["force_fluid"]->stop();
-            }
-
-            timers["segmented_scan"]->start();
-            sscan.execute(num,
-                    cl_position_u,
-                    cl_rbParticleIndex,
-                    cl_force_s,
-                    cl_comLinearForce,
-                    cl_comTorqueForce,
-                    cl_comPos,
-                    rbParticleIndex.size(),
-                    //debug params
-                    clf_debug,
-                    cli_debug);
-            timers["segmented_scan"]->stop();
-
-            integrate(); // includes boundary force
-            timers["update_particles"]->start();
-            updateParticles.execute(rbParticleIndex.size(),
-                    cl_position_u,
-                    cl_position_l,
-                    cl_velocity_u,
-                    cl_rbParticleIndex,
-                    cl_comPos,
-                    cl_comRot,
-                    cl_comVel,
-                    cl_comAngVel,
-                    //debug params
-                    clf_debug,
-                    cli_debug);
-            timers["update_particles"]->start();
-
-            
         }
 
-        cl_position_u.release();
-        cl_color_u.release();
 
         timers["update"]->stop();
     }
@@ -307,7 +247,6 @@ namespace rtps
     void ParticleRigidBody::integrate()
     {
         timers["integrate"]->start();
-
         if (integrator == EULER)
         {
             //euler();
@@ -508,6 +447,7 @@ namespace rtps
         glFinish();
         cl_position_u.acquire();
         cl_color_u.acquire();
+        cl_velocity_u.acquire();
 
         //printf("about to prep 0\n");
         //call_prep(0);
@@ -534,10 +474,11 @@ namespace rtps
         printf("rbParticleIndex.size() = %d\n",rbParticleIndex.size());
 
         settings->SetSetting("Number of Particles", num+nn);
-        updateParticleRigidBodyParams();
+        updateParams();
 
         cl_position_u.release();
         cl_color_u.release();
+        cl_velocity_u.release();
 #endif
         num += nn;  //keep track of number of particles we use
         printf("num = %d\n",num);
@@ -598,7 +539,7 @@ namespace rtps
 
         settings->SetSetting("Boundary Distance", boundary_distance);
         //float spacing = rest_distance / simulation_scale;
-        float spacing = 2.*(smoothing_distance / simulation_scale);
+        float spacing = 2.f*(smoothing_distance / simulation_scale);
         printf("Spacing = %f\n",spacing);
         settings->SetSetting("Spacing", spacing);
  
@@ -624,7 +565,7 @@ namespace rtps
 
 
 	//----------------------------------------------------------------------
-    void ParticleRigidBody::updateParticleRigidBodyParams()
+    void ParticleRigidBody::updateParams()
     {
 
         //update all the members of the prbp struct
@@ -683,5 +624,60 @@ namespace rtps
 
         settings->updated();
     }
-
+    void ParticleRigidBody::interact()
+    {
+            for(int j = 0;j<interactionSystem.size();j++)
+            {
+                //Naievely assume it is an sph system for now.
+                //Need to come up with a good way to interact.
+                timers["force_fluid"]->start();
+                forceFluid.execute(   num,
+                    //cl_vars_sorted,
+                    cl_position_s,
+                    cl_velocity_s,
+                    cl_force_s,
+                    interactionSystem[j]->getPositionBuffer(),
+                    interactionSystem[j]->getVelocityBuffer(),
+                    cl_sort_indices,
+                    interactionSystem[j]->getCellStartBuffer(),
+                    interactionSystem[j]->getCellEndBuffer(),
+                    cl_prbp,
+                    //cl_GridParams,
+                    cl_GridParamsScaled,
+                    clf_debug,
+                    cli_debug);
+                timers["force_fluid"]->stop();
+            } 
+            
+            timers["segmented_scan"]->start();
+            sscan.execute(num,
+                    cl_position_u,
+                    cl_rbParticleIndex,
+                    cl_force_s,
+                    cl_comLinearForce,
+                    cl_comTorqueForce,
+                    cl_comPos,
+                    rbParticleIndex.size(),
+                    //debug params
+                    clf_debug,
+                    cli_debug);
+            timers["segmented_scan"]->stop();
+    }
+    void ParticleRigidBody::postProcess()
+    {
+           timers["update_particles"]->start();
+            updateParticles.execute(rbParticleIndex.size(),
+                    cl_position_u,
+                    cl_position_l,
+                    cl_velocity_u,
+                    cl_rbParticleIndex,
+                    cl_comPos,
+                    cl_comRot,
+                    cl_comVel,
+                    cl_comAngVel,
+                    //debug params
+                    clf_debug,
+                    cli_debug);
+            timers["update_particles"]->start();        
+    }
 }; //end namespace

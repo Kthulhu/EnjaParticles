@@ -71,6 +71,7 @@ __kernel void euler(
     p += dt*v;
     p.xyz/=prbp->simulation_scale;
     p.w = 1.0f; //just in case
+//need to fix torque scaling.
     w.xyz += dt*(tf.xyz/rbMass[i]);
     //float wMag = length(w.xyz);
     //float wDt= length(w.xyz*dt);

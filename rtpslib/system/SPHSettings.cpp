@@ -73,7 +73,7 @@ namespace rtps
         //float boundary_distance =  smoothing_distance;
 
         settings->SetSetting("Boundary Distance", boundary_distance);
-        float spacing = rest_distance / simulation_scale;
+        float spacing = 1.1f*(rest_distance / simulation_scale);
         //float spacing = smoothing_distance / simulation_scale;
         settings->SetSetting("Spacing", spacing);
  
@@ -130,7 +130,7 @@ namespace rtps
 
 
 	//----------------------------------------------------------------------
-    void SPH::updateSPHP()
+    void SPH::updateParams()
     {
 
         //update all the members of the sphp struct
