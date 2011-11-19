@@ -349,7 +349,6 @@ namespace rtps
         cl_veleval_u = Buffer<float4>(ps->cli, f4Vec);
         cl_veleval_s = Buffer<float4>(ps->cli, f4Vec);
         //cl_density_s = Buffer<float>(ps->cli, densities);
-        cl_force_s = Buffer<float4>(ps->cli, f4Vec);
         cl_rbParticleIndex = Buffer<int2>(ps->cli,rbParticleIndex);
         cl_rbMass = Buffer<float>(ps->cli,rbfVec);
         cl_comPos = Buffer<float4>(ps->cli,rbf4Vec);

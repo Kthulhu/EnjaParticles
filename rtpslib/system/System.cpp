@@ -230,8 +230,8 @@ namespace rtps
         cl_color_s = Buffer<float4>(ps->cli, f4vec);
         cl_velocity_u = Buffer<float4>(ps->cli, velocity_vbo);
         cl_velocity_s = Buffer<float4>(ps->cli, f4vec);
-        //cl_force_s = Buffer<float4>(ps->cli, force_vbo);
-        cl_force_s = Buffer<float4>(ps->cli, f4vec);
+        cl_force_s = Buffer<float4>(ps->cli, force_vbo);
+        //cl_force_s = Buffer<float4>(ps->cli, f4vec);
         cl_active_cells = Buffer<float4>(ps->cli, active_cells_vbo);
 
         //setup debug arrays
@@ -492,21 +492,21 @@ namespace rtps
         cl_position_u.acquire();
         cl_color_u.acquire();
         cl_velocity_u.acquire();
-        //cl_force_s.acquire();
-        //cl_active_cells.acquire();
+        cl_force_s.acquire();
+        cl_active_cells.acquire();
     }
     void System::releaseGLBuffers()
     {
         cl_position_u.release();
         cl_color_u.release();
         cl_velocity_u.release();
-        //cl_force_s.release();
-        //cl_active_cells.release();
+        cl_force_s.release();
+        cl_active_cells.release();
     }
     void System::render()
     {
         renderer->render();
-        renderer->renderVelocityVector(velocity_vbo);
-//        renderer->renderForceVector(force_vbo);
+        renderer->renderVector(velocity_vbo);
+        //renderer->renderVector(force_vbo,0.029706f);
     }
 }; //end namespace

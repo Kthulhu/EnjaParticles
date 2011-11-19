@@ -117,8 +117,7 @@ namespace rtps
         void render_box(float4 min, float4 max, float4 color=float4(0.0f,1.0f,0.0f,1.0f)); //put in render utils
         void render_table(float4 min, float4 max); //put in render utils
 
-        void renderVelocityVector(GLuint velocity_vbo);
-        void renderForceVector(GLuint force_vbo);
+        void renderVector(GLuint vec_vbo, float scale=1.0f);
 
         void writeBuffersToDisk();
         void writeFramebufferTextures();

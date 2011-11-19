@@ -436,7 +436,6 @@ namespace rtps
         cl_veleval_u = Buffer<float4>(ps->cli, f4vec);
         cl_veleval_s = Buffer<float4>(ps->cli, f4vec);
         cl_density_s = Buffer<float>(ps->cli, fvec);
-        cl_force_s = Buffer<float4>(ps->cli, f4vec);
         cl_xsph_s = Buffer<float4>(ps->cli, f4vec);
 
         //TODO make a helper constructor for buffer to make a cl_mem from a struct

@@ -784,9 +784,9 @@ namespace rtps
         particle_radius = pradius;
     }
 
-    void Render::renderVelocityVector(GLuint velocity_vbo)
+    void Render::renderVector(GLuint vec_vbo, float scale)
     {
-        glBindBuffer(GL_ARRAY_BUFFER, velocity_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vec_vbo);
         glColorPointer(4, GL_FLOAT, 0, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
@@ -796,6 +796,7 @@ namespace rtps
         glEnableClientState(GL_COLOR_ARRAY);
 
         glUseProgram(glsl_program[VECTOR_SHADER]);
+        glUniform1f( glGetUniformLocation(glsl_program[VECTOR_SHADER], "scale"),scale);
         //Need to disable these for blender
         glDisableClientState(GL_NORMAL_ARRAY);
         glDrawArrays(GL_POINTS, 0, num);
@@ -803,10 +804,6 @@ namespace rtps
 
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
-    }
-    void Render::renderForceVector(GLuint force_vbo)
-    {
-
     }
 }
 
