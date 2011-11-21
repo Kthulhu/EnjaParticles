@@ -49,6 +49,7 @@ namespace rtps
                     Buffer<float4>& comAngVel,
                     Buffer<float4>& comPos,
                     Buffer<float4>& comRot,
+                    Buffer<float16>& inertialTensor,
                     Buffer<float>& rbMass,
             float4 gravity,
                     int numRBs,
@@ -73,6 +74,7 @@ namespace rtps
         k_euler.setArg(iargs++,comAngVel.getDevicePtr());
         k_euler.setArg(iargs++,comPos.getDevicePtr());
         k_euler.setArg(iargs++,comRot.getDevicePtr());
+        k_euler.setArg(iargs++,inertialTensor.getDevicePtr());
         k_euler.setArg(iargs++,rbMass.getDevicePtr());
         k_euler.setArg(iargs++, gravity);
         k_euler.setArg(iargs++, dt); //time step

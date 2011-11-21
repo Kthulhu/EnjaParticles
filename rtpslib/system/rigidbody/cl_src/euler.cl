@@ -41,6 +41,7 @@ __kernel void euler(
                    __global float4* comAngVel,
                    __global float4* comPos,
                    __global float4* comRot, 
+                   __global float16* inertialTensor, 
                    __global float* rbMass, 
         float4 gravity,
                    float dt,
@@ -72,7 +73,11 @@ __kernel void euler(
     p.xyz/=prbp->simulation_scale;
     p.w = 1.0f; //just in case
 //need to fix torque scaling.
-    w.xyz += dt*(tf.xyz/rbMass[i]);
+    float3 L = dt*(tf.xyz);
+    w.x+= dot(inertialTensor[i].s012,L);
+    w.y+= dot(inertialTensor[i].s456,L);
+    w.z+= dot(inertialTensor[i].s89a,L);
+    w.xyz/=prbp->simulation_scale;
     //float wMag = length(w.xyz);
     //float wDt= length(w.xyz*dt);
     //prevents nan error from divide-by-zero

@@ -119,8 +119,8 @@ rtps::RTPS* sph;
 rtps::RTPS* rb;
 
 //#define NUM_PARTICLES 524288
-//#define NUM_PARTICLES 262144
-#define NUM_PARTICLES 65536
+#define NUM_PARTICLES 262144
+//#define NUM_PARTICLES 65536
 //#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
@@ -203,9 +203,11 @@ int main(int argc, char** argv)
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    settings->setRenderType(RTPSettings::RENDER);
+    settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
+    //settings->setRenderType(RTPSettings::RENDER);
     //settings.setRenderType(RTPSettings::SPRITE_RENDER);
+    settings->SetSetting("render_use_alpha", true);
+    settings->SetSetting("render_alpha_function", "add");
     settings->setRadiusScale(0.4);
     settings->setBlurScale(1.0);
     settings->setUseGLSL(1);
@@ -339,7 +341,7 @@ void appKeyboard(unsigned char key, int x, int y)
             nn = 16384;
             min = float4(.1, .1, .1, 1.0f);
             max = float4(3.9, 3.9, 3.9, 1.0f);
-            float4 col1 = float4(0., 0., 1., 1.);
+            float4 col1 = float4(0., 0., 1., 0.05);
             sph->system->addBox(nn, min, max, false,col1);
             //ps2->system->addBox(nn, min, max, false);
             return;
@@ -420,7 +422,7 @@ void appKeyboard(unsigned char key, int x, int y)
 
                 float4 col1 = float4(1., 0., 0., 1.);
 
-                rb->system->addBox(nn, min, max, false, col1,1000.0f);
+                rb->system->addBox(nn, min, max, false, col1,10.0f);
                 return;
             }
         case 'o':

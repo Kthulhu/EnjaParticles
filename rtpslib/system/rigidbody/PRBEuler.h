@@ -56,6 +56,7 @@ namespace rtps
                     Buffer<float4>& comAngVel,
                     Buffer<float4>& comPos,
                     Buffer<float4>& comRot,
+                    Buffer<float16>& inertialTensor,
                     Buffer<float>& rbMass,
                     float4 gravity,
                     int numRBs,

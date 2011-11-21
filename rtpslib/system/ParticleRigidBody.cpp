@@ -36,6 +36,7 @@
 
 //for random
 #include<time.h>
+#define sq(x)(x*x)
 
 namespace rtps
 {
@@ -258,6 +259,7 @@ namespace rtps
                 cl_comAngVel,
                 cl_comPos,
                 cl_comRot,
+                cl_inertialTensor,
                 cl_rbMass,
                     float4(0.0,0.0,prbp.gravity,0.0),
                 rbParticleIndex.size(),
@@ -336,11 +338,13 @@ namespace rtps
         //That means that we assume that each rigidbody is represented by no less than 4 particles
         rbParticleIndex.resize(max_num/4);
         vector<float4> rbf4Vec(max_num/4);
+        vector<float16> rbf16Vec(max_num/4);
         vector<float4> rotf4Vec(max_num/4);
         vector<float> rbfVec(max_num/4);
 
         std::fill(f4Vec.begin(), f4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(rbf4Vec.begin(), rbf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+        std::fill(rbf16Vec.begin(), rbf16Vec.end(), (float16){0.0f});
         std::fill(rotf4Vec.begin(), rotf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 1.0f));
         std::fill(rbfVec.begin(), rbfVec.end(),0.0f);
         std::fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
@@ -357,6 +361,7 @@ namespace rtps
         cl_comAngVel = Buffer<float4>(ps->cli,rbf4Vec);
         cl_comLinearForce = Buffer<float4>(ps->cli,rbf4Vec);
         cl_comTorqueForce = Buffer<float4>(ps->cli,rbf4Vec);
+        cl_inertialTensor = Buffer<float16>(ps->cli,rbf16Vec);
         rbParticleIndex.resize(0);
                 //TODO make a helper constructor for buffer to make a cl_mem from a struct
         //Setup Grid Parameter structs
@@ -442,6 +447,8 @@ namespace rtps
             //sprintf(tmpchar,"pos_l[%d]",i);
             //tmp.print(tmpchar);
         }
+        float16 inertialTensor = calculateInertialTensor(pos,mass);
+        
 #ifdef GPU
         glFinish();
         cl_position_u.acquire();
@@ -466,6 +473,9 @@ namespace rtps
         vector<float> rbm;
         rbm.push_back(mass);
         cl_rbMass.copyToDevice(rbm,rbParticleIndex.size()-1);
+        vector<float16> inertial;
+        inertial.push_back(inertialTensor);
+        cl_inertialTensor.copyToDevice(inertial,rbParticleIndex.size()-1);
         //cl_rbParticleIndex.copyToDevice(rbParticleIndex,rbParticleIndex.size()-1,);
         cl_rbParticleIndex.copyToDevice(rbParticleIndex);
         com.print("Center of Mass");
@@ -678,5 +688,67 @@ namespace rtps
                     clf_debug,
                     cli_debug);
             timers["update_particles"]->start();        
+    }
+    float16 ParticleRigidBody::calculateInertialTensor(vector<float4>& pos, float mass)
+    {
+        //FIXME: This is a very inefficient and ugly way for calculating the
+        //inertial tensor.
+        float a11=0.0f;
+        float a12=0.0f;
+        float a13=0.0f;
+        float a21=0.0f;
+        float a22=0.0f;
+        float a23=0.0f;
+        float a31=0.0f;
+        float a32=0.0f;
+        float a33=0.0f;
+        for(int j = 0; j<pos.size(); j++)
+        {
+           a11 += (mass/pos.size()) * (sq(pos[j].y)+sq(pos[j].z));
+        }
+        for(int j = 0; j<pos.size(); j++)
+        {
+           a12 -= (mass/pos.size()) * (pos[j].x*pos[j].y);
+        }
+        a21 = a12;
+        for(int j = 0; j<pos.size(); j++)
+        {
+           a13 -= (mass/pos.size()) * (pos[j].x*pos[j].z);
+        }
+        a31 = a13;
+        for(int j = 0; j<pos.size(); j++)
+        {
+           a22 += (mass/pos.size()) * (sq(pos[j].x)+sq(pos[j].z));
+        }
+        for(int j = 0; j<pos.size(); j++)
+        {
+           a23 -= (mass/pos.size()) * (pos[j].y*pos[j].z);
+        }
+        a32 = a23;
+        for(int j = 0; j<pos.size(); j++)
+        {
+           a33 += (mass/pos.size()) * (sq(pos[j].x)+sq(pos[j].y));
+        }
+
+        float det = 1.0f/(a11*(a33*a22-a32*a23)-a21*(a33*a12-a32*a13)+a31*(a23*a12-a22*a13));
+        float16 invit;
+        invit.m[0] =det*(a33*a22-a32*a23);
+        invit.m[1] =-det*(a33*a12-a32*a13);
+        invit.m[2] =det*(a23*a12-a22*a13);
+        invit.m[3] = 0.0f;
+        invit.m[4] =-det*(a33*a21-a31*a23);
+        invit.m[5] =det*(a33*a11-a31*a13);
+        invit.m[6] =-det*(a23*a11-a21*a13);
+        invit.m[7] = 0.0f;
+        invit.m[8] =det*(a32*a21-a31*a22);
+        invit.m[9] =-det*(a32*a11-a31*a12);
+        invit.m[10]=det*(a22*a11-a21*a12);
+        invit.m[11] = 0.0f;
+        invit.m[12] = 0.0f;
+        invit.m[13] = 0.0f;
+        invit.m[14] = 0.0f;
+        invit.m[15] = 0.0f;
+        
+       return invit; 
     }
 }; //end namespace
