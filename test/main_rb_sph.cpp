@@ -430,10 +430,11 @@ void appKeyboard(unsigned char key, int x, int y)
                 //max = float4(16.5, 16.5, 16.5, 1.0f);
                 min = float4(6.0, 6.0, 6.0, 1.0f);
                 max = float4(9.0, 9.0, 9.0, 1.0f);
+                //max = float4(7.0, 7.0, 7.0, 1.0f);
 
                 float4 col1 = float4(1., 0., 0., 1.);
 
-                rb->system->addBox(nn, min, max, false, col1,10000.0f);
+                rb->system->addBox(nn, min, max, false, col1,100000.0f);
                 return;
             }
         case 'o':
