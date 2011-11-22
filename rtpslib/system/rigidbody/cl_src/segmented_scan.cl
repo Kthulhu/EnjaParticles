@@ -27,6 +27,7 @@
 
 #include "cl_macros.h"
 #include "cl_structs.h"
+#include "Quaternion.h"
 
 __kernel void sum(
                     __global float4* pos_u,
@@ -42,12 +43,12 @@ __kernel void sum(
     int i = particleIndex[index].x;
     int end = particleIndex[index].y;
     comLinearForce[index]=linear_force_s[i];
-    comTorqueForce[index].xyz=cross((pos_u[i]-comPos[index]).xyz,linear_force_s[i].xyz);
+    comTorqueForce[index].xyz=cross3F4((pos_u[i]-comPos[index]),linear_force_s[i]).xyz;
     i++;
     for(;i<end;i++)
     {
         comLinearForce[index]+=linear_force_s[i];
-        comTorqueForce[index].xyz+=cross((pos_u[i]-comPos[index]).xyz,linear_force_s[i].xyz);
+	comTorqueForce[index].xyz+=cross3F4((pos_u[i]-comPos[index]),linear_force_s[i]).xyz;
         //clf[i].xyz=pos_u[i].xyz;
         //clf[i].xyz=(pos_u[i]-comPos[index]).xyz;
     }

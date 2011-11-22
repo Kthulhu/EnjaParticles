@@ -73,16 +73,18 @@ __kernel void euler(
     p.xyz/=prbp->simulation_scale;
     p.w = 1.0f; //just in case
 //need to fix torque scaling.
-    float3 L = dt*(tf.xyz);
-    w.x+= dot(inertialTensor[i].s012,L);
-    w.y+= dot(inertialTensor[i].s456,L);
-    w.z+= dot(inertialTensor[i].s89a,L);
+    float4 L = dt*(tf);
+    L.w = 0.0f;
+    w.x+= dot(inertialTensor[i].s0123,L);
+    w.y+= dot(inertialTensor[i].s4567,L);
+    w.z+= dot(inertialTensor[i].s89ab,L);
+    w.w = 0.0f;
     //float wMag = length(w.xyz);
     //float wDt= length(w.xyz*dt);
     //prevents nan error from divide-by-zero
     //float3 a = wMag==0.0?(float3)(0.0,0.0,0.0):(w.xyz/wMag)*sin(wDt/2.0);
     //float4 dq = (float4)(cos(wDt/2.0),a.x,a.y,a.z);
-    Quaternion dq = qtSet(w,sqrt(dot(w.xyz,w.xyz)));
+    Quaternion dq = qtSet(w,sqrt(dot(w,w)));
     q = qtMul(dq,q);
     //FIXME: quaternion multiplication is not the cross product. Need to fix this.
     //q = cross(dq,q);

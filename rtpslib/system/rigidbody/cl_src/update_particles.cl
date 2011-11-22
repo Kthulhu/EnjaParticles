@@ -37,23 +37,6 @@
 #include "cl_macros.h"
 #include "cl_structs.h"
 #include "Quaternion.h"
-/*__inline__ float16 quatToRot(float4 quat)
-{
-    float a2 = quat.x*quat.x;
-    float b2 = quat.y*quat.y;
-    float c2 = quat.z*quat.z;
-    float d2 = quat.w*quat.w;
-    float bc = quat.y*quat.z;
-    float ad = quat.x*quat.w;
-    float bd = quat.y*quat.w;
-    float ac = quat.x*quat.z;
-    float ab = quat.x*quat.y;
-    float cd = quat.z*quat.z;
-    return (float16)(a2+b2-c2-d2,2.0*(bc-ad),2.0*(bd+ac),0.0,
-                        2.0*(bc+ad),a2-b2+c2-d2,2.0*(cd-ab), 0.0,
-                        2.0*(bd-ac),2.0*(cd+ab),a2-b2-c2+d2, 0.0,
-                        0.0, 0.0, 0.0, 1.0);
-}*/
 __kernel void update_particles(
                     __global float4* pos_u,
                     __global float4* pos_l,
@@ -72,11 +55,11 @@ __kernel void update_particles(
     float16 m = qtGetRotationMatrix(comRot[index]); 
     for(;i<end;i++)
     {
-        float3 rotPos =(float3)(dot(m.s012,pos_l[i].xyz),dot(m.s456,pos_l[i].xyz),dot(m.s89a,pos_l[i].xyz));
+        float4 rotPos =(float4)(dot(m.s0123,pos_l[i]),dot(m.s4567,pos_l[i]),dot(m.s89ab,pos_l[i]),0.0f);
         //pos_u[i]=rotPos+comPos[index];
-        pos_u[i].xyz=rotPos+comPos[index].xyz;
+        pos_u[i].xyz=rotPos.xyz+comPos[index].xyz;
         pos_u[i].w = 1.0;
-        velocity_u[i].xyz = comVel[index].xyz + cross(comAngVel[index].xyz,pos_l[i].xyz);
+        velocity_u[i].xyz = comVel[index].xyz + cross3F4(comAngVel[index],pos_l[i]).xyz;
         clf[i]=velocity_u[i];
         //clf[i]=pos_u[i];
         //clf[i].xyz=rotPos;

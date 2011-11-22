@@ -35,12 +35,21 @@ Quaternion qtSet(const float4 axis, float angle)
 	q.w = cos(angle/2);
 	return q;
 }
+__inline float4 cross3F4( float4 a, float4 b)
+{
+	float4 retval;
+	retval.x=a.y*b.z-a.z*b.y;
+	retval.y=a.z*b.x-a.x*b.z;
+	retval.z=a.x*b.y-a.y*b.x;
+	retval.w=0.0f;
+	return retval;
+}
 
 __inline
 Quaternion qtMul(const Quaternion a, const Quaternion b)
 {
 	Quaternion ans;
-	ans.xyz = cross( a.xyz, b.xyz );
+	ans = cross3F4( a, b );
 	ans += a.w*b + b.w*a;
 	ans.w = a.w*b.w - (a.x*b.x+a.y*b.y+a.z*b.z);
 	return ans;
