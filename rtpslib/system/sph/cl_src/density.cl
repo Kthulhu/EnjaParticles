@@ -64,11 +64,15 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     // is this particle within cutoff?
     if (rlen <= sphp->smoothing_distance)
     {
+        //iej is 0 when we are looking at same particle
+        //we allow calculations and just multiply force and xsph
+        //by iej to avoid branching
+        //int iej = index_i != index_j;
         // return density.x for single neighbor
         //float Wij = sphp->wpoly6_coef * Wpoly6(r, sphp->smoothing_distance, sphp);
         float Wij = Wpoly6(r, sphp->smoothing_distance, sphp);
 
-        pt->density.x += sphp->mass*Wij;
+        pt->density.x += Wij;//*(float)iej;
         //pt->density.x += sphp->mass*Wij;
     }
 }
@@ -111,7 +115,7 @@ __kernel void density_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    density[index] = sphp->wpoly6_coef * pt.density.x;
+    density[index] = sphp->wpoly6_coef * sphp->mass * pt.density.x;
     /*
     clf[index].x = pt.density.x * sphp->wpoly6_coef;
     clf[index].y = pt.density.y;

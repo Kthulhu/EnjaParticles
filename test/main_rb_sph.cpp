@@ -119,9 +119,9 @@ rtps::RTPS* sph;
 rtps::RTPS* rb;
 
 //#define NUM_PARTICLES 524288
-#define NUM_PARTICLES 262144
+//#define NUM_PARTICLES 262144
 //#define NUM_PARTICLES 65536
-//#define NUM_PARTICLES 32768
+#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
 //#define NUM_PARTICLES 8192
@@ -218,11 +218,11 @@ int main(int argc, char** argv)
     //ps = new rtps::RTPS();
 
     sph->settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
-    sph->settings->SetSetting("Gas Constant", 1.0f);
+    sph->settings->SetSetting("Gas Constant", 1.f);
     sph->settings->SetSetting("Viscosity", .001f);
     sph->settings->SetSetting("Velocity Limit", 600.0f);
     sph->settings->SetSetting("XSPH Factor", .15f);
-    sph->settings->SetSetting("Friction Kinetic", 0.0f);
+    sph->settings->SetSetting("Friction Kinetic", 0.2f);
     sph->settings->SetSetting("Friction Static", 0.0f);
     sph->settings->SetSetting("Boundary Stiffness", 20000.0f);
     sph->settings->SetSetting("Boundary Dampening", 256.0f);
@@ -346,6 +346,17 @@ void appKeyboard(unsigned char key, int x, int y)
             //ps2->system->addBox(nn, min, max, false);
             return;
         }
+        case 'g':
+        {
+            //nn = 16384;
+            nn = NUM_PARTICLES/8;
+            min = float4(2.5f, 2.5f, 2.5f, 1.0f);
+            max = float4(7.5f, 7.5f, 7.5f, 1.0f);
+            float4 col1 = float4(0., 0., 1., 0.05);
+            sph->system->addBox(nn, min, max, false,col1);
+            //ps2->system->addBox(nn, min, max, false);
+            return;
+        }
         case 'p': //print timers
             printf("SPH timers:\n");
             sph->system->printTimers();
@@ -422,7 +433,7 @@ void appKeyboard(unsigned char key, int x, int y)
 
                 float4 col1 = float4(1., 0., 0., 1.);
 
-                rb->system->addBox(nn, min, max, false, col1,10.0f);
+                rb->system->addBox(nn, min, max, false, col1,10000.0f);
                 return;
             }
         case 'o':

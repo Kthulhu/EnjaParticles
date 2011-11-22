@@ -90,24 +90,26 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         //quartic_coef = 
         
 
-        float kern = -.5 * dWijdr * (Pi + Pj) * sphp->wspiky_d_coef * idi * idj;
+        float kern = dWijdr * (Pi + Pj) * idj;
+        //float kern = -.5 * dWijdr * (Pi + Pj) * sphp->wspiky_d_coef * idi * idj;
+        //float kern = -.5 * dWijdr * (Pi + Pj) * sphp->wspiky_d_coef * idj * idj;
         //float kern = -1.0f * dWijdr * (Pi * idi * idi + Pj * idj * idj) * sphp->wspiky_d_coef;
-        float4 force = kern*r; 
+        //float4 force = kern*r; 
 
         float4 veli = veleval[index_i]; // sorted
         float4 velj = veleval[index_j];
 
 #if 1
         // Add viscous forces
-        float vvisc = sphp->viscosity;
-        float dWijlapl = sphp->wvisc_dd_coef * Wvisc_lapl(rlen, sphp->smoothing_distance, sphp);
-        float4 visc = vvisc * (velj-veli) * dWijlapl * idj * idi;
-        force += visc;
+        float dWijlapl = Wvisc_lapl(rlen, sphp->smoothing_distance, sphp);
+        //float4 visc = vvisc * (velj-veli) * dWijlapl * idj * idi;
+        float4 visc = (velj-veli) * dWijlapl * idj;
+        pt->viscosity+= visc*(float)iej;
 
 #endif
 
         //force *=  sphp->mass/(di.x*dj.x);  // original
-        force *= sphp->mass;// * idi * idj;
+        //force *= sphp->mass;// * idi * idj;
         //force *=  sphp->mass;// /(di.x*dj.x); 
 
 #if 1
@@ -121,12 +123,13 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         */
         float Wijpol6 = Wpoly6(r, sphp->smoothing_distance, sphp);
         //float Wijpol6 = sphp->wpoly6_coef * Wpoly6(rlen, sphp->smoothing_distance, sphp);
-        float4 xsph = (2.f * sphp->mass * Wijpol6 * (velj-veli)/(di+dj));
+        float4 xsph = (Wijpol6 * (velj-veli)/(di+dj));
         pt->xsph += xsph * (float)iej;
         pt->xsph.w = 0.f;
 #endif
 
-        pt->force += force * (float)iej;
+        pt->force += r * kern * (float)iej;
+        pt->force.w = 0.f;
 
     }
 }
@@ -168,9 +171,11 @@ __kernel void force_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    force[index] = pt.force; 
+    force[index] = (sphp->mass * (1.0/density[index]))*
+            ((-0.5 * sphp->wspiky_d_coef * pt.force) +
+                   (sphp->viscosity * sphp->wvisc_dd_coef * pt.viscosity)) ; 
     clf[index].xyz = pt.force.xyz;
-    xsph[index] = sphp->wpoly6_coef * pt.xsph;
+    xsph[index] = 2.0 * sphp->mass * sphp->wpoly6_coef * pt.xsph;
 }
 
 /*-------------------------------------------------------------- */

@@ -33,13 +33,18 @@ namespace rtps
         * The Particle Mass (and hence everything following) depends on the MAXIMUM number of particles in the system
         */
 
-        float rho0 = 1000;                              //rest density [kg/m^3 ]
-        //float mass = (128*1024.0)/max_num * .0002;    //krog's way
+        float rho0 = 1000.0;                              //rest density [kg/m^3 ]
+        float mass = (128*1024.0)/max_num * .0002;    //krog's way
+        //float VP = (1.0/rho0)*0.00002*max_num;
+        //float VP = 1.0/max_num;
+        //float mass = (rho0)/max_num;
         float VP = 2 * .0262144 / max_num;              //Particle Volume [ m^3 ]
         //float VP = .0262144 / 16000;                  //Particle Volume [ m^3 ]
-        float mass = rho0 * VP;                         //Particle Mass [ kg ]
+        //float mass = rho0 * VP;                         //Particle Mass [ kg ]
+        //float mass = (rho0*VP/max_num);
         //constant .87 is magic
-        float rest_distance = .87 * pow(VP, 1.f/3.f);   //rest distance between particles [ m ]
+        //float rest_distance = 0.005;
+        float rest_distance = .87 * pow(mass/rho0, 1.f/3.f);   //rest distance between particles [ m ]
         //float rest_distance = pow(VP, 1.f/3.f);     //rest distance between particles [ m ]
         float smoothing_distance = 2.0f * rest_distance;//interaction radius
 
@@ -53,7 +58,8 @@ namespace rtps
 
 
         //ratio between particle radius in simulation coords and world coords
-        float simulation_scale = pow(.5f * VP * max_num / domain_vol, 1.f/3.f); 
+        //float simulation_scale = pow(1./ domain_vol,1.f/3.f); 
+        float simulation_scale = pow(.5f * VP * max_num/ domain_vol, 1.f/3.f); 
         //float simulation_scale = pow(VP * 16000/ domain_vol, 1.f/3.f); 
 
 		//int max_cloud_num = cloud->getMaxCloudNum();
@@ -73,9 +79,10 @@ namespace rtps
         //float boundary_distance =  smoothing_distance;
 
         settings->SetSetting("Boundary Distance", boundary_distance);
-        float spacing = 1.1f*(rest_distance / simulation_scale);
+        float spacing = (rest_distance / simulation_scale);
         //float spacing = smoothing_distance / simulation_scale;
         settings->SetSetting("Spacing", spacing);
+        printf("spacing = %f\n",spacing);
  
 
         float pi = M_PI;
@@ -96,11 +103,11 @@ namespace rtps
         //dynamic params
         if(!settings->Exists("Gravity"))
             settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
-        settings->SetSetting("Gas Constant", 15.0f);
-        settings->SetSetting("Viscosity", .01f);
+        settings->SetSetting("Gas Constant", 1.5f);
+        settings->SetSetting("Viscosity", 1.0f);
         settings->SetSetting("Velocity Limit", 600.0f);
         settings->SetSetting("XSPH Factor", .1f);
-        settings->SetSetting("Friction Kinetic", 0.0f);
+        settings->SetSetting("Friction Kinetic", 0.2f);
         settings->SetSetting("Friction Static", 0.0f);
         settings->SetSetting("Boundary Stiffness", 20000.0f);
         settings->SetSetting("Boundary Dampening", 256.0f);

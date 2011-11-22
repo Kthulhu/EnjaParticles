@@ -64,35 +64,21 @@ __kernel void leapfrog(
     //external force is gravity
     //Make gravity a vector...
     //f.y += sphp->gravity;
-    f.z += sphp->gravity;
+    f.z += sphp->gravity;//sphp->mass*sphp->gravity;
     f.w = 0.f;
-
+    
     float speed = length(f);
     if (speed > sphp->velocity_limit) //velocity limit, need to pass in as struct
     {
         f *= sphp->velocity_limit/speed;
     }
 
-    float4 vnext = v + dt*f;
+    float4 vnext = v + dt*f;//(f/sphp->mass);
+
     //float4 vnext = v;// + dt*f;
-    vnext += sphp->xsph_factor * xsph_s[i];
+    vnext += sphp->xsph_factor * (xsph_s[i]);///sphp->mass);
 
     float4 veval = 0.5f*(v+vnext);
-
-#if 0
-    //crazy velocity freezing effect
-    float x = p.x / sphp->simulation_scale;
-    if (x > 4.)
-    {
-        float mv = length( (float4)(vnext.xyz, 0.0f));
-        //vnext /= mv;
-        //vnext *= log(mv); 
-        //this should be changed to decay with lifetime
-        veval = (float4)(0.0, 0.0, 0.0, 0.0);
-        vnext = (float4)(0.0, 0.0, 0.0, 0.0);
-    }
-#endif
-
 
     p += dt * vnext;
     p.w = 1.0f; //just in case

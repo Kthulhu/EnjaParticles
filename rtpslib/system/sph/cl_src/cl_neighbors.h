@@ -37,8 +37,9 @@ void zeroPoint(PointData* pt)
     pt->surf_tens = (float4)(0.,0.,0.,0.);
     pt->color_lapl = 0.;
     pt->xsph = (float4)(0.,0.,0.,0.);
+    pt->viscosity = (float4)(0.,0.,0.,0.);
     //	pt->center_of_mass = (float4)(0.,0.,0.,0.);
-    //	pt->num_neighbors = 0;
+    //pt->num_neighbors = 0;
 }
 
 /*--------------------------------------------------------------*/

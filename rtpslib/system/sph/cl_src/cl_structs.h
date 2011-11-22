@@ -95,8 +95,9 @@ typedef struct PointData
     float4 force;
     float4 surf_tens;
     float4 xsph;
+    float4 viscosity;
     //	float4 center_of_mass;
-    //	int num_neighbors;
+    //int num_neighbors;
 } PointData;
 
 
