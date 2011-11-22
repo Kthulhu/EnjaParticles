@@ -119,9 +119,9 @@ rtps::RTPS* sph;
 rtps::RTPS* rb;
 
 //#define NUM_PARTICLES 524288
-//#define NUM_PARTICLES 262144
+#define NUM_PARTICLES 262144
 //#define NUM_PARTICLES 65536
-#define NUM_PARTICLES 32768
+//#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
 //#define NUM_PARTICLES 8192
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
     sph->settings->SetSetting("Viscosity", .001f);
     sph->settings->SetSetting("Velocity Limit", 600.0f);
     sph->settings->SetSetting("XSPH Factor", .15f);
-    sph->settings->SetSetting("Friction Kinetic", 0.2f);
+    sph->settings->SetSetting("Friction Kinetic", 0.0f);
     sph->settings->SetSetting("Friction Static", 0.0f);
     sph->settings->SetSetting("Boundary Stiffness", 20000.0f);
     sph->settings->SetSetting("Boundary Dampening", 256.0f);

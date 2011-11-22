@@ -34,13 +34,13 @@ namespace rtps
         */
 
         float rho0 = 1000.0;                              //rest density [kg/m^3 ]
-        float mass = (128*1024.0)/max_num * .0002;    //krog's way
+        //float mass = (128*1024.0)/max_num * .0002;    //krog's way
         //float VP = (1.0/rho0)*0.00002*max_num;
         //float VP = 1.0/max_num;
         //float mass = (rho0)/max_num;
         float VP = 2 * .0262144 / max_num;              //Particle Volume [ m^3 ]
         //float VP = .0262144 / 16000;                  //Particle Volume [ m^3 ]
-        //float mass = rho0 * VP;                         //Particle Mass [ kg ]
+        float mass = rho0 * VP;                         //Particle Mass [ kg ]
         //float mass = (rho0*VP/max_num);
         //constant .87 is magic
         //float rest_distance = 0.005;
