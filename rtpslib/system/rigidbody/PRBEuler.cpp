@@ -85,7 +85,7 @@ namespace rtps
         //int local_size = 128;
         k_euler.execute(numRBs);//, local_size);
 
-#if 0 //printouts    
+#if 1 //printouts    
         //DEBUGING
         
         if(numRBs > 0)// && choice == 0)
@@ -104,7 +104,7 @@ namespace rtps
             //for (int i=0; i < 10; i++) 
             {
                 //printf("-----\n");
-                printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
+                printf("clf_debug: %08f, %08f, %08f, %08f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
                 //if(clf[i].w == 0.0) exit(0);
                 //printf("cli_debug: %d, %d, %d, %d\n", cli[i].x, cli[i].y, cli[i].z, cli[i].w);
                 //		printf("pos : %f, %f, %f, %f\n", pos[i].x, pos[i].y, pos[i].z, pos[i].w);

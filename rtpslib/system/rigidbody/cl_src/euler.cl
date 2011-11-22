@@ -77,13 +77,12 @@ __kernel void euler(
     w.x+= dot(inertialTensor[i].s012,L);
     w.y+= dot(inertialTensor[i].s456,L);
     w.z+= dot(inertialTensor[i].s89a,L);
-    w.xyz/=prbp->simulation_scale;
     //float wMag = length(w.xyz);
     //float wDt= length(w.xyz*dt);
     //prevents nan error from divide-by-zero
     //float3 a = wMag==0.0?(float3)(0.0,0.0,0.0):(w.xyz/wMag)*sin(wDt/2.0);
     //float4 dq = (float4)(cos(wDt/2.0),a.x,a.y,a.z);
-    Quaternion dq = qtSet(w,sqrt(dot3F4(w*dt,w*dt)));
+    Quaternion dq = qtSet(w,sqrt(dot(w.xyz,w.xyz)));
     q = qtMul(dq,q);
     //FIXME: quaternion multiplication is not the cross product. Need to fix this.
     //q = cross(dq,q);

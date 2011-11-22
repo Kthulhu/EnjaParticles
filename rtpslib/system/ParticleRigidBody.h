@@ -129,7 +129,7 @@ namespace rtps
         Buffer<float4> cl_comAngVel;
         Buffer<float4> cl_comLinearForce;
         Buffer<float4> cl_comTorqueForce;
-        Buffer<float16> cl_inertialTensor;
+        Buffer<float16> cl_invInertialTensor;
 
         //Parameter structs
         Buffer<ParticleRigidBodyParams>   cl_prbp;
@@ -139,7 +139,7 @@ namespace rtps
         void calculate();
         //copy the SPH parameter struct to the GPU
         void updateParams();
-        float16 calculateInertialTensor(vector<float4>& pos, float mass);
+        float16 calculateInvInertialTensor(vector<float4>& pos, float mass);
 
         //Nearest Neighbors search related functions
         void call_prep(int stage);

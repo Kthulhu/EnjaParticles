@@ -51,6 +51,8 @@ __kernel void sum(
         //clf[i].xyz=pos_u[i].xyz;
         //clf[i].xyz=(pos_u[i]-comPos[index]).xyz;
     }
+    //clf[index]=comTorqueForce[index];
+    //clf[index]=comLinearForce[index];
 }
 #endif
 

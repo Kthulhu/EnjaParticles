@@ -95,19 +95,20 @@ namespace rtps
 
 #if 0 //printouts    
         //DEBUGING
-        if(num > 0)// && choice == 0)
+        
+        if(numRBs > 0)// && choice == 0)
         {
             printf("============================================\n");
             printf("***** PRINT Segmented Scan diagnostics ******\n");
-            printf("num %d\n", num);
+            printf("numRBs %d\n", numRBs);
 
-            std::vector<int4> cli(num);
-            std::vector<float4> clf(num);
+            std::vector<int4> cli(numRBs);
+            std::vector<float4> clf(numRBs);
             
             cli_debug.copyToHost(cli);
             clf_debug.copyToHost(clf);
 
-            for (int i=0; i < num; i++)
+            for (int i=0; i < numRBs; i++)
             //for (int i=0; i < 10; i++) 
             {
                 //printf("-----\n");

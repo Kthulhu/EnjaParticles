@@ -259,7 +259,7 @@ namespace rtps
                 cl_comAngVel,
                 cl_comPos,
                 cl_comRot,
-                cl_inertialTensor,
+                cl_invInertialTensor,
                 cl_rbMass,
                     float4(0.0,0.0,prbp.gravity,0.0),
                 rbParticleIndex.size(),
@@ -361,7 +361,7 @@ namespace rtps
         cl_comAngVel = Buffer<float4>(ps->cli,rbf4Vec);
         cl_comLinearForce = Buffer<float4>(ps->cli,rbf4Vec);
         cl_comTorqueForce = Buffer<float4>(ps->cli,rbf4Vec);
-        cl_inertialTensor = Buffer<float16>(ps->cli,rbf16Vec);
+        cl_invInertialTensor = Buffer<float16>(ps->cli,rbf16Vec);
         rbParticleIndex.resize(0);
                 //TODO make a helper constructor for buffer to make a cl_mem from a struct
         //Setup Grid Parameter structs
@@ -447,7 +447,7 @@ namespace rtps
             //sprintf(tmpchar,"pos_l[%d]",i);
             //tmp.print(tmpchar);
         }
-        float16 inertialTensor = calculateInertialTensor(pos,mass);
+        float16 invInertialTensor = calculateInvInertialTensor(pos,mass);
         
 #ifdef GPU
         glFinish();
@@ -473,9 +473,9 @@ namespace rtps
         vector<float> rbm;
         rbm.push_back(mass);
         cl_rbMass.copyToDevice(rbm,rbParticleIndex.size()-1);
-        vector<float16> inertial;
-        inertial.push_back(inertialTensor);
-        cl_inertialTensor.copyToDevice(inertial,rbParticleIndex.size()-1);
+        vector<float16> invInertial;
+        invInertial.push_back(invInertialTensor);
+        cl_invInertialTensor.copyToDevice(invInertial,rbParticleIndex.size()-1);
         //cl_rbParticleIndex.copyToDevice(rbParticleIndex,rbParticleIndex.size()-1,);
         cl_rbParticleIndex.copyToDevice(rbParticleIndex);
         com.print("Center of Mass");
@@ -689,10 +689,10 @@ namespace rtps
                     cli_debug);
             timers["update_particles"]->start();        
     }
-    float16 ParticleRigidBody::calculateInertialTensor(vector<float4>& pos, float mass)
+    float16 ParticleRigidBody::calculateInvInertialTensor(vector<float4>& pos, float mass)
     {
         //FIXME: This is a very inefficient and ugly way for calculating the
-        //inertial tensor.
+        //invers of the inertial tensor.
         float a11=0.0f;
         float a12=0.0f;
         float a13=0.0f;
