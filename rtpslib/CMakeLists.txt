@@ -20,7 +20,6 @@ SET(PREPROCESS_CL TRUE)
 ###### SETTING RELATED TO GPU VS CPU IMPLEMENTATIONS ##########################
 SET(WITH_OPENCL TRUE)
 
-ADD_DEFINITIONS(-g )
 #ADD_DEFINITIONS(-DDEBUG)
 IF(WITH_OPENCL)
     ADD_DEFINITIONS(-DGPU)
@@ -73,7 +72,7 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/RTPSettings
     ${rtpslib_SOURCE_DIR}/util
     ${rtpslib_SOURCE_DIR}/structs
-    ${rtpslib_SOURCE_DIR}/timege    #gordon's timer class
+    #${rtpslib_SOURCE_DIR}/timege    #gordon's timer class
     ${rtpslib_SOURCE_DIR}/timer_eb  #evan's timer class
     ${rtpslib_SOURCE_DIR}/rtps_common
 

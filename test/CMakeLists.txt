@@ -6,8 +6,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 project(test CXX)
 
-SET(CMAKE_BUILD_TYPE "Debug")
-
 #change this later
 SET( BASE_DIR ${test_SOURCE_DIR}/..)
 SET( RTPS_DIR ${test_SOURCE_DIR}/../rtpslib)
@@ -29,7 +27,7 @@ FIND_PACKAGE (GLEW)
 
 set (test_INCLUDES
     ${RTPS_DIR}
-    ${GLUT_INCLUDE_DIR}
+    ${GLUT_INCLUDE_PATH}
     ${OPENGL_INCLUDE_DIR}
     ${GLEW_INCLUDE_PATH}
     ${BASE_DIR}/opencl10
