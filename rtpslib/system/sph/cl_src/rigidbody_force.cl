@@ -119,7 +119,7 @@ __kernel void force_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    force[index] += pt.force; 
+    force[index] += pt.force/sphp->mass; 
     clf[index].xyz = pt.force.xyz;
 }
 

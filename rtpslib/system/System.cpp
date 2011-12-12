@@ -506,7 +506,7 @@ namespace rtps
     void System::render()
     {
         renderer->render();
-        //renderer->renderVector(velocity_vbo);
+        renderer->renderVector(velocity_vbo);
         //renderer->renderVector(force_vbo,0.029706f);
     }
 }; //end namespace

@@ -8,27 +8,28 @@
 # 
 
 IF (WIN32)
-message(GLEW path "$ENV{GLEW_PATH}")
     FIND_PATH( GLEW_INCLUDE_PATH GL/glew.h
-        $ENV{PROGRAMFILES}/GLEW/include
-        ${PROJECT_SOURCE_DIR}/src/nvgl/glew/include
-	    ~/glew-1.5.8/include
-	    #$ENV{GLEW_PATH}/include
-	    $ENV{NVSDKCOMPUTE_ROOT}/shared/inc
+        ${GLEW_ROOT_DIR}/include
         DOC "The directory where GL/glew.h resides")
-
-    FIND_LIBRARY( GLEW_LIBRARY
-        NAMES glew GLEW glew32 glew32s 
-        PATHS
-	    ~/glew-1.5.8/bin
-	    ~/glew-1.5.8/lib
-        $ENV{PROGRAMFILES}/GLEW/lib
-        ${PROJECT_SOURCE_DIR}/src/nvgl/glew/bin
-        ${PROJECT_SOURCE_DIR}/src/nvgl/glew/lib
-	    #$ENV{GLEW_PATH}/lib
-	    $ENV{NVSDKCOMPUTE_ROOT}/shared/lib
-        DOC "The GLEW library")
-
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(GLEWNAMES glew GLEW glew64 glew64s)
+        FIND_LIBRARY( GLEW_LIBRARY
+          NAMES ${GLEWNAMES}
+	      PATHS
+          ${GLEW_ROOT_DIR}/bin/x86_64
+          ${GLEW_ROOT_DIR}/lib/x86_64
+          DOC "The GLEW library")
+    else ()
+        set(GLEWNAMES glew GLEW glew32 glew32s)
+        FIND_LIBRARY( GLEW_LIBRARY
+          NAMES ${GLEWNAMES}
+	      PATHS
+          ${GLEW_ROOT_DIR}/bin/x86
+          ${GLEW_ROOT_DIR}/lib/x86
+          DOC "The GLEW library")
+    endif (CMAKE_SIZEOF_VOID_P EQUAL 8)  
+    
+    
 ELSE (WIN32)
     FIND_PATH( GLEW_INCLUDE_PATH GL/glew.h
         /usr/include
