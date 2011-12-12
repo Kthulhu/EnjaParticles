@@ -9,7 +9,7 @@ void main()
 {
     gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
     vector = gl_ModelViewProjectionMatrix * gl_Color;
-    color = vec4(normalize(gl_Color.rgb),1.0);
+    color = vec4(abs(normalize(gl_Color.rgb)),1.0);
 }
 
 

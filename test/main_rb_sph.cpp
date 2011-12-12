@@ -203,8 +203,8 @@ int main(int argc, char** argv)
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-    settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    //settings->setRenderType(RTPSettings::RENDER);
+    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
+    settings->setRenderType(RTPSettings::RENDER);
     //settings.setRenderType(RTPSettings::SPRITE_RENDER);
     settings->SetSetting("render_use_alpha", true);
     settings->SetSetting("render_alpha_function", "add");
@@ -241,8 +241,8 @@ int main(int argc, char** argv)
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    rb_settings->setRenderType(RTPSettings::RENDER);
+    settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
+    //rb_settings->setRenderType(RTPSettings::RENDER);
     //settings.setRenderType(RTPSettings::SPRITE_RENDER);
     rb_settings->setRadiusScale(0.4);
     rb_settings->setBlurScale(1.0);
