@@ -24,6 +24,8 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <fstream>
+#include <iostream>
 #include <stdlib.h>
 #include <string>
 
@@ -31,6 +33,8 @@
 #include <CL/cl.hpp>
 
 #include "util.h"
+
+using namespace std;
 
 namespace rtps
 {
@@ -117,6 +121,21 @@ void Utils::printDevArray(Buffer<float4>& cl_array, char* msg, int nb_el, int nb
         ((char*)buffer)[*length] = '\0';
 
         return(char*)buffer;
+    }
+
+    void readFile(const string& filename, string& contents)
+    {
+        string line;
+        ifstream file (filename);
+        if (file.is_open())
+        {
+            while (file.good())
+            {
+                getline (file,line);
+                contents+=line+"\n";
+            }
+            file.close();
+        }
     }
 
 	//----------------------------------------------------------------------

@@ -29,7 +29,7 @@
 
 #include "structs.h"
 #include <vector>
-
+#include <string.h>
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
         #define RTPS_EXPORT __declspec(dllexport)
@@ -46,6 +46,9 @@ namespace rtps
 {
 
     char RTPS_EXPORT *file_contents(const char *filename, int *length);
+    //Added this to use C++ standard file reading. I am attempting to deprecate
+    //C-style code and anything that unnecessarily uses dynamic memory. ASY 12/14/2011
+    void readFile(const std::string& filename, std::string& contents);
 
     GLuint RTPS_EXPORT createVBO(const void* data, int dataSize, GLenum target, GLenum usage);
     int RTPS_EXPORT deleteVBO(GLuint id);

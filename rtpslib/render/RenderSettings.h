@@ -22,11 +22,9 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_SHADER_H_INCLUDED
-#define RTPS_SHADER_H_INCLUDED
+#ifndef RTPS_RENDER_SETTINGS_H_INCLUDED
+#define RTPS_RENDER_SETTINGS_H_INCLUDED
 
-#include <map>
-#include <string.h>
 #ifdef WIN32
 //must include windows.h before gl.h on windows platform
 #include <windows.h>
@@ -34,39 +32,23 @@
 
 #if defined __APPLE__ || defined(MACOSX)
 //OpenGL stuff
-    //#include <GLUT/glut.h>
     #include <OpenGL/glu.h>
     #include <OpenGL/gl.h>
 #else
 //OpenGL stuff
-    //#include <GL/glut.h>
     #include <GL/glu.h>
     #include <GL/gl.h>
 #endif
 
 namespace rtps
 {
-    class Shader 
+    struct RenderSettings
     {
-    public:
-        Shader()
-        {
-            shaderProgram = 0;
-            shaderSrc[GL_VERTEX_SHADER]="";
-            shaderSrc[GL_TESS_CONTROL_SHADER]="";
-            shaderSrc[GL_TESS_EVALUATION_SHADER]="";
-            shaderSrc[GL_GEOMETRY_SHADER]="";
-            shaderSrc[GL_FRAGMENT_SHADER]="";
-        }
-        ~Shader();
-        void setShader(GLenum pt,const std::string& source);
-        void attachGeometryParam(GLenum,GLuint);
-        GLuint compileProgram();
-    protected:
-        void compileShader(GLuint shader, const std::string& shaderName, const std::string& shaderSource);
-        GLuint shaderProgram; ///GL id for shader.
-        std::map<GLenum,std::string> shaderSrc;
-        std::map<GLenum,GLuint> geomParams; ///Used to setup geometry shader parameters before linking.
+        GLuint windowHeight,windowWidth;
+        float particleRadius;
+        float nearDepth;
+        float farDepth;
+        bool blending;
     };  
 }
 

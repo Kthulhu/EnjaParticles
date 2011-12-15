@@ -36,41 +36,35 @@ namespace rtps
     {
         glDeleteProgram(shaderProgram);
     }
-    //----------------------------------------------------------------------
+
+    void Shader::setShader(GLenum shaderType, string& shadeSrc)
+    {
+        shaderSrc[shaderType] = shadeSrc;
+    }
     GLuint Shader::compileProgram()
     {
         GLuint program = glCreateProgram();
 
-        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        compileShader(vertexShader, "Vertex Shader", vertexSource, program);
+        compileShader(GL_VERTEX_SHADER, "Vertex Shader",  program);
+        compileShader(GL_FRAGMENT_SHADER, "Fragment Shader",  program);
 
-        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        compileShader(fragmentShader, "Fragment Shader", fragmentSource, program);
-
-
-        GLuint geometryShader=0;
-        if (geometrySource.length())
+        if (shaderSrc[GL_GEOMETRY_SHADER].length())
         {
-            geometryShader = glCreateShader(GL_GEOMETRY_SHADER_EXT);
-            compileShader(geometryShader, "Geometry Shader", geometrySource,program);
+            compileShader(GL_GEOMETRY_SHADER, "Geometry Shader",program);
             for (map<GLenum,GLuint>::iterator i =geomParams.begin();i!=geomParams.end(); i++)
             {
                 glProgramParameteriEXT(program,i->first,i->second);
             }
         }
 
-        GLuint tessControlShader = 0;
-        if (tessControlSource.length())
+        if (shaderSrc[GL_TESS_CONTROL_SHADER].length())
         {
-            tessControlShader = glCreateShader(GL_TESS_CONTROL_SHADER);
-            compileShader(tessControlShader, "Tesselation Control Shader", tessControlSource,program);
+            compileShader(GL_TESS_CONTROL_SHADER, "Tesselation Control Shader",program);
         }
 
-        GLuint tessEvalShader = 0;
-        if (tessEvalSource.length())
+        if (shaderSrc[GL_TESS_EVALUATION_SHADER].length())
         {
-            tessEvalShader = glCreateShader(GL_TESS_EVALUATION_SHADER);
-            compileShader(tessEvalShader, "Tesselation Evaluation Shader", tessEvalSource,program);
+            compileShader(GL_TESS_EVALUATION_SHADER, "Tesselation Evaluation Shader",program);
         }
         
         glLinkProgram(program);
@@ -90,8 +84,10 @@ namespace rtps
         return program;
     }
 
-    Shader::compileShader(GLuint shader,const string& shaderName, const string& shaderSource, GLuint program)
+    Shader::compileShader(GLenum shaderType, const string& shaderName, GLuint program)
     {
+        GLuint shader = glCreateShader(shaderType);
+        string& shaderSource = shaderSrc[shaderType];
         GLint success;
         GLuint len;
         glShaderSource(shader, 1, (const GLchar**)&shaderSource.c_str(), 0);

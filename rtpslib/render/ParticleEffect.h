@@ -22,11 +22,13 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_SHADER_H_INCLUDED
-#define RTPS_SHADER_H_INCLUDED
+#ifndef RTPS_PARTICLE_EFFECT_H_INCLUDED
+#define RTPS_PARTICLE_EFFECT_H_INCLUDED
 
 #include <map>
+#include <vector>
 #include <string.h>
+
 #ifdef WIN32
 //must include windows.h before gl.h on windows platform
 #include <windows.h>
@@ -34,39 +36,51 @@
 
 #if defined __APPLE__ || defined(MACOSX)
 //OpenGL stuff
-    //#include <GLUT/glut.h>
     #include <OpenGL/glu.h>
     #include <OpenGL/gl.h>
 #else
 //OpenGL stuff
-    //#include <GL/glut.h>
     #include <GL/glu.h>
     #include <GL/gl.h>
 #endif
 
+#include "../structs.h"
+#include "../timer_eb.h"
+#include "RenderSettings.h"
+
 namespace rtps
 {
-    class Shader 
+
+    /*enum Shaders
+    {
+        SHADER_DEPTH=0,SHADER_CURVATURE_FLOW,SHADER_FRESNEL
+    };*/
+
+    class ParticleEffect 
     {
     public:
-        Shader()
-        {
-            shaderProgram = 0;
-            shaderSrc[GL_VERTEX_SHADER]="";
-            shaderSrc[GL_TESS_CONTROL_SHADER]="";
-            shaderSrc[GL_TESS_EVALUATION_SHADER]="";
-            shaderSrc[GL_GEOMETRY_SHADER]="";
-            shaderSrc[GL_FRAGMENT_SHADER]="";
-        }
-        ~Shader();
-        void setShader(GLenum pt,const std::string& source);
-        void attachGeometryParam(GLenum,GLuint);
-        GLuint compileProgram();
+        ParticleEffect();
+        ~ParticleEffect();
+
+        void renderPointsAsSpheres();
+        void renderVector(GLuint posVBO, GLuint vecVBO, float scale=1.0f);
+        virtual void render(GLuint posVBO, GLuint colVBO);
+        void writeBuffersToDisk();
+
     protected:
-        void compileShader(GLuint shader, const std::string& shaderName, const std::string& shaderSource);
-        GLuint shaderProgram; ///GL id for shader.
-        std::map<GLenum,std::string> shaderSrc;
-        std::map<GLenum,GLuint> geomParams; ///Used to setup geometry shader parameters before linking.
+        void drawArrays();
+        virtual void deleteFramebufferTextures(){}
+        virtual void createFramebufferTextures(){}
+        void writeFramebufferTextures(){RenderUtils::writeTextures(m_glFramebufferTexs);}
+        virtual int setupTimers();
+        virtual void printTimers();
+        static ShaderLibrary m_shaderLibrary;
+        std::map<std::string,GLuint> m_glFramebufferTexs;
+        std::map<std::string,GLuint> m_glTextures;
+        std::vector<GLuint> m_fbos;
+        RenderSettings m_settings;
+        bool m_writeFramebuffers;
+        EB::TimerList m_timers;
     };  
 }
 
