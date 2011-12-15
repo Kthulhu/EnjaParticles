@@ -22,32 +22,35 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_RENDER_SETTINGS_H_INCLUDED
-#define RTPS_RENDER_SETTINGS_H_INCLUDED
+#ifndef SS_EFFECT_H
+#define SS_EFFECT_H
 
-#ifdef WIN32
-//must include windows.h before gl.h on windows platform
-#include <windows.h>
-#endif
-
-#if defined __APPLE__ || defined(MACOSX)
-//OpenGL stuff
-    #include <OpenGL/glu.h>
-    #include <OpenGL/gl.h>
-#else
-//OpenGL stuff
-    #include <GL/glu.h>
-    #include <GL/gl.h>
-#endif
+#include "ParticleEffect.h"
 
 namespace rtps
 {
-    struct RenderSettings
+    enum SmoothingFilter
     {
-        GLuint windowHeight,windowWidth;
-        float particleRadius;
-        bool blending;
-    };  
-}
+        NO_SMOOTHING = 0,
+        GUASSIAN_BLUR,
+        SEPERABLE_GAUSS_BLUR,
+        BILATERAL_GAUSSIAN_BLUR,
+        CURVATURE_FLOW
+    };
+    class RTPS_EXPORT SSEffect : public ParticleEffect
+    {
+    public:
+        SSEffect(RenderSettings rs);
+        ~SSFRender();
+        void smoothDepth();
+        void renderSmoothedSurface(GLuint posVBO, GLuint colVBO);
+    protected:
+        virtual void deleteFramebufferTextures();
+        virtual void createFramebufferTextures();
+        SmoothingFilter smoothing;
+        float nearDepth;
+        float farDepth;
+    };
+};
 
 #endif

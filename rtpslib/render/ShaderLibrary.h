@@ -29,15 +29,6 @@
 #include <vector>
 #include <string.h>
 
-struct RenderSettings
-{
-    std::string shaderPath;
-    GLuint windowHeight,windowWidth;
-    float particleRadius;
-    float nearDepth;
-    float farDepth;
-    bool blending;
-};
 #ifdef WIN32
 //must include windows.h before gl.h on windows platform
 #include <windows.h>
@@ -91,7 +82,7 @@ namespace rtps
             addShader("depth2NormalShader",vert,frag,geom,tessCont,tessEval);
             readFile(shaderSrc+"/copy_vert.glsl",vert);
             readFile(shaderSrc+"/copy_frag.glsl",frag);
-            addShader("copyWDepthTestShader",vert,frag,geom,tessCont,tessEval);
+            addShader("copyShader",vert,frag,geom,tessCont,tessEval);
             readFile(shaderSrc+"/vector_vert.glsl",vert);
             readFile(shaderSrc+"/vector_frag.glsl",frag);
             readFile(shaderSrc+"/vector_geom.glsl",geom);

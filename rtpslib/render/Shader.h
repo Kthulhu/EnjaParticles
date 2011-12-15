@@ -61,6 +61,10 @@ namespace rtps
         ~Shader();
         void setShader(GLenum pt,const std::string& source);
         void attachGeometryParam(GLenum,GLuint);
+        GLuint getProgram()
+        {
+            return shaderProgram;
+        }
         GLuint compileProgram();
     protected:
         void compileShader(GLuint shader, const std::string& shaderName, const std::string& shaderSource);
