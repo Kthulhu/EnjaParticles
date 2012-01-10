@@ -51,7 +51,7 @@ namespace rtps
                     Buffer<float4>& comRot,
                     Buffer<float16>& inertialTensor,
                     Buffer<float>& rbMass,
-            float4 gravity,
+                    float4 gravity,
                     int numRBs,
                     Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
@@ -85,7 +85,7 @@ namespace rtps
         //int local_size = 128;
         k_euler.execute(numRBs);//, local_size);
 
-#if 1 //printouts    
+#if 0 //printouts    
         //DEBUGING
         
         if(numRBs > 0)// && choice == 0)

@@ -63,6 +63,7 @@ printf("done with constructor\n");
     RTPS::~RTPS()
     {
         printf("RTPS destructor\n");
+        delete settings;
         delete system;
         if(cl_managed)
         {

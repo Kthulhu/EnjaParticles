@@ -119,8 +119,8 @@ rtps::RTPS* sph;
 rtps::RTPS* rb;
 
 //#define NUM_PARTICLES 524288
-//#define NUM_PARTICLES 262144
-#define NUM_PARTICLES 65536
+#define NUM_PARTICLES 262144
+//#define NUM_PARTICLES 65536
 //#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
@@ -203,11 +203,11 @@ int main(int argc, char** argv)
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    settings->setRenderType(RTPSettings::RENDER);
+    settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
+    //settings->setRenderType(RTPSettings::RENDER);
     //settings.setRenderType(RTPSettings::SPRITE_RENDER);
-    //settings->SetSetting("render_use_alpha", true);
-    settings->SetSetting("render_use_alpha", false);
+    settings->SetSetting("render_use_alpha", true);
+    //settings->SetSetting("render_use_alpha", false);
     settings->SetSetting("render_alpha_function", "add");
     settings->setRadiusScale(0.4);
     settings->setBlurScale(1.0);
@@ -244,6 +244,9 @@ int main(int argc, char** argv)
 
     //rb_settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
     rb_settings->setRenderType(RTPSettings::RENDER);
+    settings->SetSetting("render_use_alpha", true);
+    //settings->SetSetting("render_use_alpha", false);
+    settings->SetSetting("render_alpha_function", "add");
     //rb_settings.setRenderType(RTPSettings::SPRITE_RENDER);
     rb_settings->setRadiusScale(0.4);
     rb_settings->setBlurScale(1.0);
@@ -307,7 +310,7 @@ void appRender()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
-        sph->render();
+	sph->render();
         rb->render();
         //ps3->render();
         draw_collision_boxes();
