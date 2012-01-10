@@ -28,9 +28,9 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global float4* pos_j, __global float4* vel_j
+#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j
 //, __global float4* torque_force
-#define ARGV pos, vel, linear_force, pos_j, vel_j 
+#define ARGV pos, vel, linear_force, mass, pos_j, vel_j, mass_j
 
 /*----------------------------------------------------------------------*/
 
@@ -72,13 +72,17 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
-
-        float4 springForce = -prbp->boundary_stiffness*(2.*prbp->smoothing_distance-rlen)*(r/rlen); 
+        float massnorm=((mass[index_i]*mass_j[index_j])/(mass[index_i]+mass_j[index_j]));
+        float stiff = (prbp->penetration_fact*600.*massnorm)/prbp->smoothing_distance;
+        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(r/rlen); 
 
         float4 veli = vel[index_i]; // sorted
         float4 velj = vel_j[index_j];
 
-        float4 dampeningForce = prbp->boundary_dampening*(velj-veli);
+        float ln_res =log(prbp->restitution_coef); 
+        
+        float dampening = -2.*ln_res*(sqrt((stiff*(massnorm))/((ln_res*ln_res)+(prbp->PI*prbp->PI))));
+        float4 dampeningForce = dampening*(velj-veli);
         //force *= sphp->mass;// * idi * idj;
         //FIXME: I think mass should be a part of one of these formulas. -ASY
         //This should be ok. Mass implicitly defines the spring and dampening

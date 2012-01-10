@@ -119,8 +119,8 @@ rtps::RTPS* sph;
 rtps::RTPS* rb;
 
 //#define NUM_PARTICLES 524288
-#define NUM_PARTICLES 262144
-//#define NUM_PARTICLES 65536
+//#define NUM_PARTICLES 262144
+#define NUM_PARTICLES 65536
 //#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
@@ -270,8 +270,8 @@ int main(int argc, char** argv)
     rb->settings->SetSetting("Boundary Dampening", 256.0f);
     //rb->settings->SetSetting("Boundary Stiffness", 5.f);
     //rb->settings->SetSetting("Boundary Dampening", 2.f);
-    rb->settings->SetSetting("Penetration Factor", .1f);
-    rb->settings->SetSetting("Restitution",0.9f);
+    rb->settings->SetSetting("Penetration Factor", .5f);
+    rb->settings->SetSetting("Restitution",0.95f);
 
     sph->system->addInteractionSystem(rb->system);
     rb->system->addInteractionSystem(sph->system);
@@ -435,7 +435,7 @@ void appKeyboard(unsigned char key, int x, int y)
 
                 float4 col1 = float4(1., 0., 0., 1.);
 
-                rb->system->addBox(nn, min, max, false, col1,1000000000.0f);
+                rb->system->addBox(nn, min, max, false, col1,10.0f);
                 return;
             }
         case 'o':

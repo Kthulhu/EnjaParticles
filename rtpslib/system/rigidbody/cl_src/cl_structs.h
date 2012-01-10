@@ -46,6 +46,7 @@ typedef struct ParticleRigidBodyParams
 
     float friction_coef;
     float restitution_coef;
+    float penetration_fact;
     float shear;
     float attraction;
 

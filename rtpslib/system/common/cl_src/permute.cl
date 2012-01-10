@@ -17,6 +17,8 @@ __kernel void permute(
                             __global float4* veleval_s,
                             __global float4*   color_u,
                             __global float4*   color_s,
+                            __global float*   mass_u,
+                            __global float*   mass_s,
                             /*__global float*   spring_coef_u,
                             __global float*   spring_coef_s,
                             __global float*   dampening_coef_u,
@@ -33,6 +35,8 @@ __kernel void permute(
     vel_s[index]     = vel_u[sorted_index];
     veleval_s[index] = veleval_u[sorted_index]; // not sure if needed
     color_s[index]   = color_u[sorted_index];
+    mass_s[index]   = mass_u[sorted_index];
+    /*spring_coef_s[index]   = spring_coef_u[sorted_index];
     /*spring_coef_s[index]   = spring_coef_u[sorted_index];
     dampening_coef_s[index]   = dampening_coef_u[sorted_index];*/
     //density(index) = unsorted_density(sorted_index); // only for debugging

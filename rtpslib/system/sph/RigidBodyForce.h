@@ -41,8 +41,10 @@ namespace rtps
                     Buffer<float4>& pos_s, 
                     Buffer<float4>& veleval_s, 
                     Buffer<float4>& force_s, 
+                    Buffer<float>& mass_s, 
                     Buffer<float4>& rb_pos_s,
                     Buffer<float4>& rb_velocity_s,
+                    Buffer<float>& rbmass_s, 
                     Buffer<unsigned int>& ci_start,
                     Buffer<unsigned int>& ci_end,
                     //params

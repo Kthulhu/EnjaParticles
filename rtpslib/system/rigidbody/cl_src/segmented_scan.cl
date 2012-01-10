@@ -30,7 +30,7 @@
 #include "Quaternion.h"
 
 __kernel void sum(
-                    __global float4* pos_u,
+                    __global float4* pos_l,
                     __global int2* particleIndex,
                     __global float4* linear_force_s,
                     __global float4* comLinearForce,
@@ -44,12 +44,12 @@ __kernel void sum(
     int i = particleIndex[index].x;
     int end = particleIndex[index].y;
     comLinearForce[index]=linear_force_s[i];
-    comTorqueForce[index].xyz=cross3F4((pos_u[i]-comPos[index])*prbp->simulation_scale,linear_force_s[i]).xyz;
+    comTorqueForce[index].xyz=cross3F4(pos_l[i],linear_force_s[i]).xyz;
     i++;
     for(;i<end;i++)
     {
         comLinearForce[index]+=linear_force_s[i];
-	    comTorqueForce[index].xyz+=cross3F4((pos_u[i]-comPos[index])*prbp->simulation_scale,linear_force_s[i]).xyz;
+	    comTorqueForce[index].xyz+=cross3F4(pos_l[i],linear_force_s[i]).xyz;
         //clf[i].xyz=pos_u[i].xyz;
         //clf[i].xyz=(pos_u[i]-comPos[index]).xyz;
     }

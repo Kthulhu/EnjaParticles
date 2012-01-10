@@ -53,8 +53,10 @@ namespace rtps
                     Buffer<float4>& pos_s,
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& force_s,
+                    Buffer<float>& mass_s,
                     Buffer<float4>& rb_pos_s,
                     Buffer<float4>& rb_velocity_s,
+                    Buffer<float>& rb_mass_s,
                     Buffer<unsigned int>& ci_start,
                     Buffer<unsigned int>& ci_end,
                     //params
@@ -70,8 +72,10 @@ namespace rtps
         k_rigidbody_force.setArg(iarg++, pos_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, veleval_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, force_s.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, mass_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, rb_pos_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, rb_velocity_s.getDevicePtr());
+        k_rigidbody_force.setArg(iarg++, rb_mass_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, stiffness);
         k_rigidbody_force.setArg(iarg++, dampening);
         k_rigidbody_force.setArg(iarg++, ci_start.getDevicePtr());

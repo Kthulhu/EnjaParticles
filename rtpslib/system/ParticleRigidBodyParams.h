@@ -58,6 +58,7 @@ namespace rtps
         float friction_coef;
         //next 4 not used at the moment
         float restitution_coef;
+        float penetration_fact;
         float shear;
         float attraction;
 

@@ -49,7 +49,7 @@ namespace rtps
     //----------------------------------------------------------------------
 
     void PRBSegmentedScan::execute(int num,
-                    Buffer<float4>& pos_u,
+                    Buffer<float4>& pos_l,
                     //Buffer<float4>& veleval_s,
                     Buffer<int2>& particleIndex,
                     Buffer<float4>& linear_force_u,
@@ -66,7 +66,7 @@ namespace rtps
                     Buffer<int4>& cli_debug)
     { 
         int iarg = 0;
-        k_segmented_scan.setArg(iarg++, pos_u.getDevicePtr());
+        k_segmented_scan.setArg(iarg++, pos_l.getDevicePtr());
         k_segmented_scan.setArg(iarg++, particleIndex.getDevicePtr());
         //k_segmented_scan.setArg(iarg++, veleval_s.getDevicePtr());
         k_segmented_scan.setArg(iarg++, linear_force_u.getDevicePtr());

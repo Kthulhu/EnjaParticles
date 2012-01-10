@@ -54,6 +54,8 @@ namespace rtps
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& color_u,
                     Buffer<float4>& color_s,
+                    Buffer<float>& mass_u,
+                    Buffer<float>& mass_s,
                     /*Buffer<float>& spring_coef_u,
                     Buffer<float>& spring_coef_s,
                     Buffer<float>& dampening_coef_u,

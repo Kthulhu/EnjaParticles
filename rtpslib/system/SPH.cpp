@@ -206,6 +206,8 @@ namespace rtps
                 cl_veleval_s,
                 cl_color_u,
                 cl_color_s,
+                cl_mass_u,
+                cl_mass_s,
                 cl_sort_indices,
                 //cl_sphp,
                 cl_GridParams,
@@ -512,6 +514,8 @@ namespace rtps
         //printf("color: %f %f %f %f\n", color.x, color.y, color.z, color.w);
 
         std::fill(cols.begin(), cols.end(),color);
+        std::vector<float> mass_p(nn);
+        std::fill(mass_p.begin(), mass_p.end(),sphp.mass);
 
 #ifdef GPU
         glFinish();
@@ -523,6 +527,7 @@ namespace rtps
         cl_position_u.copyToDevice(pos, num);
         cl_color_u.copyToDevice(cols, num);
         cl_velocity_u.copyToDevice(vels, num);
+        cl_mass_u.copyToDevice(mass_p, num);
         settings->SetSetting("Number of Particles", num+nn);
         updateParams();
         cl_position_u.release();
@@ -551,8 +556,10 @@ namespace rtps
                     cl_position_s,
                     cl_velocity_s,
                     cl_force_s,
+                    cl_mass_s,
                     interactionSystem[j]->getPositionBuffer(),
                     interactionSystem[j]->getVelocityBuffer(),
+                    interactionSystem[j]->getMassBuffer(),
                     interactionSystem[j]->getCellStartBuffer(),
                     interactionSystem[j]->getCellEndBuffer(),
                     cl_sphp,

@@ -52,8 +52,10 @@ namespace rtps
                     Buffer<float4>& pos_s,
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& linear_force_s,
+                    Buffer<float>& mass_s,
                     Buffer<float4>& fluid_pos_s,
                     Buffer<float4>& fluid_velocity_s,
+                    Buffer<float>& fluid_mass_s,
                     //Buffer<float4>& torque_force_s,
                     Buffer<unsigned int>& indices,
                     Buffer<unsigned int>& ci_start,
@@ -69,8 +71,10 @@ namespace rtps
         k_force_fluid.setArg(iarg++, pos_s.getDevicePtr());
         k_force_fluid.setArg(iarg++, veleval_s.getDevicePtr());
         k_force_fluid.setArg(iarg++, linear_force_s.getDevicePtr());
+        k_force_fluid.setArg(iarg++, mass_s.getDevicePtr());
         k_force_fluid.setArg(iarg++, fluid_pos_s.getDevicePtr());
         k_force_fluid.setArg(iarg++, fluid_velocity_s.getDevicePtr());
+        k_force_fluid.setArg(iarg++, fluid_mass_s.getDevicePtr());
         //k_force_fluid.setArg(iarg++, torque_force_s.getDevicePtr());
         k_force_fluid.setArg(iarg++, indices.getDevicePtr());
         k_force_fluid.setArg(iarg++, ci_start.getDevicePtr());

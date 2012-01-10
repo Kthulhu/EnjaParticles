@@ -43,7 +43,7 @@ namespace rtps
             PRBSegmentedScan() { cli = NULL; timer = NULL; };
             PRBSegmentedScan(std::string path, CL* cli, EB::Timer* timer);
             void execute(int num,
-                    Buffer<float4>& pos_u,
+                    Buffer<float4>& pos_l,
                     //Buffer<float4>& veleval_s,
                     Buffer<int2>& particleIndex,
                     Buffer<float4>& linear_force_u,

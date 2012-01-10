@@ -168,6 +168,8 @@ namespace rtps
                 cl_veleval_s,
                 cl_color_u,
                 cl_color_s,
+                cl_mass_u,
+                cl_mass_s,
                 /*cl_spring_coef_u,
                 cl_spring_coef_s,
                 cl_dampening_coef_u,
@@ -438,21 +440,24 @@ namespace rtps
         com.w=1.0f;
         rbParticleIndex.push_back(int2(num,num+nn));
         vector<float4> pos_l;
+        vector<float> mass_p;
         for(int i = 0;i<pos.size();i++)
         {
-            float4 tmp = pos[i]-com;
+            float4 tmp = (pos[i]-com);
+            tmp*=prbp.simulation_scale;
             tmp.w = 1.0f;
             pos_l.push_back(tmp);
+            mass_p.push_back(mass/nn);
             //char tmpchar[32];
             //sprintf(tmpchar,"pos_l[%d]",i);
             //tmp.print(tmpchar);
         }
-        vector<float4> scaled_pos_l(pos_l.size());
-        for(int i = 0; i< pos_l.size();i++)
-        {
-            scaled_pos_l[i]=pos_l[i]*prbp.simulation_scale;
-        }
-        float16 invInertialTensor = calculateInvInertialTensor(pos_l,mass);//scaled_pos_l,mass);
+        //vector<float4> scaled_pos_l(pos_l.size());
+        //for(int i = 0; i< pos_l.size();i++)
+        //{
+        //    scaled_pos_l[i]=pos_l[i]*prbp.simulation_scale;
+        //}
+        float16 invInertialTensor = calculateInvInertialTensor(pos_l,mass);
         
 #ifdef GPU
         glFinish();
@@ -470,6 +475,7 @@ namespace rtps
         cl_color_u.copyToDevice(cols, num);
         cl_velocity_u.copyToDevice(vels, num);
         cl_position_l.copyToDevice(pos_l,num);
+        cl_mass_u.copyToDevice(mass_p, num);
         /*cl_spring_coef_u.copyToDevice(spring_co, num);
         cl_dampening_coef_u.copyToDevice(dampening_co, num);*/
         vector<float4> comVec;
@@ -515,9 +521,9 @@ namespace rtps
         float rho0 = 1000;                              //rest density [kg/m^3 ]
         //float mass = (128*1024.0)/max_num * .0002;    //krog's way
         //float VP = 2 * .0262144 / max_num;              //Particle Volume [ m^3 ]
-        float VP = .0262144 / max_num;              //Particle Volume [ m^3 ]
         //float VP = .0262144 / 16000;                  //Particle Volume [ m^3 ]
-        float mass = rho0 * VP;                         //Particle Mass [ kg ]
+        float mass = 0.0256/(int)log2(max_num);         //Particle Mass [ kg ]
+        float VP = mass/rho0;
         //constant .87 is magic
         float rest_distance = .87 * pow(VP, 1.f/3.f);   //rest distance between particles [ m ]
 //        float rest_distance = .87 * pow(VP, 1.f/3.f);   //rest distance between particles [ m ]
@@ -606,6 +612,7 @@ namespace rtps
         prbp.gravity = settings->GetSettingAs<float>("Gravity"); // -9.8 m/sec^2
         prbp.friction_coef = settings->GetSettingAs<float>("Friction");
         prbp.restitution_coef = settings->GetSettingAs<float>("Restitution");
+        prbp.penetration_fact = settings->GetSettingAs<float>("Penetration Factor");
 
         //next 3 not used at the moment
         prbp.shear = settings->GetSettingAs<float>("Shear");
@@ -652,8 +659,10 @@ namespace rtps
                     cl_position_s,
                     cl_velocity_s,
                     cl_force_s,
+                    cl_mass_s,
                     interactionSystem[j]->getPositionBuffer(),
                     interactionSystem[j]->getVelocityBuffer(),
+                    interactionSystem[j]->getMassBuffer(),
                     cl_sort_indices,
                     interactionSystem[j]->getCellStartBuffer(),
                     interactionSystem[j]->getCellEndBuffer(),
@@ -667,7 +676,7 @@ namespace rtps
             
             timers["segmented_scan"]->start();
             sscan.execute(num,
-                    cl_position_u,
+                    cl_position_l,
                     cl_rbParticleIndex,
                     cl_force_s,
                     cl_comLinearForce,

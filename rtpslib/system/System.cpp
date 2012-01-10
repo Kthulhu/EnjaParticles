@@ -210,6 +210,8 @@ namespace rtps
         vector<float4> f4vec(max_num);
         std::fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
+        vector<float> fvec(max_num);
+        std::fill(fvec.begin(), fvec.end(), 0);
         // VBO creation, TODO: should be abstracted to another class
         pos_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         printf("pos vbo: %d\n", pos_vbo);
@@ -233,6 +235,8 @@ namespace rtps
         cl_force_s = Buffer<float4>(ps->cli, force_vbo);
         //cl_force_s = Buffer<float4>(ps->cli, f4vec);
         cl_active_cells = Buffer<float4>(ps->cli, active_cells_vbo);
+        cl_mass_u = Buffer<float>(ps->cli, fvec);
+        cl_mass_s = Buffer<float>(ps->cli, fvec);
 
         //setup debug arrays
         std::vector<int4> cliv(max_num);
