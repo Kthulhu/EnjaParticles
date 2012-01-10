@@ -59,7 +59,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     float rlen = length(r);
 
     // is this particle within cutoff?
-    if (rlen <= 2. * sphp->smoothing_distance)
+    if (rlen <= 2* sphp->smoothing_distance)
     {
 
         //iej is 0 when we are looking at same particle
@@ -70,7 +70,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, sphp->EPSILON);
 
-        float4 springForce = -stiffness*(2.*sphp->smoothing_distance-rlen)*(r/rlen); 
+        float4 springForce = -stiffness*(2*sphp->smoothing_distance-rlen)*(r/rlen); 
 
         float4 veli = vel[index_i]; // sorted
         float4 velj = vel_j[index_j];

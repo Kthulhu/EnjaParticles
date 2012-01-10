@@ -57,6 +57,7 @@ namespace rtps
                     Buffer<float4>& comRot,
                     Buffer<float4>& comVel,
                     Buffer<float4>& comAngVel,
+                    Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
@@ -70,6 +71,7 @@ namespace rtps
         k_update_particles.setArg(iarg++, comRot.getDevicePtr());
         k_update_particles.setArg(iarg++, comVel.getDevicePtr());
         k_update_particles.setArg(iarg++, comAngVel.getDevicePtr());
+        k_update_particles.setArg(iarg++, prbp.getDevicePtr());
 
         // ONLY IF DEBUGGING
         k_update_particles.setArg(iarg++, clf_debug.getDevicePtr());

@@ -32,6 +32,7 @@
 #include <structs.h>
 #include <Domain.h>
 #include <timer_eb.h>
+#include <ParticleRigidBodyParams.h>
 
 
 namespace rtps
@@ -50,6 +51,7 @@ namespace rtps
                     Buffer<float4>& comRot,
                     Buffer<float4>& comVel,
                     Buffer<float4>& comAngVel,
+                    Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);

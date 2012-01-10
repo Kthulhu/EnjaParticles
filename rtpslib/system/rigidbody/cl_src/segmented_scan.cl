@@ -35,7 +35,8 @@ __kernel void sum(
                     __global float4* linear_force_s,
                     __global float4* comLinearForce,
                     __global float4* comTorqueForce,
-                    __global float4* comPos
+                    __global float4* comPos,
+                    __constant struct ParticleRigidBodyParams* prbp
                        DEBUG_ARGS
                        )
 {
@@ -43,12 +44,12 @@ __kernel void sum(
     int i = particleIndex[index].x;
     int end = particleIndex[index].y;
     comLinearForce[index]=linear_force_s[i];
-    comTorqueForce[index].xyz=cross3F4((pos_u[i]-comPos[index]),linear_force_s[i]).xyz;
+    comTorqueForce[index].xyz=cross3F4((pos_u[i]-comPos[index])*prbp->simulation_scale,linear_force_s[i]).xyz;
     i++;
     for(;i<end;i++)
     {
         comLinearForce[index]+=linear_force_s[i];
-	comTorqueForce[index].xyz+=cross3F4((pos_u[i]-comPos[index]),linear_force_s[i]).xyz;
+	    comTorqueForce[index].xyz+=cross3F4((pos_u[i]-comPos[index])*prbp->simulation_scale,linear_force_s[i]).xyz;
         //clf[i].xyz=pos_u[i].xyz;
         //clf[i].xyz=(pos_u[i]-comPos[index]).xyz;
     }

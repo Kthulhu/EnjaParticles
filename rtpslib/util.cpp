@@ -126,7 +126,7 @@ void Utils::printDevArray(Buffer<float4>& cl_array, char* msg, int nb_el, int nb
     void readFile(const string& filename, string& contents)
     {
         string line;
-        ifstream file (filename);
+        ifstream file (filename.c_str(),ios::in);
         if (file.is_open())
         {
             while (file.good())

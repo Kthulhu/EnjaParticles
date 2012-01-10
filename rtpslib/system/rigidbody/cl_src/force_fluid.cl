@@ -81,6 +81,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         float4 dampeningForce = prbp->boundary_dampening*(velj-veli);
         //force *= sphp->mass;// * idi * idj;
         //FIXME: I think mass should be a part of one of these formulas. -ASY
+        //This should be ok. Mass implicitly defines the spring and dampening
+        //forces. Also mass divides the force to obtain acceleration.
         pt->linear_force += (springForce+dampeningForce) * (float)iej;
         //pt->linear_force += r;//debug
     }

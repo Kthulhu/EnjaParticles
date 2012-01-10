@@ -206,7 +206,8 @@ int main(int argc, char** argv)
     //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
     settings->setRenderType(RTPSettings::RENDER);
     //settings.setRenderType(RTPSettings::SPRITE_RENDER);
-    settings->SetSetting("render_use_alpha", true);
+    //settings->SetSetting("render_use_alpha", true);
+    settings->SetSetting("render_use_alpha", false);
     settings->SetSetting("render_alpha_function", "add");
     settings->setRadiusScale(0.4);
     settings->setBlurScale(1.0);
@@ -241,9 +242,9 @@ int main(int argc, char** argv)
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-    settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    //rb_settings->setRenderType(RTPSettings::RENDER);
-    //settings.setRenderType(RTPSettings::SPRITE_RENDER);
+    //rb_settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
+    rb_settings->setRenderType(RTPSettings::RENDER);
+    //rb_settings.setRenderType(RTPSettings::SPRITE_RENDER);
     rb_settings->setRadiusScale(0.4);
     rb_settings->setBlurScale(1.0);
     rb_settings->setUseGLSL(1);
@@ -434,7 +435,7 @@ void appKeyboard(unsigned char key, int x, int y)
 
                 float4 col1 = float4(1., 0., 0., 1.);
 
-                rb->system->addBox(nn, min, max, false, col1,100000.0f);
+                rb->system->addBox(nn, min, max, false, col1,1000000000.0f);
                 return;
             }
         case 'o':

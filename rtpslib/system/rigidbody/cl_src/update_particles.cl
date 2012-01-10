@@ -26,12 +26,6 @@
 #define _UPDATE_PARTICLES_CL_
 
 
-//These are passed along through cl_neighbors.h
-//only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force
-//, __global float4* torque_force
-#define ARGV pos, vel, linear_force 
-
 /*----------------------------------------------------------------------*/
 
 #include "cl_macros.h"
@@ -45,7 +39,8 @@ __kernel void update_particles(
                     __global float4* comPos,
                     __global float4* comRot,
                     __global float4* comVel,
-                    __global float4* comAngVel
+                    __global float4* comAngVel,
+                     __constant struct ParticleRigidBodyParams* prbp
                        DEBUG_ARGS
                        )
 {
@@ -55,11 +50,12 @@ __kernel void update_particles(
     float16 m = qtGetRotationMatrix(comRot[index]); 
     for(;i<end;i++)
     {
-        float4 rotPos =(float4)(dot(m.s0123,pos_l[i]),dot(m.s4567,pos_l[i]),dot(m.s89ab,pos_l[i]),0.0f);
+        float4 scalePos=pos_l[i]*prbp->simulation_scale;
+        float4 rotPos =(float4)(dot(m.s0123,scalePos),dot(m.s4567,scalePos),dot(m.s89ab,pos_l[i]*scalePos),0.0f);
         //pos_u[i]=rotPos+comPos[index];
-        pos_u[i].xyz=rotPos.xyz+comPos[index].xyz;
+        pos_u[i].xyz=(rotPos.xyz/prbp->simulation_scale)+comPos[index].xyz;
         pos_u[i].w = 1.0;
-        velocity_u[i].xyz = comVel[index].xyz + cross3F4(comAngVel[index],pos_l[i]).xyz;
+        velocity_u[i].xyz = comVel[index].xyz + cross3F4(comAngVel[index],scalePos).xyz;
         clf[i]=velocity_u[i];
         //clf[i]=pos_u[i];
         //clf[i].xyz=rotPos;

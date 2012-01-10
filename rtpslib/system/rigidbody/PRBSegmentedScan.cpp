@@ -57,6 +57,7 @@ namespace rtps
                     Buffer<float4>& comTorqueForce,
                     Buffer<float4>& comPos,
                     int numRBs,
+                    Buffer<ParticleRigidBodyParams>& prbp,
                     //Buffer<float4>& torque_force_s,
                     //Buffer<unsigned int>& ci_start,
                     //Buffer<unsigned int>& ci_end,
@@ -72,6 +73,7 @@ namespace rtps
         k_segmented_scan.setArg(iarg++, comLinearForce.getDevicePtr());
         k_segmented_scan.setArg(iarg++, comTorqueForce.getDevicePtr());
         k_segmented_scan.setArg(iarg++, comPos.getDevicePtr());
+        k_segmented_scan.setArg(iarg++, prbp.getDevicePtr());
         //k_segmented_scan.setArg(iarg++, torque_force_s.getDevicePtr());
         //k_segmented_scan.setArg(iarg++, ci_start.getDevicePtr());
         //k_segmented_scan.setArg(iarg++, ci_end.getDevicePtr());

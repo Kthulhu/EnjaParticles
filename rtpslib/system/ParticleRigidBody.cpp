@@ -447,7 +447,12 @@ namespace rtps
             //sprintf(tmpchar,"pos_l[%d]",i);
             //tmp.print(tmpchar);
         }
-        float16 invInertialTensor = calculateInvInertialTensor(pos,mass);
+        vector<float4> scaled_pos_l(pos_l.size());
+        for(int i = 0; i< pos_l.size();i++)
+        {
+            scaled_pos_l[i]=pos_l[i]*prbp.simulation_scale;
+        }
+        float16 invInertialTensor = calculateInvInertialTensor(pos_l,mass);//scaled_pos_l,mass);
         
 #ifdef GPU
         glFinish();
@@ -509,11 +514,13 @@ namespace rtps
 
         float rho0 = 1000;                              //rest density [kg/m^3 ]
         //float mass = (128*1024.0)/max_num * .0002;    //krog's way
-        float VP = 2 * .0262144 / max_num;              //Particle Volume [ m^3 ]
+        //float VP = 2 * .0262144 / max_num;              //Particle Volume [ m^3 ]
+        float VP = .0262144 / max_num;              //Particle Volume [ m^3 ]
         //float VP = .0262144 / 16000;                  //Particle Volume [ m^3 ]
         float mass = rho0 * VP;                         //Particle Mass [ kg ]
         //constant .87 is magic
         float rest_distance = .87 * pow(VP, 1.f/3.f);   //rest distance between particles [ m ]
+//        float rest_distance = .87 * pow(VP, 1.f/3.f);   //rest distance between particles [ m ]
         //float rest_distance = pow(VP, 1.f/3.f);     //rest distance between particles [ m ]
         float smoothing_distance = 2.0f * rest_distance;//interaction radius
 
@@ -667,6 +674,7 @@ namespace rtps
                     cl_comTorqueForce,
                     cl_comPos,
                     rbParticleIndex.size(),
+                    cl_prbp,
                     //debug params
                     clf_debug,
                     cli_debug);
@@ -684,6 +692,7 @@ namespace rtps
                     cl_comRot,
                     cl_comVel,
                     cl_comAngVel,
+                    cl_prbp,
                     //debug params
                     clf_debug,
                     cli_debug);

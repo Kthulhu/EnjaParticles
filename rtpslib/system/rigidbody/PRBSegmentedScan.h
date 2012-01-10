@@ -51,6 +51,7 @@ namespace rtps
                     Buffer<float4>& comTorqueForce,
                     Buffer<float4>& comPos,
                     int numRBs,
+                    Buffer<ParticleRigidBodyParams>& prbp, 
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);
