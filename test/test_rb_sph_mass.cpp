@@ -209,8 +209,8 @@ int main(int argc, char** argv)
     //printf("arvg[0]: %s\n", argv[0]);
 #endif
 
-    settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    //settings->setRenderType(RTPSettings::RENDER);
+    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
+    settings->setRenderType(RTPSettings::RENDER);
     //settings.setRenderType(RTPSettings::SPRITE_RENDER);
     settings->SetSetting("render_use_alpha", true);
     //settings->SetSetting("render_use_alpha", false);
@@ -349,7 +349,7 @@ void appKeyboard(unsigned char key, int x, int y)
         case 'e': //dam break
         {
             nn = NUM_PARTICLES/2;
-            float4 col1 = float4(0., 0., 1., 0.05);
+            float4 col1 = float4(0.05, 0.15, 8., 0.1);
             sph->system->addBox(nn, grid->getMin()+float4(0.5f,0.5f,0.5f,1.0f), grid->getMax()-float4(0.5f,0.5f,0.5f,1.0f), false,col1);
             //ps2->system->addBox(nn, min, max, false);
             return;
@@ -422,7 +422,7 @@ void appKeyboard(unsigned char key, int x, int y)
         case 'r': //drop a rectangle
             {
 
-                float4 col1 = float4(1., 0., 0., 1.);
+                float4 col1 = float4(1., 0.9, 0., 1.);
 
                 float4 size = float4(1.,1.,1.,0.f);
                 size=size*sizeScale;
@@ -506,7 +506,7 @@ void init_gl()
 
     // set view matrix
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(.6, .6, .6, 1.0);
+    glClearColor(.9, .9, .9, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     sph->system->getRenderer()->setWindowDimensions(window_width,window_height);

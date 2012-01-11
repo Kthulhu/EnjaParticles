@@ -61,7 +61,7 @@ void main()
 	//const vec3 lightDir = vec3(-0.5, 1.5, 5.);
 	//const vec3 lightDir = vec3(-0.5, -0.5, 2.);
 	//const vec3 lightDir = vec3(-1.0,.0,-2.0);
-	const float shininess = 100.0;
+	const float shininess = 500.0;
 	float diffuse = max(0.0,dot(lightDir,n));
 
 	vec3 v = normalize(-posEye);
