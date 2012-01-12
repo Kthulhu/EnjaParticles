@@ -517,7 +517,7 @@ void appRender()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
-        ps->render();
+//        ps->render();
         draw_collision_boxes();
         if(render_movie)
         {
@@ -694,7 +694,7 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
-        ps->render();
+//        ps->render();
         draw_collision_boxes();
     }
     glPopMatrix();
@@ -721,7 +721,7 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
-        ps->render();
+//        ps->render();
         draw_collision_boxes();
     }
     glPopMatrix();

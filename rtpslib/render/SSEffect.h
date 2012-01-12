@@ -41,15 +41,13 @@ namespace rtps
     {
     public:
         SSEffect(RenderSettings rs);
-        ~SSFRender();
+        ~SSEffect();
         void smoothDepth();
-        void renderSmoothedSurface(GLuint posVBO, GLuint colVBO);
+        void renderSmoothedSurface(GLuint posVBO, GLuint colVBO, unsigned int num);
     protected:
         virtual void deleteFramebufferTextures();
         virtual void createFramebufferTextures();
         SmoothingFilter smoothing;
-        float nearDepth;
-        float farDepth;
     };
 };
 

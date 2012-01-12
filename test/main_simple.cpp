@@ -220,7 +220,7 @@ void appRender()
 	
     glEnable(GL_DEPTH_TEST);
 
-    ps->render();
+//    ps->render();;
 
     //showFPS(enjas->getFPS(), enjas->getReport());
     glutSwapBuffers();

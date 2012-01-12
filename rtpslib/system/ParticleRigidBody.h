@@ -76,7 +76,7 @@ namespace rtps
         void integrate();
         void postProcess();
 
-        virtual void render();
+//        virtual void render();
 
         //void loadTriangles(std::vector<Triangle> &triangles);
 

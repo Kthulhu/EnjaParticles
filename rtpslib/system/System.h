@@ -27,10 +27,11 @@
 
 #include "../domain/Domain.h"
 #include "ForceField.h"
-#include "../render/Render.h"
-#include "../render/SpriteRender.h"
-#include "../render/SSFRender.h"
-#include "../render/Sphere3DRender.h"
+#include "RTPSettings.h"
+//#include "../render/Render.h"
+//#include "../render/SpriteRender.h"
+//#include "../render/SSFRender.h"
+//#include "../render/Sphere3DRender.h"
 
 #include <RTPS.h>
 #include <opencl/Kernel.h>
@@ -97,7 +98,7 @@ namespace rtps
             return col_vbo;
         }
 
-        virtual void render();
+        //virtual void render();
 /*
         template <typename RT>
         virtual RT GetSettingAs(std::string key, std::string defaultval = "0") 
@@ -143,10 +144,10 @@ namespace rtps
 
         virtual void printTimers();
 
-        virtual Render* getRenderer()
-        {
-            return renderer;
-        }
+        //virtual Render* getRenderer()
+        //{
+        //    return renderer;
+        //}
         
         void pushParticles(vector<float4> pos, float4 velo, float4 color=float4(1.0, 0.0, 0.0, 1.0),float mass = 0.0f);
         virtual void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0),float mass = 0.0f){return;}
@@ -231,7 +232,7 @@ namespace rtps
 
         Domain* grid;
 
-        Render* renderer;
+        //Render* renderer;
 
         std::string resource_path;
         std::string common_source_dir;
@@ -246,7 +247,7 @@ namespace rtps
         void bitonic_sort();
         void radix_sort();
         virtual void updateParams(){};
-        virtual void setRenderer();
+        //virtual void setRenderer();
     };
 
 }

@@ -23,6 +23,7 @@
 
 
 #include <GL/glew.h>
+#include <iostream>
 
 #include "Shader.h"
 #include "util.h"
@@ -37,7 +38,7 @@ namespace rtps
         glDeleteProgram(shaderProgram);
     }
 
-    void Shader::setShader(GLenum shaderType, string& shadeSrc)
+    void Shader::setShader(GLenum shaderType, const string& shadeSrc)
     {
         shaderSrc[shaderType] = shadeSrc;
     }
@@ -57,6 +58,7 @@ namespace rtps
             }
         }
 
+        #ifdef GL_TESS_CONTROL_SHADER
         if (shaderSrc[GL_TESS_CONTROL_SHADER].length())
         {
             compileShader(GL_TESS_CONTROL_SHADER, "Tesselation Control Shader",program);
@@ -66,6 +68,7 @@ namespace rtps
         {
             compileShader(GL_TESS_EVALUATION_SHADER, "Tesselation Evaluation Shader",program);
         }
+        #endif
         
         glLinkProgram(program);
 
@@ -84,20 +87,20 @@ namespace rtps
         return program;
     }
 
-    Shader::compileShader(GLenum shaderType, const string& shaderName, GLuint program)
+    void Shader::compileShader(GLenum shaderType, const string& shaderName, GLuint program)
     {
         GLuint shader = glCreateShader(shaderType);
-        string& shaderSource = shaderSrc[shaderType];
         GLint success;
-        GLuint len;
-        glShaderSource(shader, 1, (const GLchar**)&shaderSource.c_str(), 0);
+        GLint len;
+        const char* src = shaderSrc[shaderType].c_str();
+        glShaderSource(shader, 1, (const GLchar**)&src, 0);
         glCompileShader(shader);
-        glGetShaderiv(vsHandle, GL_COMPILE_STATUS, &success);
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
         if (len>0 && !success)
         {
             char log[len+1];
-            glGetShaderInfoLog(geometry_shader, len+1, 0, log);
+            glGetShaderInfoLog(shader, len+1, 0, log);
             cout<<shaderName<<"\n"<<log<<endl;
         }
         glAttachShader(program, shader);

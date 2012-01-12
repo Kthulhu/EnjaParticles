@@ -118,10 +118,10 @@ printf("done with constructor\n");
         system->update();
     }
 
-    void RTPS::render()
+/*    void RTPS::render()
     {
         system->render();
-    }
+    }*/
 
     void RTPS::printTimers()
     {

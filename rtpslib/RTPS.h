@@ -91,7 +91,7 @@ namespace rtps
         //IV iv;
 
         void update();
-        void render();
+ //       void render();
 
         void printTimers();
 

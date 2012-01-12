@@ -35,42 +35,12 @@ set (test_INCLUDES
 
 
 #library
-set (test_SOURCES
-    main.cpp
-    )
-
-set (test_multi_SOURCES
-    main_multi.cpp
-    )
-
-
-#set (test_simple_SOURCES
-#    main_simple.cpp
-#    )
-
-set (test_flock_SOURCES
-    main_flock.cpp
-    )
-
-set (test_rigidbody_SOURCES
-    main_rigidbody.cpp
-    )
-
-set (test_rb_sph_SOURCES
-    main_rb_sph.cpp
-    )
-set (test_rb_sph_SOURCES
-    test_rb_sph_mass.cpp
+set (test_render_SOURCES
+    test_render.cpp
     )
 
 INCLUDE_DIRECTORIES(${test_INCLUDES})
-ADD_EXECUTABLE(sph.x ${test_SOURCES})
-ADD_EXECUTABLE(multi.x ${test_multi_SOURCES})
-#ADD_EXECUTABLE(simple.x ${test_simple_SOURCES})
-ADD_EXECUTABLE(flock.x ${test_flock_SOURCES})
-ADD_EXECUTABLE(rigidbody.x ${test_rigidbody_SOURCES})
-ADD_EXECUTABLE(rb_sph.x ${test_rb_sph_SOURCES})
-ADD_EXECUTABLE(rb_sph_mass.x ${test_rb_sph_SOURCES})
+ADD_EXECUTABLE(test_render.x ${test_render_SOURCES})
 
 message("current build dir:\n")
 message("${BASE_DIR}/rtps/build")
@@ -90,39 +60,11 @@ SET(LINK_LIBS
 )
 message(RTPS_EXPORTS "${rtps_EXPORTS}")
 
-TARGET_LINK_LIBRARIES (sph.x
-    ${LINK_LIBS}
-)
-
-
-TARGET_LINK_LIBRARIES (multi.x
-    ${LINK_LIBS}
-)
-
-#TARGET_LINK_LIBRARIES (simple.x
-#    ${LINK_LIBS}
-#)
-
-TARGET_LINK_LIBRARIES (flock.x
-    ${LINK_LIBS}
-)
-TARGET_LINK_LIBRARIES (rigidbody.x
-    ${LINK_LIBS}
-)
-TARGET_LINK_LIBRARIES (rb_sph.x
-    ${LINK_LIBS}
-)
-TARGET_LINK_LIBRARIES (rb_sph_mass.x
+TARGET_LINK_LIBRARIES (test_render.x
     ${LINK_LIBS}
 )
 #IF(WIN32)
-install (TARGETS sph.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS multi.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-#install (TARGETS simple.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS flock.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS rigidbody.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS rb_sph.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS rb_sph_mass.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+install (TARGETS test_render.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES MathFunctions.h DESTINATION include)
 
 #ENDIF(WIN32)

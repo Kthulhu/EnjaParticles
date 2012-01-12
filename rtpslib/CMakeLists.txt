@@ -76,10 +76,15 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/timer_eb  #evan's timer class
     ${rtpslib_SOURCE_DIR}/rtps_common
 
-    ${rtpslib_SOURCE_DIR}/render/Render
-    ${rtpslib_SOURCE_DIR}/render/SpriteRender
-    ${rtpslib_SOURCE_DIR}/render/SSFRender
-    ${rtpslib_SOURCE_DIR}/render/Sphere3DRender
+    #${rtpslib_SOURCE_DIR}/render/Render
+    #${rtpslib_SOURCE_DIR}/render/SpriteRender
+    #${rtpslib_SOURCE_DIR}/render/SSFRender
+    #${rtpslib_SOURCE_DIR}/render/Sphere3DRender
+    ${rtpslib_SOURCE_DIR}/render/Shader
+    ${rtpslib_SOURCE_DIR}/render/ParticleEffect
+    ${rtpslib_SOURCE_DIR}/render/SSEffect
+    ${rtpslib_SOURCE_DIR}/render/ShaderLibrary
+    ${rtpslib_SOURCE_DIR}/render/RenderUtils
     ${rtpslib_SOURCE_DIR}/render/util/stb_image.c
     ${rtpslib_SOURCE_DIR}/render/util/stb_image_write.h
 

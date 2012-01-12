@@ -71,7 +71,7 @@ namespace rtps
         printf("RUNNING ON THE GPU\n");
         prepareSorted();
 
-        setRenderer();
+        //setRenderer();
 
         //should be more cross platform
         common_source_dir = resource_path + "/" + std::string(COMMON_CL_SOURCE_DIR);
@@ -201,7 +201,7 @@ namespace rtps
         oss << "sph_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num; 
         //printf("oss: %s\n", (oss.str()).c_str());
         timers.writeToFile(oss.str()); 
-        renderer->printTimers();
+        //renderer->printTimers();
     }
 
 	//----------------------------------------------------------------------
@@ -347,7 +347,7 @@ namespace rtps
 
     }
 
-    void System::setRenderer()
+    /*void System::setRenderer()
     {
         switch(ps->settings->getRenderType())
         {
@@ -373,7 +373,7 @@ namespace rtps
         }
         //renderer->setParticleRadius(spacing*0.5);
 		//renderer->setRTPS(
-    }
+    }*/
 	//----------------------------------------------------------------------
     void System::radix_sort()
     {
@@ -485,7 +485,7 @@ namespace rtps
         num+=tmpnum;
         settings->SetSetting("Number of Particles", num);
         updateParams();
-        renderer->setNum(num);
+        //renderer->setNum(num);
         //hash_and_sort();
         ps->cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
         ps->cli->queue.finish();
@@ -507,10 +507,10 @@ namespace rtps
         cl_force_s.release();
         cl_active_cells.release();
     }
-    void System::render()
+    /*void System::render()
     {
         renderer->render();
         renderer->renderVector(velocity_vbo);
         //renderer->renderVector(force_vbo,0.029706f);
-    }
+    }*/
 }; //end namespace

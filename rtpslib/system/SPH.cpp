@@ -97,7 +97,7 @@ namespace rtps
             euler = Euler(sph_source_dir, ps->cli, timers["euler_gpu"]);
         }
 #endif
-        renderer->setParticleRadius(spacing);
+        //renderer->setParticleRadius(spacing);
     }
 
 	//----------------------------------------------------------------------
@@ -243,7 +243,7 @@ namespace rtps
                 settings->SetSetting("Number of Particles", num);
                 //sphp.num = num;
                 updateParams();
-                renderer->setNum(sphp.num);
+                //renderer->setNum(sphp.num);
 
                 //need to copy sorted arrays into unsorted arrays
 //**** PREP(2)
@@ -535,15 +535,15 @@ namespace rtps
         cl_velocity_u.release();
 #endif
         num += nn;  //keep track of number of particles we use
-        renderer->setNum(num);
+        //renderer->setNum(num);
     }
 	//----------------------------------------------------------------------
-    void SPH::render()
+    /*void SPH::render()
     {
         renderer->render_box(grid->getBndMin(), grid->getBndMax());
         //renderer->render_table(grid->getBndMin(), grid->getBndMax());
         System::render();
-    }
+    }*/
     void SPH::interact()
     {
             for(int j = 0;j<interactionSystem.size();j++)

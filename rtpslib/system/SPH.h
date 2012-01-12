@@ -80,7 +80,7 @@ namespace rtps
         void refillHose(int index, int refill);
         void sprayHoses();
 
-        virtual void render();
+//        virtual void render();
 
         void loadTriangles(std::vector<Triangle> &triangles);
 

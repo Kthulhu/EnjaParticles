@@ -45,7 +45,8 @@ namespace rtps
     struct RenderSettings
     {
         GLuint windowHeight,windowWidth;
-        float particleRadius;
+        GLfloat particleRadius;
+        GLfloat near,far;
         bool blending;
     };  
 }

@@ -49,7 +49,7 @@ namespace rtps
         //Fixme:: Should probably handle shader loading more elegantly. -ASY 12/14/2011
         if(m_shaderLibrary.shaders.size()==0)
         {
-            m_shaderLibrary.initializeShaders();
+            m_shaderLibrary.initializeShaders(GLSL_BIN_DIR);
         }
         
     }
@@ -71,7 +71,7 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    void Render::drawArrays(GLuint colVBO, GLuint posVBO, unsigned int num)
+    void ParticleEffect::drawArrays(GLuint posVBO, GLuint colVBO, unsigned int num)
     {
         glBindBuffer(GL_ARRAY_BUFFER, colVBO);
         glColorPointer(4, GL_FLOAT, 0, 0);
@@ -91,9 +91,8 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    void ParticleEffect::render()
+    void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num)
     {
-        m_timers["ParticleEffect"]->start();
 
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
@@ -118,7 +117,7 @@ namespace rtps
         //TODO make the point size a setting
         glPointSize(m_settings.particleRadius);
 
-        drawArrays();
+        drawArrays(posVBO, colVBO, num);
         glDepthMask(GL_TRUE);
 
         glDisable(GL_LIGHTING);
@@ -135,32 +134,32 @@ namespace rtps
 
         //make sure rendering timing is accurate
         glFinish();
-        m_timers["ParticleEffect"]->end();
     }
     
-    ParticleEffect::writeBuffersToDisk()
+    void ParticleEffect::writeBuffersToDisk()
     {
         m_writeFramebuffers=true;
     }
 
-    void ParticleEffect::renderPointsAsSpheres()
+    void ParticleEffect::renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num)
     {
 
         glEnable(GL_POINT_SPRITE);
         glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        GLuint program = m_shaderLibrary.shaders["vectorShader"].getProgram();
 
-        glUseProgram(glsl_program[SPHERE_SHADER]);
+        glUseProgram(program);
         //float particle_radius = 0.125f * 0.5f;
-        glUniform1f( glGetUniformLocation(glsl_program[SPHERE_SHADER], "pointScale"), ((float)window_width) / tanf(65. * (0.5f * 3.1415926535f/180.0f)));
+        glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)m_settings.windowWidth) / tanf(65. * (0.5f * 3.1415926535f/180.0f)));
 
-        glUniform1f( glGetUniformLocation(glsl_program[SPHERE_SHADER], "pointRadius"), particle_radius );
-        glUniform1f( glGetUniformLocation(glsl_program[SPHERE_SHADER], "near"), near_depth );
-        glUniform1f( glGetUniformLocation(glsl_program[SPHERE_SHADER], "far"), far_depth );
+        glUniform1f( glGetUniformLocation(program, "pointRadius"), m_settings.particleRadius);
+        glUniform1f( glGetUniformLocation(program, "near"), m_settings.near );
+        glUniform1f( glGetUniformLocation(program, "far"), m_settings.far);
 
         //glColor3f(1., 1., 1.);
 
-        drawArrays();
+        drawArrays(posVBO, colVBO, num);
 
         glUseProgram(0);
 
@@ -168,19 +167,19 @@ namespace rtps
         glDisable(GL_POINT_SPRITE);
     }
 
-    void Render::renderVector(GLuint vec_vbo, float scale)
+    void ParticleEffect::renderVector(GLuint vecVBO, GLuint posVBO, unsigned int num, float scale)
     {
-        glBindBuffer(GL_ARRAY_BUFFER, vec_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vecVBO);
         glColorPointer(4, GL_FLOAT, 0, 0);
 
-        glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, posVBO);
         glVertexPointer(4, GL_FLOAT, 0, 0);
 
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
 
-        glUseProgram(glsl_program[VECTOR_SHADER]);
-        glUniform1f( glGetUniformLocation(glsl_program[VECTOR_SHADER], "scale"),scale);
+        glUseProgram(m_shaderLibrary.shaders["vectorShader"].getProgram());
+        glUniform1f(glGetUniformLocation(m_shaderLibrary.shaders["vectorShader"].getProgram(), "scale"),scale);
         //Need to disable these for blender
         glDisableClientState(GL_NORMAL_ARRAY);
         glDrawArrays(GL_POINTS, 0, num);

@@ -77,7 +77,7 @@ public:
     void updateHose(int index, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
     void sprayHoses();
 
-    virtual void render();
+//    virtual void render();
     
     int setupTimers();
 

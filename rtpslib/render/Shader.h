@@ -53,8 +53,10 @@ namespace rtps
         {
             shaderProgram = 0;
             shaderSrc[GL_VERTEX_SHADER]="";
-            shaderSrc[GL_TESS_CONTROL_SHADER]="";
-            shaderSrc[GL_TESS_EVALUATION_SHADER]="";
+            #ifdef GL_TESS_CONTROL_SHADER
+                shaderSrc[GL_TESS_CONTROL_SHADER]="";
+                shaderSrc[GL_TESS_EVALUATION_SHADER]="";
+            #endif
             shaderSrc[GL_GEOMETRY_SHADER]="";
             shaderSrc[GL_FRAGMENT_SHADER]="";
         }
@@ -67,7 +69,7 @@ namespace rtps
         }
         GLuint compileProgram();
     protected:
-        void compileShader(GLuint shader, const std::string& shaderName, const std::string& shaderSource);
+        void compileShader(GLenum shaderType, const std::string& shaderName, GLuint program);
         GLuint shaderProgram; ///GL id for shader.
         std::map<GLenum,std::string> shaderSrc;
         std::map<GLenum,GLuint> geomParams; ///Used to setup geometry shader parameters before linking.

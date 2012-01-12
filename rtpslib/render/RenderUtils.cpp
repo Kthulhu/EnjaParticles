@@ -22,9 +22,8 @@
 ****************************************************************************************/
 
 
-#include <stdio.h>
+#include <iostream>
 #include <string.h>
-#include <stdlib.h>
 
 #include <GL/glew.h>
 
@@ -78,7 +77,7 @@ namespace rtps
     }
     void RenderUtils::writeTextures(const map<string,GLuint>& texs) 
     {
-        for (map<string,GLuint>::iterator i = texs.begin();i!=texs.end();i++)
+        for (map<string,GLuint>::const_iterator i = texs.begin();i!=texs.end();i++)
         {
             string s(i->first);
             s+=".png";
@@ -87,24 +86,27 @@ namespace rtps
             writeTexture(i->second, s, i->first.find("depth"));
         }
     }
-    int RenderUtils::writeTexture( GLuint tex, const string& filename, bool depth) const
+    int RenderUtils::writeTexture( GLuint tex, const string& filename, bool depth)
     {
         glBindTexture(GL_TEXTURE_2D,tex);
-        GLubyte* image = new GLubyte[window_width*window_height*4];
+        GLint width,height;
+        glGetTexLevelParameteriv(tex , 0 , GL_TEXTURE_WIDTH , &width);
+        glGetTexLevelParameteriv(tex , 0 , GL_TEXTURE_HEIGHT , &height);
+        GLubyte* image = new GLubyte[width*height*4];
         if(depth)
         {
-            GLfloat* fimg = new GLfloat[window_width*window_height];
+            GLfloat* fimg = new GLfloat[width*height];
             glGetTexImage(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT,GL_FLOAT,fimg);
-            convertDepthToRGB(fimg,window_width*window_height,image);
+            convertDepthToRGB(fimg,width*height,image);
             delete[] fimg;
         }
         else
         {
             glGetTexImage(GL_TEXTURE_2D,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
         }
-        if (!stbi_write_png(filename,window_width,window_height,4,(void*)image,0))
+        if (!stbi_write_png(filename.c_str(),width,height,4,(void*)image,0))
         {
-            printf("failed to write image %s",filename);
+            cout<<"failed to write image "<<filename<<endl;
             return -1;
         }
 
@@ -114,7 +116,7 @@ namespace rtps
         return 0;
     }
 
-    void RenderUtils::convertDepthToRGB(const GLfloat* depth, GLuint size, GLubyte* rgba) const
+    void RenderUtils::convertDepthToRGB(const GLfloat* depth, GLuint size, GLubyte* rgba) 
     {
         GLfloat minimum = 1.0f;
         for (GLuint i = 0;i<size;i++)

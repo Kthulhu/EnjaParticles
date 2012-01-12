@@ -54,31 +54,34 @@ namespace rtps
     }
     void SSEffect::smoothDepth()
     {
+        GLuint smoothingProgram;
         switch(smoothing)
         {
             case NO_SMOOTHING:
                 return;
             case SEPERABLE_GAUSS_BLUR:
-                glUseProgram(m_shaderLibrary.shaders["gaussBlurXShader"].getProgram());
-                glUniform1i( glGetUniformLocation(m_shaderLibrary.shaders["gaussBlurXShader"], "depthTex"),0);
-                glUniform1i( glGetUniformLocation(m_shaderLibrary.shaders["gaussBlurXShader"], "width"),window_width);
+                smoothingProgram= m_shaderLibrary.shaders["gaussBlurXShader"].getProgram();
+                glUseProgram(smoothingProgram);
+                glUniform1i( glGetUniformLocation(smoothingProgram, "depthTex"),0);
+                glUniform1i( glGetUniformLocation(smoothingProgram, "width"),m_settings.windowWidth);
                 RenderUtils::fullscreenQuad();
 
-                glUseProgram(m_shaderLibrary.shaders["gaussBlurYShader"].getProgram());
-                glUniform1i( glGetUniformLocation(m_shaderLibrary.shaders["gaussBlurYShader"].getProgram(), "depthTex"),0);
-                glUniform1i( glGetUniformLocation(m_shaderLibrary.shaders["gaussBlurYShader"].getProgram(), "height"),window_height);
+                smoothingProgram= m_shaderLibrary.shaders["gaussBlurYShader"].getProgram();
+                glUseProgram(smoothingProgram);
+                glUniform1i( glGetUniformLocation(smoothingProgram, "depthTex"),0);
+                glUniform1i( glGetUniformLocation(smoothingProgram, "height"),m_settings.windowHeight);
                 break;
             case BILATERAL_GAUSSIAN_BLUR:
                 glUseProgram(m_shaderLibrary.shaders["bilateralGaussianBlurShader"].getProgram());
                 glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["bilateralGaussianBlurShader"].getProgram(),"depthTex"),0);
-                glUniform1f( glGetUniformLocation(m_shaderLibrary.shaders["bilateralGaussianBlurShader"].getProgram(), "del_x"),1.0/((float)window_width));
-                glUniform1f( glGetUniformLocation(m_shaderLibrary.shaders["bilateralGaussianBlurShader"].getProgram(), "del_y"),1.0/((float)window_height));
+                glUniform1f( glGetUniformLocation(m_shaderLibrary.shaders["bilateralGaussianBlurShader"].getProgram(), "del_x"),1.0/((float)m_settings.windowWidth));
+                glUniform1f( glGetUniformLocation(m_shaderLibrary.shaders["bilateralGaussianBlurShader"].getProgram(), "del_y"),1.0/((float)m_settings.windowHeight));
                 break;
             case CURVATURE_FLOW:
                 glUseProgram(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram());
                 glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"depthTex"),0);
-                glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"width"),window_width);
-                glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"height"),window_height); 
+                glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"width"),m_settings.windowWidth);
+                glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"height"),m_settings.windowHeight); 
                 glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"iterations"),40);
                 break;
             default:
@@ -87,7 +90,7 @@ namespace rtps
         RenderUtils::fullscreenQuad();
     }
 
-    void SSEffect::renderSmoothedSurface(GLuint posVBO, GLuint colVBO)
+    void SSEffect::renderSmoothedSurface(GLuint posVBO, GLuint colVBO, unsigned int num)
     {
 
         glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -101,22 +104,14 @@ namespace rtps
         glGetIntegerv(GL_VIEWPORT, xywh);
         int glwidth = xywh[2];
         int glheight = xywh[3];
-        if (glwidth != window_width || glheight != window_height)
-        {
-            //printf("SETTING DIMENSIONS\n");
-            setWindowDimensions(glwidth, glheight);
-        }
         float nf[2];
         glGetFloatv(GL_DEPTH_RANGE,nf);
-        nearDepth = nf[0];
-        farDepth = nf[1];
-        glViewport(0, 0, window_width, window_height);
-        glScissor(0, 0, window_width, window_height);
+        m_settings.near = nf[0];
+        m_settings.far = nf[1];
+        glViewport(0, 0, m_settings.windowWidth, m_settings.windowHeight);
+        glScissor(0, 0, m_settings.windowWidth, m_settings.windowHeight);
 
-        timers["ScreenSpaceFluidRendering"]->start();
-
-        
-        if (settings.blending)
+        if (m_settings.blending)
         {
             //glDepthMask(GL_FALSE);
             glEnable(GL_BLEND);
@@ -124,7 +119,7 @@ namespace rtps
         }
 
         
-        //glViewport(0, 0, window_width-xywh[0], window_height-xywh[1]);
+        //glViewport(0, 0, m_settings.windowWidth-xywh[0], m_settings.windowHeight-xywh[1]);
 
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
         //glDrawBuffers(2,buffers);
@@ -133,11 +128,11 @@ namespace rtps
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glClearColor(0.0f,0.0f,0.0f,0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderPointsAsSpheres();
+        renderPointsAsSpheres(posVBO, colVBO, num);
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
 
-        if (settings.blending)
+        if (m_settings.blending)
         {
             //glDepthMask(GL_FALSE);
             glDisable(GL_BLEND);
@@ -149,7 +144,7 @@ namespace rtps
         glDrawBuffer(GL_COLOR_ATTACHMENT4_EXT);
         glClearColor(0.0f,0.0f,0.0f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderPointsAsSpheres();
+        renderPointsAsSpheres(posVBO, colVBO, num);
         //smoothDepth();
 
 
@@ -176,7 +171,7 @@ namespace rtps
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
 
-        if (settings.blending)
+        if (m_settings.blending)
         {
             //glDepthMask(GL_FALSE);
             glEnable(GL_BLEND);
@@ -189,11 +184,12 @@ namespace rtps
         glDrawBuffer(GL_COLOR_ATTACHMENT2_EXT);
         glClearColor(0.0f,0.0f,0.0f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        glUseProgram(glsl_program[NORMAL_SHADER]);
-        glUniform1i( glGetUniformLocation(m_shaderLibrary.shaders["depth2NormalShader"].getProgram(), "depthTex"),0);
-        glUniform1i( glGetUniformLocation(m_shaderLibrary.shaders["depth2NormalShader"].getProgram(), "colorTex"),1);
-        glUniform1f( glGetUniformLocation(m_shaderLibrary.shaders["depth2NormalShader"].getProgram(), "del_x"),1.0/((float)window_width));
-        glUniform1f( glGetUniformLocation(m_shaderLibrary.shaders["depth2NormalShader"].getProgram(), "del_y"),1.0/((float)window_height));
+        GLuint normalProgram = m_shaderLibrary.shaders["depth2NormalShader"].getProgram();
+        glUseProgram(normalProgram);
+        glUniform1i( glGetUniformLocation(normalProgram, "depthTex"),0);
+        glUniform1i( glGetUniformLocation(normalProgram, "colorTex"),1);
+        glUniform1f( glGetUniformLocation(normalProgram, "del_x"),1.0/((float)m_settings.windowWidth));
+        glUniform1f( glGetUniformLocation(normalProgram, "del_y"),1.0/((float)m_settings.windowHeight));
         RenderUtils::fullscreenQuad();
 
         /*
@@ -210,8 +206,8 @@ namespace rtps
         glDrawBuffer(buffer);
         //glDrawBuffer(GL_BACK);
 
-        glViewport(xywh[0],xywh[1],window_width,window_height);
-        glScissor(xywh[0], xywh[1], window_width, window_height);
+        glViewport(xywh[0],xywh[1],m_settings.windowWidth,m_settings.windowHeight);
+        glScissor(xywh[0], xywh[1], m_settings.windowWidth, m_settings.windowHeight);
 
 
 
@@ -226,9 +222,10 @@ namespace rtps
         {
             glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["depth"]);
         }
-        glUseProgram(m_shaderLibrary.shaders["copyShader"].getProgram();
-        glUniform1i( glGetUniformLocation(m_shaderLibrary.shaders["copyShader"].getProgram(), "normalTex"),0);
-        glUniform1i( glGetUniformLocation(m_shaderLibrary.shaders["copyShader"].getProgram(), "depthTex"),1);
+        GLuint copyProgram = m_shaderLibrary.shaders["copyShader"].getProgram();
+        glUseProgram(copyProgram);
+        glUniform1i( glGetUniformLocation(copyProgram, "normalTex"),0);
+        glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);
         RenderUtils::fullscreenQuad();
 
 
@@ -240,7 +237,7 @@ namespace rtps
 
 
         //glDisable(GL_POINT_SMOOTH);
-        if (settings.blending)
+        if (m_settings.blending)
         {
             glDisable(GL_BLEND);
         }
@@ -255,7 +252,6 @@ namespace rtps
         glFinish();
 
         //printf("done rendering\n");
-        timers["ScreenSpaceFluidRendering"]->end();
         if (m_writeFramebuffers)
         {
             writeFramebufferTextures();
@@ -263,7 +259,7 @@ namespace rtps
         }
     }
 
-    void SSFRender::deleteFramebufferTextures()
+    void SSEffect::deleteFramebufferTextures()
     {
         glDeleteTextures(1,&m_glFramebufferTexs["depth"]);
         glDeleteTextures(1,&m_glFramebufferTexs["depth2"]);
@@ -275,7 +271,7 @@ namespace rtps
         glDeleteTextures(1,&m_glFramebufferTexs["Color"]);
     }
 
-    void SSFRender::createFramebufferTextures()
+    void SSEffect::createFramebufferTextures()
     {
         glGenTextures(1, &m_glFramebufferTexs["depth"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["depth"]);
@@ -283,51 +279,51 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,window_width,window_height,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,m_settings.windowWidth,m_settings.windowHeight,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
         glGenTextures(1, &m_glFramebufferTexs["depth2"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["depth2"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,window_width,window_height,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,m_settings.windowWidth,m_settings.windowHeight,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
         glGenTextures(1,&m_glFramebufferTexs["thickness"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["thickness"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,window_width,window_height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
-        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,window_width,window_height,0,GL_RGBA,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_FLOAT,NULL);
         glGenTextures(1,&m_glFramebufferTexs["depthColor"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["depthColor"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,window_width,window_height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
         glGenTextures(1,&m_glFramebufferTexs["normalColor"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["normalColor"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,window_width,window_height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
-        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,window_width,window_height,0,GL_RGBA,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_FLOAT,NULL);
         glGenTextures(1,&m_glFramebufferTexs["lightColor"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["lightColor"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,window_width,window_height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
         glGenTextures(1,&m_glFramebufferTexs["Color"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["Color"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,window_width,window_height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
 
 
 
@@ -337,16 +333,16 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,window_width,window_height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
-        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,window_width,window_height,0,GL_RGBA,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_FLOAT,NULL);
 
     }
 
-    void SSFRender::setWindowDimensions(GLuint width, GLuint height)
+    /*void SSEffect::setWindowDimensions(GLuint width, GLuint height)
     {
         deleteFramebufferTextures();
-        window_width = width;
-        window_height = height; 
+        m_settings.windowWidth = width;
+        m_settings.windowHeight = height; 
         createFramebufferTextures();
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,fbos[0]);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness"],0);
@@ -358,4 +354,5 @@ namespace rtps
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
     }
+    */
 };

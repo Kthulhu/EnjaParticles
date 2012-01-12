@@ -80,7 +80,7 @@ FLOCK::FLOCK(RTPS *psfr, int n):System(psfr,n)
     rules = Rules(flock_source_dir, ps->cli, timers["rules_gpu"]);
     euler_integration = EulerIntegration(flock_source_dir, ps->cli, timers["euler_gpu"]);
 #endif
-        renderer->setParticleRadius(spacing);
+        //renderer->setParticleRadius(spacing);
 }
 
 //----------------------------------------------------------------------
@@ -203,7 +203,7 @@ void FLOCK::updateGPU()
             settings->SetSetting("Number of Particles", num);
             
             updateParams();
-            renderer->setNum(flock_params.num);
+            //renderer->setNum(flock_params.num);
             
             //need to copy sorted arrays into unsorted arrays
             call_prep(2);
@@ -417,15 +417,15 @@ void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
     num += nn;  //keep track of number of particles we use
 #endif
 
-	renderer->setNum(num);
+	//renderer->setNum(num);
 }
 
 //----------------------------------------------------------------------
-void FLOCK::render()
+/*void FLOCK::render()
 {
     renderer->render_box(grid->getBndMin(), grid->getBndMax());
     System::render();
-}
+}*/
 /*void FLOCK::interact()
 {
     

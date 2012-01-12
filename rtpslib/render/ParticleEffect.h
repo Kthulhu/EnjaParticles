@@ -46,7 +46,9 @@
 
 #include "../structs.h"
 #include "../timer_eb.h"
+#include "ShaderLibrary.h"
 #include "RenderSettings.h"
+#include "RenderUtils.h"
 
 namespace rtps
 {
@@ -59,16 +61,16 @@ namespace rtps
     class ParticleEffect 
     {
     public:
-        ParticleEffect();
+        ParticleEffect(RenderSettings rs);
         ~ParticleEffect();
 
-        void renderPointsAsSpheres();
-        void renderVector(GLuint posVBO, GLuint vecVBO, float scale=1.0f);
-        virtual void render(GLuint posVBO, GLuint colVBO);
+        void renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num);
+        void renderVector(GLuint posVBO, GLuint vecVBO, unsigned int num, float scale=1.0f);
+        void render(GLuint posVBO, GLuint colVBO, unsigned int num);
         void writeBuffersToDisk();
 
     protected:
-        void drawArrays();
+        void drawArrays(GLuint posVBO, GLuint colVBO, unsigned int num);
         virtual void deleteFramebufferTextures(){}
         virtual void createFramebufferTextures(){}
         void writeFramebufferTextures(){RenderUtils::writeTextures(m_glFramebufferTexs);}

@@ -46,6 +46,8 @@
 
 #include "../structs.h"
 #include "../timer_eb.h"
+#include "../util.h"
+#include "Shader.h"
 
 namespace rtps
 {
@@ -58,7 +60,7 @@ namespace rtps
     struct ShaderLibrary 
     {
         static std::map<std::string,Shader> shaders;    
-        static void initializeShaders(std::string shaderSrc)
+        void initializeShaders(std::string shaderSrc)
         {
             std::string vert,frag,geom,tessCont,tessEval;
             geom = "";
@@ -98,8 +100,10 @@ namespace rtps
             shaders[name].setShader(GL_VERTEX_SHADER,vert);
             shaders[name].setShader(GL_FRAGMENT_SHADER,frag);
             shaders[name].setShader(GL_GEOMETRY_SHADER,geom);
+#ifdef GL_TESS_CONTROL_SHADER
             shaders[name].setShader(GL_TESS_CONTROL_SHADER,tessCont);
             shaders[name].setShader(GL_TESS_EVALUATION_SHADER,tessEval);
+#endif
             shaders[name].compileProgram();
         }
     };  

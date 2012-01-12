@@ -101,7 +101,7 @@ namespace rtps
 
 #endif
 
-        renderer->setParticleRadius(spacing);
+        //renderer->setParticleRadius(spacing);
     }
 
 	//----------------------------------------------------------------------
@@ -207,7 +207,7 @@ namespace rtps
                 settings->SetSetting("Number of Particles", num);
                 //prbp.num = num;
                 updateParams();
-                renderer->setNum(prbp.num);
+                //renderer->setNum(prbp.num);
 
                 //need to copy sorted arrays into unsorted arrays
 //**** PREP(2)
@@ -502,15 +502,15 @@ namespace rtps
 #endif
         num += nn;  //keep track of number of particles we use
         printf("num = %d\n",num);
-        renderer->setNum(num);
+        //renderer->setNum(num);
     }
 	//----------------------------------------------------------------------
-    void ParticleRigidBody::render()
+    /*void ParticleRigidBody::render()
     {
         renderer->render_box(grid->getBndMin(), grid->getBndMax());
         //renderer->render_table(grid->getBndMin(), grid->getBndMax());
         System::render();
-    }
+    }*/
 
     void ParticleRigidBody::calculate()
     {
