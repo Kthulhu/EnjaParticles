@@ -74,8 +74,8 @@ namespace rtps
         virtual void deleteFramebufferTextures(){}
         virtual void createFramebufferTextures(){}
         void writeFramebufferTextures(){RenderUtils::writeTextures(m_glFramebufferTexs);}
-        virtual int setupTimers();
-        virtual void printTimers();
+        //virtual int setupTimers();
+        //virtual void printTimers();
         static ShaderLibrary m_shaderLibrary;
         std::map<std::string,GLuint> m_glFramebufferTexs;
         std::map<std::string,GLuint> m_glTextures;

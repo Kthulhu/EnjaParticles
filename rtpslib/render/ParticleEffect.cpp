@@ -45,7 +45,7 @@ namespace rtps
     {
         m_settings=rs;
         m_writeFramebuffers = false;
-        setupTimers();
+//        setupTimers();
         //Fixme:: Should probably handle shader loading more elegantly. -ASY 12/14/2011
         if(m_shaderLibrary.shaders.size()==0)
         {
