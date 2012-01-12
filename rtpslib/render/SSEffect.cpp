@@ -37,11 +37,13 @@
 using namespace std;
 namespace rtps
 {
-    SSEffect::SSEffect(RenderSettings rs):ParticleEffect(rs)
+    SSEffect::SSEffect(RenderSettings rs, ShaderLibrary& lib):ParticleEffect(rs,lib)
     {
+        cout<<"Shaderlib size = "<<m_shaderLibrary.shaders.size()<<endl;
         m_fbos.resize(1);
         glGenFramebuffersEXT(1,&m_fbos[0]);
         createFramebufferTextures();
+        smoothing=BILATERAL_GAUSSIAN_BLUR;
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness"],0);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT1_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColor"],0);
@@ -90,7 +92,7 @@ namespace rtps
         RenderUtils::fullscreenQuad();
     }
 
-    void SSEffect::renderSmoothedSurface(GLuint posVBO, GLuint colVBO, unsigned int num)
+    void SSEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num)
     {
 
         glPushAttrib(GL_ALL_ATTRIB_BITS);

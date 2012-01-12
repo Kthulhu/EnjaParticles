@@ -26,6 +26,7 @@
 #define RTPS_SHADER_LIBRARY_H_INCLUDED
 
 #include <map>
+#include <iostream>
 #include <vector>
 #include <string.h>
 
@@ -57,9 +58,13 @@ namespace rtps
         SHADER_DEPTH=0,SHADER_CURVATURE_FLOW,SHADER_FRESNEL
     };*/
 
-    struct ShaderLibrary 
+    class ShaderLibrary 
     {
-        static std::map<std::string,Shader> shaders;    
+    public:
+        ShaderLibrary()
+        {
+        }
+        std::map<std::string,Shader> shaders;    
         void initializeShaders(std::string shaderSrc)
         {
             std::string vert,frag,geom,tessCont,tessEval;
@@ -69,28 +74,36 @@ namespace rtps
             readFile(shaderSrc+"/sphere_vert.glsl",vert);
             readFile(shaderSrc+"/sphere_frag.glsl",frag);
             addShader("sphereShader",vert,frag,geom,tessCont,tessEval);
+            vert = frag = "";
             readFile(shaderSrc+"/depth_vert.glsl",vert);
             readFile(shaderSrc+"/depth_frag.glsl",frag);
             addShader("depthShader",vert,frag,geom,tessCont,tessEval);
+            vert = frag = "";
             readFile(shaderSrc+"/gaussian_blur_vert.glsl",vert);
             readFile(shaderSrc+"/gaussian_blur_x_frag.glsl",frag);
-            addShader("gaussianBlurXShader",vert,frag,geom,tessCont,tessEval);
+            addShader("gaussBlurXShader",vert,frag,geom,tessCont,tessEval);
+            frag = "";
             readFile(shaderSrc+"/gaussian_blur_y_frag.glsl",frag);
-            addShader("gaussianBlurYShader",vert,frag,geom,tessCont,tessEval);
-            readFile(shaderSrc+"/gaussian_bilateral_frag.glsl",frag);
+            addShader("gaussBlurYShader",vert,frag,geom,tessCont,tessEval);
+            frag = "";
+            readFile(shaderSrc+"/bilateral_blur_frag.glsl",frag);
             addShader("bilateralGaussianBlurShader",vert,frag,geom,tessCont,tessEval);
+            vert = frag = "";
             readFile(shaderSrc+"/normal_vert.glsl",vert);
             readFile(shaderSrc+"/normal_frag.glsl",frag);
             addShader("depth2NormalShader",vert,frag,geom,tessCont,tessEval);
+            vert = frag = "";
             readFile(shaderSrc+"/copy_vert.glsl",vert);
             readFile(shaderSrc+"/copy_frag.glsl",frag);
             addShader("copyShader",vert,frag,geom,tessCont,tessEval);
+            vert = frag = "";
             readFile(shaderSrc+"/vector_vert.glsl",vert);
             readFile(shaderSrc+"/vector_frag.glsl",frag);
             readFile(shaderSrc+"/vector_geom.glsl",geom);
             shaders["vectorShader"].attachGeometryParam(GL_GEOMETRY_INPUT_TYPE_EXT,GL_POINTS);
             shaders["vectorShader"].attachGeometryParam(GL_GEOMETRY_OUTPUT_TYPE_EXT,GL_LINE_STRIP);
             addShader("vectorShader",vert,frag,geom,tessCont,tessEval);
+            vert = frag = geom="";
         }
 
         void addShader(const std::string& name, const std::string& vert,
@@ -104,7 +117,7 @@ namespace rtps
             shaders[name].setShader(GL_TESS_CONTROL_SHADER,tessCont);
             shaders[name].setShader(GL_TESS_EVALUATION_SHADER,tessEval);
 #endif
-            shaders[name].compileProgram();
+            std::cout<<"Program = "<<shaders[name].compileProgram()<<std::endl;
         }
     };  
 }

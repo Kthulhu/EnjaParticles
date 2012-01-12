@@ -61,12 +61,12 @@ namespace rtps
     class ParticleEffect 
     {
     public:
-        ParticleEffect(RenderSettings rs);
+        ParticleEffect(RenderSettings rs, ShaderLibrary& lib);
         ~ParticleEffect();
 
         void renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num);
         void renderVector(GLuint posVBO, GLuint vecVBO, unsigned int num, float scale=1.0f);
-        void render(GLuint posVBO, GLuint colVBO, unsigned int num);
+        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num);
         void writeBuffersToDisk();
 
     protected:
@@ -76,7 +76,7 @@ namespace rtps
         void writeFramebufferTextures(){RenderUtils::writeTextures(m_glFramebufferTexs);}
         //virtual int setupTimers();
         //virtual void printTimers();
-        static ShaderLibrary m_shaderLibrary;
+        ShaderLibrary& m_shaderLibrary;
         std::map<std::string,GLuint> m_glFramebufferTexs;
         std::map<std::string,GLuint> m_glTextures;
         std::vector<GLuint> m_fbos;

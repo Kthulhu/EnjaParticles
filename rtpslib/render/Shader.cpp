@@ -42,6 +42,12 @@ namespace rtps
     {
         shaderSrc[shaderType] = shadeSrc;
     }
+
+    void Shader::attachGeometryParam(GLenum paramType, GLuint paramValue)
+    {
+        geomParams[paramType]=paramValue;
+    }
+    
     GLuint Shader::compileProgram()
     {
         GLuint program = glCreateProgram();
@@ -83,6 +89,7 @@ namespace rtps
             glDeleteProgram(program);
             program = 0;
         }
+        shaderProgram = program;
 
         return program;
     }

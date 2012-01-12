@@ -10,6 +10,8 @@ project(test CXX)
 SET( BASE_DIR ${test_SOURCE_DIR}/..)
 SET( RTPS_DIR ${test_SOURCE_DIR}/../rtpslib)
 
+ADD_DEFINITIONS(-DGLSL_BIN_DIR="./bin/shaders")
+
 message("base dir: ${BASE_DIR}")
 
 #need to include FindOPENCL.cmake to

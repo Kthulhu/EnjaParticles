@@ -37,13 +37,13 @@ namespace rtps
         BILATERAL_GAUSSIAN_BLUR,
         CURVATURE_FLOW
     };
-    class RTPS_EXPORT SSEffect : public ParticleEffect
+    class SSEffect : public ParticleEffect
     {
     public:
-        SSEffect(RenderSettings rs);
+        SSEffect(RenderSettings rs, ShaderLibrary& lib);
         ~SSEffect();
         void smoothDepth();
-        void renderSmoothedSurface(GLuint posVBO, GLuint colVBO, unsigned int num);
+        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num);
     protected:
         virtual void deleteFramebufferTextures();
         virtual void createFramebufferTextures();

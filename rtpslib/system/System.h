@@ -89,13 +89,21 @@ namespace rtps
         {
             num = nn;
         };//should this be public
-        virtual GLuint getPosVBO()
+        GLuint getPosVBO()
         {
             return pos_vbo;
         }
-        virtual GLuint getColVBO()
+        GLuint getColVBO()
         {
             return col_vbo;
+        }
+        GLuint getVelocityVBO()
+        {
+            return velocity_vbo;
+        }
+        GLuint getForceVBO()
+        {
+            return force_vbo;
         }
 
         //virtual void render();
@@ -167,6 +175,7 @@ namespace rtps
         Buffer<float>& getDampeningCoefBuffer() {return cl_dampening_coef_s;}
         Buffer<unsigned int>& getCellStartBuffer() {return cl_cell_indices_start;}
         Buffer<unsigned int>& getCellEndBuffer() {return cl_cell_indices_end;}
+        float getSpacing(){return spacing;}
         RTPSettings* getSettings() {return settings;}
         virtual void acquireGLBuffers();
         virtual void releaseGLBuffers();

@@ -31,9 +31,6 @@
 #include "ParticleEffect.h"
 #include "Shader.h"
 #include "util.h"
-#include "stb_image.h" 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
 #include "ShaderLibrary.h" 
 
 using namespace std;
@@ -41,17 +38,9 @@ using namespace std;
 namespace rtps
 {
 
-    ParticleEffect::ParticleEffect(RenderSettings rs)
+    ParticleEffect::ParticleEffect(RenderSettings rs, ShaderLibrary& lib):m_settings(rs), m_shaderLibrary(lib)
     {
-        m_settings=rs;
         m_writeFramebuffers = false;
-//        setupTimers();
-        //Fixme:: Should probably handle shader loading more elegantly. -ASY 12/14/2011
-        if(m_shaderLibrary.shaders.size()==0)
-        {
-            m_shaderLibrary.initializeShaders(GLSL_BIN_DIR);
-        }
-        
     }
 
     
@@ -147,7 +136,7 @@ namespace rtps
         glEnable(GL_POINT_SPRITE);
         glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        GLuint program = m_shaderLibrary.shaders["vectorShader"].getProgram();
+        GLuint program = m_shaderLibrary.shaders["sphereShader"].getProgram();
 
         glUseProgram(program);
         //float particle_radius = 0.125f * 0.5f;
@@ -167,7 +156,7 @@ namespace rtps
         glDisable(GL_POINT_SPRITE);
     }
 
-    void ParticleEffect::renderVector(GLuint vecVBO, GLuint posVBO, unsigned int num, float scale)
+    void ParticleEffect::renderVector(GLuint posVBO, GLuint vecVBO, unsigned int num, float scale)
     {
         glBindBuffer(GL_ARRAY_BUFFER, vecVBO);
         glColorPointer(4, GL_FLOAT, 0, 0);

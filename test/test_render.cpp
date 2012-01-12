@@ -45,6 +45,7 @@
 #include <RTPS.h>
 #include <render/ParticleEffect.h>
 #include <render/SSEffect.h>
+#include <render/ShaderLibrary.h>
 //#include "timege.h"
 #include "../rtpslib/render/util/stb_image_write.h"
 
@@ -126,7 +127,10 @@ rtps::RTPS* sph=NULL;
 rtps::RTPS* rb=NULL;
 rtps::Domain* grid=NULL;
 rtps::Domain* grid2=NULL;
-std::map<std::string,ParticleEffect*> effects;
+std::map<std::string,rtps::ParticleEffect*> effects;
+rtps::ShaderLibrary* lib = NULL;
+std::string renderType = "default";
+bool renderVelocity = false;
 
 //#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
@@ -195,6 +199,7 @@ int main(int argc, char** argv)
 
     printf("before we call enjas functions\n");
 
+ 
     cli = new CL();
     //default constructor
     //rtps::RTPSettings settings;
@@ -292,16 +297,22 @@ int main(int argc, char** argv)
     init_gl();
 
     RenderSettings rs;
-    rs.blending=true;
+    //rs.blending=false;
+    rs.blending=false;
     float nf[2];
     glGetFloatv(GL_DEPTH_RANGE,nf);
     rs.near = nf[0];
     rs.far = nf[1];
+    rs.particleRadius = sph->system->getSpacing()*20.f;
     rs.windowWidth=window_width;
     rs.windowHeight=window_height;
-    effects["default"]=new ParticleEffect(rs);
+    lib = new ShaderLibrary();
+    lib->initializeShaders(GLSL_BIN_DIR);
+    effects["default"]=new ParticleEffect(rs,*lib);
     //effects["sprite"]=new ParticleEffect();
-    effects["ssfr"]=new SSEffect(rs);
+    rs.blending=true;
+    rs.particleRadius = sph->system->getSpacing()*.4f;
+    effects["ssfr"]=new SSEffect(rs, *lib);
 
     glutMainLoop();
     return 0;
@@ -332,6 +343,14 @@ void appRender()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
+        RenderUtils::renderBox(grid->getMin(),grid->getMax(),float4(0.0f,1.0,0.0f,1.0f));
+        if(renderVelocity)
+        {
+            effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
+            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
+        }
+        effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
+        effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
 //	sph->render();
 //        rb->render();
         //ps3->render();
@@ -451,9 +470,14 @@ void appKeyboard(unsigned char key, int x, int y)
                 rb->system->addBox(NUM_PARTICLES, position, position+size, false, col1,mass);
                 return;
             }
+        case 'v':
+            renderVelocity=!renderVelocity;
+            return;
         case 'o':
+            renderType="default";
             return;
         case 'c':
+            renderType="ssfr";
             return;
         case 'C':
             return;
@@ -565,6 +589,11 @@ void appDestroy()
     delete sph;
     delete cli;
     delete grid;
+    for(map<string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+    {
+        delete i->second;
+    }
+    delete lib;
 
 
     if (glutWindowHandle)glutDestroyWindow(glutWindowHandle);
@@ -751,6 +780,9 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
+        effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
+        effects[renderType]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
+        RenderUtils::renderBox(grid->getMin(),grid->getMax(),float4(0.0f,1.0,0.0f,1.0f));
 //        sph->render();
 //        rb->render();
         draw_collision_boxes();
@@ -779,6 +811,9 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
+        effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
+        effects[renderType]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
+        RenderUtils::renderBox(grid->getMin(),grid->getMax(),float4(0.0f,1.0,0.0f,1.0f));
 //        sph->render();
 //        rb->render();
         draw_collision_boxes();
