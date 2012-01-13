@@ -343,7 +343,7 @@ void appRender()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
-        RenderUtils::renderBox(grid->getMin(),grid->getMax(),float4(0.0f,1.0,0.0f,1.0f));
+        RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
         if(renderVelocity)
         {
             effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
@@ -780,9 +780,14 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
+        RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
+        if(renderVelocity)
+        {
+            effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
+            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
+        }
+        effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
         effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-        effects[renderType]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
-        RenderUtils::renderBox(grid->getMin(),grid->getMax(),float4(0.0f,1.0,0.0f,1.0f));
 //        sph->render();
 //        rb->render();
         draw_collision_boxes();
@@ -811,9 +816,14 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
+        RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
+        if(renderVelocity)
+        {
+            effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
+            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
+        }
+        effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
         effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-        effects[renderType]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
-        RenderUtils::renderBox(grid->getMin(),grid->getMax(),float4(0.0f,1.0,0.0f,1.0f));
 //        sph->render();
 //        rb->render();
         draw_collision_boxes();
