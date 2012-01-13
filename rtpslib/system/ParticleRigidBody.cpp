@@ -42,7 +42,7 @@ namespace rtps
 {
 
 	//----------------------------------------------------------------------
-    ParticleRigidBody::ParticleRigidBody(RTPS *psfr, int n) :System(psfr,n)
+    ParticleRigidBody::ParticleRigidBody(RTPS *psfr, int n) :System(psfr,n), curRigidbodyID(0)
     {
         resource_path = settings->GetSettingAs<string>("rtps_path");
         printf("resource path: %s\n", resource_path.c_str());
@@ -170,6 +170,8 @@ namespace rtps
                 cl_color_s,
                 cl_mass_u,
                 cl_mass_s,
+                cl_objectIndex_u,
+                cl_objectIndex_s,
                 /*cl_spring_coef_u,
                 cl_spring_coef_s,
                 cl_dampening_coef_u,
@@ -230,6 +232,7 @@ namespace rtps
                 cl_velocity_s,
                 //cl_veleval_s,
                 cl_force_s,
+                cl_objectIndex_s,
                 //cl_spring_coef_s,
                 //cl_dampening_coef_s,
                 cl_sort_indices,
@@ -458,7 +461,10 @@ namespace rtps
         //    scaled_pos_l[i]=pos_l[i]*prbp.simulation_scale;
         //}
         float16 invInertialTensor = calculateInvInertialTensor(pos_l,mass);
-        
+
+        vector<unsigned int> index(nn);
+        std::fill(index.begin(), index.end(), curRigidbodyID);
+        curRigidbodyID++; 
 #ifdef GPU
         glFinish();
         cl_position_u.acquire();
@@ -476,6 +482,7 @@ namespace rtps
         cl_velocity_u.copyToDevice(vels, num);
         cl_position_l.copyToDevice(pos_l,num);
         cl_mass_u.copyToDevice(mass_p, num);
+        cl_objectIndex_u.copyToDevice(index, num);
         /*cl_spring_coef_u.copyToDevice(spring_co, num);
         cl_dampening_coef_u.copyToDevice(dampening_co, num);*/
         vector<float4> comVec;
@@ -561,7 +568,7 @@ namespace rtps
 
         settings->SetSetting("Boundary Distance", boundary_distance);
         //float spacing = rest_distance / simulation_scale;
-        float spacing = 2.f*(smoothing_distance / simulation_scale);
+        float spacing = (smoothing_distance / simulation_scale);
         printf("Spacing = %f\n",spacing);
         settings->SetSetting("Spacing", spacing);
  

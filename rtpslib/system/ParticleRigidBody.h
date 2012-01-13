@@ -91,6 +91,7 @@ namespace rtps
 
     private:
        
+        unsigned int curRigidbodyID;
         ParticleRigidBodyParams prbp;
         Integrator integrator;
 

@@ -28,9 +28,9 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force/*, __global float* spring_coef, __global float* dampening_coef*/
+#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global uint* objectIndex/*, __global float* spring_coef, __global float* dampening_coef*/
 //, __global float4* torque_force
-#define ARGV pos, vel, linear_force 
+#define ARGV pos, vel, linear_force, objectIndex 
 
 /*----------------------------------------------------------------------*/
 
@@ -68,7 +68,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         //iej is 0 when we are looking at same particle
         //we allow calculations and just multiply force and xsph
         //by iej to avoid branching
-        int iej = index_i != index_j;
+        int iej = objectIndex[index_i]!=objectIndex[index_j];
 
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);

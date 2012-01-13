@@ -182,6 +182,8 @@ void FLOCK::updateGPU()
             cl_color_s,
             cl_mass_u,
             cl_mass_s,
+            cl_objectIndex_u,
+            cl_objectIndex_s,
             cl_sort_indices,
             cl_GridParams,
             clf_debug,

@@ -52,6 +52,8 @@ namespace rtps
                     Buffer<float4>& color_s,
                     Buffer<float>& mass_u,
                     Buffer<float>& mass_s,
+                    Buffer<unsigned int>& objectIndex_u,
+                    Buffer<unsigned int>& objectIndex_s,
                     /*Buffer<float>& spring_coef_u,
                     Buffer<float>& spring_coef_s,
                     Buffer<float>& dampening_coef_u,
@@ -78,6 +80,8 @@ namespace rtps
         k_permute.setArg(iarg++, color_s.getDevicePtr());
         k_permute.setArg(iarg++, mass_u.getDevicePtr());
         k_permute.setArg(iarg++, mass_s.getDevicePtr());
+        k_permute.setArg(iarg++, objectIndex_u.getDevicePtr());
+        k_permute.setArg(iarg++, objectIndex_s.getDevicePtr());
         /*k_permute.setArg(iarg++, spring_coef_u.getDevicePtr());
         k_permute.setArg(iarg++, spring_coef_u_s.getDevicePtr());
         k_permute.setArg(iarg++, dampening_coef_u.getDevicePtr());

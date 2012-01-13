@@ -203,6 +203,8 @@ namespace rtps
         Buffer<float4>      cl_active_cells;
         Buffer<float>      cl_mass_u;
         Buffer<float>      cl_mass_s;
+        Buffer<unsigned int>      cl_objectIndex_u;
+        Buffer<unsigned int>      cl_objectIndex_s;
 
         Buffer<unsigned int>    cl_cell_indices_start;
         Buffer<unsigned int>    cl_cell_indices_end;
