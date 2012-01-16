@@ -45,6 +45,7 @@
 #include <RTPS.h>
 #include <render/ParticleEffect.h>
 #include <render/SSEffect.h>
+#include <render/StreamlineEffect.h>
 #include <render/ShaderLibrary.h>
 //#include "timege.h"
 #include "../rtpslib/render/util/stb_image_write.h"
@@ -313,6 +314,7 @@ int main(int argc, char** argv)
     rs.blending=true;
     rs.particleRadius = sph->system->getSpacing()*.4f;
     effects["ssfr"]=new SSEffect(rs, *lib);
+    effects["streamline"]=new StreamlineEffect(rs, *lib,100,100);
 
     glutMainLoop();
     return 0;
@@ -349,8 +351,11 @@ void appRender()
             effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
             effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
         }
+        effects["streamline"]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
+        /*
         effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
         effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
+         */
 //	sph->render();
 //        rb->render();
         //ps3->render();
@@ -385,7 +390,7 @@ void appKeyboard(unsigned char key, int x, int y)
         {
             nn = NUM_PARTICLES/2;
             float4 col1 = float4(0.05, 0.15, 8., 0.1);
-            sph->system->addBox(nn, grid->getMin()+float4(0.5f,0.5f,0.5f,1.0f), grid->getMax()-float4(0.5f,0.5f,0.5f,1.0f), false,col1);
+            sph->system->addBox(nn, grid->getBndMin()+float4(0.5f,0.5f,0.5f,1.0f), grid->getBndMax()-float4(0.5f,0.5f,0.5f,1.0f), false,col1);
             //ps2->system->addBox(nn, min, max, false);
             return;
         }
