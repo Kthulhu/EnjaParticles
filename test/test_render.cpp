@@ -47,6 +47,7 @@
 #include <render/SSEffect.h>
 #include <render/StreamlineEffect.h>
 #include <render/ShaderLibrary.h>
+#include <system/common/Sample.h>
 //#include "timege.h"
 #include "../rtpslib/render/util/stb_image_write.h"
 
@@ -128,7 +129,9 @@ rtps::RTPS* sph=NULL;
 rtps::RTPS* rb=NULL;
 rtps::Domain* grid=NULL;
 rtps::Domain* grid2=NULL;
+rtps::Sample* sampleKernel=NULL;
 std::map<std::string,rtps::ParticleEffect*> effects;
+rtps::StreamlineEffect* streamline = NULL;
 rtps::ShaderLibrary* lib = NULL;
 std::string renderType = "default";
 bool renderVelocity = false;
@@ -314,7 +317,13 @@ int main(int argc, char** argv)
     rs.blending=true;
     rs.particleRadius = sph->system->getSpacing()*.4f;
     effects["ssfr"]=new SSEffect(rs, *lib);
-    effects["streamline"]=new StreamlineEffect(rs, *lib,100,100);
+    int tmp = NUM_PARTICLES/100;
+    vector<unsigned int> indices(100);
+    for(int i = 0;i<100;i++)
+    {
+        indices[i]=tmp*i;      
+    }
+    streamline=new StreamlineEffect(rs, *lib,100,100,indices,cli);
 
     glutMainLoop();
     return 0;
@@ -351,7 +360,7 @@ void appRender()
             effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
             effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
         }
-        effects["streamline"]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
+        streamline->render();
         /*
         effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
         effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
@@ -579,6 +588,7 @@ void timerCB(int ms)
     rb->system->integrate();
     sph->system->postProcess();
     rb->system->postProcess();
+    streamline->addStreamLine(sph->system->getPositionBuffer(),sph->system->getColorBuffer(),sph->system->getNum());
     sph->system->releaseGLBuffers();
     rb->system->releaseGLBuffers();
 
@@ -599,6 +609,7 @@ void appDestroy()
         delete i->second;
     }
     delete lib;
+    delete streamline;
 
 
     if (glutWindowHandle)glutDestroyWindow(glutWindowHandle);
