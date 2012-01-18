@@ -44,8 +44,9 @@ namespace rtps
         public:
             Sample() { cli = NULL; };
             Sample(std::string path, CL* cli);
-            void execute(int num,
+            void execute(int popSize,
                     Buffer<float4>& population,
+                    int sampSize,
                     Buffer<float4>& samples,
                     Buffer<unsigned int>& sampleIndices,
                     unsigned int insOffset,

@@ -44,8 +44,8 @@ namespace rtps
     {
         m_maxSLLength=maxLength;
         m_numSL = num;
-        m_curSLIndex = 0;
-        vector<float4> f4vec(m_maxSLLength*m_numSL);
+        m_curSLIndex = 1;
+        vector<float4> f4vec((m_maxSLLength+1)*m_numSL);
         std::fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         m_streamLineCP = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         m_streamLineColor = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
@@ -74,12 +74,13 @@ namespace rtps
         glBindBuffer(GL_ARRAY_BUFFER, m_streamLineColor);
         glColorPointer(4, GL_FLOAT, 0, (char *) NULL);
 
-        if(m_curSLIndex>1)
+        if(m_curSLIndex>2)
         {
             glEnableClientState(GL_VERTEX_ARRAY);
             glEnableClientState(GL_COLOR_ARRAY);
             for(unsigned int i = 0; i<m_numSL; i++)
-                glDrawArrays(GL_LINE_STRIP, i*m_maxSLLength, m_curSLIndex);
+                glDrawArrays(GL_LINE_STRIP, (i*m_maxSLLength)+1, m_curSLIndex);
+            //glDrawArrays(GL_LINE_STRIP, 0, m_curSLIndex);
             glDisableClientState(GL_COLOR_ARRAY);
             glDisableClientState(GL_VERTEX_ARRAY);
         }
@@ -93,11 +94,14 @@ namespace rtps
         {
             m_clStreamLineCP.acquire();
             m_clStreamLineColor.acquire();
-            sample.execute(num,pos,m_clStreamLineCP,m_clSampleIndices, m_curSLIndex,m_maxSLLength); 
-            sample.execute(num,col,m_clStreamLineColor,m_clSampleIndices, m_curSLIndex,m_maxSLLength); 
+            sample.execute(num,pos,m_maxSLLength,m_clStreamLineCP,m_clSampleIndices, m_curSLIndex,m_maxSLLength); 
+            sample.execute(num,col,m_maxSLLength,m_clStreamLineColor,m_clSampleIndices, m_curSLIndex,m_maxSLLength); 
             m_clStreamLineCP.release();
             m_clStreamLineColor.release();
-            m_curSLIndex++;
+            if(m_curSLIndex==m_maxSLLength)
+                m_curSLIndex = 0;
+            else
+                m_curSLIndex++;
         }
     }
 }

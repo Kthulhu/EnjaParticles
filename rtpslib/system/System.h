@@ -171,6 +171,10 @@ namespace rtps
         Buffer<float4>& getColorBuffer() {return cl_color_s;}
         Buffer<float4>& getPositionBuffer() {return cl_position_s;}
         Buffer<float>& getMassBuffer() {return cl_mass_s;}
+        Buffer<float4>& getVelocityBufferUnsorted() {return cl_velocity_u;}
+        Buffer<float4>& getColorBufferUnsorted() {return cl_color_u;}
+        Buffer<float4>& getPositionBufferUnsorted() {return cl_position_u;}
+        Buffer<float>& getMassBufferUnsorted() {return cl_mass_u;}
         Buffer<float>& getSpringCoefBuffer() {return cl_spring_coef_s;}
         Buffer<float>& getDampeningCoefBuffer() {return cl_dampening_coef_s;}
         Buffer<unsigned int>& getCellStartBuffer() {return cl_cell_indices_start;}

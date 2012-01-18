@@ -135,6 +135,7 @@ rtps::StreamlineEffect* streamline = NULL;
 rtps::ShaderLibrary* lib = NULL;
 std::string renderType = "default";
 bool renderVelocity = false;
+bool paused = false;
 
 //#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
@@ -361,10 +362,8 @@ void appRender()
             effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
         }
         streamline->render();
-        /*
         effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
         effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-         */
 //	sph->render();
 //        rb->render();
         //ps3->render();
@@ -395,6 +394,9 @@ void appKeyboard(unsigned char key, int x, int y)
     float4 max;
     switch (key)
     {
+        case ' ':
+            paused=!paused;
+            return;
         case 'e': //dam break
         {
             nn = NUM_PARTICLES/2;
@@ -577,21 +579,24 @@ void init_gl()
 void timerCB(int ms)
 {
     glutTimerFunc(ms, timerCB, ms);
-    glFinish();
-    sph->system->acquireGLBuffers();
-    rb->system->acquireGLBuffers();
-    sph->system->update();
-    rb->system->update();
-    sph->system->interact();
-    rb->system->interact();
-    sph->system->integrate();
-    rb->system->integrate();
-    sph->system->postProcess();
-    rb->system->postProcess();
-    streamline->addStreamLine(sph->system->getPositionBuffer(),sph->system->getColorBuffer(),sph->system->getNum());
-    sph->system->releaseGLBuffers();
-    rb->system->releaseGLBuffers();
-
+    if(!paused)
+    {
+        glFinish();
+        sph->system->acquireGLBuffers();
+        rb->system->acquireGLBuffers();
+        sph->system->update();
+        rb->system->update();
+        sph->system->interact();
+        rb->system->interact();
+        sph->system->integrate();
+        rb->system->integrate();
+        sph->system->postProcess();
+        rb->system->postProcess();
+        streamline->addStreamLine(sph->system->getPositionBufferUnsorted(),sph->system->getColorBufferUnsorted(),sph->system->getNum());
+        //streamline->addStreamLine(rb->system->getPositionBufferUnsorted(),rb->system->getColorBufferUnsorted(),rb->system->getNum());
+        sph->system->releaseGLBuffers();
+        rb->system->releaseGLBuffers();
+    }
     //ps3->update();
     glutPostRedisplay();
 }

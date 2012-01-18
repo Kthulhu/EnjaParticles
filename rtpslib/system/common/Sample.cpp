@@ -39,8 +39,9 @@ namespace rtps
         
     }
 
-    void Sample::execute(int num,
+    void Sample::execute(int popSize,
                     Buffer<float4>& population,
+                    int sampSize,
                     Buffer<float4>& samples,
                     Buffer<unsigned int>& sampleIndices,
                     unsigned int insOffset,
@@ -48,18 +49,29 @@ namespace rtps
     {
 
         
+        /*std::vector<float4> fvec(sampSize);
+        std::fill(fvec.begin(), fvec.end(), float4(0.0,0.0,0.0,0.0));
+
+        std::vector<int4> uivec(sampSize);
+        std::fill(uivec.begin(), uivec.end(), int4(0,0,0,0));
+        Buffer<float4> debugf(cli,fvec);
+        Buffer<int4> debugi(cli,uivec);*/
         int iarg = 0;
-        k_sample.setArg(iarg++, num);
+        k_sample.setArg(iarg++, popSize);
         k_sample.setArg(iarg++, population.getDevicePtr());
+        k_sample.setArg(iarg++, sampSize);
         k_sample.setArg(iarg++, samples.getDevicePtr());
         k_sample.setArg(iarg++, sampleIndices.getDevicePtr());
         k_sample.setArg(iarg++, insOffset);
         k_sample.setArg(iarg++, insStride);
+        //k_sample.setArg(iarg++, debugf.getDevicePtr());
+        //k_sample.setArg(iarg++, debugi.getDevicePtr());
+        
 
         try
         {
 			//printf("k_sample (non-cloud): num= %d\n", num); 
-            float gputime = k_sample.execute(num);
+            float gputime = k_sample.execute(sampSize);
         }
         catch (cl::Error er)
         {
@@ -71,29 +83,16 @@ namespace rtps
         //printSampleDiagnostics();
 
         printf("**************** Sample Diagnostics ****************\n");
-        int nbc = nb_cells + 1;
-        printf("nb_cells: %d\n", nbc);
-        printf("num particles: %d\n", num);
-
-        std::vector<unsigned int> is(nbc);
-        std::vector<unsigned int> ie(nbc);
+        std::vector<float4> fl(5);
+        std::vector<int4> in(5);
         
-        ci_end.copyToHost(ie);
-        ci_start.copyToHost(is);
+        debugf.copyToHost(fl);
+        debugi.copyToHost(in);
 
-        //std::vector<unsigned int> hpos_u(nbc);
-        //std::vector<unsigned int> hpos_s(nbc);
-		//pos_s.copyToHost(hpos_s);
-		//pos_u.copyToHost(hpos_u);
-
-        for(int i = 0; i < nbc; i++)
+        for(int i = 0; i < 5; i++)
         {
-            if (is[i] != -1)// && ie[i] != 0)
-            {
-                //nb = ie[i] - is[i];
-                //nb_particles += nb;
-                printf("cell: %d indices start: %d indices stop: %d\n", i, is[i], ie[i]);
-            }
+            printf("pos[%d] = (%f,%f,%f,%f)\n", i, fl[i].x, fl[i].y, fl[i].z, fl[i].w);
+            printf("index[%d] = (%d,%d,%d,%d)\n", i, in[i].x, in[i].y, in[i].z, in[i].w);
         }
 
 #endif
