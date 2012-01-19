@@ -33,13 +33,13 @@
 #include "ParticleShape.h"
 namespace rtps
 {
-    ParticleShape::ParticleShape(float3 min, float3 max, float diamater){
+    ParticleShape::ParticleShape(float3 min, float3 max, float diameter){
         float3 dim = max-min;
-        float maxDim = dim.x();
-        if(maxDim<dim.y())
-            maxDim=dim.y();
-        if(maxDim<dim.z())
-            maxDim=dim.z();
+        float maxDim = dim.x;
+        if(maxDim<dim.y)
+            maxDim=dim.y;
+        if(maxDim<dim.z)
+            maxDim=dim.z;
         this->dim=dim;
         this->min=min;
         this->max=max;
@@ -115,6 +115,8 @@ namespace rtps
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
+        int v[4];
+        glGetIntegerv(GL_VIEWPORT,v);
         glViewport(0,0,voxelResolution,voxelResolution);
         glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , volumeTexture, 0, i );
 
@@ -150,7 +152,7 @@ namespace rtps
             glPopMatrix();
         }
         glDisableClientState( GL_VERTEX_ARRAY );
-        glViewport(0,0,m_glutScreenWidth,m_glutScreenHeight);
+        glViewport(0,0,v[3],v[4]);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_LIGHTING);
         glDisable(GL_BLEND);
@@ -160,6 +162,5 @@ namespace rtps
         glClearColor(col[0],col[1],col[2],col[3]);
         glMatrixMode(GL_MODELVIEW);
         glDisable(GL_TEXTURE_3D_EXT);
-        printf("time to voxelize = %ld\n",end-start);
     }
 }; //end namespace

@@ -25,14 +25,7 @@
 #ifndef RTPS_PARTICLE_SHAPE_H_INCLUDED
 #define RTPS_PARTICLE_SHAPE_H_INCLUDED
 
-#include "../domain/Domain.h"
-#include "ForceField.h"
-#include "RTPSettings.h"
-
-#include <RTPS.h>
-#include <opencl/Kernel.h>
-#include <opencl/Buffer.h>
-#include <domain/Domain.h>
+#include "structs.h"
 #include <timer_eb.h>
 
 namespace rtps
@@ -40,7 +33,7 @@ namespace rtps
     class ParticleShape
     {
     public:
-       ParticleShape(float3 min, float3 max, float diamater);
+       ParticleShape(float3 min, float3 max, float diameter);
        ~ParticleShape();
        void voxelizeMesh(GLuint vbo, GLuint ibo, int length);
        void voxelizeSurface(GLuint vbo, GLuint ibo, int length);

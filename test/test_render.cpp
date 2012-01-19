@@ -53,7 +53,7 @@
 #include "../rtpslib/render/util/stb_image_write.h"
 #include "BunnyMesh.h"
 #include "util.h"
-#inlcude <system/ParticleShape.h>
+#include <system/ParticleShape.h>
 
 using namespace rtps;
 
@@ -317,7 +317,7 @@ int main(int argc, char** argv)
     }
     float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
     float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-    for(int i = 0; i<BUNNY_NUM_VERTICIES; i++)
+    for(int i = 0; i<BUNNY_NUM_VERTICES; i++)
     {
         float x = gVerticesBunny[(i*3)];
         float y = gVerticesBunny[(i*3)+1];
@@ -475,10 +475,10 @@ void appKeyboard(unsigned char key, int x, int y)
         case 'b':
         {
             //matrix is to position the rigidbody at 7,7,7 with no rotations.
-            float16 mat(1.0,0.0,0.0,7.0,
-                    0.0,1.0,0.0,7.0,
-                    0.0,0.0,1.0,7.0,
-                    0.0,0.0,0.0,1.0);
+            float16 mat(1.0f,0.0f,0.0f,7.0f,
+                    0.0f,1.0f,0.0f,7.0f,
+                    0.0f,0.0f,1.0f,7.0f,
+                    0.0f,0.0f,0.0f,1.0f);
             rb->system->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),bunnyShape->getMin(),mat,bunnyShape->getVoxelResolution(),mass);
             /*printf("deleting willy nilly\n");
             sph->system->testDelete();

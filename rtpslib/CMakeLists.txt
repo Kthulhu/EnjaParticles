@@ -140,8 +140,10 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/boids
     ####
 
+    ${rtpslib_SOURCE_DIR}/system/ParticleShape
+
     #ParticleRigidBody 
-    ${rtpslib_SOURCE_DIR}/system/ParticleRigidBody.cpp
+    ${rtpslib_SOURCE_DIR}/system/ParticleRigidBody
     # Rigidbody dynamics.
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBEuler
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBLeapFrog

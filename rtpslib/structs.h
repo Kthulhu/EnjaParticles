@@ -54,6 +54,11 @@ namespace rtps
             this->y = y;
             this->z = z;
         }
+        friend float3 operator-(float3& a, float3& b)
+        {
+            float3 c = float3(a.x-b.x, a.y-b.y, a.z-b.z);
+            return c;
+        }
     } float3;
 
     typedef struct int2
@@ -269,6 +274,24 @@ namespace rtps
     typedef struct float16
     {
         float m[16];
+
+        float16()
+        {
+            m[0]= 0; m[1]= 0; m[2]= 0; m[3]= 0;
+            m[4]= 0; m[5]= 0; m[6]= 0; m[7]= 0;
+            m[8]= 0; m[9]= 0; m[10]= 0; m[11]= 0;
+            m[12]= 0; m[13]= 0; m[14]= 0; m[15]= 0;
+        }
+        float16(float a, float b, float c, float d,
+                float e, float f, float g, float h,
+                float i, float j, float k, float l,
+                float n, float o, float p, float q)
+        {
+            m[0]= a; m[1]= b; m[2]= c; m[3]= d;
+            m[4]= e; m[5]= f; m[6]= g; m[7]= h;
+            m[8]= i; m[9]= j; m[10]= k; m[11]= l;
+            m[12]= n; m[13]= o; m[14]= p; m[15]= q;
+        }
     } float16;
     // size: 4*4 = 16 floats
     // shared memory = 65,536 bytes = 16,384 floats
