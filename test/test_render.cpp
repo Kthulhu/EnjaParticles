@@ -27,6 +27,7 @@
 #include <math.h>
 #include <map>
 #include <time.h>
+#include <float.h>
 
 //#include <utils.h>
 //#include <string.h>
@@ -50,6 +51,9 @@
 #include <system/common/Sample.h>
 //#include "timege.h"
 #include "../rtpslib/render/util/stb_image_write.h"
+#include "BunnyMesh.h"
+#include "util.h"
+#inlcude <system/ParticleShape.h>
 
 using namespace rtps;
 
@@ -133,9 +137,12 @@ rtps::Sample* sampleKernel=NULL;
 std::map<std::string,rtps::ParticleEffect*> effects;
 rtps::StreamlineEffect* streamline = NULL;
 rtps::ShaderLibrary* lib = NULL;
+rtps::ParticleShape* bunnyShape = NULL;
 std::string renderType = "default";
 bool renderVelocity = false;
 bool paused = false;
+GLuint bunnyVBO=0;
+GLuint bunnyIBO=0;
 
 //#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
@@ -301,6 +308,39 @@ int main(int argc, char** argv)
     //initialize the OpenGL scene for rendering
     init_gl();
 
+    int gIndices[3*BUNNY_NUM_TRIANGLES];
+    for(int i = 0; i<BUNNY_NUM_TRIANGLES;i++)
+    {
+        gIndices[(i*3)]=gIndicesBunny[i][0];
+        gIndices[(i*3)+1]=gIndicesBunny[i][1];
+        gIndices[(i*3)+2]=gIndicesBunny[i][2];
+    }
+    float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
+    float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+    for(int i = 0; i<BUNNY_NUM_VERTICIES; i++)
+    {
+        float x = gVerticesBunny[(i*3)];
+        float y = gVerticesBunny[(i*3)+1];
+        float z = gVerticesBunny[(i*3)+2];
+        if(x<min.x)
+            min.x=x;
+        else if(x>max.x)
+            max.x=x;
+        if(y<min.y)
+            min.y=y;
+        else if(y>max.y)
+            max.y=y;
+        if(z<min.z)
+            min.z=z;
+        else if(z>max.z)
+            max.z=z;
+    }
+    
+    bunnyVBO = createVBO(gVerticesBunny, 3*BUNNY_NUM_VERTICES*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
+    bunnyIBO = createVBO(gIndices, 3*BUNNY_NUM_TRIANGLES*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
+    bunnyShape = new ParticleShape(min,max,rb->system->getSpacing());
+    bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
+    
     RenderSettings rs;
     //rs.blending=false;
     rs.blending=false;
@@ -355,13 +395,16 @@ void appRender()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
+        
+        
+        
         RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
         if(renderVelocity)
         {
             effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
             effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
         }
-        streamline->render();
+        //streamline->render();
         effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
         effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
 //	sph->render();
@@ -430,10 +473,18 @@ void appKeyboard(unsigned char key, int x, int y)
             appDestroy();
             return;
         case 'b':
-            printf("deleting willy nilly\n");
+        {
+            //matrix is to position the rigidbody at 7,7,7 with no rotations.
+            float16 mat(1.0,0.0,0.0,7.0,
+                    0.0,1.0,0.0,7.0,
+                    0.0,0.0,1.0,7.0,
+                    0.0,0.0,0.0,1.0);
+            rb->system->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),bunnyShape->getMin(),mat,bunnyShape->getVoxelResolution(),mass);
+            /*printf("deleting willy nilly\n");
             sph->system->testDelete();
-            rb->system->testDelete();
+            rb->system->testDelete();*/
             return;
+        }
         case 'h':
         {
             //spray hose

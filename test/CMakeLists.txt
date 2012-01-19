@@ -33,6 +33,7 @@ set (test_INCLUDES
     ${OPENGL_INCLUDE_DIR}
     ${GLEW_INCLUDE_PATH}
     ${BASE_DIR}/opencl10
+    ${BASE_DIR}/test
 )
 
 

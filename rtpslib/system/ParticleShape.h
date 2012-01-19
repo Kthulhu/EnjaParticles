@@ -22,22 +22,17 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_SYSTEM_H_INCLUDED
-#define RTPS_SYSTEM_H_INCLUDED
+#ifndef RTPS_PARTICLE_SHAPE_H_INCLUDED
+#define RTPS_PARTICLE_SHAPE_H_INCLUDED
 
 #include "../domain/Domain.h"
 #include "ForceField.h"
 #include "RTPSettings.h"
-//#include "../render/Render.h"
-//#include "../render/SpriteRender.h"
-//#include "../render/SSFRender.h"
-//#include "../render/Sphere3DRender.h"
 
 #include <RTPS.h>
 #include <opencl/Kernel.h>
 #include <opencl/Buffer.h>
 #include <domain/Domain.h>
-#include <system/common/MeshToParticles.h>
 #include <timer_eb.h>
 
 namespace rtps
@@ -45,10 +40,26 @@ namespace rtps
     class ParticleShape
     {
     public:
-       ParticleShape();
-       Particle
+       ParticleShape(float3 min, float3 max, float diamater);
+       ~ParticleShape();
+       void voxelizeMesh(GLuint vbo, GLuint ibo, int length);
+       void voxelizeSurface(GLuint vbo, GLuint ibo, int length);
+       GLuint getVoxelTexture()
+       {
+           return volumeTexture;
+       }
+       float3 getMax() const;
+       float3 getMin() const;
+       float3 getDim() const;
+       float getMaxDim() const;
+       int getVoxelResolution() const;
        
     protected:
+        GLuint volumeTexture; 
+        int voxelResolution;
+        float maxDim;
+        float delz;
+        float3 dim,min,max;
     };
 
 }
