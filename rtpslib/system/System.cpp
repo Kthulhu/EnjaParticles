@@ -190,6 +190,7 @@ namespace rtps
         timers["ds_gpu"] = new EB::Timer("DataStructures GPU kernel execution", time_offset);
         timers["bitonic"] = new EB::Timer("Bitonic Sort function", time_offset);
         timers["radix"] = new EB::Timer("Radix Sort function", time_offset);
+        timers["meshtoparticles_gpu"] = new EB::Timer("Mesh to particles GPU kernel", time_offset);
 		return 0;
     }
 
