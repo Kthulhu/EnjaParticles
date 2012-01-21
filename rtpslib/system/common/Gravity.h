@@ -50,7 +50,8 @@ namespace rtps
                     Buffer<float>& massSources,
                     float alpha,
                     Buffer<float4>& pos,
-                    Buffer<float4>& accel);
+                    Buffer<float4>& accel,
+                    float scale);
 
         private:
             CL* cli;

@@ -366,7 +366,7 @@ int main(int argc, char** argv)
     
     bunnyVBO = createVBO(gVerticesBunny, 3*BUNNY_NUM_VERTICES*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
     bunnyIBO = createVBO(gIndices, 3*BUNNY_NUM_TRIANGLES*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
-    bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),5.0f);
+    //bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),5.0f);
     
     RenderSettings rs;
     //rs.blending=false;
@@ -392,8 +392,11 @@ int main(int argc, char** argv)
         indices[i]=tmp*i;      
     }
     streamline=new StreamlineEffect(rs, *lib,100,100,indices,cli);
-    sph->system->addPointSource(float4(5.0f,5.0f,5.0f,1.0f),1.0f);
-    sph->system->setAlpha(1.0f);
+    float4 point(2.5f,2.5f,2.5f,1.0f);
+    float4 point2(7.5f,7.5f,7.5f,1.0f);
+    sph->system->addPointSource(point,1.0f);
+    sph->system->addPointSource(point2,1.5f);
+    sph->system->setAlpha(0.05f);
 
     glutMainLoop();
     return 0;
@@ -449,8 +452,8 @@ void appRender()
 
     if(!voxelized)
     {
-        bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
-        write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
+        //bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
+        //write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
         voxelized=true;
     }
     if(render_movie)

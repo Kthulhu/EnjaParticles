@@ -114,11 +114,11 @@ namespace rtps
         glClearColor(0.0f,0.0f,0.0f,1.0f);
         //FIXME: Code should check and preserve the current state so that
         //It correctly restores previous state.
-        glEnable(GL_COLOR_LOGIC_OP);
-        glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
+        //glEnable(GL_COLOR_LOGIC_OP);
+        //glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
         //glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
-        glLogicOp(GL_XOR);
-        glBlendFunc(GL_ONE,GL_ONE);
+        //glLogicOp(GL_XOR);
+        //glBlendFunc(GL_ONE,GL_ONE);
         /*glDisable(GL_ALPHA_TEST);
         glDisable(GL_POINT_SMOOTH);
         glDisable(GL_LINE_SMOOTH);
@@ -186,9 +186,9 @@ namespace rtps
         //glEnable(GL_DEPTH_TEST);
         //glEnable(GL_CULL_FACE);
         //glEnable(GL_LIGHTING);
-        glDisable(GL_BLEND);
-        glLogicOp(GL_COPY);
-        glDisable(GL_COLOR_LOGIC_OP);
+        //glDisable(GL_BLEND);
+        //glLogicOp(GL_COPY);
+        //glDisable(GL_COLOR_LOGIC_OP);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glClearColor(col[0],col[1],col[2],col[3]);
         glMatrixMode(GL_MODELVIEW);

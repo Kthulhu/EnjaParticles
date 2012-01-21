@@ -300,7 +300,8 @@ namespace rtps
                     cl_massSources,
                     alpha,
                     cl_position_s,
-                    cl_force_s);
+                    cl_force_s,
+                    sphp.simulation_scale);
             collision();
 
         }

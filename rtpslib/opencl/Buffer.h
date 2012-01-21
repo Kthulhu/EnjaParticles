@@ -75,7 +75,7 @@ namespace rtps
         void acquire();
         void release();
 
-        void copyToDevice(const T& data);
+        void copyToDevice(const T& data,int start);
         void copyToDevice(const std::vector<T> &data);
         //pastes the data over the current array starting at [start]
         void copyToDevice(const std::vector<T> &data, int start);

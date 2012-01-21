@@ -43,10 +43,11 @@
 namespace rtps
 {
 	//----------------------------------------------------------------------
-    System::System(RTPS *psfr, int n)
+    System::System(RTPS *psfr, int n, int maxGravSources)
     {
         ps = psfr;
         max_num = n;
+        this->maxGravSources=maxGravSources;
         num = 0;
         activeParticle = 0;
 
@@ -334,11 +335,22 @@ namespace rtps
         pushParticles(sphere,velo,color, mass);
     }
 
+    void addTorus(int nn, float4 center, float innerRadius, float outerRadius, float thickness, float4 color, float mass);
+    {
+        float scale = 1.0f;
+        vector<float4> torus = addTorus(nn, center, radius, spacing, scale);
+        float4 velo(0, 0, 0, 0);
+        pushParticles(torus,velo,color, mass);
+    }
     
     void System::addPointSource(float4& pointSource, float massSource)
     {
-       cl_pointSources.copyToDevice(pointSource); 
-       cl_massSources.copyToDevice(massSource); 
+        if(numGravSources<maxGravSources)
+        {
+           cl_pointSources.copyToDevice(pointSource,numGravSources); 
+           cl_massSources.copyToDevice(massSource,numGravSources); 
+           numGravSources++;
+        }
     }
 
     void System::testDelete()

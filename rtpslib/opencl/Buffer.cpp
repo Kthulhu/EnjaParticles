@@ -33,6 +33,7 @@ Buffer<T>::Buffer(CL *cli, int num ,T data)
 
     std::vector<T> vec(num);
     std::fill(vec.begin(), vec.end(), data);
+    printf("vec size = %d\n",vec.size());
     
     cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err));
     copyToDevice(vec);
@@ -109,12 +110,12 @@ void Buffer<T>::release()
 }
 
 template <class T>
-void Buffer<T>::copyToDevice(const T& data)
+void Buffer<T>::copyToDevice(const T& data,int start)
 {
     T d[1];
     d[0]=data;
     cl::Event event;
-    cli->err = cli->queue.enqueueWriteBuffer(*((cl::Buffer*)&cl_buffer[0]), CL_TRUE, 0, sizeof(T), &d, NULL, &event);
+    cli->err = cli->queue.enqueueWriteBuffer(*((cl::Buffer*)&cl_buffer[0]), CL_TRUE, start*sizeof(T), sizeof(T), &d, NULL, &event);
     cli->queue.finish();
 }
 

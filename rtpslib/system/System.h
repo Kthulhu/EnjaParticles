@@ -76,8 +76,7 @@ namespace rtps
 
         }
 
-        System(RTPS *psfr, int num);
-        System(RTPS *psfr, int num, int maxGravSources);
+        System(RTPS *psfr, int num, int maxGravSources=1);
         virtual ~System();
         virtual Domain* getGrid()
         {
@@ -123,6 +122,7 @@ namespace rtps
         virtual int addBox(int nn, float4 min, float4 max, bool scaled, float4 color=float4(1., 0., 0., 1.),float mass = 0.0f);
 
         virtual void addBall(int nn, float4 center, float radius, bool scaled, float4 color=float4(1., 0., 0., 1.), float mass = 0.0f);
+        virtual void addTorus(int nn, float4 center, float innerRadius, float outerRadius, float thickness, float4 color=float4(1., 0., 0., 1.), float mass = 0.0f);
         virtual int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1., 0., 0., 1.), float mass = 0.0f)
         {
             return 0;

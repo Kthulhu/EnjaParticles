@@ -45,7 +45,8 @@ namespace rtps
                     Buffer<float>& massSources,
                     float alpha,
                     Buffer<float4>& pos,
-                    Buffer<float4>& accel)
+                    Buffer<float4>& accel,
+                    float scale)
     {
 
         
@@ -64,6 +65,7 @@ namespace rtps
         k_gravity.setArg(iarg++, alpha);
         k_gravity.setArg(iarg++, pos.getDevicePtr());
         k_gravity.setArg(iarg++, accel.getDevicePtr());
+        k_gravity.setArg(iarg++, scale);
         
 
         try

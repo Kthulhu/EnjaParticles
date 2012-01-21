@@ -85,6 +85,10 @@ namespace rtps
         rvec.resize(i);
         return rvec;
     }
+	std::vector<float4> addTorus(int nn, float4 center, float radius_in, float radius_out, float thickness, float spacing, float scale)
+    {
+
+    }
 //----------------------------------------------------------------------
     std::vector<float4> addRect(int num, float4 min, float4 max, float spacing, float scale)
     {
