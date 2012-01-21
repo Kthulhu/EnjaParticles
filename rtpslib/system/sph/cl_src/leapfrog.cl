@@ -64,7 +64,7 @@ __kernel void leapfrog(
     //external force is gravity
     //Make gravity a vector...
     //f.y += sphp->gravity;
-    f.z += sphp->gravity;//sphp->mass*sphp->gravity;
+    //f.z += sphp->gravity;//sphp->mass*sphp->gravity;
     f.w = 0.f;
     
     float speed = length(f);

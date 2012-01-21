@@ -68,7 +68,7 @@ namespace rtps
     class RTPS_EXPORT SPH : public System
     {
     public:
-        SPH(RTPS *ps, int num, int nb_in_cloud);
+        SPH(RTPS *ps, int num, int maxGravSources);
         ~SPH();
 
         void update();

@@ -27,6 +27,18 @@
 //namespace rtps {
 
 template <class T>
+Buffer<T>::Buffer(CL *cli, int num ,T data)
+{
+    this->cli = cli;
+
+    std::vector<T> vec(num);
+    std::fill(vec.begin(), vec.end(), data);
+    
+    cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err));
+    copyToDevice(vec);
+}
+
+template <class T>
 Buffer<T>::Buffer(CL *cli, const std::vector<T> &data)
 {
     this->cli = cli;
@@ -96,6 +108,15 @@ void Buffer<T>::release()
     cli->queue.finish();
 }
 
+template <class T>
+void Buffer<T>::copyToDevice(const T& data)
+{
+    T d[1];
+    d[0]=data;
+    cl::Event event;
+    cli->err = cli->queue.enqueueWriteBuffer(*((cl::Buffer*)&cl_buffer[0]), CL_TRUE, 0, sizeof(T), &d, NULL, &event);
+    cli->queue.finish();
+}
 
 template <class T>
 void Buffer<T>::copyToDevice(const std::vector<T> &data)

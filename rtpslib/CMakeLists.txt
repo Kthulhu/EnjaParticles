@@ -100,6 +100,7 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/common/CellIndices
     ${rtpslib_SOURCE_DIR}/system/common/Permute
     ${rtpslib_SOURCE_DIR}/system/common/Sample
+    ${rtpslib_SOURCE_DIR}/system/common/Gravity
 	
     ${rtpslib_SOURCE_DIR}/system/System
     

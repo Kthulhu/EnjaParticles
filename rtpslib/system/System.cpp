@@ -79,6 +79,7 @@ namespace rtps
         printf("%s\n",common_source_dir.c_str());
 
         hash = Hash(common_source_dir, ps->cli, timers["hash_gpu"]);
+        gravity = Gravity(common_source_dir, ps->cli);
         bitonic = Bitonic<unsigned int>(common_source_dir, ps->cli );
         //radix = Radix<unsigned int>(common_source_dir, ps->cli, max_num, 128);
         cellindices = CellIndices(common_source_dir, ps->cli, timers["ci_gpu"] );
@@ -249,6 +250,9 @@ namespace rtps
         clf_debug = Buffer<float4>(ps->cli, f4vec);
         cli_debug = Buffer<int4>(ps->cli, cliv);
         
+        //Gravity
+        cl_pointSources = Buffer<float4>(ps->cli, maxGravSources, float4(0.0f,0.0f,0.0f,0.0f));
+        cl_massSources = Buffer<float>(ps->cli, maxGravSources, 0.0f);
 
         std::vector<unsigned int> keys(max_num);
         //to get around limits of bitonic sort only handling powers of 2
@@ -327,6 +331,13 @@ namespace rtps
         vector<float4> sphere = addSphere(nn, center, radius, spacing, scale);
         float4 velo(0, 0, 0, 0);
         pushParticles(sphere,velo,color, mass);
+    }
+
+    
+    void System::addPointSource(float4& pointSource, float massSource)
+    {
+       cl_pointSources.copyToDevice(pointSource); 
+       cl_massSources.copyToDevice(massSource); 
     }
 
     void System::testDelete()

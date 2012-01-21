@@ -60,6 +60,7 @@ namespace rtps
     public:
         Buffer(){ cli=NULL; vbo_id=0; };
         //create an OpenCL buffer from existing data
+        Buffer(CL *cli, int num ,T data);
         Buffer(CL *cli, const std::vector<T> &data);
         Buffer(CL *cli, const std::vector<T> &data, unsigned int memtype);
         //create a OpenCL BufferGL from a vbo_id
@@ -74,6 +75,7 @@ namespace rtps
         void acquire();
         void release();
 
+        void copyToDevice(const T& data);
         void copyToDevice(const std::vector<T> &data);
         //pastes the data over the current array starting at [start]
         void copyToDevice(const std::vector<T> &data, int start);

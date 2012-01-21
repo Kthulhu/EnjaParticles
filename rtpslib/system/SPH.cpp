@@ -45,7 +45,7 @@ namespace rtps
     using namespace sph;
 
 	//----------------------------------------------------------------------
-    SPH::SPH(RTPS *psfr, int n, int nb_in_cloud=0):System(psfr,n)
+    SPH::SPH(RTPS *psfr, int n, int maxGravSources):System(psfr,n,maxGravSources)
     {
         nb_var = 10;
 
@@ -294,6 +294,13 @@ namespace rtps
 
             timers["force"]->stop();
 
+            gravity.execute(num,
+                    numGravSources,
+                    cl_pointSources,
+                    cl_massSources,
+                    alpha,
+                    cl_position_s,
+                    cl_force_s);
             collision();
 
         }

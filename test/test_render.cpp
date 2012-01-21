@@ -365,6 +365,8 @@ int main(int argc, char** argv)
         indices[i]=tmp*i;      
     }
     streamline=new StreamlineEffect(rs, *lib,100,100,indices,cli);
+    sph->system->addPointSource(float4(5.0f,5.0f,5.0f,1.0f),1.0f);
+    sph->system->setAlpha(1.0f);
 
     glutMainLoop();
     return 0;

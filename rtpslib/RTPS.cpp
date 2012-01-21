@@ -93,7 +93,8 @@ printf("done with constructor\n");
         {
             printf("*** sph system 1  ***\n");
 			settings->setMaxOuterParticles(4096*4);
-            system = new SPH(this, settings->max_particles, settings->max_outer_particles);
+            //FIXME: I set max gravity sources to 5. This should be configurable.
+            system = new SPH(this, settings->max_particles, 5);
 			printf("max: %d\n", settings->max_outer_particles);
         }
         else if (settings->system == RTPSettings::FLOCK)

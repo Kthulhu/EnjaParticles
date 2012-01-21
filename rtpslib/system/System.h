@@ -42,6 +42,7 @@
 #include <system/common/Radix.h>
 #include <system/common/CellIndices.h>
 #include <system/common/Permute.h> 
+#include <system/common/Gravity.h> 
 
 #include <system/common/MeshToParticles.h>
 #include <timer_eb.h>
@@ -76,6 +77,7 @@ namespace rtps
         }
 
         System(RTPS *psfr, int num);
+        System(RTPS *psfr, int num, int maxGravSources);
         virtual ~System();
         virtual Domain* getGrid()
         {
@@ -163,6 +165,11 @@ namespace rtps
         virtual void setupDomain(float cell_size, float sim_scale);
         virtual void prepareSorted();
         virtual int setupTimers();
+        void addPointSource(float4& pointSource, float massSource);
+        void setAlpha(float newAlpha)
+        {
+            alpha = newAlpha;
+        }
         void addInteractionSystem(System* interact)
         {
             interactionSystem.push_back(interact);
@@ -230,6 +237,13 @@ namespace rtps
         Buffer<int4>        cli_debug;  //just for debugging cl files
         Bitonic<unsigned int> bitonic;
         Radix<unsigned int> radix;
+
+        //Gravity
+        Buffer<float4> cl_pointSources;
+        Buffer<float> cl_massSources;
+        float alpha;
+        int numGravSources;
+        int maxGravSources;
         
         float spacing; //Particle rest distance in world coordinates
         //number of particles
@@ -255,6 +269,7 @@ namespace rtps
         Hash hash;
         CellIndices cellindices;
         Permute permute;
+        Gravity gravity;
         MeshToParticles m2p; 
         vector<System*> interactionSystem;
 
