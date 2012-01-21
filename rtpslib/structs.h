@@ -59,6 +59,13 @@ namespace rtps
             float3 c = float3(a.x-b.x, a.y-b.y, a.z-b.z);
             return c;
         }
+        float3& operator*(float b)
+        {
+            x*=b;
+            y*=b;
+            z*=b;
+            return *this;
+        }
     } float3;
 
     typedef struct int2
@@ -142,6 +149,12 @@ namespace rtps
         float4()
         {
         };
+        float4(const float3& f, float ww):
+        x(f.x),
+        y(f.y),
+        z(f.z),
+        w(ww)
+        {}
         float4(float xx, float yy, float zz, float ww):
         x(xx),
         y(yy),

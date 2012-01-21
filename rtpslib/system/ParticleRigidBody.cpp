@@ -349,7 +349,10 @@ namespace rtps
 
         std::fill(f4Vec.begin(), f4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         std::fill(rbf4Vec.begin(), rbf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
-        std::fill(rbf16Vec.begin(), rbf16Vec.end(), (float16){0.0f});
+        std::fill(rbf16Vec.begin(), rbf16Vec.end(), float16(0.0f,0.0f,0.0f,0.0f,
+                                                            0.0f,0.0f,0.0f,0.0f,
+                                                            0.0f,0.0f,0.0f,0.0f,
+                                                            0.0f,0.0f,0.0f,0.0f));
         std::fill(rotf4Vec.begin(), rotf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 1.0f));
         std::fill(rbfVec.begin(), rbfVec.end(),0.0f);
         std::fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));

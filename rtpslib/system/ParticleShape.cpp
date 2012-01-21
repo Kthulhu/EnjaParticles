@@ -31,29 +31,25 @@
 #include <limits.h>
 
 #include "ParticleShape.h"
+#include "../render/RenderUtils.h"
 namespace rtps
 {
-    ParticleShape::ParticleShape(float3 min, float3 max, float diameter){
-        float3 dim = max-min;
+    ParticleShape::ParticleShape(float3 min, float3 max, float diameter, float scale){
+        dim = (max-min)*scale;
         float maxDim = dim.x;
         if(maxDim<dim.y)
             maxDim=dim.y;
         if(maxDim<dim.z)
             maxDim=dim.z;
-        this->dim=dim;
-        this->min=min;
-        this->max=max;
+        this->min=min*scale;
+        this->max=max*scale;
+        this->scale=scale;
         delz=diameter;
         voxelResolution = maxDim/diameter;
         
         printf("3d texture supported? %d\n",glewIsSupported("GL_EXT_texture3D"));
         glEnable(GL_TEXTURE_3D_EXT);
-        //glEnable(GL_DRAW_BUFFER);
-        //glEnable(GL_FRAMEBUFFER);
-        GLuint volumeTexture=0;
         glGenTextures(1, &volumeTexture);
-        printf("volumeTexture = %d\n",volumeTexture);
-        printf("voxelResolution = %d\n",voxelResolution);
         glBindTexture(GL_TEXTURE_3D_EXT, volumeTexture);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -98,66 +94,101 @@ namespace rtps
     void ParticleShape::voxelizeMesh(GLuint vbo, GLuint ibo, int length)
     {
         
-        //img);
         GLuint fboId = 0;
         glGenFramebuffersEXT(1, &fboId);
-        glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,fboId);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,fboId);
+        //glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,fboId);
+        //glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,fboId);
         //glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , GL_TEXTURE_3D_EXT, volumeTexture, 0, 0 );
+        GLuint depth=0;
+        glGenTextures(1, &depth);
+        glBindTexture(GL_TEXTURE_2D, depth);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,voxelResolution,voxelResolution,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
         float col[4];
         glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
         glClearColor(0.0f,0.0f,0.0f,1.0f);
-        int i = 0;
         //FIXME: Code should check and preserve the current state so that
         //It correctly restores previous state.
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE,GL_ONE);
+        glEnable(GL_COLOR_LOGIC_OP);
+        glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
+        //glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
         glLogicOp(GL_XOR);
-        glDisable(GL_LIGHTING);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
+        glBlendFunc(GL_ONE,GL_ONE);
+        /*glDisable(GL_ALPHA_TEST);
+        glDisable(GL_POINT_SMOOTH);
+        glDisable(GL_LINE_SMOOTH);
+        
+        glDisable(GL_LIGHTING);*/
+        //glDisable(GL_CULL_FACE);
+        //glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_TEXTURE_2D);
         int v[4];
         glGetIntegerv(GL_VIEWPORT,v);
         glViewport(0,0,voxelResolution,voxelResolution);
-        glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , volumeTexture, 0, i );
-
+        glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , volumeTexture, 0, 0 );
+        glClear(GL_COLOR_BUFFER_BIT);
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+        glReadBuffer(GL_COLOR_ATTACHMENT1_EXT);
+        glEnableClientState( GL_VERTEX_ARRAY );
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glVertexPointer(3, GL_FLOAT, 0, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-        glEnableClientState( GL_VERTEX_ARRAY );
-        for(int i = 0; i<voxelResolution; i++)
+        float halfMaxDim=maxDim/2.0f;
+        for(int i = 0;i<voxelResolution; i++)
         {
-            glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , volumeTexture, 0, i );
-            glDrawBuffer(GL_AUX0);
-            glClear(GL_COLOR_BUFFER_BIT);
-            glFramebufferTextureLayer(GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, volumeTexture, 0, i?i-1:0);
-            glReadBuffer(GL_AUX1);
+            if(i>0)
+            {
+                glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, volumeTexture, 0, i );
+                glFramebufferTextureLayer(GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, volumeTexture, 0, i-1);
+                glBlitFramebuffer(0,0,voxelResolution,voxelResolution,
+                                    0,0,voxelResolution,voxelResolution,
+                                    GL_COLOR_BUFFER_BIT,GL_NEAREST);
+            }
             // switch to projection mode
             glMatrixMode(GL_PROJECTION);
             // save previous matrix which contains the 
             //settings for the perspective projection
-            glPushMatrix();
             // reset matrix
             glLoadIdentity();
             // set a 2D orthographic projection
-            //glOrtho(0, maxDim, 0, maxDim,delz*i*maxDim,delz*(i+1)*maxDim);
-            glOrtho(-maxDim, maxDim, -maxDim, maxDim ,-maxDim+delz*i ,-maxDim+delz*(i+1));
+            glOrtho(-halfMaxDim, halfMaxDim, -halfMaxDim, halfMaxDim ,-halfMaxDim+delz*i ,-halfMaxDim+delz*(i+1));
             glMatrixMode(GL_MODELVIEW);
             glPushMatrix();
             glLoadIdentity();
 
-            glTranslatef(0.f,0.f,maxDim);
+            glScalef(scale,scale,scale);
+            glColor4f(1.0f,0.0f,1.0f,1.0f);
             glDrawElements(GL_TRIANGLES,length,GL_UNSIGNED_INT,0); 
+            //glBegin(GL_TRIANGLES);
+            //glVertex3f(-maxDim,-maxDim,-maxDim);
+            //glVertex3f(maxDim,maxDim,maxDim);
+            //glVertex3f(maxDim,-maxDim,-maxDim);
+            //glVertex3f(0.0f,0.0f,(-halfMaxDim+delz*i-halfMaxDim+delz*(i+1))/2.0f);
+            //glVertex3f(0.0f,.5f,(-halfMaxDim+delz*i-halfMaxDim+delz*(i+1))/2.0f);
+            //glVertex3f(.5f,0.f,(-halfMaxDim+delz*i-halfMaxDim+delz*(i+1))/2.0f);
+            //glEnd();
             glPopMatrix();
-            glMatrixMode(GL_PROJECTION);
-            glPopMatrix();
+            glFlush();
         }
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
         glDisableClientState( GL_VERTEX_ARRAY );
         glViewport(0,0,v[3],v[4]);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_LIGHTING);
+        //glEnable(GL_ALPHA_TEST);
+        //glEnable(GL_TEXTURE_2D);
+        //glEnable(GL_DEPTH_TEST);
+        //glEnable(GL_CULL_FACE);
+        //glEnable(GL_LIGHTING);
         glDisable(GL_BLEND);
         glLogicOp(GL_COPY);
-        glEnable(GL_CULL_FACE);
+        glDisable(GL_COLOR_LOGIC_OP);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glClearColor(col[0],col[1],col[2],col[3]);
         glMatrixMode(GL_MODELVIEW);

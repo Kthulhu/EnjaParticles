@@ -33,7 +33,7 @@ namespace rtps
     class ParticleShape
     {
     public:
-       ParticleShape(float3 min, float3 max, float diameter);
+       ParticleShape(float3 min, float3 max, float diameter, float scale=1.0f);
        ~ParticleShape();
        void voxelizeMesh(GLuint vbo, GLuint ibo, int length);
        void voxelizeSurface(GLuint vbo, GLuint ibo, int length);
@@ -50,8 +50,7 @@ namespace rtps
     protected:
         GLuint volumeTexture; 
         int voxelResolution;
-        float maxDim;
-        float delz;
+        float maxDim,scale,delz;
         float3 dim,min,max;
     };
 

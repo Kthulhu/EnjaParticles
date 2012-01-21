@@ -141,6 +141,7 @@ rtps::ParticleShape* bunnyShape = NULL;
 std::string renderType = "default";
 bool renderVelocity = false;
 bool paused = false;
+bool voxelized = false;
 GLuint bunnyVBO=0;
 GLuint bunnyIBO=0;
 
@@ -162,7 +163,32 @@ GLuint bunnyIBO=0;
 
 
 
+void write3DTextureToDisc(GLuint tex,int voxelResolution, const char* filename)
+{
+    printf("writing %s texture to disc.\n",filename);
+    glBindTexture(GL_TEXTURE_3D_EXT,tex);
+    GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
+    //GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*3];
+    glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
+    //glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGB,GL_UNSIGNED_BYTE,image);
+    GLubyte* tmp2Dimg = new GLubyte[voxelResolution*voxelResolution*4];
+    //GLubyte* tmp2Dimg = new GLubyte[voxelResolution*voxelResolution*3];
+    for(int i = 0; i<voxelResolution; i++)
+    {
+        char fname[128];
+        sprintf(fname,"%s-%03d.png",filename,i);
+        memcpy(tmp2Dimg,image+(i*(voxelResolution*voxelResolution*4)),sizeof(GLubyte)*voxelResolution*voxelResolution*4);
+        //memcpy(tmp2Dimg,image+(i*(voxelResolution*voxelResolution*3)),sizeof(GLubyte)*voxelResolution*voxelResolution*3);
+        if (!stbi_write_png(fname,voxelResolution,voxelResolution,4,(void*)tmp2Dimg,0))
+        //if (!stbi_write_png(fname,voxelResolution,voxelResolution,3,(void*)tmp2Dimg,0))
+        {
+            printf("failed to write image %s",filename);
+        }
+    }
+    glBindTexture(GL_TEXTURE_3D_EXT,0);
+    delete[] image;
 
+}
 //timers
 //GE::Time *ts[3];
 
@@ -324,22 +350,23 @@ int main(int argc, char** argv)
         float z = gVerticesBunny[(i*3)+2];
         if(x<min.x)
             min.x=x;
-        else if(x>max.x)
+        if(x>max.x)
             max.x=x;
         if(y<min.y)
             min.y=y;
-        else if(y>max.y)
+        if(y>max.y)
             max.y=y;
         if(z<min.z)
             min.z=z;
-        else if(z>max.z)
+        if(z>max.z)
             max.z=z;
     }
+    cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
+    cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
     
     bunnyVBO = createVBO(gVerticesBunny, 3*BUNNY_NUM_VERTICES*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
     bunnyIBO = createVBO(gIndices, 3*BUNNY_NUM_TRIANGLES*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
-    bunnyShape = new ParticleShape(min,max,rb->system->getSpacing());
-    bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
+    bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),5.0f);
     
     RenderSettings rs;
     //rs.blending=false;
@@ -418,6 +445,12 @@ void appRender()
 
     }
 
+    if(!voxelized)
+    {
+        bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
+        write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
+        voxelized=true;
+    }
     if(render_movie)
     {
         frame_counter++;
@@ -479,7 +512,7 @@ void appKeyboard(unsigned char key, int x, int y)
                     0.0f,1.0f,0.0f,7.0f,
                     0.0f,0.0f,1.0f,7.0f,
                     0.0f,0.0f,0.0f,1.0f);
-            rb->system->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),bunnyShape->getMin(),mat,bunnyShape->getVoxelResolution(),mass);
+            rb->system->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),float4(bunnyShape->getMin(),0.0f),mat,bunnyShape->getVoxelResolution(),mass);
             /*printf("deleting willy nilly\n");
             sph->system->testDelete();
             rb->system->testDelete();*/
