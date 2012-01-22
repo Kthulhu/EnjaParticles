@@ -335,12 +335,12 @@ namespace rtps
         pushParticles(sphere,velo,color, mass);
     }
 
-    void addTorus(int nn, float4 center, float innerRadius, float outerRadius, float thickness, float4 color, float mass);
+    void System::addTorus(int nn, float4 center, float innerRadius, float outerRadius, float thickness, float4 color, float mass, float innerVel, float outerVel)
     {
         float scale = 1.0f;
-        vector<float4> torus = addTorus(nn, center, radius, spacing, scale);
-        float4 velo(0, 0, 0, 0);
-        pushParticles(torus,velo,color, mass);
+        vector<float4> initVel;
+        vector<float4> torus = generateTorus(nn, center,innerRadius, outerRadius, thickness,spacing, scale, innerVel, outerVel,initVel);
+        pushParticles(torus,initVel,color, mass);
     }
     
     void System::addPointSource(float4& pointSource, float massSource)

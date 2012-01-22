@@ -144,6 +144,7 @@ bool paused = false;
 bool voxelized = false;
 GLuint bunnyVBO=0;
 GLuint bunnyIBO=0;
+float gravAlpha=9800.0f;
 
 //#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
@@ -392,11 +393,11 @@ int main(int argc, char** argv)
         indices[i]=tmp*i;      
     }
     streamline=new StreamlineEffect(rs, *lib,100,100,indices,cli);
-    float4 point(2.5f,2.5f,2.5f,1.0f);
-    float4 point2(7.5f,7.5f,7.5f,1.0f);
+    //float4 point=(grid->getBndMin()+grid->getBndMax());
+    //point/=2.0f;
+    float4 point(5.0f,5.0f,-1000.0f,1.0f);
     sph->system->addPointSource(point,1.0f);
-    sph->system->addPointSource(point2,1.5f);
-    sph->system->setAlpha(0.05f);
+    sph->system->setAlpha(gravAlpha);
 
     glutMainLoop();
     return 0;
@@ -492,7 +493,7 @@ void appKeyboard(unsigned char key, int x, int y)
             nn = NUM_PARTICLES/8;
             min = float4(2.5f, 2.5f, 2.5f, 1.0f);
             max = float4(7.5f, 7.5f, 7.5f, 1.0f);
-            float4 col1 = float4(0., 0., 1., 0.05);
+            float4 col1 = float4(0.05, 0.15, 8., 0.1);
             sph->system->addBox(nn, min, max, false,col1);
             //ps2->system->addBox(nn, min, max, false);
             return;
@@ -546,12 +547,28 @@ void appKeyboard(unsigned char key, int x, int y)
             break;
         case 't': //place a cube for collision
             {
+                float4 col1 = float4(0.05, 0.15, 8., 0.1);
                 float4 center=(grid->getBndMin()+grid->getBndMax());
                 center/=2.0f;
-                float innerRadius=1.0f;
-                float outerRadius=4.0f;
-                float thickness=2.0f;
-                sph->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness);
+                float innerRadius=2.0f;
+                float outerRadius=4.5f;
+                float thickness=1.0f;
+                float innerVel=1.0f;
+                float outerVel=0.0f;//sqrt((2.0f*gravAlpha)/outerRadius)*2.0f;
+                sph->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness,col1,0.0f,innerVel,outerVel);
+                return;
+            }
+        case 'T': //place a cube for collision
+            {
+                float4 col1 = float4(0.0, 0.5, 8., 0.);
+                float4 center=(grid->getBndMin()+grid->getBndMax());
+                center/=2.0f;
+                float innerRadius=2.0f;
+                float outerRadius=4.5f;
+                float thickness=1.0f;
+                float innerVel=1.0f;
+                float outerVel=1.0f;//sqrt((2.0f*gravAlpha)/outerRadius)*2.0f;
+                rb->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness,col1,mass,innerVel,outerVel);
                 return;
             }
         case 'r': //drop a rectangle

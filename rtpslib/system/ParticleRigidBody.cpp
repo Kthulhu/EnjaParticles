@@ -464,6 +464,23 @@ namespace rtps
         //    scaled_pos_l[i]=pos_l[i]*prbp.simulation_scale;
         //}
         float16 invInertialTensor = calculateInvInertialTensor(pos_l,mass);
+        float4 comVel=float4(0.0f,0.0f,0.0f,0.0f);
+        float4 angMomentum =float4(0.0f,0.0f,0.0f,0.0f);
+        for(int i = 0;i<vels.size();i++)
+        {
+           comVel=comVel+vels[i]; 
+           printf("vel (%f,%f,%f)\n",vels[i].x,vels[i].y,vels[i].z);
+           float4 r = pos[i]-com;
+           
+           angMomentum.x+=r.y*vels[i].z-r.z*vels[i].y; 
+           angMomentum.y+=r.z*vels[i].x-r.x*vels[i].z; 
+           angMomentum.z+=r.x*vels[i].y-r.y*vels[i].x; 
+        }
+        angMomentum*=mass_p[0];
+        float4 comAngVel=float4(0.0f,0.0f,0.0f,0.0f);;
+        comAngVel=invInertialTensor*angMomentum;
+        printf("vel (%f,%f,%f)\n",comVel.x,comVel.y,comVel.z);
+        printf("angVel (%f,%f,%f)\n",comAngVel.x,comAngVel.y,comAngVel.z);
 
         vector<unsigned int> index(nn);
         std::fill(index.begin(), index.end(), curRigidbodyID);
@@ -485,6 +502,8 @@ namespace rtps
         cl_velocity_u.copyToDevice(vels, num);
         cl_position_l.copyToDevice(pos_l,num);
         cl_mass_u.copyToDevice(mass_p, num);
+        cl_comVel.copyToDevice(comVel, rbParticleIndex.size()-1);
+        cl_comAngVel.copyToDevice(comAngVel, rbParticleIndex.size()-1);
         cl_objectIndex_u.copyToDevice(index, num);
         /*cl_spring_coef_u.copyToDevice(spring_co, num);
         cl_dampening_coef_u.copyToDevice(dampening_co, num);*/

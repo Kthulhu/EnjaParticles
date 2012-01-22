@@ -23,11 +23,12 @@
 
 
 #include "IV.h"
-#include <vector>
 
 //for random
 #include<stdlib.h>
 #include<time.h>
+#include<math.h>
+#define PI 3.1415962
 
 namespace rtps
 {
@@ -85,9 +86,41 @@ namespace rtps
         rvec.resize(i);
         return rvec;
     }
-	std::vector<float4> addTorus(int nn, float4 center, float radius_in, float radius_out, float thickness, float spacing, float scale)
+	std::vector<float4> generateTorus(int num, float4 center, float radius_in, float radius_out, float thickness, float spacing, float scale, float innerVel, float outerVel, vector<float4>& initVel)
     {
-
+        std::vector<float4> rvec;
+        float zmin = center.z-thickness/2.0f;
+        float zmax = center.z+thickness/2.0f;
+        int i =0;
+        for(float z=zmin;z<=zmax;z+=spacing)
+        {
+            for(float r=radius_in;r<=radius_out;r+=spacing)
+            {
+                float t = (r-radius_in)/(radius_out-radius_in);
+                float vMag= innerVel*(1-t)+outerVel*t;
+                int N = ceil((2.0f*PI*r)/spacing);
+                N+=N%2;
+                float delTheta = (2.0f*PI)/N;
+                for(float theta=0.0f;theta<2.0f*PI;theta+=delTheta)
+                {
+                    if(i>=num) break;
+                    float4 pos;
+                    pos.x=r*cos(theta)+center.x;
+                    pos.y=r*sin(theta)+center.y;
+                    pos.z=z;
+                    pos.w=1.0f;
+                    float4 velocity;
+                    velocity.x=vMag*-sin(theta);
+                    velocity.y=vMag*cos(theta);
+                    velocity.z=0.0f;
+                    velocity.w=0.0f;
+                    initVel.push_back(velocity);
+                    rvec.push_back(pos);
+                    i++;
+                }
+            }
+        }
+        return rvec;
     }
 //----------------------------------------------------------------------
     std::vector<float4> addRect(int num, float4 min, float4 max, float spacing, float scale)

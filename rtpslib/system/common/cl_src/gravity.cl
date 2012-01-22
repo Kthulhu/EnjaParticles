@@ -24,7 +24,8 @@ __kernel void gravity(int numPart,
         float3 direction = normalize(vect.xyz);
         float dist2 = dot(vect.xyz,vect.xyz);
         float mag = alpha*massSources[i];
-        float cutoff = 0.05*scale;
+        float cutoff = 0.5*scale;
+        cutoff*=cutoff;
         if(dist2<cutoff)
             mag/=-cutoff;
         else
