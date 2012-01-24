@@ -89,6 +89,8 @@ namespace rtps
 	std::vector<float4> generateTorus(int num, float4 center, float radius_in, float radius_out, float thickness, float spacing, float scale, float innerVel, float outerVel, vector<float4>& initVel)
     {
         std::vector<float4> rvec;
+        radius_out=ceil(radius_out/spacing)*spacing;
+        radius_in=floor(radius_in/spacing)*spacing;
         float zmin = center.z-thickness/2.0f;
         float zmax = center.z+thickness/2.0f;
         float xmin = center.x-radius_out;
@@ -97,11 +99,13 @@ namespace rtps
         float ymax = center.y+radius_out;
         center.w = 0.0f;
         int i =0;
-        for(float z=zmin;z<zmax;z+=spacing)
+        float rInSq=radius_in*radius_in;
+        float rOutSq=radius_out*radius_out;
+        for(float z=zmin;z<=zmax;z+=spacing)
         {
-            for (float y = ymin; y <ymax; y+=spacing)
+            for (float y = ymin; y <=ymax; y+=spacing)
             {
-                for (float x = xmin; x <xmax; x+=spacing)
+                for (float x = xmin; x <=xmax; x+=spacing)
                 {
                     float4 pos;
                     pos.x=x;
@@ -109,13 +113,10 @@ namespace rtps
                     pos.z=z;
                     pos.w=0.0f;
                     float4 direction = (pos-center);
-                    float r = sqrt((direction.x*direction.x)+(direction.y*direction.y));
-                    if(r>radius_out || r<radius_in)
+                    float r = (direction.x*direction.x)+(direction.y*direction.y);
+                    if(r>rOutSq || r<rInSq)
                         continue;
-                    float theta = acos(direction.x/r);
-                    //printf("direction = (%f,%f), theta = %f, 2*pi-theta = %f, \n",direction.x/r,direction.y/r,theta,2*PI-theta);
-                    if(direction.y<0)
-                        theta=-theta;//2*PI-theta;
+                    float theta = atan2(direction.y,direction.x);//acos(direction.x/r);
                     float t = (r-radius_in)/(radius_out-radius_in);
                     float vMag= innerVel*(1-t)+outerVel*t;
                     float4 velocity;

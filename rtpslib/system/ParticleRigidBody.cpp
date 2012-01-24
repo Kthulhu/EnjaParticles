@@ -469,7 +469,6 @@ namespace rtps
         for(int i = 0;i<vels.size();i++)
         {
            comVel=comVel+vels[i]; 
-           printf("vel (%f,%f,%f)\n",vels[i].x,vels[i].y,vels[i].z);
            float4 r = pos[i]-com;
            
            angMomentum.x+=r.y*vels[i].z-r.z*vels[i].y; 
@@ -479,8 +478,6 @@ namespace rtps
         angMomentum*=mass_p[0];
         float4 comAngVel=float4(0.0f,0.0f,0.0f,0.0f);;
         comAngVel=invInertialTensor*angMomentum;
-        printf("vel (%f,%f,%f)\n",comVel.x,comVel.y,comVel.z);
-        printf("angVel (%f,%f,%f)\n",comAngVel.x,comAngVel.y,comAngVel.z);
 
         vector<unsigned int> index(nn);
         std::fill(index.begin(), index.end(), curRigidbodyID);

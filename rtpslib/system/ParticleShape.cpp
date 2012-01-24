@@ -118,33 +118,37 @@ namespace rtps
         glClearColor(0.0f,0.0f,0.0f,0.0f);
         //FIXME: Code should check and preserve the current state so that
         //It correctly restores previous state.
-        /*/glEnable(GL_COLOR_LOGIC_OP);
+        glEnable(GL_COLOR_LOGIC_OP);
         glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
-        glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
+        //glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
         glLogicOp(GL_XOR);
         glBlendFunc(GL_ONE,GL_ONE);
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_POINT_SMOOTH);
         glDisable(GL_LINE_SMOOTH);
-        glDisable(GL_LIGHTING);*/
+        //glDisable(GL_LIGHTING);
         //glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
-        //glDisable(GL_TEXTURE_2D);
+        glDisable(GL_TEXTURE_2D);
         int v[4];
         glGetIntegerv(GL_VIEWPORT,v);
         glViewport(0,0,voxelResolution,voxelResolution);
         glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , volumeTexture, 0, 0 );
         glClear(GL_COLOR_BUFFER_BIT);
-        glDisable(GL_TEXTURE_2D);
+        
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
+        
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glReadBuffer(GL_COLOR_ATTACHMENT1_EXT);
+        
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glVertexPointer(3, GL_FLOAT, 0, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
         glEnableClientState( GL_VERTEX_ARRAY );
+        glDisable(GL_TEXTURE_3D_EXT);
         float halfMaxDim=maxDim/2.0f;
+        
         for(int i = 0;i<voxelResolution; i++)
         {
             if(i>0)
@@ -187,13 +191,13 @@ namespace rtps
         glDisableClientState( GL_VERTEX_ARRAY );
         glViewport(v[0],v[1],v[2],v[3]);
         glEnable(GL_DEPTH_TEST);
-        /*glEnable(GL_ALPHA_TEST);
-        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_ALPHA_TEST);
+        //glEnable(GL_TEXTURE_2D);
         //glEnable(GL_CULL_FACE);
         //glEnable(GL_LIGHTING);
         glDisable(GL_BLEND);
         glLogicOp(GL_COPY);
-        glDisable(GL_COLOR_LOGIC_OP);*/
+        glDisable(GL_COLOR_LOGIC_OP);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glClearColor(col[0],col[1],col[2],col[3]);
         glMatrixMode(GL_MODELVIEW);

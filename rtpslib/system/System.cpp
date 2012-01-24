@@ -498,27 +498,51 @@ namespace rtps
 
 #endif
     }
-    void System::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int resolution, float mass)
+    void System::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int voxelResolution,float4 velo, float4 color,float mass)
     {
         glFinish();
-        cl::Image3DGL img(ps->cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
-        std::vector<cl::Memory> objs;
-        objs.push_back(img);
-        ps->cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
-        ps->cli->queue.finish();
-        acquireGLBuffers();
-        int tmpnum = m2p.execute(cl_position_u,cl_color_u,cl_velocity_u,num,img,scale,min,world,resolution,//debug
-                clf_debug,
-                cli_debug);
-        printf("tmpnum = %d\n",tmpnum);
-        num+=tmpnum;
-        settings->SetSetting("Number of Particles", num);
-        updateParams();
+        //cl::Image3DGL img(ps->cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
+        //std::vector<cl::Memory> objs;
+        //objs.push_back(img);
+        //ps->cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
+        //ps->cli->queue.finish();
+        //acquireGLBuffers();
+        //int tmpnum = m2p.execute(cl_position_u,cl_color_u,cl_velocity_u,num,img,scale,min,world,resolution,//debug
+        //        clf_debug,
+        //        cli_debug);
+        vector<float4> vec;
+        glBindTexture(GL_TEXTURE_3D_EXT,tex3d);
+        GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
+        glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
+        for(int k = 0; k<voxelResolution; k++)
+        {
+            for(int j=0; j<voxelResolution; j++)
+            {
+                for(int i=0;i<voxelResolution;i++)
+                {
+                    if(image[(i*4)+(j*voxelResolution*4)+(k*voxelResolution*voxelResolution*4)]>0)
+                    {
+                        float4 pos;
+                        pos.x = (i/(float)voxelResolution)*scale+min.x;
+                        pos.y = (j/(float)voxelResolution)*scale+min.y;
+                        pos.z = (k/(float)voxelResolution)*scale+min.z;
+                        pos.w = 1.0f;
+                        pos = world*pos;
+                        vec.push_back(pos);
+                    }
+                }
+            }
+        }
+        glBindTexture(GL_TEXTURE_3D_EXT,0);
+        delete[] image;
+
+        printf("vec.size() = %d\n",vec.size());
+        pushParticles(vec,velo,color,mass);
         //renderer->setNum(num);
         //hash_and_sort();
-        ps->cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
-        ps->cli->queue.finish();
-        releaseGLBuffers(); 
+        //ps->cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
+        //ps->cli->queue.finish();
+        //releaseGLBuffers(); 
     }
     void System::acquireGLBuffers()
     {

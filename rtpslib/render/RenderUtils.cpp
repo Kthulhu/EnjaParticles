@@ -116,6 +116,33 @@ namespace rtps
         return 0;
     }
 
+    
+    void RenderUtils::write3DTextureToDisc(GLuint tex,int voxelResolution, const char* filename)
+    {
+        printf("writing %s texture to disc.\n",filename);
+        glBindTexture(GL_TEXTURE_3D_EXT,tex);
+        GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
+        //GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*3];
+        glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
+        //glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGB,GL_UNSIGNED_BYTE,image);
+        GLubyte* tmp2Dimg = new GLubyte[voxelResolution*voxelResolution*4];
+        //GLubyte* tmp2Dimg = new GLubyte[voxelResolution*voxelResolution*3];
+        for(int i = 0; i<voxelResolution; i++)
+        {
+            char fname[128];
+            sprintf(fname,"%s-%03d.png",filename,i);
+            memcpy(tmp2Dimg,image+(i*(voxelResolution*voxelResolution*4)),sizeof(GLubyte)*voxelResolution*voxelResolution*4);
+            //memcpy(tmp2Dimg,image+(i*(voxelResolution*voxelResolution*3)),sizeof(GLubyte)*voxelResolution*voxelResolution*3);
+            if (!stbi_write_png(fname,voxelResolution,voxelResolution,4,(void*)tmp2Dimg,0))
+            //if (!stbi_write_png(fname,voxelResolution,voxelResolution,3,(void*)tmp2Dimg,0))
+            {
+                printf("failed to write image %s",filename);
+            }
+        }
+        glBindTexture(GL_TEXTURE_3D_EXT,0);
+        delete[] image;
+    }
+
     void RenderUtils::convertDepthToRGB(const GLfloat* depth, GLuint size, GLubyte* rgba) 
     {
         GLfloat minimum = 1.0f;

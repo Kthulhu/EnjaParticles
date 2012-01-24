@@ -20,18 +20,12 @@
 * misrepresented as being the original software.
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
+#include "TestApplication.h"
 
-
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 #include <map>
 #include <time.h>
 #include <float.h>
-
-//#include <utils.h>
-//#include <string.h>
-//#include <string>
 #include <sstream>
 #include <iomanip>
 
@@ -42,113 +36,73 @@
     #include <GL/glut.h>
 //OpenCL stuff
 #endif
-
-#include <RTPS.h>
-#include <render/ParticleEffect.h>
-#include <render/SSEffect.h>
-#include <render/StreamlineEffect.h>
-#include <render/ShaderLibrary.h>
-#include <system/common/Sample.h>
-//#include "timege.h"
-#include "../rtpslib/render/util/stb_image_write.h"
-#include "BunnyMesh.h"
-#include "util.h"
-#include <system/ParticleShape.h>
-
-using namespace rtps;
-
-int window_width = 640;
-int window_height = 480;
-int glutWindowHandle = 0;
-
-
-#define DTR 0.0174532925
-
-struct camera
-{
-    GLdouble leftfrustum;
-    GLdouble rightfrustum;
-    GLdouble bottomfrustum;
-    GLdouble topfrustum;
-    GLfloat modeltranslation;
-} leftCam, rightCam;
-
-bool stereo_enabled = false;
-bool render_movie = false;
-GLubyte* image = new GLubyte[window_width*window_height*4];
-const char* render_dir = "./frames/";
-
-char filename[512] = {'\0'};
-unsigned int frame_counter = 0;
-float depthZ = -10.0;                                      //depth of the object drawing
-
-double fovy = 65.;                                          //field of view in y-axis
-double aspect = double(window_width)/double(window_height);  //screen aspect ratio
-double nearZ = 0.3;                                        //near clipping plane
-double farZ = 100.0;                                        //far clipping plane
-double screenZ = 10.0;                                     //screen projection plane
-double IOD = 0.5;                                          //intraocular distance
-
-float translate_x = -2.00f;
-float translate_y = -2.70f;//300.f;
-float translate_z = 3.50f;
-
-float mass = 1.0f;
-float sizeScale = 1.0f;
-
-// mouse controls
-int mouse_old_x, mouse_old_y;
-int mouse_buttons = 0;
-float rotate_x = 0.0, rotate_y = 0.0;
-std::vector<Triangle> triangles;
-
-
-
 void init_gl();
 void render_stereo();
 void setFrustum();
+namespace rtps
+{
+    TestApplication::TestApplication()
+    {
+        
+    }
+    TestApplication::~TestApplication()
+    {
+        
+    }
+    void TestApplication::KeyboardCallback(unsigned char key, int x, int y)
+    {
+        
+    }
+    void TestApplication::RenderCallback()
+    {
 
-void appKeyboard(unsigned char key, int x, int y);
-void keyUp(unsigned char key, int x, int y);
-void appRender();
-void appDestroy();
+    }
+    void TestApplication::DestroyCallback()
+    {
 
-void appMouse(int button, int state, int x, int y);
-void appMotion(int x, int y);
-void resizeWindow(int w, int h);
+    }
+    void TestApplication::MouseCallback(int button, int state, int x, int y)
+    {
 
-void timerCB(int ms);
+    }
+    void TestApplication::MouseMotionCallback(int x, int y)
+    {
 
-void drawString(const char *str, int x, int y, float color[4], void *font);
+    }
+    void TestApplication::ResizeWindowCallback(int w, int h)
+    {
+
+    }
+    void TestApplication::TimerCallback(int ms)
+    {
+
+    }
+    void TestApplication::ResetSimulations()
+    {
+
+    }
+    void TestApplication::drawString(const char *str, int x, int y, float color[4], void *font)
+    {
+
+    }
+    GLuint windowWidth,windowHeight;
+    std::map<std::string,RTPS*> systems;
+    std::map<std::string,ParticleEffect*> effects;
+    std::map<std::string,ParticleShape*> pShapes;
+    std::map<std::string,GLuint> meshVBOs;
+    std::map<std::string,GLuint> meshIBOs;
+    std::string renderType;
+    CL* cli;
+    bool paused;
+    bool renderVelocity = false;
+};
+
 void showMass();
-void showFPS(float fps, std::string *report);
-int write_movie_frame(const char* name);
-void draw_collision_boxes();
-void rotate_img(GLubyte* img, int size);
 
-void *font = GLUT_BITMAP_8_BY_13;
 
-rtps::CL* cli=NULL;
-rtps::RTPS* sph=NULL;
-rtps::RTPS* rb=NULL;
-rtps::Domain* grid=NULL;
-rtps::Domain* grid2=NULL;
-rtps::Sample* sampleKernel=NULL;
-std::map<std::string,rtps::ParticleEffect*> effects;
-rtps::StreamlineEffect* streamline = NULL;
-rtps::ShaderLibrary* lib = NULL;
-rtps::ParticleShape* bunnyShape = NULL;
-std::string renderType = "default";
-bool renderVelocity = false;
-bool paused = false;
-bool voxelized = false;
-GLuint bunnyVBO=0;
-GLuint bunnyIBO=0;
-float gravAlpha=0.01f;
-
-//#define NUM_PARTICLES 524288
+#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
-#define NUM_PARTICLES 65536
+//#define NUM_PARTICLES 65536
 //#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
@@ -160,48 +114,6 @@ float gravAlpha=0.01f;
 //#define DT .003f
 #define DT .003f
 //#define DT .015f
-
-
-
-
-void write3DTextureToDisc(GLuint tex,int voxelResolution, const char* filename)
-{
-    printf("writing %s texture to disc.\n",filename);
-    glBindTexture(GL_TEXTURE_3D_EXT,tex);
-    GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
-    //GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*3];
-    glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
-    //glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGB,GL_UNSIGNED_BYTE,image);
-    GLubyte* tmp2Dimg = new GLubyte[voxelResolution*voxelResolution*4];
-    //GLubyte* tmp2Dimg = new GLubyte[voxelResolution*voxelResolution*3];
-    for(int i = 0; i<voxelResolution; i++)
-    {
-        char fname[128];
-        sprintf(fname,"%s-%03d.png",filename,i);
-        memcpy(tmp2Dimg,image+(i*(voxelResolution*voxelResolution*4)),sizeof(GLubyte)*voxelResolution*voxelResolution*4);
-        //memcpy(tmp2Dimg,image+(i*(voxelResolution*voxelResolution*3)),sizeof(GLubyte)*voxelResolution*voxelResolution*3);
-        if (!stbi_write_png(fname,voxelResolution,voxelResolution,4,(void*)tmp2Dimg,0))
-        //if (!stbi_write_png(fname,voxelResolution,voxelResolution,3,(void*)tmp2Dimg,0))
-        {
-            printf("failed to write image %s",filename);
-        }
-    }
-    glBindTexture(GL_TEXTURE_3D_EXT,0);
-    delete[] image;
-
-}
-//timers
-//GE::Time *ts[3];
-
-//================
-//#include "materials_lights.h"
-
-//----------------------------------------------------------------------
-float rand_float(float mn, float mx)
-{
-    float r = rand() / (float) RAND_MAX;
-    return mn + (mx-mn)*r;
-}
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 int main(int argc, char** argv)
@@ -209,7 +121,7 @@ int main(int argc, char** argv)
 
     //initialize glut
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
 		//|GLUT_STEREO //if you want stereo you must uncomment this.
 		);
     glutInitWindowSize(window_width, window_height);
@@ -235,10 +147,6 @@ int main(int argc, char** argv)
     GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object"); 
     printf("GLEW supported?: %d\n", bGLEW);
 
-
-    printf("before we call enjas functions\n");
-
- 
     cli = new CL();
     //default constructor
     //rtps::RTPSettings settings;
@@ -342,10 +250,10 @@ int main(int argc, char** argv)
         gIndices[(i*3)+1]=gIndicesBunny[i][1];
         gIndices[(i*3)+2]=gIndicesBunny[i][2];
     }
+
     
     bunnyVBO = createVBO(gVerticesBunny, 3*BUNNY_NUM_VERTICES*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
     bunnyIBO = createVBO(gIndices, 3*BUNNY_NUM_TRIANGLES*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
-    //bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),5.0f);
     
     RenderSettings rs;
     //rs.blending=false;
@@ -371,10 +279,11 @@ int main(int argc, char** argv)
         indices[i]=tmp*i;      
     }
     streamline=new StreamlineEffect(rs, *lib,100,100,indices,cli);
-    float4 point=(grid->getBndMin()+grid->getBndMax());
-    point/=2.0f;
+    float4 point(2.5f,2.5f,2.5f,1.0f);
+    float4 point2(7.5f,7.5f,7.5f,1.0f);
     sph->system->addPointSource(point,1.0f);
-    sph->system->setAlpha(gravAlpha);
+    sph->system->addPointSource(point2,1.5f);
+    sph->system->setAlpha(0.05f);
 
     glutMainLoop();
     return 0;
@@ -384,7 +293,7 @@ int main(int argc, char** argv)
 void appRender()
 {
 
-    //ps->system->sprayHoses();
+        //ps->system->sprayHoses();;
     if(!voxelized)
     {
        float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
@@ -435,6 +344,12 @@ void appRender()
         glTranslatef(translate_x, translate_z, translate_y);
         
         
+        glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
+        glVertexPointer(3, GL_FLOAT, 0, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
+        glEnableClientState( GL_VERTEX_ARRAY );
+        glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0); 
+        glDisableClientState( GL_VERTEX_ARRAY );
         
         RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
         if(renderVelocity)
@@ -455,6 +370,7 @@ void appRender()
         }
 
     }
+
 
     if(render_movie)
     {
@@ -513,8 +429,8 @@ void appKeyboard(unsigned char key, int x, int y)
         case 'b':
         {
             //matrix is to position the rigidbody at 7,7,7 with no rotations.
-            float16 mat(1.0f,1.0f,0.0f,7.0f,
-                    -1.0f,1.0f,0.0f,7.0f,
+            float16 mat(1.0f,0.0f,0.0f,7.0f,
+                    0.0f,1.0f,0.0f,7.0f,
                     0.0f,0.0f,1.0f,7.0f,
                     0.0f,0.0f,0.0f,1.0f);
             float4 velocity(0.0f,0.0f,0.0f,0.0f);
@@ -548,28 +464,12 @@ void appKeyboard(unsigned char key, int x, int y)
             break;
         case 't': //place a cube for collision
             {
-                float4 col1 = float4(0.05, 0.15, 8., 0.1);
                 float4 center=(grid->getBndMin()+grid->getBndMax());
                 center/=2.0f;
-                float innerRadius=2.0f;
-                float outerRadius=4.5f;
-                float thickness=1.0f;
-                float innerVel=1.0f;
-                float outerVel=0.0f;//sqrt((2.0f*gravAlpha)/outerRadius)*2.0f;
-                sph->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness,col1,0.0f,innerVel,outerVel);
-                return;
-            }
-        case 'T': //place a cube for collision
-            {
-                float4 col1 = float4(0.05, 0.15, 8., 0.1);
-                float4 center=(grid->getBndMin()+grid->getBndMax());
-                center/=2.0f;
-                float innerRadius=2.0f;
-                float outerRadius=4.5f;
-                float thickness=1.0f;
-                float innerVel=1.0f;
-                float outerVel=0.0f;//sqrt((2.0f*gravAlpha)/outerRadius)*2.0f;
-                sph->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness,col1,0.0f,innerVel,outerVel);
+                float innerRadius=1.0f;
+                float outerRadius=4.0f;
+                float thickness=2.0f;
+                sph->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness);
                 return;
             }
         case 'r': //drop a rectangle
