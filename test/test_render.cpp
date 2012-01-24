@@ -467,7 +467,7 @@ void appRender()
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,fboId);
         //glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,fboId);
         glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , tex, 0,0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
         float col[4];
         glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
         glClearColor(0.0f,0.0f,0.0f,0.0f);
@@ -478,17 +478,16 @@ void appRender()
         int i = 0;
         //FIXME: Code should check and preserve the current state so that
         //It correctly restores previous state.
-        glEnable(GL_COLOR_LOGIC_OP);
-        glEnablei(GL_BLEND,0);//GL_DRAW_BUFFER0);
+        //glEnable(GL_COLOR_LOGIC_OP);
+        glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
         //glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
-        glLogicOp(GL_NOR);
+        //glLogicOp(GL_NOR);
+        glLogicOp(GL_XOR);
         glBlendFunc(GL_ONE,GL_ONE);
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_POINT_SMOOTH);
         glDisable(GL_LINE_SMOOTH);
         
-        /*
-        **/
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
@@ -537,6 +536,7 @@ void appRender()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
         glEnableClientState( GL_VERTEX_ARRAY );
         //m_shapeDrawer->enableTexture(false);
+        glDisable(GL_TEXTURE_3D_EXT);
         for(int i = 0; i<voxelResolution; i++)
         {
             glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , tex, 0, i );
@@ -586,15 +586,13 @@ void appRender()
         glViewport(0,0,window_width,window_height);
         glDisableClientState(GL_VERTEX_ARRAY);
         glEnable(GL_ALPHA_TEST);
-        glEnable(GL_TEXTURE_2D);
+        //glEnable(GL_TEXTURE_2D);
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_LIGHTING);
+        //glEnable(GL_LIGHTING);
         glDisable(GL_BLEND);
         glLogicOp(GL_COPY);
         glEnable(GL_CULL_FACE);
         glDisable(GL_COLOR_LOGIC_OP);
-        /*
-        */
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
 //printf("Here at %s:%d\n",__FILE__,__LINE__);
