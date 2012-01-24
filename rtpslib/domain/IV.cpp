@@ -91,8 +91,46 @@ namespace rtps
         std::vector<float4> rvec;
         float zmin = center.z-thickness/2.0f;
         float zmax = center.z+thickness/2.0f;
+        float xmin = center.x-radius_out;
+        float xmax = center.x+radius_out;
+        float ymin = center.y-radius_out;
+        float ymax = center.y+radius_out;
+        center.w = 0.0f;
         int i =0;
-        for(float z=zmin;z<=zmax;z+=spacing)
+        for(float z=zmin;z<zmax;z+=spacing)
+        {
+            for (float y = ymin; y <ymax; y+=spacing)
+            {
+                for (float x = xmin; x <xmax; x+=spacing)
+                {
+                    float4 pos;
+                    pos.x=x;
+                    pos.y=y;
+                    pos.z=z;
+                    pos.w=0.0f;
+                    float4 direction = (pos-center);
+                    float r = sqrt((direction.x*direction.x)+(direction.y*direction.y));
+                    if(r>radius_out || r<radius_in)
+                        continue;
+                    float theta = acos(direction.x/r);
+                    //printf("direction = (%f,%f), theta = %f, 2*pi-theta = %f, \n",direction.x/r,direction.y/r,theta,2*PI-theta);
+                    if(direction.y<0)
+                        theta=-theta;//2*PI-theta;
+                    float t = (r-radius_in)/(radius_out-radius_in);
+                    float vMag= innerVel*(1-t)+outerVel*t;
+                    float4 velocity;
+                    velocity.x=vMag*-sin(theta);
+                    velocity.y=vMag*cos(theta);
+                    velocity.z=0.0f;
+                    velocity.w=0.0f;
+                    initVel.push_back(velocity);
+                    pos.w=1.0f;
+                    rvec.push_back(pos);
+                    i++;
+                }
+            }
+        }
+        /*for(float z=zmin;z<=zmax;z+=spacing)
         {
             for(float r=radius_in;r<=radius_out;r+=spacing)
             {
@@ -119,7 +157,7 @@ namespace rtps
                     i++;
                 }
             }
-        }
+        }*/
         return rvec;
     }
 //----------------------------------------------------------------------

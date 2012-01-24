@@ -147,8 +147,8 @@ GLuint bunnyIBO=0;
 float gravAlpha=9800.0f;
 
 //#define NUM_PARTICLES 524288
-//#define NUM_PARTICLES 262144
-#define NUM_PARTICLES 65536
+#define NUM_PARTICLES 262144
+//#define NUM_PARTICLES 65536
 //#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
@@ -435,7 +435,7 @@ void appRender()
         if(renderVelocity)
         {
             effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
-            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
+            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum(),0.01);
         }
         //streamline->render();
         effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());

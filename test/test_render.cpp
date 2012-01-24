@@ -145,9 +145,9 @@ bool voxelized = false;
 GLuint bunnyVBO=0;
 GLuint bunnyIBO=0;
 
-//#define NUM_PARTICLES 524288
+#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
-#define NUM_PARTICLES 65536
+//#define NUM_PARTICLES 65536
 //#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
@@ -208,7 +208,7 @@ int main(int argc, char** argv)
 
     //initialize glut
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
 		//|GLUT_STEREO //if you want stereo you must uncomment this.
 		);
     glutInitWindowSize(window_width, window_height);
@@ -341,32 +341,10 @@ int main(int argc, char** argv)
         gIndices[(i*3)+1]=gIndicesBunny[i][1];
         gIndices[(i*3)+2]=gIndicesBunny[i][2];
     }
-    float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
-    float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-    for(int i = 0; i<BUNNY_NUM_VERTICES; i++)
-    {
-        float x = gVerticesBunny[(i*3)];
-        float y = gVerticesBunny[(i*3)+1];
-        float z = gVerticesBunny[(i*3)+2];
-        if(x<min.x)
-            min.x=x;
-        if(x>max.x)
-            max.x=x;
-        if(y<min.y)
-            min.y=y;
-        if(y>max.y)
-            max.y=y;
-        if(z<min.z)
-            min.z=z;
-        if(z>max.z)
-            max.z=z;
-    }
-    cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
-    cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
+
     
     bunnyVBO = createVBO(gVerticesBunny, 3*BUNNY_NUM_VERTICES*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
     bunnyIBO = createVBO(gIndices, 3*BUNNY_NUM_TRIANGLES*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
-    //bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),5.0f);
     
     RenderSettings rs;
     //rs.blending=false;
@@ -406,8 +384,230 @@ int main(int argc, char** argv)
 void appRender()
 {
 
-    //ps->system->sprayHoses();
+        //ps->system->sprayHoses();;
+    if(!voxelized)
+    {
+       float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
+        float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+        for(int i = 0; i<BUNNY_NUM_VERTICES; i++)
+        {
+            float x = gVerticesBunny[(i*3)];
+            float y = gVerticesBunny[(i*3)+1];
+            float z = gVerticesBunny[(i*3)+2];
+            if(x<min.x)
+                min.x=x;
+            if(x>max.x)
+                max.x=x;
+            if(y<min.y)
+                min.y=y;
+            if(y>max.y)
+                max.y=y;
+            if(z<min.z)
+                min.z=z;
+            if(z>max.z)
+                max.z=z;
+        }
+        cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
+        cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl; 
+        float3 dim = (max-min);//*btScalar(4.0);
+        
+        /*btScalar maxDim = max.x();
+        if(maxDim<max.y())
+            maxDim=max.y();
+        if(maxDim<max.z())
+            maxDim=max.z();
+         */
+        float maxDim = dim.x;
+        if(maxDim<dim.y)
+            maxDim=dim.y;
+        if(maxDim<dim.z)
+            maxDim=dim.z;
 
+        float spacing = rb->settings->GetSettingAs<float>("Spacing");
+        printf("addRigidBody spacing %08f\n",spacing);
+        int voxelResolution = (int)((maxDim)/spacing);
+        //voxelResolution = (int)((maxDim*btScalar(2.0))/btScalar(spacing));
+        printf("voxelResolution after recalculation %d\n",voxelResolution);
+        //printf("dim = (%f,%f,%f)\n",dim.x(),dim.y(),dim.z());
+        float halfMaxDim = maxDim/2.0f;
+       
+        printf("3d texture supported? %d\n",glewIsSupported("GL_EXT_texture3D"));
+        glEnable(GL_TEXTURE_3D_EXT);
+        //glEnable(GL_DRAW_BUFFER);
+        //glEnable(GL_FRAMEBUFFER);
+        GLuint tex=0;
+        glGenTextures(1, &tex);
+        printf("tex = %d\n",tex);
+        glBindTexture(GL_TEXTURE_3D_EXT, tex);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        GLint mode = GL_CLAMP_TO_BORDER;
+        glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S, mode);
+        glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T, mode);
+        glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R, mode);
+        //img is for debugging
+        //unsigned char img[voxelResolution*voxelResolution*voxelResolution*4];
+        //memset(img,0,sizeof(unsigned char)*voxelResolution*voxelResolution*voxelResolution*4);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0, GL_RGBA, voxelResolution, voxelResolution, voxelResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);//img);
+        GLuint depth=0;
+        glGenTextures(1, &depth);
+        glBindTexture(GL_TEXTURE_2D, depth);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,voxelResolution,voxelResolution,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+        
+        glViewport(0,0,voxelResolution,voxelResolution);
+
+        GLuint fboId = 0;
+        glGenFramebuffersEXT(1, &fboId);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,fboId);
+        //glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,fboId);
+        glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , tex, 0,0);
+        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
+        float col[4];
+        glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
+        glClearColor(0.0f,0.0f,0.0f,0.0f);
+
+        
+
+        double delz = spacing;//(2.0*maxDim)/voxelResolution;
+        int i = 0;
+        //FIXME: Code should check and preserve the current state so that
+        //It correctly restores previous state.
+        glEnable(GL_COLOR_LOGIC_OP);
+        glEnablei(GL_BLEND,0);//GL_DRAW_BUFFER0);
+        //glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
+        glLogicOp(GL_NOR);
+        glBlendFunc(GL_ONE,GL_ONE);
+        glDisable(GL_ALPHA_TEST);
+        glDisable(GL_POINT_SMOOTH);
+        glDisable(GL_LINE_SMOOTH);
+        
+        /*
+        **/
+        glDisable(GL_LIGHTING);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_TEXTURE_2D);
+        
+        GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER_EXT);
+        if(status!=GL_FRAMEBUFFER_COMPLETE)
+        {
+            switch(status)
+            {
+                case GL_FRAMEBUFFER_UNDEFINED:
+                    printf("Here LINE %d\n",__LINE__);
+                    break;
+                case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                    printf("Here LINE %d\n",__LINE__);
+                    break;
+                case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                    printf("Here LINE %d\n",__LINE__);
+                    break;
+                case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+                    printf("Here LINE %d\n",__LINE__);
+                    break;
+                case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+                    printf("Here LINE %d\n",__LINE__);
+                    break;
+                case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:       
+                    printf("Here LINE %d\n",__LINE__);
+                    break;
+                default:
+                    printf("WTF??\n");
+                    break;
+            }
+        }
+        else
+        {
+            printf("FRAMEBUFFER is complete.\n");
+        }
+        glMatrixMode(GL_PROJECTION);
+        // save previous matrix which contains the 
+        //settings for the perspective projection
+        glPushMatrix();
+        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+        glReadBuffer(GL_COLOR_ATTACHMENT1_EXT);
+        glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
+        glVertexPointer(3, GL_FLOAT, 0, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
+        glEnableClientState( GL_VERTEX_ARRAY );
+        //m_shapeDrawer->enableTexture(false);
+        for(int i = 0; i<voxelResolution; i++)
+        {
+            glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , tex, 0, i );
+            glClear(GL_COLOR_BUFFER_BIT);
+            glFramebufferTextureLayer(GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, tex, 0, i?i-1:0);
+            glBlitFramebuffer(0,0,voxelResolution,voxelResolution,
+                                0,0,voxelResolution,voxelResolution,
+                                GL_COLOR_BUFFER_BIT,GL_NEAREST);
+            glMatrixMode(GL_PROJECTION);
+            // switch to projection mode
+            // reset matrix
+            glLoadIdentity();
+            // set a 2D orthographic projection
+            //glOrtho(0, maxDim, 0, maxDim,delz*i*maxDim,delz*(i+1)*maxDim);
+            glOrtho(-halfMaxDim, halfMaxDim, -halfMaxDim, halfMaxDim ,-halfMaxDim+delz*i ,-halfMaxDim+delz*(i+1));
+            glMatrixMode(GL_MODELVIEW);
+            glPushMatrix();
+            glLoadIdentity();
+
+            //glTranslatef(0.f,0.f,-maxDim);
+            //btScalar m[16];
+            //btTransform::getIdentity().getOpenGLMatrix(m);
+            //btVector3 a(btScalar(1.0),btScalar(1.0),btScalar(1.0));
+            //m_shapeDrawer->drawOpenGL(m,shape,a,getDebugMode(),min,max);
+            //glVertexPointer( 3,   //3 components per vertex (x,y,z)
+            //     GL_FLOAT,
+            //     sizeof(btScalar)*3,
+            //     gVerticesBunny);
+            //glBegin();
+            glColor4f(1.0f,1.0f,1.0f,1.0f);
+            glDrawElements(GL_TRIANGLES,BUNNY_NUM_INDICES,GL_UNSIGNED_INT,0);
+            //glDrawElements( GL_TRIANGLE_STRIP, //mode
+            //glDrawElements( GL_TRIANGLES, //mode
+            //                            BUNNY_NUM_INDICES,  //count, ie. how many indices
+            //                            //GL_INT, //type of the index array
+            //                            GL_UNSIGNED_INT, //type of the index array
+            //                            //gIndicesBunny);
+            //                            gIndices);
+            //glEnd();
+            glPopMatrix();
+            glFlush();
+            //glMatrixMode(GL_PROJECTION);
+            //glPopMatrix();
+        }
+        //write3DTextureToDisc(tex,voxelResolution,"test");
+        //m_shapeDrawer->enableTexture(true);
+        glViewport(0,0,window_width,window_height);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glEnable(GL_ALPHA_TEST);
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_LIGHTING);
+        glDisable(GL_BLEND);
+        glLogicOp(GL_COPY);
+        glEnable(GL_CULL_FACE);
+        glDisable(GL_COLOR_LOGIC_OP);
+        /*
+        */
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+//printf("Here at %s:%d\n",__FILE__,__LINE__);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
+        //glDrawBuffer(0);
+        //glReadBuffer(0);
+        glClearColor(col[0],col[1],col[2],col[3]);
+        glMatrixMode(GL_MODELVIEW);
+        //bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),40.0f);
+        //bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
+        write3DTextureToDisc(tex,voxelResolution,"bunnytex");//bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
+        voxelized=true;
+    }
     glEnable(GL_DEPTH_TEST);
     if (stereo_enabled)
     {
@@ -429,6 +629,12 @@ void appRender()
         glTranslatef(translate_x, translate_z, translate_y);
         
         
+        glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
+        glVertexPointer(3, GL_FLOAT, 0, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
+        glEnableClientState( GL_VERTEX_ARRAY );
+        glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0); 
+        glDisableClientState( GL_VERTEX_ARRAY );
         
         RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
         if(renderVelocity)
@@ -450,12 +656,7 @@ void appRender()
 
     }
 
-    if(!voxelized)
-    {
-        //bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
-        //write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
-        voxelized=true;
-    }
+
     if(render_movie)
     {
         frame_counter++;

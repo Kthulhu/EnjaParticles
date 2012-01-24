@@ -36,7 +36,7 @@ namespace rtps
 {
     ParticleShape::ParticleShape(float3 min, float3 max, float diameter, float scale){
         dim = (max-min)*scale;
-        float maxDim = dim.x;
+        maxDim = dim.x;
         if(maxDim<dim.y)
             maxDim=dim.y;
         if(maxDim<dim.z)
@@ -61,8 +61,10 @@ namespace rtps
         //img is for debugging
         //unsigned char img[voxelResolution*voxelResolution*voxelResolution*4];
         //memset(img,0,sizeof(unsigned char)*voxelResolution*voxelResolution*voxelResolution*4);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0, GL_RGBA, voxelResolution, voxelResolution, voxelResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glBindTexture(GL_TEXTURE_3D_EXT, 0);
+        glDisable(GL_TEXTURE_3D_EXT);
     }
 
     float3 ParticleShape::getMax() const {
@@ -94,6 +96,8 @@ namespace rtps
     void ParticleShape::voxelizeMesh(GLuint vbo, GLuint ibo, int length)
     {
         
+        glEnable(GL_TEXTURE_3D_EXT);
+        glBindTexture(GL_TEXTURE_3D_EXT, volumeTexture);
         GLuint fboId = 0;
         glGenFramebuffersEXT(1, &fboId);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,fboId);
@@ -108,44 +112,45 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,voxelResolution,voxelResolution,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
         float col[4];
         glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
-        glClearColor(0.0f,0.0f,0.0f,1.0f);
+        glClearColor(0.0f,0.0f,0.0f,0.0f);
         //FIXME: Code should check and preserve the current state so that
         //It correctly restores previous state.
-        //glEnable(GL_COLOR_LOGIC_OP);
-        //glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
-        //glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
-        //glLogicOp(GL_XOR);
-        //glBlendFunc(GL_ONE,GL_ONE);
-        /*glDisable(GL_ALPHA_TEST);
+        /*/glEnable(GL_COLOR_LOGIC_OP);
+        glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
+        glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
+        glLogicOp(GL_XOR);
+        glBlendFunc(GL_ONE,GL_ONE);
+        glDisable(GL_ALPHA_TEST);
         glDisable(GL_POINT_SMOOTH);
         glDisable(GL_LINE_SMOOTH);
-        
         glDisable(GL_LIGHTING);*/
         //glDisable(GL_CULL_FACE);
-        //glDisable(GL_DEPTH_TEST);
+        glDisable(GL_DEPTH_TEST);
         //glDisable(GL_TEXTURE_2D);
         int v[4];
         glGetIntegerv(GL_VIEWPORT,v);
         glViewport(0,0,voxelResolution,voxelResolution);
         glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , volumeTexture, 0, 0 );
         glClear(GL_COLOR_BUFFER_BIT);
+        glDisable(GL_TEXTURE_2D);
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glReadBuffer(GL_COLOR_ATTACHMENT1_EXT);
-        glEnableClientState( GL_VERTEX_ARRAY );
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glVertexPointer(3, GL_FLOAT, 0, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        glEnableClientState( GL_VERTEX_ARRAY );
         float halfMaxDim=maxDim/2.0f;
         for(int i = 0;i<voxelResolution; i++)
         {
             if(i>0)
             {
                 glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, volumeTexture, 0, i );
+                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                 glFramebufferTextureLayer(GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, volumeTexture, 0, i-1);
                 glBlitFramebuffer(0,0,voxelResolution,voxelResolution,
                                     0,0,voxelResolution,voxelResolution,
@@ -167,31 +172,32 @@ namespace rtps
             glColor4f(1.0f,0.0f,1.0f,1.0f);
             glDrawElements(GL_TRIANGLES,length,GL_UNSIGNED_INT,0); 
             //glBegin(GL_TRIANGLES);
-            //glVertex3f(-maxDim,-maxDim,-maxDim);
-            //glVertex3f(maxDim,maxDim,maxDim);
-            //glVertex3f(maxDim,-maxDim,-maxDim);
-            //glVertex3f(0.0f,0.0f,(-halfMaxDim+delz*i-halfMaxDim+delz*(i+1))/2.0f);
-            //glVertex3f(0.0f,.5f,(-halfMaxDim+delz*i-halfMaxDim+delz*(i+1))/2.0f);
-            //glVertex3f(.5f,0.f,(-halfMaxDim+delz*i-halfMaxDim+delz*(i+1))/2.0f);
+            //glVertex3f(-halfMaxDim,-halfMaxDim,-halfMaxDim);
+            //glVertex3f(halfMaxDim,halfMaxDim,halfMaxDim);
+            //glVertex3f(halfMaxDim,-halfMaxDim,-halfMaxDim);
+            //glVertex3f(0.0f,0.0f,0.0f);//(-halfMaxDim+delz*i-halfMaxDim+delz*(i+1))/2.0f);
+            //glVertex3f(0.0f,.5f,-0.5f);//(-halfMaxDim+delz*i-halfMaxDim+delz*(i+1))/2.0f);
+            //glVertex3f(.5f,0.f,-0.5f);//(-halfMaxDim+delz*i-halfMaxDim+delz*(i+1))/2.0f);
             //glEnd();
             glPopMatrix();
             glFlush();
         }
         glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
+        glPopMatrix();
         glDisableClientState( GL_VERTEX_ARRAY );
-        glViewport(0,0,v[3],v[4]);
-        //glEnable(GL_ALPHA_TEST);
-        //glEnable(GL_TEXTURE_2D);
-        //glEnable(GL_DEPTH_TEST);
+        glViewport(v[0],v[1],v[2],v[3]);
+        glEnable(GL_DEPTH_TEST);
+        /*glEnable(GL_ALPHA_TEST);
+        glEnable(GL_TEXTURE_2D);
         //glEnable(GL_CULL_FACE);
         //glEnable(GL_LIGHTING);
-        //glDisable(GL_BLEND);
-        //glLogicOp(GL_COPY);
-        //glDisable(GL_COLOR_LOGIC_OP);
+        glDisable(GL_BLEND);
+        glLogicOp(GL_COPY);
+        glDisable(GL_COLOR_LOGIC_OP);*/
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glClearColor(col[0],col[1],col[2],col[3]);
         glMatrixMode(GL_MODELVIEW);
+        glBindTexture(GL_TEXTURE_3D_EXT, 0);
         glDisable(GL_TEXTURE_3D_EXT);
     }
 }; //end namespace
