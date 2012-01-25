@@ -39,6 +39,7 @@ set (test_INCLUDES
 
 #library
 set (test_render_SOURCES
+    ParamParser
     test_render.cpp
     )
 

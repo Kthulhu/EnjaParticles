@@ -47,14 +47,265 @@ namespace rtps
     }
     TestApplication::~TestApplication()
     {
-        
+        for(map<string,RTPS*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        {
+            delete i->second;
+        }
+        for(map<string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+        {
+            delete i->second;
+        }
+        for(map<string,ParticleShapes*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
+        {
+            delete i->second;
+        }
+        for(map<string,GLuint>::iterator i = meshVBOs.begin(); i!=meshVBOs.end(); i++)
+        {
+            glBindBuffer(1, i->second);
+            glDeleteBuffers(1, (GLuint*)&i->second);
+        }
+        for(map<string,GLuint>::iterator i = meshIBOs.begin(); i!=meshIBOs.end(); i++)
+        {
+            delete i->second;
+        }
+        delete cli;
+        delete lib;
     }
     void TestApplication::KeyboardCallback(unsigned char key, int x, int y)
     {
-        
+        switch (key)
+        {
+            case ' ':
+                paused=!paused;
+                return;
+            case 'e': //dam break
+            {
+                nn = NUM_PARTICLES/2;
+                float4 col1 = float4(0.05, 0.15, 8., 0.1);
+                sph->system->addBox(nn, grid->getBndMin()+float4(0.5f,0.5f,0.5f,1.0f), grid->getBndMax()-float4(0.5f,0.5f,0.5f,1.0f), false,col1);
+                //ps2->system->addBox(nn, min, max, false);
+                return;
+            }
+            case 'g':
+            {
+                //nn = 16384;
+                nn = NUM_PARTICLES/8;
+                min = float4(2.5f, 2.5f, 2.5f, 1.0f);
+                max = float4(7.5f, 7.5f, 7.5f, 1.0f);
+                float4 col1 = float4(0., 0., 1., 0.05);
+                sph->system->addBox(nn, min, max, false,col1);
+                //ps2->system->addBox(nn, min, max, false);
+                return;
+            }
+            case 'p': //print timers
+                printf("SPH timers:\n");
+                sph->system->printTimers();
+                printf("RB timers:\n");
+                rb->system->printTimers();
+                return;
+            case '\033': // escape quits
+            case '\015': // Enter quits    
+            case 'Q':    // Q quits
+            case 'q':    // q (or escape) quits
+                // Cleanup up and quit
+                appDestroy();
+                return;
+            case 'b':
+            {
+                //matrix is to position the rigidbody at 7,7,7 with no rotations.
+                float16 mat(1.0f,0.0f,0.0f,7.0f,
+                        0.0f,1.0f,0.0f,7.0f,
+                        0.0f,0.0f,1.0f,7.0f,
+                        0.0f,0.0f,0.0f,1.0f);
+                float4 velocity(0.0f,0.0f,0.0f,0.0f);
+                float4 color(1.0f,0.0f,0.0f,1.0f);
+                rb->system->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),float4(bunnyShape->getMin(),0.0f),mat,bunnyShape->getVoxelResolution(),velocity,color,mass);
+                /*printf("deleting willy nilly\n");
+                sph->system->testDelete();
+                rb->system->testDelete();*/
+                return;
+            }
+            case 'h':
+            {
+                //spray hose
+                printf("about to make hose\n");
+                float4 center(2., 2., .2, 1.);
+                //float4 velocity(.6, -.6, -.6, 0);
+                //float4 velocity(2., 5., -.8, 0);
+                float4 velocity(0., 0., 2., 0);
+                //sph sets spacing and multiplies by radius value
+                float4 col1 = float4(0., 0., 1., 1.);
+
+
+                sph->system->addHose(5000, center, velocity, 5, col1);
+                return;
+            }
+            case 'n':
+                render_movie=!render_movie;
+                break;
+            case '`':
+                stereo_enabled = !stereo_enabled;
+                break;
+            case 't': //place a cube for collision
+                {
+                    float4 center=(grid->getBndMin()+grid->getBndMax());
+                    center/=2.0f;
+                    float innerRadius=1.0f;
+                    float outerRadius=4.0f;
+                    float thickness=2.0f;
+                    sph->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness);
+                    return;
+                }
+            case 'r': //drop a rectangle
+                {
+
+                    float4 col1 = float4(1., 0.9, 0., 1.);
+
+                    float4 size = float4(1.,1.,1.,0.f);
+                    size=size*sizeScale;
+                    float4 mid = (grid->getMax()-grid->getMin());
+                    mid = mid/2.0f;
+                    mid.z=0.f;
+                    float4 position = float4(0.0f, 0.0f,grid->getMax().z-(size.z/2.f),1.0f);
+                    position.x = mid.x-(size.x/2.0f);
+                    position.y = mid.y-(size.y/2.0f);
+                    rb->system->addBox(NUM_PARTICLES, position, position+size, false, col1,mass);
+                    return;
+                }
+            case 'v':
+                renderVelocity=!renderVelocity;
+                return;
+            case 'o':
+                renderType="default";
+                return;
+            case 'c':
+                renderType="ssfr";
+                return;
+            case 'C':
+                return;
+            case 'w':
+                translate_z -= 0.1;
+                break;
+            case 'a':
+                translate_x += 0.1;
+                break;
+            case 's':
+                translate_z += 0.1;
+                break;
+            case 'd':
+                translate_x -= 0.1;
+                break;
+            case 'z':
+                translate_y += 0.1;
+                break;
+            case 'x':
+                translate_y -= 0.1;
+                break;
+            case '+':
+                mass*=10.0f;
+                break;
+            case '-':
+                mass/=10.0f;
+                break;
+            case '[':
+                sizeScale+=0.5f;
+                break;
+            case ']':
+                sizeScale-=0.5f;
+                break;
+            default:
+                return;
+        }
+
+        glutPostRedisplay();
     }
     void TestApplication::RenderCallback()
     {
+
+        //ps->system->sprayHoses();;
+        if(!voxelized)
+        {
+           float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
+            float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+            for(int i = 0; i<BUNNY_NUM_VERTICES; i++)
+            {
+                float x = gVerticesBunny[(i*3)];
+                float y = gVerticesBunny[(i*3)+1];
+                float z = gVerticesBunny[(i*3)+2];
+                if(x<min.x)
+                    min.x=x;
+                if(x>max.x)
+                    max.x=x;
+                if(y<min.y)
+                    min.y=y;
+                if(y>max.y)
+                    max.y=y;
+                if(z<min.z)
+                    min.z=z;
+                if(z>max.z)
+                    max.z=z;
+            }
+            cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
+            cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl; 
+            bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),3.0f);
+            bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
+            //write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
+            voxelized=true;
+        }
+        glEnable(GL_DEPTH_TEST);
+        if (stereo_enabled)
+        {
+            render_stereo();
+        }
+        else
+        {
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            gluPerspective(fovy, aspect, nearZ, farZ);
+
+            // set view matrix
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+            glRotatef(-90, 1.0, 0.0, 0.0);
+            glRotatef(rotate_x, 1.0, 0.0, 0.0);
+            glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
+            glTranslatef(translate_x, translate_z, translate_y);
+
+
+            glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
+            glVertexPointer(3, GL_FLOAT, 0, 0);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
+            glEnableClientState( GL_VERTEX_ARRAY );
+            glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0); 
+            glDisableClientState( GL_VERTEX_ARRAY );
+
+            RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
+            //FIXME: Have a method to give renderType to each System. That way we can have different
+            //Systems with the different effects.
+            for(map<string,RTPS*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            {
+                if(renderVelocity)
+                {
+                    effects[renderType]->renderVector(i->second->system->getPosVBO(),i->second->system->getVelocityVBO(),i->second->system->getNum());
+                }
+                effects[renderType]->render(i->second->system->getPosVBO(),i->second->system->getColVBO(),i->second->system->getNum());
+            }
+            if(render_movie)
+            {
+                write_movie_frame("image");
+            }
+
+        }
+        glDisable(GL_DEPTH_TEST);
+
+
+        if(render_movie)
+        {
+            frame_counter++;
+        }
+        showMass();
+        glutSwapBuffers();
 
     }
     void TestApplication::DestroyCallback()
@@ -63,19 +314,93 @@ namespace rtps
     }
     void TestApplication::MouseCallback(int button, int state, int x, int y)
     {
+        if (state == GLUT_DOWN)
+        {
+            mouse_buttons |= 1<<button;
+        }
+        else if (state == GLUT_UP)
+        {
+            mouse_buttons = 0;
+        }
 
+        mouse_old_x = x;
+        mouse_old_y = y;
     }
     void TestApplication::MouseMotionCallback(int x, int y)
     {
+        float dx, dy;
+        dx = x - mouse_old_x;
+        dy = y - mouse_old_y;
 
+        if (mouse_buttons & 1)
+        {
+            rotate_x += dy * 0.2;
+            rotate_y += dx * 0.2;
+        }
+        else if (mouse_buttons & 4)
+        {
+            translate_z -= dy * 0.1;
+        }
+
+        mouse_old_x = x;
+        mouse_old_y = y;
+
+        // set view matrix
+        glutPostRedisplay();
     }
     void TestApplication::ResizeWindowCallback(int w, int h)
     {
+        //avoid height = 0 this will cause divide by zero when calculating aspect ratio
+        if (h==0)
+        {
+            h=1;
+        }
+        glViewport(0, 0, w, h);
 
+        // projection
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        windowWidth = w;
+        windowHeight = h;
+        setFrustum();
+        glutPostRedisplay();
     }
     void TestApplication::TimerCallback(int ms)
     {
-
+        glutTimerFunc(ms, timerCB, ms);
+        if(!paused)
+        {
+            glFinish();
+            for(map<string,RTPS*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            {
+                i->second->system->acquireGLBuffers();
+                i->second->system->update();
+                i->second->system->interact();
+            }
+            
+            for(map<string,RTPS*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            {
+                i->second->system->integrate();
+                i->second->system->postProcess();
+                i->second->system->acquireGLBuffers();
+            }
+            /*sph->system->acquireGLBuffers();
+            rb->system->acquireGLBuffers();
+            sph->system->update();
+            rb->system->update();
+            sph->system->interact();
+            rb->system->interact();
+            sph->system->integrate();
+            rb->system->integrate();
+            sph->system->postProcess();
+            rb->system->postProcess();
+            //streamline->addStreamLine(sph->system->getPositionBufferUnsorted(),sph->system->getColorBufferUnsorted(),sph->system->getNum());
+            sph->system->releaseGLBuffers();
+            rb->system->releaseGLBuffers();*/
+        }
+        glutPostRedisplay();
     }
     void TestApplication::ResetSimulations()
     {
@@ -83,7 +408,39 @@ namespace rtps
     }
     void TestApplication::drawString(const char *str, int x, int y, float color[4], void *font)
     {
+        glPushAttrib(GL_LIGHTING_BIT | GL_CURRENT_BIT); // lighting and color mask
+        glDisable(GL_LIGHTING);     // need to disable lighting for proper text color
 
+        glColor4fv(color);          // set text color
+        glRasterPos2i(x, y);        // place text position
+
+        // loop all characters in the string
+        while (*str)
+        {
+            glutBitmapCharacter(font, *str);
+            ++str;
+        }
+
+        glEnable(GL_LIGHTING);
+        glPopAttrib();
+    }
+    void TestApplication::initGL()
+    {
+        // viewport
+        glViewport(0, 0, windowWidth, windowHeight);
+
+        // projection
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        //gluPerspective(60.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 100.0);
+        //gluPerspective(fov, (GLfloat)window_width / (GLfloat) window_height, 0.3, 100.0);
+        //gluPerspective(90.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 10000.0); //for lorentz
+
+        // set view matrix
+        glClearColor(.9, .9, .9, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
     }
     GLuint windowWidth,windowHeight;
     std::map<std::string,RTPS*> systems;
@@ -92,6 +449,7 @@ namespace rtps
     std::map<std::string,GLuint> meshVBOs;
     std::map<std::string,GLuint> meshIBOs;
     std::string renderType;
+
     CL* cli;
     bool paused;
     bool renderVelocity = false;
@@ -293,335 +651,33 @@ int main(int argc, char** argv)
 void appRender()
 {
 
-        //ps->system->sprayHoses();;
-    if(!voxelized)
-    {
-       float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
-        float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-        for(int i = 0; i<BUNNY_NUM_VERTICES; i++)
-        {
-            float x = gVerticesBunny[(i*3)];
-            float y = gVerticesBunny[(i*3)+1];
-            float z = gVerticesBunny[(i*3)+2];
-            if(x<min.x)
-                min.x=x;
-            if(x>max.x)
-                max.x=x;
-            if(y<min.y)
-                min.y=y;
-            if(y>max.y)
-                max.y=y;
-            if(z<min.z)
-                min.z=z;
-            if(z>max.z)
-                max.z=z;
-        }
-        cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
-        cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl; 
-        bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),3.0f);
-        bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
-        //write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
-        voxelized=true;
-    }
-    glEnable(GL_DEPTH_TEST);
-    if (stereo_enabled)
-    {
-        render_stereo();
-    }
-    else
-    {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluPerspective(fovy, aspect, nearZ, farZ);
-
-        // set view matrix
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glRotatef(-90, 1.0, 0.0, 0.0);
-        glRotatef(rotate_x, 1.0, 0.0, 0.0);
-        glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-        glTranslatef(translate_x, translate_z, translate_y);
-        
-        
-        glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
-        glVertexPointer(3, GL_FLOAT, 0, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
-        glEnableClientState( GL_VERTEX_ARRAY );
-        glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0); 
-        glDisableClientState( GL_VERTEX_ARRAY );
-        
-        RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
-        if(renderVelocity)
-        {
-            effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
-            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
-        }
-        //streamline->render();
-        effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
-        effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-//	sph->render();
-//        rb->render();
-        //ps3->render();
-        draw_collision_boxes();
-        if(render_movie)
-        {
-            write_movie_frame("image");
-        }
-
-    }
-
-
-    if(render_movie)
-    {
-        frame_counter++;
-    }
-    showMass();
-    glutSwapBuffers();
-
-    //glDisable(GL_DEPTH_TEST);
 }
 
 
 
 void appKeyboard(unsigned char key, int x, int y)
 {
-    int nn;
-    float4 min;
-    float4 max;
-    switch (key)
-    {
-        case ' ':
-            paused=!paused;
-            return;
-        case 'e': //dam break
-        {
-            nn = NUM_PARTICLES/2;
-            float4 col1 = float4(0.05, 0.15, 8., 0.1);
-            sph->system->addBox(nn, grid->getBndMin()+float4(0.5f,0.5f,0.5f,1.0f), grid->getBndMax()-float4(0.5f,0.5f,0.5f,1.0f), false,col1);
-            //ps2->system->addBox(nn, min, max, false);
-            return;
-        }
-        case 'g':
-        {
-            //nn = 16384;
-            nn = NUM_PARTICLES/8;
-            min = float4(2.5f, 2.5f, 2.5f, 1.0f);
-            max = float4(7.5f, 7.5f, 7.5f, 1.0f);
-            float4 col1 = float4(0., 0., 1., 0.05);
-            sph->system->addBox(nn, min, max, false,col1);
-            //ps2->system->addBox(nn, min, max, false);
-            return;
-        }
-        case 'p': //print timers
-            printf("SPH timers:\n");
-            sph->system->printTimers();
-            printf("RB timers:\n");
-            rb->system->printTimers();
-            return;
-        case '\033': // escape quits
-        case '\015': // Enter quits    
-        case 'Q':    // Q quits
-        case 'q':    // q (or escape) quits
-            // Cleanup up and quit
-            appDestroy();
-            return;
-        case 'b':
-        {
-            //matrix is to position the rigidbody at 7,7,7 with no rotations.
-            float16 mat(1.0f,0.0f,0.0f,7.0f,
-                    0.0f,1.0f,0.0f,7.0f,
-                    0.0f,0.0f,1.0f,7.0f,
-                    0.0f,0.0f,0.0f,1.0f);
-            float4 velocity(0.0f,0.0f,0.0f,0.0f);
-            float4 color(1.0f,0.0f,0.0f,1.0f);
-            rb->system->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),float4(bunnyShape->getMin(),0.0f),mat,bunnyShape->getVoxelResolution(),velocity,color,mass);
-            /*printf("deleting willy nilly\n");
-            sph->system->testDelete();
-            rb->system->testDelete();*/
-            return;
-        }
-        case 'h':
-        {
-            //spray hose
-            printf("about to make hose\n");
-            float4 center(2., 2., .2, 1.);
-            //float4 velocity(.6, -.6, -.6, 0);
-            //float4 velocity(2., 5., -.8, 0);
-            float4 velocity(0., 0., 2., 0);
-            //sph sets spacing and multiplies by radius value
-            float4 col1 = float4(0., 0., 1., 1.);
-
-
-            sph->system->addHose(5000, center, velocity, 5, col1);
-            return;
-		}
-        case 'n':
-            render_movie=!render_movie;
-            break;
-        case '`':
-            stereo_enabled = !stereo_enabled;
-            break;
-        case 't': //place a cube for collision
-            {
-                float4 center=(grid->getBndMin()+grid->getBndMax());
-                center/=2.0f;
-                float innerRadius=1.0f;
-                float outerRadius=4.0f;
-                float thickness=2.0f;
-                sph->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness);
-                return;
-            }
-        case 'r': //drop a rectangle
-            {
-
-                float4 col1 = float4(1., 0.9, 0., 1.);
-
-                float4 size = float4(1.,1.,1.,0.f);
-                size=size*sizeScale;
-                float4 mid = (grid->getMax()-grid->getMin());
-                mid = mid/2.0f;
-                mid.z=0.f;
-                float4 position = float4(0.0f, 0.0f,grid->getMax().z-(size.z/2.f),1.0f);
-                position.x = mid.x-(size.x/2.0f);
-                position.y = mid.y-(size.y/2.0f);
-                rb->system->addBox(NUM_PARTICLES, position, position+size, false, col1,mass);
-                return;
-            }
-        case 'v':
-            renderVelocity=!renderVelocity;
-            return;
-        case 'o':
-            renderType="default";
-            return;
-        case 'c':
-            renderType="ssfr";
-            return;
-        case 'C':
-            return;
-        case 'w':
-            translate_z -= 0.1;
-            break;
-        case 'a':
-            translate_x += 0.1;
-            break;
-        case 's':
-            translate_z += 0.1;
-            break;
-        case 'd':
-            translate_x -= 0.1;
-            break;
-        case 'z':
-            translate_y += 0.1;
-            break;
-        case 'x':
-            translate_y -= 0.1;
-            break;
-        case '+':
-            mass*=10.0f;
-            break;
-        case '-':
-            mass/=10.0f;
-            break;
-        case '[':
-            sizeScale+=0.5f;
-            break;
-        case ']':
-            sizeScale-=0.5f;
-            break;
-        default:
-            return;
-    }
-
-    glutPostRedisplay();
-    // set view matrix
-    /*glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glRotatef(-90, 1.0, 0.0, 0.0);
-    glRotatef(rotate_x, 1.0, 0.0, 0.0);
-    glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-    glTranslatef(translate_x, translate_z, translate_y);*/
+    
 }
 
 void init_gl()
 {
-    // default initialization
-    //glDisable(GL_DEPTH_TEST);
 
-    // viewport
-    glViewport(0, 0, window_width, window_height);
-
-    // projection
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    //gluPerspective(60.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 100.0);
-    //gluPerspective(fov, (GLfloat)window_width / (GLfloat) window_height, 0.3, 100.0);
-    //gluPerspective(90.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 10000.0); //for lorentz
-
-    // set view matrix
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(.9, .9, .9, 1.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    //glTranslatef(0, 10, 0);
-    /*
-    gluLookAt(  0,10,0,
-                0,0,0,
-                0,0,1);
-    */
-
-
-    //glTranslatef(0, translate_z, translate_y);
-    //glRotatef(-90, 1.0, 0.0, 0.0);
-
-    return;
 
 }
 void timerCB(int ms)
 {
-    glutTimerFunc(ms, timerCB, ms);
-    if(!paused)
-    {
-        glFinish();
-        sph->system->acquireGLBuffers();
-        rb->system->acquireGLBuffers();
-        sph->system->update();
-        rb->system->update();
-        sph->system->interact();
-        rb->system->interact();
-        sph->system->integrate();
-        rb->system->integrate();
-        sph->system->postProcess();
-        rb->system->postProcess();
-        streamline->addStreamLine(sph->system->getPositionBufferUnsorted(),sph->system->getColorBufferUnsorted(),sph->system->getNum());
-        //streamline->addStreamLine(rb->system->getPositionBufferUnsorted(),rb->system->getColorBufferUnsorted(),rb->system->getNum());
-        sph->system->releaseGLBuffers();
-        rb->system->releaseGLBuffers();
-    }
-    //ps3->update();
-    glutPostRedisplay();
+
 }
 
 
 void appDestroy()
 {
 
-    delete rb;
-    delete sph;
-    delete cli;
-    delete grid;
-    for(map<string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
-    {
-        delete i->second;
-    }
-    delete lib;
-    delete streamline;
+
 
 
     if (glutWindowHandle)glutDestroyWindow(glutWindowHandle);
-    printf("about to exit!\n");
-
     exit(0);
 }
 
@@ -630,42 +686,14 @@ void appDestroy()
 
 void appMouse(int button, int state, int x, int y)
 {
-    if (state == GLUT_DOWN)
-    {
-        mouse_buttons |= 1<<button;
-    }
-    else if (state == GLUT_UP)
-    {
-        mouse_buttons = 0;
-    }
 
-    mouse_old_x = x;
-    mouse_old_y = y;
 
     //glutPostRedisplay();
 }
 
 void appMotion(int x, int y)
 {
-    float dx, dy;
-    dx = x - mouse_old_x;
-    dy = y - mouse_old_y;
 
-    if (mouse_buttons & 1)
-    {
-        rotate_x += dy * 0.2;
-        rotate_y += dx * 0.2;
-    }
-    else if (mouse_buttons & 4)
-    {
-        translate_z -= dy * 0.1;
-    }
-
-    mouse_old_x = x;
-    mouse_old_y = y;
-
-    // set view matrix
-    glutPostRedisplay();
 }
 
 
@@ -675,21 +703,7 @@ void appMotion(int x, int y)
 ///////////////////////////////////////////////////////////////////////////////
 void drawString(const char *str, int x, int y, float color[4], void *font)
 {
-    glPushAttrib(GL_LIGHTING_BIT | GL_CURRENT_BIT); // lighting and color mask
-    glDisable(GL_LIGHTING);     // need to disable lighting for proper text color
 
-    glColor4fv(color);          // set text color
-    glRasterPos2i(x, y);        // place text position
-
-    // loop all characters in the string
-    while (*str)
-    {
-        glutBitmapCharacter(font, *str);
-        ++str;
-    }
-
-    glEnable(GL_LIGHTING);
-    glPopAttrib();
 }
 void showMass()
 {
@@ -763,24 +777,7 @@ void showFPS(float fps, std::string* report)
 //----------------------------------------------------------------------
 void resizeWindow(int w, int h)
 {
-    if (h==0)
-    {
-        h=1;
-    }
-    glViewport(0, 0, w, h);
 
-    // projection
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    //gluPerspective(fov, aspect, nearZ, farZ);
-    window_width = w;
-    window_height = h;
-    delete[] image;
-    image = new GLubyte[w*h*4];
-    setFrustum();
-    glutPostRedisplay();
 }
 
 void render_stereo()
@@ -888,41 +885,4 @@ int write_movie_frame(const char* name)
             return -1;
         }
         return 0;
-}
-void rotate_img(GLubyte* img, int size)
-{
-    GLubyte tmp=0;
-    for(int i = 0; i<size; i++)
-    {
-        for(int j = 0; j<4; j++)
-        {
-            tmp = img[(i*4)+j];
-            img[(i*4)+j] = img[size-((i*4)+j)-1];
-            img[size-((i*4)+j)-1] = tmp;
-        }
-    }
-}
-
-void draw_collision_boxes()
-{
-    glColor4f(0,0,1,.5);
-
-    //glDepthMask(GL_FALSE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glBegin(GL_TRIANGLES);
-    //printf("num triangles %zd\n", triangles.size());
-    for (int i=0; i < triangles.size(); i++)
-    {
-        //for (int i=0; i < 20; i++) {
-        Triangle& tria = triangles[i];
-        glNormal3fv(&tria.normal.x);
-        glVertex3f(tria.verts[0].x, tria.verts[0].y, tria.verts[0].z);
-        glVertex3f(tria.verts[1].x, tria.verts[1].y, tria.verts[1].z);
-        glVertex3f(tria.verts[2].x, tria.verts[2].y, tria.verts[2].z);
-    }
-    glEnd();
-
-    glDisable(GL_BLEND);
 }

@@ -35,6 +35,7 @@
 #include <sstream>
 #include <iomanip>
 
+#include <fstream>
 #include <GL/glew.h>
 #if defined __APPLE__ || defined(MACOSX)
     #include <GLUT/glut.h>
@@ -52,6 +53,7 @@
 //#include "timege.h"
 #include "../rtpslib/render/util/stb_image_write.h"
 #include "BunnyMesh.h"
+#include "ParamParser.h"
 #include "util.h"
 #include <system/ParticleShape.h>
 
@@ -376,6 +378,9 @@ int main(int argc, char** argv)
     sph->system->addPointSource(point2,1.5f);
     sph->system->setAlpha(0.05f);
 
+    rtps::ParamParser p;
+    ifstream file("test1.xml", std::ifstream::in);
+    p.readParameterFile(file);
     glutMainLoop();
     return 0;
 }
