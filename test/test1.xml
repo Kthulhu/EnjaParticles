@@ -1,36 +1,39 @@
 <?xml version="1.0"?>
 <main>
-    <system type = "sph" name = "water">
+    <system type="sph" name="water">
         <parameters type="system">
-            <param name = "gravity">(0.0,0.0,-9.8)</param>
-            <param name = "gas_constant">1.0</param>
-            <param name = "viscosity">0.001</param>
-            <param name = "velocity_limit">600.0</param>
-            <param name = "xsph_factor">0.15</param>
-            <param name = "friction_kinetic">0.0</param>
-            <param name = "friction static">0.0</param>
-            <param name = "boundary_stiffness">20000.0</param>
-            <param name = "boundary_dampening">256.0</param>
+            <param name="rest_density" >1000.0</param>
+            <param name="max_particles" >262144</param>
+            <param name="gravity" >0.0 0.0 -9.8 0.0</param>
+            <param name="gas_constant" >1.0</param>
+            <param name="viscosity" >0.001</param>
+            <param name="velocity_limit" >600.0</param>
+            <param name="xsph_factor" >0.15</param>
+            <param name="friction_kinetic" >0.0</param>
+            <param name="friction static" >0.0</param>
+            <param name="boundary_stiffness" >20000.0</param>
+            <param name="boundary_dampening" >256.0</param>
         </parameters>
         <parameters type="render">
-            <param name = "render_type">default</param>
-            <param name = "render_velocities">false</param>
-            <param name = "render_blending">true</param>
+            <param name="render_type" >default</param>
+            <param name="render_velocities" >false</param>
+            <param name="render_blending" >true</param>
         </parameters>
     </system>
-    <system type = "rigidbody" name = "rb1">
-        <parameters type = "system">
-            <param name = "gravity">(0.0,0.0,-9.8)</param>
-            <param name = "velocity_limit">600.0</param>
-            <param name = "friction_kinetic">0.0</param>
-            <param name = "friction static">0.0</param>
-            <param name = "penetration_factor">0.5</param>
-            <param name = "restitution">0.95</param>
+    <system type="rigidbody" name="rb1">
+        <parameters type="system">
+            <param name="max_particles" >262144</param>
+            <param name="gravity" >0.0 0.0 -9.8 0.0</param>
+            <param name="velocity_limit" >600.0</param>
+            <param name="friction_kinetic" >0.0</param>
+            <param name="friction static" >0.0</param>
+            <param name="penetration_factor" >0.5</param>
+            <param name="restitution" >0.95</param>
         </parameters>
         <parameters type="render">
-            <param name = "render_type">default</param>
-            <param name = "render_velocities">false</param>
-            <param name = "render_blending">false</param>
+            <param name="render_type" >default</param>
+            <param name="render_velocities" >false</param>
+            <param name="render_blending" >false</param>
         </parameters>
     </system>
 </main>

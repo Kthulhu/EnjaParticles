@@ -25,15 +25,11 @@
 #ifndef RTPS_RTPSETTINGS_H_INCLUDED
 #define RTPS_RTPSETTINGS_H_INCLUDED
 
-#include <stdlib.h>
 #include <string>
 #include <map>
-#include <iostream>
-#include <stdio.h>
 #include <sstream>
 
-
-#include "domain/Domain.h"
+//#include "domain/Domain.h"
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
         #define RTPS_EXPORT __declspec(dllexport)
@@ -53,7 +49,7 @@ namespace rtps
     {
     public:
         //decide which system to use
-        enum SysType
+        /*enum SysType
         {
             Simple, SPH, FLOCK, PARTICLE_RIGIDBODY
         };
@@ -62,10 +58,10 @@ namespace rtps
         enum RenderType
         {
             RENDER = 0, SPRITE_RENDER, SCREEN_SPACE_RENDER, SPHERE3D_RENDER
-        };
-
+        };*/
 
         RTPSettings();
+        /*
         RTPSettings(SysType system, int max_particles, float dt);
         RTPSettings(SysType system, int max_particles, float dt, Domain *grid);
 
@@ -81,13 +77,13 @@ namespace rtps
 		}
 		int getMaxOuterParticles() {
 			return this->max_outer_particles;
-		}
+		}*/
 
         //without this, windows was crashing with a ValidHeapPointer
         //assertion error. Indicates the heap may be corrupted by 
         //something in here
         ~RTPSettings();
-
+        /*
         //TODO get rid of all variables, just use map
         //maximum number of particles a system can hold
         int max_particles;
@@ -106,7 +102,7 @@ namespace rtps
         // FLOCK: 2D simulation
         bool two_dimensional;
 
-        bool has_changed() { return changed; };
+        bool has_changed() { return changed; };*/
         void updated() { changed = false; }; //for now we are assuming only one consumer (one system using the settings)
 
         void printSettings();
@@ -146,12 +142,12 @@ namespace rtps
         std::map<std::string, std::string> settings;
         bool changed;
         
-        // Added by GE
+        /*// Added by GE
         float render_radius_scale;
         float render_blur_scale;
         RenderType render_type;
         bool use_glsl;
-        bool use_alpha_blending;
+        bool use_alpha_blending;*/
 
         // This routine is adapted from post on GameDev:
         // http://www.gamedev.net/community/forums/topic.asp?topic_id=190991
@@ -163,10 +159,11 @@ namespace rtps
             std::basic_istringstream< _CharT, _Traits, _Alloc > temp_ss(the_string);
             RT num;
             temp_ss >> num;
+            //temp_ss.operator>>(num);
             return num;
         }
 
-    public:
+    /*public:
         Domain* getDomain()
         {
             return grid;
@@ -240,7 +237,7 @@ namespace rtps
         {
             two_dimensional = dim;
         }
-    };
+    };*/
 
 }
 

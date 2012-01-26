@@ -33,14 +33,14 @@ namespace rtps
         * The Particle Mass (and hence everything following) depends on the MAXIMUM number of particles in the system
         */
 
-        float rho0 = 1000.0;                              //rest density [kg/m^3 ]
+        float rho0 = settings->GetSettingAs<float>("rest_density");                              //rest density [kg/m^3 ]
         //float mass = (128*1024.0)/max_num * .0002;    //krog's way
         //float VP = (1.0/rho0)*0.00002*max_num;
         //float VP = 1.0/max_num;
         //float mass = (rho0)/max_num;
         //float VP = 2 * .0262144 / max_num;            //Particle Volume [ m^3 ]
         //float VP = .0262144 / 16000;                  //Particle Volume [ m^3 ]
-        float mass = (0.0256/(int)log2(max_num));         //Particle Mass [ kg ]
+        float mass = (0.0256/(int)log2(settings->GetSettingAs<unsigned int>("max_num_particles"));         //Particle Mass [ kg ]
         float VP = mass/rho0;
         //float mass = (rho0*VP/max_num);
         //constant .87 is magic
@@ -68,23 +68,19 @@ namespace rtps
 		// Cloud update (SHOULD NOT BE REQUIRED
         //settings->SetSetting("Maximum Number of Cloud Particles", max_cloud_num);
        
-        settings->SetSetting("Maximum Number of Particles", max_num);
-        settings->SetSetting("Mass", mass);
-        settings->SetSetting("Rest Distance", rest_distance);
-        settings->SetSetting("Smoothing Distance", smoothing_distance);
-        settings->SetSetting("Simulation Scale", simulation_scale);
-
+        settings->SetSetting("mass", mass);
+        settings->SetSetting("rest_distance", rest_distance);
+        settings->SetSetting("smoothing_distance", smoothing_distance);
+        settings->SetSetting("simulation_scale", simulation_scale);
 
 		// Why did Ian choose the 2nd line
         float boundary_distance = .5f * rest_distance;
         //float boundary_distance =  smoothing_distance;
 
-        settings->SetSetting("Boundary Distance", boundary_distance);
+        settings->SetSetting("boundary_distance", boundary_distance);
         float spacing = (rest_distance / simulation_scale);
         //float spacing = smoothing_distance / simulation_scale;
-        settings->SetSetting("Spacing", spacing);
-        printf("spacing = %f\n",spacing);
- 
+        settings->SetSetting("spacing", spacing);
 
         float pi = M_PI;
         float h9 = pow(smoothing_distance, 9.f);
@@ -102,37 +98,29 @@ namespace rtps
         settings->SetSetting("wvisc_dd", 45./(pi*h6) );
 
         //dynamic params
-        if(!settings->Exists("Gravity"))
-            settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
-        settings->SetSetting("Gas Constant", 1.5f);
-        settings->SetSetting("Viscosity", 1.0f);
-        settings->SetSetting("Velocity Limit", 600.0f);
-        settings->SetSetting("XSPH Factor", .1f);
-        settings->SetSetting("Friction Kinetic", 0.2f);
-        settings->SetSetting("Friction Static", 0.0f);
-        settings->SetSetting("Boundary Stiffness", 20000.0f);
-        settings->SetSetting("Boundary Dampening", 256.0f);
+        settings->SetSetting("gravity", float4(0.0f,0.0f,-9.8f,0.0f); // -9.8 m/sec^2
+        settings->SetSetting("gas_constant", 1.5f);
+        settings->SetSetting("viscosity", 1.0f);
+        settings->SetSetting("velocity_limit", 600.0f);
+        settings->SetSetting("xsph_factor", .1f);
+        settings->SetSetting("friction_kinetic", 0.2f);
+        settings->SetSetting("friction_static", 0.0f);
+        settings->SetSetting("boundary_stiffness", 20000.0f);
+        settings->SetSetting("boundary_dampening", 256.0f);
 
 
         //next 4 not used at the moment
-        settings->SetSetting("Restitution", 0.0f);
-        settings->SetSetting("Shear", 0.0f);
-        settings->SetSetting("Attraction", 0.0f);
-        settings->SetSetting("Spring", 0.0f);
+        settings->SetSetting("restitution", 0.0f);
+        settings->SetSetting("shear", 0.0f);
+        settings->SetSetting("attraction", 0.0f);
+        settings->SetSetting("spring", 0.0f);
 
         //constants
-        settings->SetSetting("EPSILON", 1E-6);
-        settings->SetSetting("PI", M_PI);       //delicious
+        settings->SetSetting("epsilon", 1E-6);
+        settings->SetSetting("pi", M_PI);       //delicious
 
         //CL parameters
-        settings->SetSetting("Number of Particles", 0);
-        settings->SetSetting("Number of Variables", 10); // for combined variables (vars_sorted, etc.) //TO be depracated
-        settings->SetSetting("Choice", 0); // which kind of calculation to invoke //TO be depracated
-
-
-		// CL Cloud parameters
-        settings->SetSetting("Number of Cloud Particles", 0);
-
+        settings->SetSetting("num_particles", 0);
     }
    
 
@@ -142,37 +130,31 @@ namespace rtps
     {
 
         //update all the members of the sphp struct
-        //sphp.grid_min = this->settings->GetSettingAs<float4>; //settings->GetSettingAs doesn't support float4
-        //sphp.grid_max;
-        sphp.mass = settings->GetSettingAs<float>("Mass");
-        sphp.rest_distance = settings->GetSettingAs<float>("Rest Distance");
-        sphp.smoothing_distance = settings->GetSettingAs<float>("Smoothing Distance");
-        sphp.simulation_scale = settings->GetSettingAs<float>("Simulation Scale");
-
-		printf("sphp.simulation_scale= %f\n", sphp.simulation_scale);
-		printf("sphp.smoothing_distance= %f\n", sphp.smoothing_distance);
+        sphp.mass = settings->GetSettingAs<float>("mass");
+        sphp.rest_distance = settings->GetSettingAs<float>("rest_distance");
+        sphp.smoothing_distance = settings->GetSettingAs<float>("smoothing_distance");
+        sphp.simulation_scale = settings->GetSettingAs<float>("simulation_scale");
         
         //dynamic params
-        sphp.boundary_stiffness = settings->GetSettingAs<float>("Boundary Stiffness");
-        sphp.boundary_dampening = settings->GetSettingAs<float>("Boundary Dampening");
-        sphp.boundary_distance = settings->GetSettingAs<float>("Boundary Distance");
-        sphp.K = settings->GetSettingAs<float>("Gas Constant");        //gas constant
-        sphp.viscosity = settings->GetSettingAs<float>("Viscosity");
-        sphp.velocity_limit = settings->GetSettingAs<float>("Velocity Limit");
-        sphp.xsph_factor = settings->GetSettingAs<float>("XSPH Factor");
-        sphp.gravity = settings->GetSettingAs<float>("Gravity"); // -9.8 m/sec^2
-        sphp.friction_coef = settings->GetSettingAs<float>("Friction");
-        sphp.restitution_coef = settings->GetSettingAs<float>("Restitution");
-
+        sphp.boundary_stiffness = settings->GetSettingAs<float>("boundary_stiffness");
+        sphp.boundary_dampening = settings->GetSettingAs<float>("boundary_dampening");
+        sphp.boundary_distance = settings->GetSettingAs<float>("boundary_distance");
+        sphp.K = settings->GetSettingAs<float>("gas_constant");        //gas constant
+        sphp.viscosity = settings->GetSettingAs<float>("viscosity");
+        sphp.velocity_limit = settings->GetSettingAs<float>("velocity_limit");
+        sphp.xsph_factor = settings->GetSettingAs<float>("xsph_factor");
+        sphp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2
+        sphp.friction_coef = settings->GetSettingAs<float>("friction");
+        sphp.restitution_coef = settings->GetSettingAs<float>("restitution");
         //next 3 not used at the moment
-        sphp.shear = settings->GetSettingAs<float>("Shear");
-        sphp.attraction = settings->GetSettingAs<float>("Attraction");
-        sphp.spring = settings->GetSettingAs<float>("Spring");
+        sphp.shear = settings->GetSettingAs<float>("shear");
+        sphp.attraction = settings->GetSettingAs<float>("attraction");
+        sphp.spring = settings->GetSettingAs<float>("spring");
         //sphp.surface_threshold;
 
         //constants
-        sphp.EPSILON = settings->GetSettingAs<float>("EPSILON");
-        sphp.PI = settings->GetSettingAs<float>("PI");       //delicious
+        sphp.EPSILON = settings->GetSettingAs<float>("epsilon");
+        sphp.PI = settings->GetSettingAs<float>("pi");       //delicious
         //Kernel Coefficients
         sphp.wpoly6_coef = settings->GetSettingAs<float>("wpoly6");
         sphp.wpoly6_d_coef = settings->GetSettingAs<float>("wpoly6_d");
@@ -185,18 +167,13 @@ namespace rtps
         sphp.wvisc_dd_coef = settings->GetSettingAs<float>("wvisc_dd");
 
         //CL parameters
-        sphp.num = settings->GetSettingAs<int>("Number of Particles");
-        sphp.nb_vars = settings->GetSettingAs<int>("Number of Variables"); // for combined variables (vars_sorted, etc.)
-        sphp.choice = settings->GetSettingAs<int>("Choice"); // which kind of calculation to invoke
-        sphp.max_num = settings->GetSettingAs<int>("Maximum Number of Particles");
-        sphp.cloud_num = settings->GetSettingAs<int>("Number of Cloud Particles");
-        sphp.max_cloud_num = settings->GetSettingAs<int>("Maximum Number of Cloud Particles");
+        sphp.num = settings->GetSettingAs<int>("num_particles");
+        sphp.max_num = settings->GetSettingAs<int>("max_num_particles");
 
         //update the OpenCL buffer
-        std::vector<SPHParams> vparams(0);
-        vparams.push_back(sphp);
-        cl_sphp.copyToDevice(vparams);
-
+        //std::vector<SPHParams> vparams();
+        //vparams.push_back(sphp);
+        cl_sphp.copyToDevice(vparams,0);
         settings->updated();
     }
 

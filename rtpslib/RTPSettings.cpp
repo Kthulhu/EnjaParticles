@@ -25,6 +25,7 @@
 #include "RTPSettings.h"
 namespace rtps
 {
+    //Fixme: This need to go somewhere else
     unsigned int nlpo2(register unsigned int x)
     {
         x--;
@@ -38,16 +39,10 @@ namespace rtps
 
     RTPSettings::RTPSettings()
     {
-		printf("rtpsettings: 1\n");
         changed = false;
-        system = SPH;
-        max_particles = 2048;
-        max_outer_particles = 0;
-        dt = .001f;
-        grid = new Domain(float4(-5,-.3f,0,0), float4(2, 2, 12, 0));
     }
 
-    RTPSettings::RTPSettings(SysType system, int max_particles, float dt)
+    /*RTPSettings::RTPSettings(SysType system, int max_particles, float dt)
     {
 		printf("rtpsettings: 2\n");
         changed = false;
@@ -102,7 +97,7 @@ namespace rtps
         this->w_coh = w_coh;
     }
 #endif
-
+*/
     RTPSettings::~RTPSettings()
     {
         printf("settings destructing!\n");

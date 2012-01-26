@@ -207,7 +207,7 @@ float rand_float(float mn, float mx)
 //----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-
+/*
     //initialize glut
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
@@ -376,12 +376,12 @@ int main(int argc, char** argv)
     float4 point2(7.5f,7.5f,7.5f,1.0f);
     sph->system->addPointSource(point,1.0f);
     sph->system->addPointSource(point2,1.5f);
-    sph->system->setAlpha(0.05f);
+    sph->system->setAlpha(0.05f);*/
 
     rtps::ParamParser p;
-    ifstream file("test1.xml", std::ifstream::in);
+    ifstream file("./bin/test1.xml", std::ifstream::in);
     p.readParameterFile(file);
-    glutMainLoop();
+    //glutMainLoop();
     return 0;
 }
 

@@ -26,7 +26,9 @@
 #define RTPS_STRUCTS_H_INCLUDED
 
 #include <stdio.h>
+#include <iostream>
 #include <math.h>
+#include <boost/tokenizer.hpp>
 
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
@@ -303,6 +305,16 @@ namespace rtps
             retval.z=mat.m[8]*b.x+mat.m[9]*b.y+mat.m[10]*b.z+mat.m[11]*b.w;
             retval.w=mat.m[12]*b.x+mat.m[13]*b.y+mat.m[14]*b.z+mat.m[15]*b.w;
             return retval;
+        }
+        friend std::istream& operator>>(std::istream& is, float4& __n)
+        {
+                is>>__n.x>>__n.y>>__n.z>>__n.w;
+                return is;
+        }
+        friend std::ostream& operator<<(std::ostream& os, float4& __n)
+        {
+                os<<__n.x<<" "<<__n.y<<" "<<__n.z<<" "<<__n.w;
+                return os;
         }
         /*float4& operator/(float r)
         {

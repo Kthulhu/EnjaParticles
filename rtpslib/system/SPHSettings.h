@@ -46,6 +46,7 @@ namespace rtps
     //Struct which gets passed to OpenCL routines
 	typedef struct SPHParams
     {
+        float rest_density;
         float mass;
         float rest_distance;
         float smoothing_distance;
@@ -60,22 +61,20 @@ namespace rtps
         float viscosity;
         float velocity_limit;
         float xsph_factor;
-        float gravity; // -9.8 m/sec^2
+        float4 gravity; // -9.8 m/sec^2
 
         float friction_coef;
-        //next 4 not used at the moment
         float restitution_coef;
         float shear;
         float attraction;
-
         float spring;
-        //float surface_threshold;
+
         //constants
         float EPSILON;
         float PI;       //delicious
+
         //Kernel Coefficients
         float wpoly6_coef;
-        
         float wpoly6_d_coef;
         float wpoly6_dd_coef; // laplacian
         float wspiky_coef;
@@ -86,17 +85,9 @@ namespace rtps
         float wvisc_d_coef;
         float wvisc_dd_coef;
 
-
         //CL parameters
         int num;
-        int nb_vars; // for combined variables (vars_sorted, etc.)
-        int choice; // which kind of calculation to invoke
         int max_num;
-
-		//CL parameter, cloud
-        int cloud_num; // nb cloud points
-        int max_cloud_num;
-
 
         void print()
         {

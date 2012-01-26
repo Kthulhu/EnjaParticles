@@ -540,74 +540,58 @@ namespace rtps
 
     void ParticleRigidBody::calculate()
     {
-        /*!
-        * The Particle Mass (and hence everything following) depends on the MAXIMUM number of particles in the system
-        */
-
-        float rho0 = 1000;                              //rest density [kg/m^3 ]
-        //float mass = (128*1024.0)/max_num * .0002;    //krog's way
-        //float VP = 2 * .0262144 / max_num;              //Particle Volume [ m^3 ]
-        //float VP = .0262144 / 16000;                  //Particle Volume [ m^3 ]
-        float mass = 0.0256/(int)log2(max_num);         //Particle Mass [ kg ]
+        //This shouldn't be here. We should just be able to set the rest distance
+        float rho0 = settings->GetSettingAs<float>("rest_density");                              //rest density [kg/m^3 ]
+        float mass = (0.0256/(int)log2(settings->GetSettingAs<unsigned int>("max_num_particles")); //Particle Mass [ kg ]
         float VP = mass/rho0;
-        //constant .87 is magic
-        float rest_distance = .87 * pow(VP, 1.f/3.f);   //rest distance between particles [ m ]
-//        float rest_distance = .87 * pow(VP, 1.f/3.f);   //rest distance between particles [ m ]
-        //float rest_distance = pow(VP, 1.f/3.f);     //rest distance between particles [ m ]
+        float rest_distance = .87 * pow(mass/rho0, 1.f/3.f);   //rest distance between particles [ m ]
         float smoothing_distance = 2.0f * rest_distance;//interaction radius
-
 
         float4 dmin = grid->getBndMin();
         float4 dmax = grid->getBndMax();
-        //printf("dmin: %f %f %f\n", dmin.x, dmin.y, dmin.z);
-        //printf("dmax: %f %f %f\n", dmax.x, dmax.y, dmax.z);
         float domain_vol = (dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z);
-        //printf("domain volume: %f\n", domain_vol);
-
 
         //ratio between particle radius in simulation coords and world coords
         float simulation_scale = pow(.5f * VP * max_num / domain_vol, 1.f/3.f); 
-        //float simulation_scale = pow(VP * 16000/ domain_vol, 1.f/3.f); 
-
-		//int max_cloud_num = cloud->getMaxCloudNum();
-
-		// Cloud update (SHOULD NOT BE REQUIRED
-        //settings->SetSetting("Maximum Number of Cloud Particles", max_cloud_num);
        
-        settings->SetSetting("Maximum Number of Particles", max_num);
-        settings->SetSetting("Mass", mass);
-        settings->SetSetting("Rest Distance", rest_distance);
-        settings->SetSetting("Smoothing Distance", smoothing_distance);
-        settings->SetSetting("Simulation Scale", simulation_scale);
-
+        settings->SetSetting("mass", mass);
+        settings->SetSetting("rest_distance", rest_distance);
+        settings->SetSetting("smoothing_distance", smoothing_distance);
+        settings->SetSetting("simulation_scale", simulation_scale);
 
 		// Why did Ian choose the 2nd line
         float boundary_distance = .5f * rest_distance;
         //float boundary_distance =  smoothing_distance;
 
-        settings->SetSetting("Boundary Distance", boundary_distance);
-        //float spacing = rest_distance / simulation_scale;
+        settings->SetSetting("boundary_distance", boundary_distance);
         float spacing = (smoothing_distance / simulation_scale);
-        printf("Spacing = %f\n",spacing);
-        settings->SetSetting("Spacing", spacing);
- 
+        //float spacing = smoothing_distance / simulation_scale;
+        settings->SetSetting("spacing", spacing);
+		// Why did Ian choose the 2nd line
 
-        if(!settings->Exists("Gravity"))
-            settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
-        settings->SetSetting("Gas Constant", 15.0f);
-        settings->SetSetting("Viscosity", .01f);
-        settings->SetSetting("Velocity Limit", 600.0f);
-        settings->SetSetting("XParticleRigidBody Factor", .1f);
-        settings->SetSetting("Friction Kinetic", 0.0f);
-        settings->SetSetting("Friction Static", 0.0f);
+        /*settings->SetSetting("gravity", float4(0.0f,0.0f,-9.8f,0.0f); // -9.8 m/sec^2
+        settings->SetSetting("gas_constant", 1.5f);
+        settings->SetSetting("viscosity", 1.0f);
+        settings->SetSetting("velocity_limit", 600.0f);
+        settings->SetSetting("xsph_factor", .1f);
+        settings->SetSetting("friction_kinetic", 0.2f);
+        settings->SetSetting("friction_static", 0.0f);
+        settings->SetSetting("boundary_stiffness", 20000.0f);
+        settings->SetSetting("boundary_dampening", 256.0f);
+
+        
+        //next 4 not used at the moment
+        settings->SetSetting("restitution", 0.0f);
+        settings->SetSetting("shear", 0.0f);
+        settings->SetSetting("attraction", 0.0f);
+        settings->SetSetting("spring", 0.0f);*/
 
         //constants
-        settings->SetSetting("EPSILON", 1E-6);
-        settings->SetSetting("PI", M_PI);       //delicious
+        settings->SetSetting("epsilon", 1E-6);
+        settings->SetSetting("pi", M_PI);       //delicious
 
         //CL parameters
-        settings->SetSetting("Number of Particles", 0);
-        settings->SetSetting("Number of Variables", 10); // for combined variables (vars_sorted, etc.) //TO be depracated
+        settings->SetSetting("num_particles", 0);
     }
    
 
@@ -616,62 +600,44 @@ namespace rtps
     void ParticleRigidBody::updateParams()
     {
 
-        //update all the members of the prbp struct
-        //prbp.grid_min = this->settings->GetSettingAs<float4>; //settings->GetSettingAs doesn't support float4
-        //prbp.grid_max;
-        prbp.mass = settings->GetSettingAs<float>("Mass");
-        prbp.rest_distance = settings->GetSettingAs<float>("Rest Distance");
-        prbp.smoothing_distance = settings->GetSettingAs<float>("Smoothing Distance");
-        prbp.simulation_scale = settings->GetSettingAs<float>("Simulation Scale");
-
-		printf("prbp.simulation_scale= %f\n", prbp.simulation_scale);
-		printf("prbp.smoothing_distance= %f\n", prbp.smoothing_distance);
+        
+        //update all the members of the sphp struct
+        sphp.mass = settings->GetSettingAs<float>("mass");
+        sphp.rest_distance = settings->GetSettingAs<float>("rest_distance");
+        sphp.smoothing_distance = settings->GetSettingAs<float>("smoothing_distance");
+        sphp.simulation_scale = settings->GetSettingAs<float>("simulation_scale");
         
         //dynamic params
-        prbp.boundary_stiffness = settings->GetSettingAs<float>("Boundary Stiffness");
-        prbp.boundary_dampening = settings->GetSettingAs<float>("Boundary Dampening");
-        prbp.boundary_distance = settings->GetSettingAs<float>("Boundary Distance");
-        //prbp.K = settings->GetSettingAs<float>("Gas Constant");        //gas constant
-        //prbp.viscosity = settings->GetSettingAs<float>("Viscosity");
-        //prbp.velocity_limit = settings->GetSettingAs<float>("Velocity Limit");
-        //prbp.xsph_factor = settings->GetSettingAs<float>("XParticleRigidBody Factor");
-        prbp.gravity = settings->GetSettingAs<float>("Gravity"); // -9.8 m/sec^2
-        prbp.friction_coef = settings->GetSettingAs<float>("Friction");
-        prbp.restitution_coef = settings->GetSettingAs<float>("Restitution");
-        prbp.penetration_fact = settings->GetSettingAs<float>("Penetration Factor");
-
+        sphp.boundary_stiffness = settings->GetSettingAs<float>("boundary_stiffness");
+        sphp.boundary_dampening = settings->GetSettingAs<float>("boundary_dampening");
+        sphp.boundary_distance = settings->GetSettingAs<float>("boundary_distance");
+        sphp.K = settings->GetSettingAs<float>("gas_constant");        //gas constant
+        sphp.viscosity = settings->GetSettingAs<float>("viscosity");
+        sphp.velocity_limit = settings->GetSettingAs<float>("velocity_limit");
+        sphp.xsph_factor = settings->GetSettingAs<float>("xsph_factor");
+        sphp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2
+        sphp.friction_coef = settings->GetSettingAs<float>("friction");
+        sphp.restitution_coef = settings->GetSettingAs<float>("restitution");
         //next 3 not used at the moment
-        prbp.shear = settings->GetSettingAs<float>("Shear");
-        prbp.attraction = settings->GetSettingAs<float>("Attraction");
-        prbp.spring = settings->GetSettingAs<float>("Spring");
-        //prbp.surface_threshold;
+        sphp.shear = settings->GetSettingAs<float>("shear");
+        sphp.attraction = settings->GetSettingAs<float>("attraction");
+        sphp.spring = settings->GetSettingAs<float>("spring");
+        //sphp.surface_threshold;
 
         //constants
-        prbp.EPSILON = settings->GetSettingAs<float>("EPSILON");
-        prbp.PI = settings->GetSettingAs<float>("PI");       //delicious
-        //Kernel Coefficients
-        prbp.wpoly6_coef = settings->GetSettingAs<float>("wpoly6");
-        prbp.wpoly6_d_coef = settings->GetSettingAs<float>("wpoly6_d");
-        prbp.wpoly6_dd_coef = settings->GetSettingAs<float>("wpoly6_dd"); // laplacian
-        prbp.wspiky_coef = settings->GetSettingAs<float>("wspiky");
-        prbp.wspiky_d_coef = settings->GetSettingAs<float>("wspiky_d");
-        prbp.wspiky_dd_coef = settings->GetSettingAs<float>("wspiky_dd");
-        prbp.wvisc_coef = settings->GetSettingAs<float>("wvisc");
-        prbp.wvisc_d_coef = settings->GetSettingAs<float>("wvisc_d");
-        prbp.wvisc_dd_coef = settings->GetSettingAs<float>("wvisc_dd");
+        sphp.EPSILON = settings->GetSettingAs<float>("epsilon");
+        sphp.PI = settings->GetSettingAs<float>("pi");       //delicious
 
         //CL parameters
-        prbp.num = settings->GetSettingAs<int>("Number of Particles");
-        prbp.nb_vars = settings->GetSettingAs<int>("Number of Variables"); // for combined variables (vars_sorted, etc.)
-        prbp.choice = settings->GetSettingAs<int>("Choice"); // which kind of calculation to invoke
-        prbp.max_num = settings->GetSettingAs<int>("Maximum Number of Particles");
+        sphp.num = settings->GetSettingAs<int>("num_particles");
+        sphp.max_num = settings->GetSettingAs<int>("max_num_particles");
 
         //update the OpenCL buffer
-        std::vector<ParticleRigidBodyParams> vparams(0);
-        vparams.push_back(prbp);
-        cl_prbp.copyToDevice(vparams);
-
+        //std::vector<SPHParams> vparams();
+        //vparams.push_back(sphp);
+        cl_prbp.copyToDevice(vparams,0);
         settings->updated();
+     
     }
     void ParticleRigidBody::interact()
     {
