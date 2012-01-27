@@ -42,7 +42,7 @@ namespace rtps
     class RTPS_EXPORT SpriteRender : public Render
     {
     public:
-        SpriteRender(GLuint pos, GLuint col, int n, CL* cli, RTPSettings* _settings);
+        SpriteRender(GLuint pos, GLuint col, int n, CL* cli, RTPSSettings* _settings);
         ~SpriteRender();
         virtual void render();
     };

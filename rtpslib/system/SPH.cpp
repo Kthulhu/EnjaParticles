@@ -45,65 +45,51 @@ namespace rtps
     using namespace sph;
 
 	//----------------------------------------------------------------------
-    SPH::SPH(RTPS *psfr, int n, int maxGravSources):System(psfr,n,maxGravSources)
+    SPH::SPH(RTPSSettings* set, CL* c):System(set,c)
     {
-        nb_var = 10;
+        spacing = settings->GetSettingAs<float>("Spacing");
 
-        std::vector<SPHParams> vparams(0);
-        vparams.push_back(sphp);
-        cl_sphp = Buffer<SPHParams>(ps->cli, vparams);
+        setupDomain(sphp.smoothing_distance/sphp.simulation_scale,sphp.simulation_scale);
+
+        setupTimers();
 
         calculate();
         updateParams();
 
-        //settings->printSettings();
-
-        spacing = settings->GetSettingAs<float>("Spacing");
-
-        //SPH settings depend on number of particles used
-        //calculateSPHSettings();
-        //set up the grid
-        setupDomain(sphp.smoothing_distance/sphp.simulation_scale,sphp.simulation_scale);
-
-        integrator = LEAPFROG;
-        //integrator = EULER;
-
-        setupTimers();
-
+        std::vector<SPHParams> vparams(0);
+        vparams.push_back(sphp);
+        cl_sphp = Buffer<SPHParams>(cli, vparams);
 #ifdef GPU
-        printf("RUNNING ON THE GPU\n");
+        dout<<"RUNNING ON THE GPU"<<endl;
         prepareSorted();
 
         //should be more cross platform
-        sph_source_dir = resource_path + "/" + std::string(SPH_CL_SOURCE_DIR);
-        ps->cli->addIncludeDir(sph_source_dir);
+        string sph_source_dir = settings->GetSettingAs<string>("rtps_path") + "/" + string(SPH_CL_SOURCE_DIR);
+        cli->addIncludeDir(sph_source_dir);
 
-        forceRB = RigidBodyForce(sph_source_dir, ps->cli, timers["force_rigidbody_gpu"]);
-        density = Density(sph_source_dir, ps->cli, timers["density_gpu"]);
-        force = Force(sph_source_dir, ps->cli, timers["force_gpu"]);
-        collision_wall = CollisionWall(sph_source_dir, ps->cli, timers["cw_gpu"]);
-        collision_tri = CollisionTriangle(sph_source_dir, ps->cli, timers["ct_gpu"], 2048); //TODO expose max_triangles as a parameter
+        forceRB = RigidBodyForce(sph_source_dir, cli, timers["force_rigidbody_gpu"]);
+        density = Density(sph_source_dir, cli, timers["density_gpu"]);
+        force = Force(sph_source_dir, cli, timers["force_gpu"]);
+        collision_wall = CollisionWall(sph_source_dir, cli, timers["cw_gpu"]);
+        collision_tri = CollisionTriangle(sph_source_dir, cli, timers["ct_gpu"], 2048); //TODO expose max_triangles as a parameter
 		
 
         //could generalize this to other integration methods later (leap frog, RK4)
-        if (integrator == LEAPFROG)
+        if (settings->GetSettingAs<string>("integrator")=="leapfrog")
         {
-            //loadLeapFrog();
-            leapfrog = LeapFrog(sph_source_dir, ps->cli, timers["leapfrog_gpu"]);
+            leapfrog = LeapFrog(sph_source_dir, cli, timers["leapfrog_gpu"]);
         }
-        else if (integrator == EULER)
+        else if (settings->GetSettingAs("integrator")=="euler")
         {
-            //loadEuler();
-            euler = Euler(sph_source_dir, ps->cli, timers["euler_gpu"]);
+            euler = Euler(sph_source_dir, cli, timers["euler_gpu"]);
         }
 #endif
-        //renderer->setParticleRadius(spacing);
     }
 
 	//----------------------------------------------------------------------
     SPH::~SPH()
     {
-        printf("SPH destructor\n");
+        dout<<"SPH destructor"<<endl;
 
         Hose* hose;
         int hs = hoses.size();  
@@ -118,9 +104,6 @@ namespace rtps
 	//----------------------------------------------------------------------
     void SPH::update()
     {
-		//printf("+++++++++++++ enter UPDATE()\n");
-        //call kernels
-        //TODO: add timings
 #ifdef CPU
         updateCPU();
 #endif
@@ -156,7 +139,7 @@ namespace rtps
 		//printf("**** enter updateGPU, num= %d\n", num);
 
         timers["update"]->start();
-        if (settings->has_changed()) updateParams();
+        if (settings->hasChanged()) updateParams();
 
         //settings->printSettings();
 
@@ -231,8 +214,8 @@ namespace rtps
                 //
                 //if so we need to copy sorted into unsorted
                 //and redo hash_and_sort
-                printf("SOME PARTICLES WERE DELETED!\n");
-                printf("nc: %d num: %d\n", nc, num);
+                dout<<"SOME PARTICLES WERE DELETED!"<<endl;
+                dout<<"nc: "<<nc<<" num: "<< num<<endl;
 
                 deleted_pos.resize(num-nc);
                 deleted_vel.resize(num-nc);
@@ -242,11 +225,8 @@ namespace rtps
 
  
                 num = nc;
-                settings->SetSetting("Number of Particles", num);
-                //sphp.num = num;
+                settings->SetSetting("num_particles", num);
                 updateParams();
-                //renderer->setNum(sphp.num);
-
                 //need to copy sorted arrays into unsorted arrays
 //**** PREP(2)
                 call_prep(2);
@@ -334,7 +314,7 @@ namespace rtps
         timers["collision_tri"]->start();
         //collide_triangles();
         collision_tri.execute(num,
-                settings->dt,
+                settings->GetSettingAs<float>("time_step"),
                 //cl_vars_sorted, 
                 cl_position_s,
                 cl_velocity_s,
@@ -350,11 +330,11 @@ namespace rtps
     void SPH::integrate()
     {
         timers["integrate"]->start();
-        if (integrator == EULER)
+        if (settings->GetSettingAs<string>("integrator")=="euler")
         {
             //euler();
             euler.execute(num,
-                settings->dt,
+                settings->GetSettingAs<float>("time_step"),
                 cl_position_u,
                 cl_position_s,
                 cl_velocity_u,
@@ -370,11 +350,11 @@ namespace rtps
 
 
         }
-        else if (integrator == LEAPFROG)
+        else if (settings->GetSettingAs<string>("integrator")=="leapfrog")
         {
             //leapfrog();
              leapfrog.execute(num,
-                settings->dt,
+                settings->GetSettingAs<float>("time_step"),
                 cl_position_u,
                 cl_position_s,
                 cl_velocity_u,
@@ -441,35 +421,35 @@ namespace rtps
 
         vector<float4> f4vec(max_num);
         vector<float> fvec(max_num);
-        std::fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
-        std::fill(fvec.begin(), fvec.end(), 0.0f);
+        fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+        fill(fvec.begin(), fvec.end(), 0.0f);
 
         //pure opencl buffers: these are deprecated
-        cl_veleval_u = Buffer<float4>(ps->cli, f4vec);
-        cl_veleval_s = Buffer<float4>(ps->cli, f4vec);
-        cl_density_s = Buffer<float>(ps->cli, fvec);
-        cl_xsph_s = Buffer<float4>(ps->cli, f4vec);
+        cl_veleval_u = Buffer<float4>(cli, f4vec);
+        cl_veleval_s = Buffer<float4>(cli, f4vec);
+        cl_density_s = Buffer<float>(cli, fvec);
+        cl_xsph_s = Buffer<float4>(cli, f4vec);
 
         //TODO make a helper constructor for buffer to make a cl_mem from a struct
         //Setup Grid Parameter structs
-        std::vector<GridParams> gparams(0);
+        vector<GridParams> gparams(0);
         gparams.push_back(grid_params);
-        cl_GridParams = Buffer<GridParams>(ps->cli, gparams);
+        cl_GridParams = Buffer<GridParams>(cli, gparams);
 
         //scaled Grid Parameters
-        std::vector<GridParams> sgparams(0);
+        vector<GridParams> sgparams(0);
         sgparams.push_back(grid_params_scaled);
-        cl_GridParamsScaled = Buffer<GridParams>(ps->cli, sgparams);
+        cl_GridParamsScaled = Buffer<GridParams>(cli, sgparams);
         // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
         // That is a problem since the number of
         // occupied cells could be much less than the number of grid elements.
-        printf("%d\n", grid_params.nb_cells);
-        std::vector<unsigned int> gcells(grid_params.nb_cells+1);
-        int minus = 0xffffffff;
-        std::fill(gcells.begin(), gcells.end(), 666);
+        dout<<"Number of Grid Cells "<< grid_params.nb_cells<<endl;
+        vector<unsigned int> gcells(grid_params.nb_cells+1);
+        //int minus = 0xffffffff;
+        fill(gcells.begin(), gcells.end(), 666);
 
-        cl_cell_indices_start = Buffer<unsigned int>(ps->cli, gcells);
-        cl_cell_indices_end   = Buffer<unsigned int>(ps->cli, gcells);
+        cl_cell_indices_start = Buffer<unsigned int>(cli, gcells);
+        cl_cell_indices_end   = Buffer<unsigned int>(cli, gcells);
         //printf("gp.nb_points= %d\n", gp.nb_points); exit(0);
 
      }
@@ -479,7 +459,7 @@ namespace rtps
     {
         //in sph we just use sph spacing
         radius *= spacing;
-        Hose *hose = new Hose(ps->settings->dt, total_n, center, velocity, radius, spacing, color);
+        Hose *hose = new Hose(settings->dt, total_n, center, velocity, radius, spacing, color);
         hoses.push_back(hose);
         //return the index
         return hoses.size()-1;
@@ -517,15 +497,15 @@ namespace rtps
         int nn = pos.size();
         if (num + nn > max_num)
         {
-			printf("pushParticles: exceeded max nb(%d) of particles allowed\n", max_num);
+			cout<<"pushParticles: exceeded max nb ("<<max_num<<") of particles allowed"<<endl;
             return;
         }
-        std::vector<float4> cols(nn);
+        vector<float4> cols(nn);
         //printf("color: %f %f %f %f\n", color.x, color.y, color.z, color.w);
 
-        std::fill(cols.begin(), cols.end(),color);
-        std::vector<float> mass_p(nn);
-        std::fill(mass_p.begin(), mass_p.end(),sphp.mass);
+        fill(cols.begin(), cols.end(),color);
+        vector<float> mass_p(nn);
+        fill(mass_p.begin(), mass_p.end(),sphp.mass);
 
 #ifdef GPU
         glFinish();
@@ -538,7 +518,7 @@ namespace rtps
         cl_color_u.copyToDevice(cols, num);
         cl_velocity_u.copyToDevice(vels, num);
         cl_mass_u.copyToDevice(mass_p, num);
-        settings->SetSetting("Number of Particles", num+nn);
+        settings->SetSetting("num_particles", num+nn);
         updateParams();
         cl_position_u.release();
         cl_color_u.release();

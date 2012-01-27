@@ -68,7 +68,7 @@ namespace rtps
     class RTPS_EXPORT SPH : public System
     {
     public:
-        SPH(RTPS *ps, int num, int maxGravSources);
+        SPH(RTPSSettings* settings, CL* c);
         ~SPH();
 
         void update();
@@ -95,32 +95,13 @@ namespace rtps
         void prepareSorted();
 
     private:
-
-        Integrator integrator;
         SPHParams sphp;
-        std::string sph_source_dir;
-        int nb_var;
-
 
         //keep track of hoses
         std::vector<Hose*> hoses;
 
         //needs to be called when particles are added
         void calculateSPHSettings();
-
-        //void popParticles();
-
-        //This should be in OpenCL classes
-        //Kernel k_scopy;
-
-        /*std::vector<float4> positions;
-        std::vector<float4> colors;
-        std::vector<float4> velocities;
-        std::vector<float4> veleval;
-
-        std::vector<float>  densities;
-        std::vector<float4> forces;
-        std::vector<float4> xsphs;*/
 
         Buffer<float4>      cl_veleval_u;
         Buffer<float4>      cl_veleval_s;
@@ -147,7 +128,6 @@ namespace rtps
         void calculate();
         //copy the SPH parameter struct to the GPU
         void updateParams();
-		//void pushCloudParticles(vector<float4>& pos, vector<float4>& normals);
 
         //Nearest Neighbors search related functions
         //Prep prep;

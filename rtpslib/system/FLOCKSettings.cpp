@@ -44,73 +44,73 @@ namespace rtps{
         float spacing = rest_distance/ simulation_scale;
     
         // SIMULATION SETTINGS
-        settings->SetSetting("Rest Distance", rest_distance);
-        settings->SetSetting("Smoothing Distance", smoothing_distance);
-        settings->SetSetting("Simulation Scale", simulation_scale);
+        settings->SetSetting("rest_distance", rest_distance);
+        settings->SetSetting("smoothing_distance", smoothing_distance);
+        settings->SetSetting("simulation_scale", simulation_scale);
 
         // SPACING
-        settings->SetSetting("Spacing", spacing);
+        settings->SetSetting("spacing", spacing);
 
         // BOID SETTINGS
-        settings->SetSetting("Min Separation Distance", 1.f);
-        settings->SetSetting("Searching Radius", 1.f);
-        settings->SetSetting("Max Speed", 5.f);
-        settings->SetSetting("Angular Velocity", 0.f);
+        settings->SetSetting("min_separation_distance", 1.f);
+        settings->SetSetting("searching_radius", 1.f);
+        settings->SetSetting("max_speed", 5.f);
+        settings->SetSetting("angular_velocity", 0.f);
 
-        // BOID WEIGHTS
-        settings->SetSetting("Separation Weight", 1.50f);
-        settings->SetSetting("Alignment Weight", 0.75f);
-        settings->SetSetting("Cohesion Weight", 0.5f);
-        settings->SetSetting("Goal Weight", 0.f);
-        settings->SetSetting("Avoid Weight", 0.f);
-        settings->SetSetting("Wander Weight", 0.f);
-        settings->SetSetting("LeaderFollowing Weight", 0.f);
+        // BOID_wEIGHTS
+        settings->SetSetting("separation_weight", 1.50f);
+        settings->SetSetting("alignment_weight", 0.75f);
+        settings->SetSetting("cohesion_weight", 0.5f);
+        settings->SetSetting("goal_weight", 0.f);
+        settings->SetSetting("avoid_weight", 0.f);
+        settings->SetSetting("wander_weight", 0.f);
+        settings->SetSetting("leader_following_weight", 0.f);
        
         // BOID RULE'S SETTINGS 
-        settings->SetSetting("Slowing Distance", 0.025f);
-        settings->SetSetting("Leader Index", 0);
+        settings->SetSetting("slowing_distance", 0.025f);
+        settings->SetSetting("leader_index", 0);
 
-        settings->SetSetting("Maximum Number of Particles", max_num);
-        settings->SetSetting("Number of Particles", 0);
+        settings->SetSetting("max_num_particles", max_num);
+        settings->SetSetting("num_particles", 0);
     }
 
     void FLOCK::updateParams(){
         
         // CL SETTINGS
-        flock_params.max_num = settings->GetSettingAs<int>("Maximum Number of Particles");
-        flock_params.num = settings->GetSettingAs<int>("Number of Particles");
+        flock_params.max_num = settings->GetSettingAs<int>("max_num_particles");
+        flock_params.num = settings->GetSettingAs<int>("num_particles");
 
         // SIMULATION SETTINGS
-        flock_params.rest_distance = settings->GetSettingAs<float>("Rest Distance");
-        flock_params.smoothing_distance = settings->GetSettingAs<float>("Smoothing Distance");
-        flock_params.simulation_scale = settings->GetSettingAs<float>("Simulation Scale");
+        flock_params.rest_distance = settings->GetSettingAs<float>("rest_distance");
+        flock_params.smoothing_distance = settings->GetSettingAs<float>("smoothing_distance");
+        flock_params.simulation_scale = settings->GetSettingAs<float>("simulation_scale");
 
         // SPACING
-        spacing = 1.1f*settings->GetSettingAs<float>("Spacing");
+        spacing = 1.1f*settings->GetSettingAs<float>("spacing");
 
         // BOID SETTINGS
-        flock_params.min_dist = 0.5f * flock_params.smoothing_distance * settings->GetSettingAs<float>("Min Separation Distance");
-        flock_params.search_radius = 0.8f * flock_params.smoothing_distance * settings->GetSettingAs<float>("Searching Radius");
-        flock_params.max_speed = settings->GetSettingAs<float>("Max Speed");
-        flock_params.ang_vel = settings->GetSettingAs<float>("Angular Velocity");
+        flock_params.min_dist = 0.5f * flock_params.smoothing_distance * settings->GetSettingAs<float>("min_separation_distance");
+        flock_params.search_radius = 0.8f * flock_params.smoothing_distance * settings->GetSettingAs<float>("searching_radius");
+        flock_params.max_speed = settings->GetSettingAs<float>("max_speed");
+        flock_params.ang_vel = settings->GetSettingAs<float>("angular_velocity");
 
-        // BOID WEIGHTS
-        flock_params.w_sep = settings->GetSettingAs<float>("Separation Weight");
-        flock_params.w_align = settings->GetSettingAs<float>("Alignment Weight");
-        flock_params.w_coh = settings->GetSettingAs<float>("Cohesion Weight");
-        flock_params.w_goal = settings->GetSettingAs<float>("Goal Weight");
-        flock_params.w_avoid = settings->GetSettingAs<float>("Avoid Weight");
-        flock_params.w_wander = settings->GetSettingAs<float>("Wander Weight");
-        flock_params.w_leadfoll = settings->GetSettingAs<float>("LeaderFollowing Weight");
+        // BOID_wEIGHTS
+        flock_params.w_sep = settings->GetSettingAs<float>("separation_weight");
+        flock_params.w_align = settings->GetSettingAs<float>("alignment_weight");
+        flock_params.w_coh = settings->GetSettingAs<float>("cohesion_weight");
+        flock_params.w_goal = settings->GetSettingAs<float>("goal_weight");
+        flock_params.w_avoid = settings->GetSettingAs<float>("avoid_weight");
+        flock_params.w_wander = settings->GetSettingAs<float>("wander_weight");
+        flock_params.w_leadfoll = settings->GetSettingAs<float>("leader_following_weight");
         
         // BOID RULE'S SETTINGS 
-        flock_params.slowing_distance= settings->GetSettingAs<float>("Slowing Distance");
-        flock_params.leader_index = settings->GetSettingAs<int>("Leader Index");
+        flock_params.slowing_distance= settings->GetSettingAs<float>("slowing_distance");
+        flock_params.leader_index = settings->GetSettingAs<int>("leader_index");
         
         // update the OpenCL buffer
-        std::vector<FLOCKParameters> vparams(0);
-        vparams.push_back(flock_params);
-        cl_FLOCKParameters.copyToDevice(vparams);
+        //std::vector<FLOCKParameters> vparams(0);
+        //vparams.push_back(flock_params);
+        cl_FLOCKParameters.copyToDevice(flock_params,0);
 
         settings->updated();
     }

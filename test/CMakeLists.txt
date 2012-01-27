@@ -38,30 +38,37 @@ set (test_INCLUDES
 
 
 #library
-set (test_render_SOURCES
-    ParamParser
-    test_render.cpp
+#set (test_render_SOURCES
+#    ParamParser
+#    test_render.cpp
+#    )
+
+#set (torusTest_SOURCES
+#    torusTest.cpp
+#    )
+
+#set (torusRBTest_SOURCES
+#    torusRBTest.cpp
+#    )
+
+set (test_SOURCES
+    main_test.cpp
     )
 
-set (torusTest_SOURCES
-    torusTest.cpp
-    )
+#INCLUDE_DIRECTORIES(${test_INCLUDES})
+#ADD_EXECUTABLE(test_render.x ${test_render_SOURCES})
 
-set (torusRBTest_SOURCES
-    torusRBTest.cpp
-    )
+#INCLUDE_DIRECTORIES(${test_INCLUDES})
+#ADD_EXECUTABLE(torusTest.x ${torusTest_SOURCES})
 
-INCLUDE_DIRECTORIES(${test_INCLUDES})
-ADD_EXECUTABLE(test_render.x ${test_render_SOURCES})
+#INCLUDE_DIRECTORIES(${test_INCLUDES})
+#ADD_EXECUTABLE(torusRBTest.x ${torusRBTest_SOURCES})
 
 INCLUDE_DIRECTORIES(${test_INCLUDES})
-ADD_EXECUTABLE(torusTest.x ${torusTest_SOURCES})
+ADD_EXECUTABLE(test.x ${test_SOURCES})
 
-INCLUDE_DIRECTORIES(${test_INCLUDES})
-ADD_EXECUTABLE(torusRBTest.x ${torusRBTest_SOURCES})
-
-message("current build dir:\n")
-message("${BASE_DIR}/rtps/build")
+#message("current build dir:\n")
+#message("${BASE_DIR}/rtps/build")
 
 LINK_DIRECTORIES(${rtpsuite_BINARY_DIR}/rtpslib)
 #${rtpsuite_BINARY_DIR}/bin)
@@ -78,19 +85,23 @@ SET(LINK_LIBS
 )
 message(RTPS_EXPORTS "${rtps_EXPORTS}")
 
-TARGET_LINK_LIBRARIES (test_render.x
-    ${LINK_LIBS}
-)
-TARGET_LINK_LIBRARIES (torusTest.x
-    ${LINK_LIBS}
-)
-TARGET_LINK_LIBRARIES (torusRBTest.x
+#TARGET_LINK_LIBRARIES (test_render.x
+#    ${LINK_LIBS}
+#)
+#TARGET_LINK_LIBRARIES (torusTest.x
+#    ${LINK_LIBS}
+#)
+#TARGET_LINK_LIBRARIES (torusRBTest.x
+#    ${LINK_LIBS}
+#)
+TARGET_LINK_LIBRARIES (test.x
     ${LINK_LIBS}
 )
 #IF(WIN32)
-install (TARGETS test_render.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS torusTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS torusRBTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+#install (TARGETS test_render.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+#install (TARGETS torusTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+#install (TARGETS torusRBTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+install (TARGETS test.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES MathFunctions.h DESTINATION include)
 
 #ENDIF(WIN32)

@@ -54,14 +54,10 @@ namespace rtps
         this->maxGravSources=maxGravSources;
         activeParticle = 0;
 		// I should be able to not specify this, but GPU restrictions ...
-
-        resource_path = settings->GetSettingAs<string>("rtps_path");
-        printf("resource path: %s\n", resource_path.c_str());
-
         //seed random
         srand ( time(NULL) );
 
-        grid = settings->grid;
+        grid = Domain(settings->GetSettingAs<float4>("domain_min"),settings->GetSettingAs<float4>("domain_max"));
 
         setupTimers();
         //*** end Initialization
@@ -73,7 +69,7 @@ namespace rtps
         prepareSorted();
 
         //should be more cross platform
-        common_source_dir = resource_path + "/" + std::string(COMMON_CL_SOURCE_DIR);
+        string common_source_dir = settings->GetSettingAs<string>("rtps_path") + "/" + std::string(COMMON_CL_SOURCE_DIR);
         cli->addIncludeDir(common_source_dir);
         dout<<common_source_dir.c_str()<<endl;
 
@@ -220,7 +216,7 @@ namespace rtps
         pos_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         dout<<"pos vbo: "<< pos_vbo<<endl;
         col_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        dout<<"color vbo: "<< color_vbo<<endl;
+        dout<<"color vbo: "<< col_vbo<<endl;
         velocity_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         dout<<"velocity vbo: "<< velocity_vbo<<endl;
         force_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
@@ -272,19 +268,19 @@ namespace rtps
 	//----------------------------------------------------------------------
     void System::setupDomain(float cell_size, float sim_scale)
     {
-        grid->calculateCells(cell_size);
+        grid.calculateCells(cell_size);
 
-        grid_params.grid_min = grid->getMin();
-        grid_params.grid_max = grid->getMax();
-        grid_params.bnd_min  = grid->getBndMin();
-        grid_params.bnd_max  = grid->getBndMax();
+        grid_params.grid_min = grid.getMin();
+        grid_params.grid_max = grid.getMax();
+        grid_params.bnd_min  = grid.getBndMin();
+        grid_params.bnd_max  = grid.getBndMax();
 
         //grid_params.bnd_min = float4(1, 1, 1,0);
         //grid_params.bnd_max =  float4(4, 4, 4, 0);
 
-        grid_params.grid_res = grid->getRes();
-        grid_params.grid_size = grid->getSize();
-        grid_params.grid_delta = grid->getDelta();
+        grid_params.grid_res = grid.getRes();
+        grid_params.grid_size = grid.getSize();
+        grid_params.grid_delta = grid.getDelta();
         grid_params.nb_cells = (int) (grid_params.grid_res.x*grid_params.grid_res.y*grid_params.grid_res.z);
 
         /*
@@ -310,15 +306,6 @@ namespace rtps
     int System::addBox(int nn, float4 min, float4 max, bool scaled, float4 color, float mass)
     {
         float scale = 1.0f;
-		#if 0
-        if (scaled)
-        {
-            scale = sphp.simulation_scale;
-        }
-		#endif
-		//printf("GEE inside addBox, before addRect, scale= %f\n", scale);
-		//printf("GEE inside addBox, sphp.simulation_scale= %f\n", sphp.simulation_scale);
-		printf("GEE addBox spacing = %f\n", spacing);
         vector<float4> rect = addRect(nn, min, max, spacing, scale);
         float4 velo(0, 0, 0, 0);
         pushParticles(rect, velo, color, mass);
@@ -353,8 +340,6 @@ namespace rtps
 
     void System::testDelete()
     {
-
-        //cut = 1;
         std::vector<float4> poss(40);
         float4 posx(100.,100.,100.,1.);
         std::fill(poss.begin(), poss.end(),posx);
@@ -374,33 +359,6 @@ namespace rtps
 
     }
 
-    /*void System::setRenderer()
-    {
-        switch(ps->settings->getRenderType())
-        {
-            case RTPSettings::SPRITE_RENDER:
-                renderer = new SpriteRender(pos_vbo,col_vbo,num,cli, ps->settings);
-                //printf("spacing for radius %f\n", spacing);
-                break;
-            case RTPSettings::SCREEN_SPACE_RENDER:
-                //renderer = new ScreenSpaceRender();
-                renderer = new SSFRender(pos_vbo,col_vbo,num,cli, ps->settings);
-                break;
-            case RTPSettings::RENDER:
-                renderer = new Render(pos_vbo,col_vbo,num,cli, ps->settings);
-                break;
-            case RTPSettings::SPHERE3D_RENDER:
-                printf("new Sphere3DRender\n");
-                renderer = new Sphere3DRender(pos_vbo,col_vbo,num,cli, ps->settings);
-                break;
-            default:
-                //should be an error
-                renderer = new Render(pos_vbo,col_vbo,num,cli, ps->settings);
-                break;
-        }
-        //renderer->setParticleRadius(spacing*0.5);
-		//renderer->setRTPS(
-    }*/
 	//----------------------------------------------------------------------
     void System::radix_sort()
     {
@@ -416,7 +374,7 @@ namespace rtps
         }   
         catch (cl::Error er) 
         {   
-            printf("ERROR(radix sort): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
+            cout<<"ERROR(radix sort): "<< er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
         }   
 
     }
@@ -447,8 +405,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR(bitonic sort): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
-            exit(0);
+            cout<<"ERROR(bitonic sort): "<< er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
         }
 
         cli->queue.finish();
@@ -499,15 +456,6 @@ namespace rtps
     void System::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int voxelResolution,float4 velo, float4 color,float mass)
     {
         glFinish();
-        //cl::Image3DGL img(cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
-        //std::vector<cl::Memory> objs;
-        //objs.push_back(img);
-        //cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
-        //cli->queue.finish();
-        //acquireGLBuffers();
-        //int tmpnum = m2p.execute(cl_position_u,cl_color_u,cl_velocity_u,num,img,scale,min,world,resolution,//debug
-        //        clf_debug,
-        //        cli_debug);
         vector<float4> vec;
         glBindTexture(GL_TEXTURE_3D_EXT,tex3d);
         GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
@@ -534,13 +482,8 @@ namespace rtps
         glBindTexture(GL_TEXTURE_3D_EXT,0);
         delete[] image;
 
-        printf("vec.size() = %d\n",vec.size());
+        dout<<"Num particles from voxel = "<<vec.size()<<endl;
         pushParticles(vec,velo,color,mass);
-        //renderer->setNum(num);
-        //hash_and_sort();
-        //cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
-        //cli->queue.finish();
-        //releaseGLBuffers(); 
     }
     void System::acquireGLBuffers()
     {
@@ -558,10 +501,4 @@ namespace rtps
         cl_force_s.release();
         cl_active_cells.release();
     }
-    /*void System::render()
-    {
-        renderer->render();
-        renderer->renderVector(velocity_vbo);
-        //renderer->renderVector(force_vbo,0.029706f);
-    }*/
 }; //end namespace

@@ -1,9 +1,15 @@
 #ifndef TEST_APPLICATION_H
 #define TEST_APPLICATION_H
+#include <map>
+#include <string>
+#include <iostream>
 
+#include "../rtpslib/system/System.h"
+#include "../rtpslib/system/ParticleShape.h"
+#include "../rtpslib/render/ParticleEffect.h"
 namespace rtps
 {
-    public class TestApplication
+    class TestApplication
     {
         public:
             TestApplication();
@@ -17,9 +23,11 @@ namespace rtps
             void TimerCallback(int ms);
             void ResetSimulations();
             void drawString(const char *str, int x, int y, float color[4], void *font);
+            void initGL();
+            void readParamFile(std::istream& is);
         private:
             GLuint windowWidth,windowHeight;
-            std::map<std::string,RTPS*> systems;
+            std::map<std::string,System*> systems;
             std::map<std::string,ParticleEffect*> effects;
             std::map<std::string,ParticleShape*> pShapes;
             std::map<std::string,GLuint> meshVBOs;
@@ -28,6 +36,6 @@ namespace rtps
             CL* cli;
             bool paused;
             bool renderVelocity = false;
-    }
-}
+    };
+};
 #endif

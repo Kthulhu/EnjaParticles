@@ -22,7 +22,7 @@
 ****************************************************************************************/
 
 
-#include "RTPSettings.h"
+#include "RTPSSettings.h"
 namespace rtps
 {
     //Fixme: This need to go somewhere else
@@ -37,7 +37,7 @@ namespace rtps
         return(x+1);
     }
 
-    RTPSettings::RTPSettings()
+    RTPSSettings::RTPSSettings()
     {
         changed = false;
     }
@@ -98,12 +98,12 @@ namespace rtps
     }
 #endif
 */
-    RTPSettings::~RTPSettings()
+    RTPSSettings::~RTPSSettings()
     {
         printf("settings destructing!\n");
     }
 
-    void RTPSettings::printSettings()
+    void RTPSSettings::printSettings()
     {
         printf("RTPS Settings\n");
         typedef std::map <std::string, std::string> MapType;

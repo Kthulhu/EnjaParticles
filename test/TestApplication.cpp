@@ -21,13 +21,11 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 #include "TestApplication.h"
+#include "ParamParser.h"
+#include "RTPS.h"
 
-#include <math.h>
-#include <map>
-#include <time.h>
-#include <float.h>
 #include <sstream>
-#include <iomanip>
+#include <float.h>
 
 #include <GL/glew.h>
 #if defined __APPLE__ || defined(MACOSX)
@@ -36,9 +34,7 @@
     #include <GL/glut.h>
 //OpenCL stuff
 #endif
-void init_gl();
-void render_stereo();
-void setFrustum();
+using namespace std;
 namespace rtps
 {
     TestApplication::TestApplication()
@@ -55,7 +51,7 @@ namespace rtps
         {
             delete i->second;
         }
-        for(map<string,ParticleShapes*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
+        for(map<string,ParticleShape*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
         {
             delete i->second;
         }
@@ -73,6 +69,7 @@ namespace rtps
     }
     void TestApplication::KeyboardCallback(unsigned char key, int x, int y)
     {
+        unsigned int nn=0;
         switch (key)
         {
             case ' ':
@@ -80,28 +77,28 @@ namespace rtps
                 return;
             case 'e': //dam break
             {
-                nn = NUM_PARTICLES/2;
+                nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/2;
                 float4 col1 = float4(0.05, 0.15, 8., 0.1);
-                sph->system->addBox(nn, grid->getBndMin()+float4(0.5f,0.5f,0.5f,1.0f), grid->getBndMax()-float4(0.5f,0.5f,0.5f,1.0f), false,col1);
+                systems["water"]->addBox(nn, grid->getBndMin()+float4(0.5f,0.5f,0.5f,1.0f), grid->getBndMax()-float4(0.5f,0.5f,0.5f,1.0f), false,col1);
                 //ps2->system->addBox(nn, min, max, false);
                 return;
             }
             case 'g':
             {
                 //nn = 16384;
-                nn = NUM_PARTICLES/8;
+                nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/8;
                 min = float4(2.5f, 2.5f, 2.5f, 1.0f);
                 max = float4(7.5f, 7.5f, 7.5f, 1.0f);
                 float4 col1 = float4(0., 0., 1., 0.05);
-                sph->system->addBox(nn, min, max, false,col1);
+                systems["water"]->addBox(nn, min, max, false,col1);
                 //ps2->system->addBox(nn, min, max, false);
                 return;
             }
             case 'p': //print timers
-                printf("SPH timers:\n");
-                sph->system->printTimers();
-                printf("RB timers:\n");
-                rb->system->printTimers();
+                cout<<"SPH timers:"<<endl;
+                systems["water"]->printTimers();
+                cout<<"RB timers:"<<endl;
+                systems["rb1"]->printTimers();
                 return;
             case '\033': // escape quits
             case '\015': // Enter quits    
@@ -119,16 +116,16 @@ namespace rtps
                         0.0f,0.0f,0.0f,1.0f);
                 float4 velocity(0.0f,0.0f,0.0f,0.0f);
                 float4 color(1.0f,0.0f,0.0f,1.0f);
-                rb->system->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),float4(bunnyShape->getMin(),0.0f),mat,bunnyShape->getVoxelResolution(),velocity,color,mass);
+                systems["rb1"]->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),float4(bunnyShape->getMin(),0.0f),mat,bunnyShape->getVoxelResolution(),velocity,color,mass);
                 /*printf("deleting willy nilly\n");
-                sph->system->testDelete();
-                rb->system->testDelete();*/
+                systems["water"]->testDelete();
+                systems["rb1"]->testDelete();*/
                 return;
             }
             case 'h':
             {
                 //spray hose
-                printf("about to make hose\n");
+                cout<<"about to make hose"<<endl;
                 float4 center(2., 2., .2, 1.);
                 //float4 velocity(.6, -.6, -.6, 0);
                 //float4 velocity(2., 5., -.8, 0);
@@ -137,7 +134,7 @@ namespace rtps
                 float4 col1 = float4(0., 0., 1., 1.);
 
 
-                sph->system->addHose(5000, center, velocity, 5, col1);
+                systems["water"]->addHose(5000, center, velocity, 5, col1);
                 return;
             }
             case 'n':
@@ -153,7 +150,7 @@ namespace rtps
                     float innerRadius=1.0f;
                     float outerRadius=4.0f;
                     float thickness=2.0f;
-                    sph->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness);
+                    systems["water"]->addTorus(systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles"),center,innerRadius,outerRadius,thickness);
                     return;
                 }
             case 'r': //drop a rectangle
@@ -169,7 +166,7 @@ namespace rtps
                     float4 position = float4(0.0f, 0.0f,grid->getMax().z-(size.z/2.f),1.0f);
                     position.x = mid.x-(size.x/2.0f);
                     position.y = mid.y-(size.y/2.0f);
-                    rb->system->addBox(NUM_PARTICLES, position, position+size, false, col1,mass);
+                    systems["rb1"]->addBox(systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles"), position, position+size, false, col1,mass);
                     return;
                 }
             case 'v':
@@ -247,7 +244,7 @@ namespace rtps
             }
             cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
             cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl; 
-            bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),3.0f);
+            bunnyShape = new ParticleShape(min,max,systems["rb1"]->getSpacing(),3.0f);
             bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
             //write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
             voxelized=true;
@@ -283,17 +280,17 @@ namespace rtps
             RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
             //FIXME: Have a method to give renderType to each System. That way we can have different
             //Systems with the different effects.
-            for(map<string,RTPS*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
             {
                 if(renderVelocity)
                 {
-                    effects[renderType]->renderVector(i->second->system->getPosVBO(),i->second->system->getVelocityVBO(),i->second->system->getNum());
+                    effects[renderType]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
                 }
-                effects[renderType]->render(i->second->system->getPosVBO(),i->second->system->getColVBO(),i->second->system->getNum());
+                effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
             }
             if(render_movie)
             {
-                write_movie_frame("image");
+                //write_movie_frame("image");
             }
 
         }
@@ -302,9 +299,9 @@ namespace rtps
 
         if(render_movie)
         {
-            frame_counter++;
+            //frame_counter++;
         }
-        showMass();
+        //showMass();
         glutSwapBuffers();
 
     }
@@ -373,32 +370,32 @@ namespace rtps
         if(!paused)
         {
             glFinish();
-            for(map<string,RTPS*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
             {
-                i->second->system->acquireGLBuffers();
-                i->second->system->update();
-                i->second->system->interact();
+                i->second->acquireGLBuffers();
+                i->second->update();
+                i->second->interact();
             }
             
-            for(map<string,RTPS*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
             {
-                i->second->system->integrate();
-                i->second->system->postProcess();
-                i->second->system->acquireGLBuffers();
+                i->second->integrate();
+                i->second->postProcess();
+                i->second->acquireGLBuffers();
             }
-            /*sph->system->acquireGLBuffers();
-            rb->system->acquireGLBuffers();
-            sph->system->update();
-            rb->system->update();
-            sph->system->interact();
-            rb->system->interact();
-            sph->system->integrate();
-            rb->system->integrate();
-            sph->system->postProcess();
-            rb->system->postProcess();
-            //streamline->addStreamLine(sph->system->getPositionBufferUnsorted(),sph->system->getColorBufferUnsorted(),sph->system->getNum());
-            sph->system->releaseGLBuffers();
-            rb->system->releaseGLBuffers();*/
+            /*systems["water"]->acquireGLBuffers();
+            systems["rb1"]->acquireGLBuffers();
+            systems["water"]->update();
+            systems["rb1"]->update();
+            systems["water"]->interact();
+            systems["rb1"]->interact();
+            systems["water"]->integrate();
+            systems["rb1"]->integrate();
+            systems["water"]->postProcess();
+            systems["rb1"]->postProcess();
+            //streamline->addStreamLine(systems["water"]->getPositionBufferUnsorted(),systems["water"]->getColorBufferUnsorted(),systems["water"]->getNum());
+            systems["water"]->releaseGLBuffers();
+            systems["rb1"]->releaseGLBuffers();*/
         }
         glutPostRedisplay();
     }
@@ -442,447 +439,16 @@ namespace rtps
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
     }
-    GLuint windowWidth,windowHeight;
-    std::map<std::string,RTPS*> systems;
-    std::map<std::string,ParticleEffect*> effects;
-    std::map<std::string,ParticleShape*> pShapes;
-    std::map<std::string,GLuint> meshVBOs;
-    std::map<std::string,GLuint> meshIBOs;
-    std::string renderType;
-
-    CL* cli;
-    bool paused;
-    bool renderVelocity = false;
+    
+    void TestApplication::readParamFile(std::istream& is)
+    {
+        ParamParser p;
+        vector<RTPSSettings*> sysSettings;
+        vector<string> names;
+        p.readParameterFile(is,sysSettings ,names );
+        for(unsigned int i = 0; i<sysSettings.size(); i++)
+        {
+            systems[names[i]]=RTPS::getSystemInstance(sysSettings[i],cli);
+        }
+    }
 };
-
-void showMass();
-
-
-#define NUM_PARTICLES 524288
-//#define NUM_PARTICLES 262144
-//#define NUM_PARTICLES 65536
-//#define NUM_PARTICLES 32768
-//#define NUM_PARTICLES 16384
-//#define NUM_PARTICLES 10000
-//#define NUM_PARTICLES 8192
-//#define NUM_PARTICLES 4096
-//#define NUM_PARTICLES 2048
-//#define NUM_PARTICLES 1024
-//#define NUM_PARTICLES 256
-//#define DT .003f
-#define DT .003f
-//#define DT .015f
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-int main(int argc, char** argv)
-{
-
-    //initialize glut
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
-		//|GLUT_STEREO //if you want stereo you must uncomment this.
-		);
-    glutInitWindowSize(window_width, window_height);
-    glutInitWindowPosition (glutGet(GLUT_SCREEN_WIDTH)/2 - window_width/2, 
-                            glutGet(GLUT_SCREEN_HEIGHT)/2 - window_height/2);
-
-
-    std::stringstream ss;
-    ss << "Real-Time Particle System: " << NUM_PARTICLES << std::ends;
-    glutWindowHandle = glutCreateWindow(ss.str().c_str());
-
-    glutDisplayFunc(appRender); //main rendering function
-    glutTimerFunc(30, timerCB, 30); //determin a minimum time between frames
-    glutKeyboardFunc(appKeyboard);
-    glutMouseFunc(appMouse);
-    glutMotionFunc(appMotion);
-    glutReshapeFunc(resizeWindow);
-
-    //define_lights_and_materials();
-
-    // initialize necessary OpenGL extensions
-    glewInit();
-    GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object"); 
-    printf("GLEW supported?: %d\n", bGLEW);
-
-    cli = new CL();
-    //default constructor
-    //rtps::RTPSettings settings;
-    //rtps::Domain grid = Domain(float4(-5,-.3,0,0), float4(2, 2, 12, 0));
-    grid = new Domain(float4(0,0,0,0), float4(10, 10, 10, 0));
-    //rtps::Domain grid = Domain(float4(0,0,0,0), float4(2, 2, 2, 0));
-    rtps::RTPSettings *settings = new rtps::RTPSettings(rtps::RTPSettings::SPH, NUM_PARTICLES, DT, grid);
-    
-
-    //should be argv[0]
-#ifdef WIN32
-    settings->SetSetting("rtps_path", ".");
-#else
-    settings->SetSetting("rtps_path", "./bin");
-    //settings->SetSetting("rtps_path", argv[0]);
-    //printf("arvg[0]: %s\n", argv[0]);
-#endif
-
-    //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    settings->setRenderType(RTPSettings::RENDER);
-    //settings.setRenderType(RTPSettings::SPRITE_RENDER);
-    settings->SetSetting("render_use_alpha", true);
-    //settings->SetSetting("render_use_alpha", false);
-    settings->SetSetting("render_alpha_function", "add");
-    settings->setRadiusScale(0.4);
-    settings->setBlurScale(1.0);
-    settings->setUseGLSL(1);
-
-    settings->SetSetting("sub_intervals", 1);
-
-    sph = new rtps::RTPS(settings,cli);
-    //ps = new rtps::RTPS();
-
-    sph->settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
-    sph->settings->SetSetting("Gas Constant", 1.f);
-    sph->settings->SetSetting("Viscosity", .001f);
-    sph->settings->SetSetting("Velocity Limit", 600.0f);
-    sph->settings->SetSetting("XSPH Factor", .15f);
-    sph->settings->SetSetting("Friction Kinetic", 0.0f);
-    sph->settings->SetSetting("Friction Static", 0.0f);
-    sph->settings->SetSetting("Boundary Stiffness", 20000.0f);
-    sph->settings->SetSetting("Boundary Dampening", 256.0f);
-
-
-    grid2 = new Domain(float4(0,0,0,0), float4(10, 10, 10, 0));
-    rtps::RTPSettings* rb_settings = new rtps::RTPSettings(rtps::RTPSettings::PARTICLE_RIGIDBODY, NUM_PARTICLES, DT , grid2);
-    
-
-    //should be argv[0]
-#ifdef WIN32
-    rb_settings->SetSetting("rtps_path", ".");
-#else
-    rb_settings->SetSetting("rtps_path", "./bin");
-    //settings->SetSetting("rtps_path", argv[0]);
-    //printf("arvg[0]: %s\n", argv[0]);
-#endif
-
-    //rb_settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    rb_settings->setRenderType(RTPSettings::RENDER);
-    settings->SetSetting("render_use_alpha", true);
-    //settings->SetSetting("render_use_alpha", false);
-    settings->SetSetting("render_alpha_function", "add");
-    //rb_settings.setRenderType(RTPSettings::SPRITE_RENDER);
-    rb_settings->setRadiusScale(0.4);
-    rb_settings->setBlurScale(1.0);
-    rb_settings->setUseGLSL(1);
-
-    rb_settings->SetSetting("sub_intervals", 1);
-    //settings->SetSetting("render_texture", "firejet_blast.png");
-    //settings->SetSetting("render_frag_shader", "sprite_tex_frag.glsl");
-    //settings->SetSetting("render_use_alpha", true);
-    //settings->SetSetting("render_use_alpha", false);
-    //settings->SetSetting("render_alpha_function", "add");
-    //settings->SetSetting("lt_increment", -.00);
-    //settings->SetSetting("lt_cl", "lifetime.cl");
-
-    rb = new rtps::RTPS(rb_settings,cli);
-    //ps = new rtps::RTPS();
-
-
-    rb->settings->SetSetting("Gravity", -9.8f); // -9.8 m/sec^2
-    rb->settings->SetSetting("Velocity Limit", 600.0f);
-    rb->settings->SetSetting("Friction Kinetic", 0.0f);
-    rb->settings->SetSetting("Friction Static", 0.0f);
-    rb->settings->SetSetting("Boundary Stiffness", 20000.0f);
-    rb->settings->SetSetting("Boundary Dampening", 256.0f);
-    //rb->settings->SetSetting("Boundary Stiffness", 5.f);
-    //rb->settings->SetSetting("Boundary Dampening", 2.f);
-    rb->settings->SetSetting("Penetration Factor", .5f);
-    rb->settings->SetSetting("Restitution",0.95f);
-
-    sph->system->addInteractionSystem(rb->system);
-    rb->system->addInteractionSystem(sph->system);
-    //initialize the OpenGL scene for rendering
-    init_gl();
-
-    int gIndices[3*BUNNY_NUM_TRIANGLES];
-    for(int i = 0; i<BUNNY_NUM_TRIANGLES;i++)
-    {
-        gIndices[(i*3)]=gIndicesBunny[i][0];
-        gIndices[(i*3)+1]=gIndicesBunny[i][1];
-        gIndices[(i*3)+2]=gIndicesBunny[i][2];
-    }
-
-    
-    bunnyVBO = createVBO(gVerticesBunny, 3*BUNNY_NUM_VERTICES*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
-    bunnyIBO = createVBO(gIndices, 3*BUNNY_NUM_TRIANGLES*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
-    
-    RenderSettings rs;
-    //rs.blending=false;
-    rs.blending=false;
-    float nf[2];
-    glGetFloatv(GL_DEPTH_RANGE,nf);
-    rs.near = nf[0];
-    rs.far = nf[1];
-    rs.particleRadius = sph->system->getSpacing()*20.f;
-    rs.windowWidth=window_width;
-    rs.windowHeight=window_height;
-    lib = new ShaderLibrary();
-    lib->initializeShaders(GLSL_BIN_DIR);
-    effects["default"]=new ParticleEffect(rs,*lib);
-    //effects["sprite"]=new ParticleEffect();
-    rs.blending=true;
-    rs.particleRadius = sph->system->getSpacing()*.4f;
-    effects["ssfr"]=new SSEffect(rs, *lib);
-    int tmp = NUM_PARTICLES/100;
-    vector<unsigned int> indices(100);
-    for(int i = 0;i<100;i++)
-    {
-        indices[i]=tmp*i;      
-    }
-    streamline=new StreamlineEffect(rs, *lib,100,100,indices,cli);
-    float4 point(2.5f,2.5f,2.5f,1.0f);
-    float4 point2(7.5f,7.5f,7.5f,1.0f);
-    sph->system->addPointSource(point,1.0f);
-    sph->system->addPointSource(point2,1.5f);
-    sph->system->setAlpha(0.05f);
-
-    glutMainLoop();
-    return 0;
-}
-
-
-void appRender()
-{
-
-}
-
-
-
-void appKeyboard(unsigned char key, int x, int y)
-{
-    
-}
-
-void init_gl()
-{
-
-
-}
-void timerCB(int ms)
-{
-
-}
-
-
-void appDestroy()
-{
-
-
-
-
-    if (glutWindowHandle)glutDestroyWindow(glutWindowHandle);
-    exit(0);
-}
-
-
-
-
-void appMouse(int button, int state, int x, int y)
-{
-
-
-    //glutPostRedisplay();
-}
-
-void appMotion(int x, int y)
-{
-
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// write 2d text using GLUT
-// The projection matrix must be set to orthogonal before call this function.
-///////////////////////////////////////////////////////////////////////////////
-void drawString(const char *str, int x, int y, float color[4], void *font)
-{
-
-}
-void showMass()
-{
-    static std::stringstream ss;
-
-    // backup current model-view matrix
-    glPushMatrix();                     // save current modelview matrix
-    glLoadIdentity();                   // reset modelview matrix
-
-    // set to 2D orthogonal projection
-    glMatrixMode(GL_PROJECTION);        // switch to projection matrix
-    glPushMatrix();                     // save current projection matrix
-    glLoadIdentity();                   // reset projection matrix
-    gluOrtho2D(0, 400, 0, 300);         // set to orthogonal projection
-
-    float color[4] = {1, .5, .25, 1};
-
-    ss.str("");
-    ss << "Mass (Press '+' to increase and '-' to decrease): " << mass;
-    drawString(ss.str().c_str(), 15, 15, color, font);
-    ss.str("");
-    ss << "Size (Press '[' to increase and ']' to decrease): " << sizeScale;
-    drawString(ss.str().c_str(), 15, 25, color, font);
-
-    // restore projection matrix
-    glPopMatrix();                      // restore to previous projection matrix
-
-    // restore modelview matrix
-    glMatrixMode(GL_MODELVIEW);         // switch to modelview matrix
-    glPopMatrix();                      // restore to previous modelview matrix
-}
-//----------------------------------------------------------------------
-///////////////////////////////////////////////////////////////////////////////
-// display frame rates
-///////////////////////////////////////////////////////////////////////////////
-void showFPS(float fps, std::string* report)
-{
-    static std::stringstream ss;
-
-    // backup current model-view matrix
-    glPushMatrix();                     // save current modelview matrix
-    glLoadIdentity();                   // reset modelview matrix
-
-    // set to 2D orthogonal projection
-    glMatrixMode(GL_PROJECTION);        // switch to projection matrix
-    glPushMatrix();                     // save current projection matrix
-    glLoadIdentity();                   // reset projection matrix
-    gluOrtho2D(0, 400, 0, 300);         // set to orthogonal projection
-
-    float color[4] = {1, 1, 0, 1};
-
-    // update fps every second
-    ss.str("");
-    ss << std::fixed << std::setprecision(1);
-    ss << fps << " FPS" << std::ends; // update fps string
-    ss << std::resetiosflags(std::ios_base::fixed | std::ios_base::floatfield);
-    drawString(ss.str().c_str(), 15, 286, color, font);
-    drawString(report[0].c_str(), 15, 273, color, font);
-    drawString(report[1].c_str(), 15, 260, color, font);
-    ss.str("Mass: ");
-    ss << mass;
-    drawString(ss.str().c_str(), 15, 259, color, font);
-
-    // restore projection matrix
-    glPopMatrix();                      // restore to previous projection matrix
-
-    // restore modelview matrix
-    glMatrixMode(GL_MODELVIEW);         // switch to modelview matrix
-    glPopMatrix();                      // restore to previous modelview matrix
-}
-//----------------------------------------------------------------------
-void resizeWindow(int w, int h)
-{
-
-}
-
-void render_stereo()
-{
-
-    glDrawBuffer(GL_BACK_LEFT);                              //draw into back left buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();                                        //reset projection matrix
-    glFrustum(leftCam.leftfrustum, leftCam.rightfrustum,     //set left view frustum
-              leftCam.bottomfrustum, leftCam.topfrustum,
-              nearZ, farZ);
-    glTranslatef(leftCam.modeltranslation, 0.0, 0.0);        //translate to cancel parallax
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glPushMatrix();
-    {
-        //glTranslatef(0.0, 0.0, depthZ);                        //translate to screenplane
-        glRotatef(-90, 1.0, 0.0, 0.0);
-        glRotatef(rotate_x, 1.0, 0.0, 0.0);
-        glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-        glTranslatef(translate_x, translate_z, translate_y);
-        RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
-        if(renderVelocity)
-        {
-            effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
-            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
-        }
-        effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
-        effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-//        sph->render();
-//        rb->render();
-        draw_collision_boxes();
-    }
-    glPopMatrix();
-
-    if(render_movie)
-    {
-        write_movie_frame("stereo/image_left_");
-    }
-
-    glDrawBuffer(GL_BACK_RIGHT);                             //draw into back right buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();                                        //reset projection matrix
-    glFrustum(rightCam.leftfrustum, rightCam.rightfrustum,   //set left view frustum
-              rightCam.bottomfrustum, rightCam.topfrustum,
-              nearZ, farZ);
-    glTranslatef(rightCam.modeltranslation, 0.0, 0.0);       //translate to cancel parallax
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    glPushMatrix();
-    {
-        glRotatef(-90, 1.0, 0.0, 0.0);
-        glRotatef(rotate_x, 1.0, 0.0, 0.0);
-        glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-        glTranslatef(translate_x, translate_z, translate_y);
-        RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
-        if(renderVelocity)
-        {
-            effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
-            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
-        }
-        effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
-        effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-//        sph->render();
-//        rb->render();
-        draw_collision_boxes();
-    }
-    glPopMatrix();
-    if(render_movie)
-    {
-        write_movie_frame("stereo/image_right_");
-    }
-}
-
-
-void setFrustum(void)
-{
-    double top = nearZ*tan(DTR*fovy/2);                    //sets top of frustum based on fovy and near clipping plane
-    double right = aspect*top;                             //sets right of frustum based on aspect ratio
-    double frustumshift = (IOD/2)*nearZ/screenZ;
-
-    leftCam.topfrustum = top;
-    leftCam.bottomfrustum = -top;
-    leftCam.leftfrustum = -right + frustumshift;
-    leftCam.rightfrustum = right + frustumshift;
-    leftCam.modeltranslation = IOD/2;
-
-    rightCam.topfrustum = top;
-    rightCam.bottomfrustum = -top;
-    rightCam.leftfrustum = -right - frustumshift;
-    rightCam.rightfrustum = right - frustumshift;
-    rightCam.modeltranslation = -IOD/2;
-}
-
-int write_movie_frame(const char* name)
-{
-        sprintf(filename,"%s%s_%08d.png",render_dir,name,frame_counter);
-        glReadPixels(0, 0, window_width, window_height, GL_RGBA, GL_UNSIGNED_BYTE, image);
-        if (!stbi_write_png(filename,window_width,window_height,4,(void*)image,0))
-        {
-            printf("failed to write image %s\n",filename);
-            return -1;
-        }
-        return 0;
-}

@@ -189,10 +189,10 @@ int main(int argc, char** argv)
     //rtps::Domain grid = Domain(float4(-5,-.3,0,0), float4(2, 2, 12, 0));
     rtps::Domain* grid = new Domain(float4(0,0,0,0), float4(5, 5, 5, 0));
     //rtps::Domain grid = Domain(float4(0,0,0,0), float4(2, 2, 2, 0));
-    rtps::RTPSettings *settings = new rtps::RTPSettings(rtps::RTPSettings::SPH, NUM_PARTICLES, DT, grid);
+    rtps::RTPSSettings *settings = new rtps::RTPSSettings(rtps::RTPSSettings::SPH, NUM_PARTICLES, DT, grid);
 
     //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    settings->setRenderType(RTPSettings::RENDER);
+    settings->setRenderType(RTPSSettings::RENDER);
     //settings->setRenderType(RTPSettings::SPRITE_RENDER);
    /* settings->setRadiusScale(1.0);
     settings->setBlurScale(1.0);
@@ -215,10 +215,10 @@ int main(int argc, char** argv)
     cli = new CL();
     ps1 = new rtps::RTPS(settings, cli);
 
-    rtps::RTPSettings *settings2 = new rtps::RTPSettings(rtps::RTPSettings::SPH, NUM_PARTICLES, DT, grid);
+    rtps::RTPSSettings *settings2 = new rtps::RTPSSettings(rtps::RTPSSettings::SPH, NUM_PARTICLES, DT, grid);
 
     //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    settings2->setRenderType(RTPSettings::RENDER);
+    settings2->setRenderType(RTPSSettings::RENDER);
     //settings->setRenderType(RTPSettings::SPRITE_RENDER);
    /* settings->setRadiusScale(1.0);
     settings->setBlurScale(1.0);

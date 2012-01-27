@@ -81,7 +81,7 @@ namespace rtps
     class RTPS_EXPORT Render
     {
     public:
-        Render(GLuint pos_vbo, GLuint vel_vbo, int num, CL *cli, RTPSettings* _settings=0);
+        Render(GLuint pos_vbo, GLuint vel_vbo, int num, CL *cli, RTPSSettings* _settings=0);
         //Render(GLuint pos_vbo, GLuint vel_vbo, int num, CL *cli, RTPSettings& _settings);
         ~Render();
 
@@ -193,7 +193,7 @@ namespace rtps
         // reference guarantees the location pointed to cannot be changed
         // But that is creating problems because one cannot have a default 
         // property for a reference
-        RTPSettings* settings; 
+        RTPSSettings* settings; 
 
         std::string shader_source_dir;
 

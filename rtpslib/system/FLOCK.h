@@ -86,10 +86,6 @@ public:
 private:
     FLOCKParameters flock_params;
 
-    std::string flock_source_dir;
-
-    int nb_var;
-    
     //keep track of hoses
     std::vector<Hose*> hoses;   
     

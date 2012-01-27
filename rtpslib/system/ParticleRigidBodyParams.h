@@ -48,46 +48,22 @@ namespace rtps
         float boundary_stiffness;
         float boundary_dampening;
         float boundary_distance;
-        //float K;        //gas constant
-        
-        //float viscosity;
-        //float velocity_limit;
-        //float xsph_factor;
-        float gravity; // -9.8 m/sec^2
+        float4 gravity; // -9.8 m/sec^2
 
         float friction_coef;
-        //next 4 not used at the moment
         float restitution_coef;
         float penetration_fact;
         float shear;
         float attraction;
-
         float spring;
-        //float surface_threshold;
         //constants
         float EPSILON;
-        float PI;       //delicious
-        //Kernel Coefficients
-        float wpoly6_coef;
-        
-        float wpoly6_d_coef;
-        float wpoly6_dd_coef; // laplacian
-        float wspiky_coef;
-        float wspiky_d_coef;
-
-        float wspiky_dd_coef;
-        float wvisc_coef;
-        float wvisc_d_coef;
-        float wvisc_dd_coef;
-
 
         //CL parameters
         int num;
-        int nb_vars; // for combined variables (vars_sorted, etc.)
-        int choice; // which kind of calculation to invoke
         int max_num;
 
-        void print()
+        /*void print()
         {
             printf("----- ParticleRigidBodyParams ----\n");
             printf("mass: %f\n", mass);
@@ -96,7 +72,6 @@ namespace rtps
             printf("simulation_scale: %f\n", simulation_scale);
             printf("--------------------\n");
 
-            /*
             printf("friction_coef: %f\n", friction_coef);
             printf("restitution_coef: %f\n", restitution_coef);
             printf("damping: %f\n", boundary_dampening);
@@ -105,8 +80,7 @@ namespace rtps
             printf("spring: %f\n", spring);
             printf("gravity: %f\n", gravity);
             printf("choice: %d\n", choice);
-            */
-        }
+        }*/
     } ParticleRigidBodyParams
 #ifndef WIN32
 	__attribute__((aligned(16)));

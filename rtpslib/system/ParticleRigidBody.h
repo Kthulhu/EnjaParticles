@@ -50,8 +50,6 @@
 #include <rigidbody/PRBUpdateParticles.h>
 #include <structs.h>
 
-//FIXME:needed for Integrator definition. This should be fixed and made more generic.
-#include <SPHSettings.h>
 #include <timer_eb.h>
 
 #ifdef WIN32
@@ -76,13 +74,6 @@ namespace rtps
         void integrate();
         void postProcess();
 
-//        virtual void render();
-
-        //void loadTriangles(std::vector<Triangle> &triangles);
-
-        //void testDelete();
-        //int cut; //for debugging DEBUG
-
         int setupTimers();
         void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0), float mass = 0.0);
 
@@ -90,35 +81,25 @@ namespace rtps
         std::vector<float4> getDeletedVel();
 
     private:
-       
         unsigned int curRigidbodyID;
         ParticleRigidBodyParams prbp;
-        Integrator integrator;
-
-        std::string rigidbody_source_dir;
 
         std::vector<float4> deleted_pos;
         std::vector<float4> deleted_vel;
 
         void prepareSorted();
 
-        /*std::vector<float4> veleval;
-
-        std::vector<float4> linearForce;
-        std::vector<float4> torqueForce;*/
-        
         //Maps a string name to an index in the following arrays
         //That allows for convenient lookup of rigid bodies. 
         std::map<std::string,int> rbIndex;
         std::vector<int2> rbParticleIndex;//first int is starting index. Second int is end index.
-        /*std::vector<float4> comPos;
-        std::vector<float4> comRot;*/
 
         //FIXME: Should find a more efficient way of doing this. For now
         //I will have 3 position buffers for particles. One holds unsorted global
         //positions, another holds sorted global positions, and a third holds 
         //unsorted local positions(per_rigid_body).
         Buffer<float4>      cl_position_l;
+
         Buffer<float4>      cl_veleval_u;
         Buffer<float4>      cl_veleval_s;
 

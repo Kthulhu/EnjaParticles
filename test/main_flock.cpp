@@ -192,7 +192,7 @@ int main(int argc, char** argv)
     //default constructor
     rtps::Domain* grid = new Domain(float4(0,0,0,0), float4(5, 5, 5, 0));
     //rtps::RTPSettings* settings(rtps::RTPSettings::FLOCK, NUM_PARTICLES, DT, grid, maxspeed, mindist, searchradius, color, w_sep, w_align, w_coh);
-    rtps::RTPSettings* settings = new rtps::RTPSettings(rtps::RTPSettings::FLOCK, NUM_PARTICLES, DT, grid);
+    rtps::RTPSSettings* settings = new rtps::RTPSSettings(rtps::RTPSSettings::FLOCK, NUM_PARTICLES, DT, grid);
 
 #ifdef WIN32
     settings->SetSetting("rtps_path", ".");
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
 
    // settings->setRenderType(RTPSettings::RENDER);
     //settings->setRenderType(RTPSettings::SPRITE_RENDER);
-    settings->setRenderType(RTPSettings::SPHERE3D_RENDER);
+    settings->setRenderType(RTPSSettings::SPHERE3D_RENDER);
     
     settings->setRadiusScale(1.0);
     settings->setBlurScale(1.0);

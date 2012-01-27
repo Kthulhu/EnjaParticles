@@ -45,7 +45,7 @@ namespace rtps
 		GLUquadric *qu;
 
     public:
-        Sphere3DRender(GLuint pos, GLuint col, int n, CL* cli, RTPSettings* _settings);
+        Sphere3DRender(GLuint pos, GLuint col, int n, CL* cli, RTPSSettings* _settings);
         ~Sphere3DRender();
         virtual void render();
     };

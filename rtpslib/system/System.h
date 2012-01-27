@@ -27,13 +27,12 @@
 
 #include "../domain/Domain.h"
 #include "ForceField.h"
-#include "RTPSettings.h"
+#include "RTPSSettings.h"
 //#include "../render/Render.h"
 //#include "../render/SpriteRender.h"
 //#include "../render/SSFRender.h"
 //#include "../render/Sphere3DRender.h"
 
-#include <RTPSSettings.h>
 #include <opencl/Kernel.h>
 #include <opencl/Buffer.h>
 #include <domain/Domain.h>
@@ -78,7 +77,7 @@ namespace rtps
 
         System(RTPSSettings* settings);
         virtual ~System();
-        virtual Domain* getGrid()
+        virtual Domain& getGrid()
         {
             return grid;
         }
@@ -187,7 +186,7 @@ namespace rtps
         Buffer<unsigned int>& getCellStartBuffer() {return cl_cell_indices_start;}
         Buffer<unsigned int>& getCellEndBuffer() {return cl_cell_indices_end;}
         float getSpacing(){return spacing;}
-        RTPSettings* getSettings() {return settings;}
+        RTPSSettings* getSettings() {return settings;}
         virtual void acquireGLBuffers();
         virtual void releaseGLBuffers();
     protected:
@@ -258,12 +257,7 @@ namespace rtps
         GLuint force_vbo;
         GLuint active_cells_vbo;
 
-        Domain* grid;
-
-        //Render* renderer;
-
-        std::string resource_path;
-        std::string common_source_dir;
+        Domain grid;
 
         Hash hash;
         CellIndices cellindices;

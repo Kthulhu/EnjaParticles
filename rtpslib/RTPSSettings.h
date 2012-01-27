@@ -22,8 +22,8 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_RTPSETTINGS_H_INCLUDED
-#define RTPS_RTPSETTINGS_H_INCLUDED
+#ifndef RTPS_RTPSSETTINGS_H_INCLUDED
+#define RTPS_RTPSSETTINGS_H_INCLUDED
 
 #include <string>
 #include <map>
@@ -45,7 +45,7 @@ namespace rtps
     //next largest power of 2. hack required for BitonicSort
     unsigned int nlpo2(register unsigned int x);
 
-    class RTPS_EXPORT RTPSettings 
+    class RTPS_EXPORT RTPSSettings 
     {
     public:
         //decide which system to use
@@ -60,7 +60,7 @@ namespace rtps
             RENDER = 0, SPRITE_RENDER, SCREEN_SPACE_RENDER, SPHERE3D_RENDER
         };*/
 
-        RTPSettings();
+        RTPSSettings();
         /*
         RTPSettings(SysType system, int max_particles, float dt);
         RTPSettings(SysType system, int max_particles, float dt, Domain *grid);
@@ -82,7 +82,7 @@ namespace rtps
         //without this, windows was crashing with a ValidHeapPointer
         //assertion error. Indicates the heap may be corrupted by 
         //something in here
-        ~RTPSettings();
+        ~RTPSSettings();
         /*
         //TODO get rid of all variables, just use map
         //maximum number of particles a system can hold
@@ -100,10 +100,10 @@ namespace rtps
         float4 target;
 
         // FLOCK: 2D simulation
-        bool two_dimensional;
+        bool two_dimensional;*/
 
-        bool has_changed() { return changed; };*/
-        void updated() { changed = false; }; //for now we are assuming only one consumer (one system using the settings)
+        bool hasChanged() { return changed; };
+        void updated() { changed = false; } //for now we are assuming only one consumer (one system using the settings)
 
         void printSettings();
 
@@ -136,7 +136,7 @@ namespace rtps
         }
     
 		//----------------------------------------------------------------------
-        bool Exists(std::string key) { if(settings.find(key) == settings.end()) { return false; } else { return true; } }
+        bool Exists(std::string key);
 
     private:
         std::map<std::string, std::string> settings;
@@ -236,9 +236,9 @@ namespace rtps
         void setDimension(bool dim)
         {
             two_dimensional = dim;
-        }
-    };*/
+        }*/
+    };
 
-}
+};
 
 #endif

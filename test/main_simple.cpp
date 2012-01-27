@@ -143,7 +143,7 @@ int main(int argc, char** argv)
 
     
     rtps::Domain* grid = new Domain(float4(0,0,0,0), float4(2, 2, 2, 0));
-	rtps::RTPSettings *settings = new rtps::RTPSettings(rtps::RTPSettings::Simple, NUM_PARTICLES, DT, grid);
+	rtps::RTPSSettings *settings = new rtps::RTPSSettings(rtps::RTPSSettings::Simple, NUM_PARTICLES, DT, grid);
     ps = new rtps::RTPS(settings);
 
     glutMainLoop();

@@ -2,14 +2,13 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
-#include <string>
-#include "structs.h"
-#include "RTPSettings.h"
+#include "RTPSSettings.h"
 
 using namespace std;
+using namespace boost;
 namespace rtps
 {
-    void ParamParser::readParameterFile(istream& is)
+    void ParamParser::readParameterFile(istream& is, vector<RTPSSettings*>& systems, vector<string>& names)
     {
         // populate tree structure pt
         using boost::property_tree::ptree;
@@ -22,8 +21,8 @@ namespace rtps
             //cout<<v.first<<endl;
             if(v.first=="system")
             {
-                string sysType,sysName;
-                RTPSettings settings;
+                RTPSSettings* settings=new RTPSSettings();
+                systems.push_back(settings);
                 BOOST_FOREACH( ptree::value_type const& v2, v.second) 
                 {
                     //cout<<v2.first<<endl;
@@ -31,8 +30,8 @@ namespace rtps
                     {
                         //cout<<"type = "<<<<endl;
                         //cout<<"name = "<<<<endl;
-                        sysType=v2.second.get<string>("type");
-                        sysName=v2.second.get<string>("name");
+                        settings->SetSetting("system",v2.second.get<string>("type"));
+                        names.push_back(v2.second.get<string>("name"));
                     }
                     else if(v2.first=="parameters")
                     {
@@ -48,7 +47,7 @@ namespace rtps
                              string name = v3.second.get<string>("<xmlattr>.name","no name");
                              //cout<<" type = "<<v3.second.get<string>("<xmlattr>.type","string")<<endl;
                              //string pType=v3.second.get<string>("<xmlattr>.type","string");
-                             settings.SetSetting(name,v3.second.get_value<string>());
+                             settings->SetSetting(name,v3.second.get_value<string>());
                              /*if(pType=="float")
                              {
                                  float val=v3.second.get_value<float>();
@@ -80,7 +79,7 @@ namespace rtps
                         }
                     }
                 }
-                settings.printSettings();//GetSettingAs<float4>("gravity").print("gravity");
+                settings->printSettings();//GetSettingAs<float4>("gravity").print("gravity");
             }
         }
     }

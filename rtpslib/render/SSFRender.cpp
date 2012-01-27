@@ -35,7 +35,7 @@
 using namespace std;
 namespace rtps
 {
-    SSFRender::SSFRender(GLuint pos, GLuint col, int n, CL* cli, RTPSettings* _settings):Render(pos,col,n,cli,_settings)
+    SSFRender::SSFRender(GLuint pos, GLuint col, int n, CL* cli, RTPSSettings* _settings):Render(pos,col,n,cli,_settings)
     {
 
         fbos.resize(1);

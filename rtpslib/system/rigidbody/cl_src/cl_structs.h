@@ -27,6 +27,7 @@
 
 #include "../cl_common/cl_structs.h"
 
+//Struct which gets passed to OpenCL routines
 typedef struct ParticleRigidBodyParams
 {
     float mass;
@@ -34,45 +35,26 @@ typedef struct ParticleRigidBodyParams
     float smoothing_distance;
     float simulation_scale;
 
+    //dynamic params
     float boundary_stiffness;
     float boundary_dampening;
     float boundary_distance;
-    //float K;        //speed of sound
-    
-    //float viscosity;
-    //float velocity_limit;
-    //float xsph_factor;
-    float gravity; // -9.8 m/sec^2
+    float4 gravity; // -9.8 m/sec^2
 
     float friction_coef;
     float restitution_coef;
     float penetration_fact;
     float shear;
     float attraction;
-
     float spring;
     //constants
     float EPSILON;
-    float PI;       //delicious
-    //kernel coefficients
-    float wpoly6_coef;
 
-    float wpoly6_d_coef;
-    float wpoly6_dd_coef; // laplacian
-    float wspiky_coef;
-    float wspiky_d_coef;
-
-    float wspiky_dd_coef;
-    float wvisc_coef;
-    float wvisc_d_coef;
-    float wvisc_dd_coef;
-
+    //CL parameters
     int num;
-    int nb_vars; // for combined variables (vars_sorted, etc.)
-    int choice; // which kind of calculation to invoke
     int max_num;
 
-} ParticleRigidBodyParams;
+} ParticleRigidBodyParams
 
 
 
