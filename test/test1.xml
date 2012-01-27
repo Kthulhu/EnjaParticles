@@ -13,6 +13,8 @@
             <param name="friction static" >0.0</param>
             <param name="boundary_stiffness" >20000.0</param>
             <param name="boundary_dampening" >256.0</param>
+            <param name="integrator" >leapfrog</param>
+            <param name="time_step" >0.003</param>
         </parameters>
         <parameters type="render">
             <param name="render_type" >default</param>
@@ -29,6 +31,8 @@
             <param name="friction static" >0.0</param>
             <param name="penetration_factor" >0.5</param>
             <param name="restitution" >0.95</param>
+            <param name="integrator" >euler</param>
+            <param name="time_step" >0.003</param>
         </parameters>
         <parameters type="render">
             <param name="render_type" >default</param>

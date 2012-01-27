@@ -29,11 +29,13 @@
 #include <system/FLOCK.h>
 #include <system/ParticleRigidBody.h>
 
+#include <string.h>
+using namespace std;
 
 namespace rtps
 {
 
-    RTPS::RTPS()
+    /*RTPS::RTPS()
     {
         cli = new CL();
         cl_managed = true;
@@ -70,48 +72,35 @@ printf("done with constructor\n");
             delete cli;
         }
         //delete renderer;
-    }
+    }*/
 
-    void RTPS::Init()
+    void RTPS::GenerateSystemInstance(RTPSSettings* settings, CL* cli)
     {
         //this should already be done, but in blender its not
         //whats best way to check if stuff like glGenBuffers has been inited?
-        glewInit();
+        //glewInit();
 
-        system = NULL;
-
-        printf("init: settings->system: %d\n", settings->system);
-        
+        dout<<"init: settings->system: "<< settings->GetSettingsAs<string>("system")<<endl;
         //TODO choose based on settings
-        if (settings->system == RTPSettings::Simple)
+        if (settings->GetSettingsAs<string>("system") == "sph")
         {
-            printf("simple system\n");
-            system = new System(this, settings->max_particles);
-            //system = new Simple(this, settings->max_particles);
-        }
-        else if (settings->system == RTPSettings::SPH)
-        {
-            printf("*** sph system 1  ***\n");
-			settings->setMaxOuterParticles(4096*4);
+            dout<<"*** sph system 1  ***"<<endl;
             //FIXME: I set max gravity sources to 5. This should be configurable.
-            system = new SPH(this, settings->max_particles, 5);
-			printf("max: %d\n", settings->max_outer_particles);
+            system = new SPH(settings,cli);
         }
-        else if (settings->system == RTPSettings::FLOCK)
+        else if (settings->GetSettingsAs<string>("system")  == "flock")
         {
-            printf("flock system\n");
-            system = new FLOCK(this, settings->max_particles);
+            dout<<"flock system"<<endl;
+            system = new FLOCK(settings,cli);
         }
-        else if (settings->system == RTPSettings::PARTICLE_RIGIDBODY)
+        else if (settings->GetSettingsAs<string>("system")  == "rigidbody")
         {
-            printf("*** particleRigidBody system 1  ***\n");
-            system = new ParticleRigidBody(this, settings->max_particles);
+            dout<<"*** particleRigidBody system 1  ***"<<endl;
+            system = new ParticleRigidBody(settings,cli);
         }
-
-        printf("created system in RTPS\n");
     }
 
-    void RTPS::update()
+    /*void RTPS::update()
     {
         //eventually we will support more systems
         //then we will want to iterate over them
@@ -119,14 +108,14 @@ printf("done with constructor\n");
         system->update();
     }
 
-/*    void RTPS::render()
+    void RTPS::render()
     {
         system->render();
-    }*/
+    }
 
     void RTPS::printTimers()
     {
             system->printTimers();
-    }
+    }*/
 };
 

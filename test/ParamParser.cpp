@@ -19,14 +19,14 @@ namespace rtps
         // traverse pt
         BOOST_FOREACH( ptree::value_type const& v, pt.get_child("main") ) 
         {
-            cout<<v.first<<endl;
+            //cout<<v.first<<endl;
             if(v.first=="system")
             {
                 string sysType,sysName;
                 RTPSettings settings;
                 BOOST_FOREACH( ptree::value_type const& v2, v.second) 
                 {
-                    cout<<v2.first<<endl;
+                    //cout<<v2.first<<endl;
                     if(v2.first=="<xmlattr>")
                     {
                         //cout<<"type = "<<<<endl;
@@ -40,14 +40,14 @@ namespace rtps
                         {
                              if(v3.first=="<xmlattr>")
                              {
-                                 cout<<"parameter type = "<<v3.second.get<string>("type")<<endl;
+                                 //cout<<"parameter type = "<<v3.second.get<string>("type")<<endl;
                                  continue;
                              }
                              cout<<v3.first;
-                             cout<<" name = "<<v3.second.get<string>("<xmlattr>.name","no name");
+                             //cout<<" name = "<<v3.second.get<string>("<xmlattr>.name","no name");
                              string name = v3.second.get<string>("<xmlattr>.name","no name");
-                             cout<<" type = "<<v3.second.get<string>("<xmlattr>.type","string")<<endl;
-                             string pType=v3.second.get<string>("<xmlattr>.type","string");
+                             //cout<<" type = "<<v3.second.get<string>("<xmlattr>.type","string")<<endl;
+                             //string pType=v3.second.get<string>("<xmlattr>.type","string");
                              settings.SetSetting(name,v3.second.get_value<string>());
                              /*if(pType=="float")
                              {

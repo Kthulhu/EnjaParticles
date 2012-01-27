@@ -25,16 +25,7 @@
 #ifndef RTPS_SPHSETTINGS_H_INCLUDED
 #define RTPS_SPHSETTINGS_H_INCLUDED
 
-#include <stdlib.h>
-#include <string>
-#include <map>
-#include <iostream>
-#include <stdio.h>
-#include <sstream>
-
 #include <structs.h>
-#include <Buffer.h>
-#include <Domain.h>
 
 namespace rtps
 {
@@ -71,7 +62,6 @@ namespace rtps
 
         //constants
         float EPSILON;
-        float PI;       //delicious
 
         //Kernel Coefficients
         float wpoly6_coef;
@@ -89,6 +79,7 @@ namespace rtps
         int num;
         int max_num;
 
+        /*
         void print()
         {
             printf("----- SPHParams ----\n");
@@ -98,7 +89,6 @@ namespace rtps
             printf("simulation_scale: %f\n", simulation_scale);
             printf("--------------------\n");
 
-            /*
             printf("friction_coef: %f\n", friction_coef);
             printf("restitution_coef: %f\n", restitution_coef);
             printf("damping: %f\n", boundary_dampening);
@@ -107,8 +97,8 @@ namespace rtps
             printf("spring: %f\n", spring);
             printf("gravity: %f\n", gravity);
             printf("choice: %d\n", choice);
-            */
         }
+        */
     } SPHParams
 #ifndef WIN32
 	__attribute__((aligned(16)));
@@ -116,14 +106,5 @@ namespace rtps
 		;
         #pragma pack(pop)
 #endif
-
-
-    enum Integrator
-    {
-        EULER, LEAPFROG
-    };
-
-
 }
-
 #endif

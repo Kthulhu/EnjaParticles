@@ -33,7 +33,7 @@
 //#include "../render/SSFRender.h"
 //#include "../render/Sphere3DRender.h"
 
-#include <RTPS.h>
+#include <RTPSSettings.h>
 #include <opencl/Kernel.h>
 #include <opencl/Buffer.h>
 #include <domain/Domain.h>
@@ -76,7 +76,7 @@ namespace rtps
 
         }
 
-        System(RTPS *psfr, int num, int maxGravSources=1);
+        System(RTPSSettings* settings);
         virtual ~System();
         virtual Domain* getGrid()
         {
@@ -191,9 +191,8 @@ namespace rtps
         virtual void acquireGLBuffers();
         virtual void releaseGLBuffers();
     protected:
-                //the particle system framework
-        RTPS* ps;
-        RTPSettings* settings;
+        RTPSSettings* settings;
+        CL* cli;
 
         EB::TimerList timers;
 

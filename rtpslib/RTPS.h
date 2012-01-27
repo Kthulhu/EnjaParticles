@@ -61,42 +61,43 @@ namespace rtps
 {
 
     class System;
-    class RTPS_EXPORT RTPS
+    class RTPS
     
     {
     public:
         //default constructor
-        RTPS();
+        //RTPS();
         //Setup CL, Render, initial values and System based on settings
-        RTPS(RTPSettings *s);
-        RTPS(RTPSettings *s, CL* _cli);
+        //RTPS(RTPSettings *s);
+        //RTPS(RTPSettings *s, CL* _cli);
 
-        ~RTPS();
+        //~RTPS();
 
-        void Init();
+        static System* getSystemInstance(RTPSSettings*, CL* cli);
+        //void Init();
 
         //Keep track of settings
-        RTPSettings *settings;
+        //RTPSettings *settings;
         
         //OpenCL abstraction instance
         //TODO shouldn't be public
-        CL *cli;
+        //CL *cli;
 
         //will be instanciated as a specific subclass like SPH or Boids
         //TODO shouldn't be public? right now we expose various methods from the system
-        System *system;
+        //System *system;
         //std::vector<System> systems;
 
         //initial value helper
         //IV iv;
 
-        void update();
+        //void update();
  //       void render();
 
-        void printTimers();
+        //void printTimers();
 
     private:
-        bool cl_managed;
+        //bool cl_managed;
         
     };
 }

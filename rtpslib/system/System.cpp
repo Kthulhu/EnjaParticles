@@ -34,25 +34,25 @@
 //#include "../domain/UniformGrid.h"
 #include "Domain.h"
 #include "IV.h"
-
+#include "util.h"
 #include "common/Hose.h"
 
 //for random
 #include<time.h>
+using namespace std;
 
 namespace rtps
 {
 	//----------------------------------------------------------------------
-    System::System(RTPS *psfr, int n, int maxGravSources)
+    System::System(RTPSSettings* set, CL* c)
     {
-        ps = psfr;
-        max_num = n;
+        settings = set;
+        cli = c;
+
+        max_num = settings->GetSettingAs<unsigned int>("max_num_particles");
+        num = settings->GetSettingAs<unsigned int>("num_particles");
         this->maxGravSources=maxGravSources;
-        num = 0;
         activeParticle = 0;
-
-        settings = ps->settings;
-
 		// I should be able to not specify this, but GPU restrictions ...
 
         resource_path = settings->GetSettingAs<string>("rtps_path");
@@ -66,26 +66,24 @@ namespace rtps
         setupTimers();
         //*** end Initialization
 #ifdef CPU
-        printf("RUNNING ON THE CPU\n");
+        cout<<"RUNNING ON THE CPU"<<endl;
 #endif
 #ifdef GPU
-        printf("RUNNING ON THE GPU\n");
+        cout<<"RUNNING ON THE GPU"<<endl;
         prepareSorted();
-
-        //setRenderer();
 
         //should be more cross platform
         common_source_dir = resource_path + "/" + std::string(COMMON_CL_SOURCE_DIR);
-        ps->cli->addIncludeDir(common_source_dir);
-        printf("%s\n",common_source_dir.c_str());
+        cli->addIncludeDir(common_source_dir);
+        dout<<common_source_dir.c_str()<<endl;
 
-        hash = Hash(common_source_dir, ps->cli, timers["hash_gpu"]);
-        gravity = Gravity(common_source_dir, ps->cli);
-        bitonic = Bitonic<unsigned int>(common_source_dir, ps->cli );
-        //radix = Radix<unsigned int>(common_source_dir, ps->cli, max_num, 128);
-        cellindices = CellIndices(common_source_dir, ps->cli, timers["ci_gpu"] );
-        permute = Permute( common_source_dir, ps->cli, timers["perm_gpu"] );
-        m2p = MeshToParticles(common_source_dir, ps->cli, timers["meshtoparticles_gpu"]);
+        hash = Hash(common_source_dir, cli, timers["hash_gpu"]);
+        gravity = Gravity(common_source_dir, cli);
+        bitonic = Bitonic<unsigned int>(common_source_dir, cli );
+        //radix = Radix<unsigned int>(common_source_dir, cli, max_num, 128);
+        cellindices = CellIndices(common_source_dir, cli, timers["ci_gpu"] );
+        permute = Permute( common_source_dir, cli, timers["perm_gpu"] );
+        m2p = MeshToParticles(common_source_dir, cli, timers["meshtoparticles_gpu"]);
 #endif
 
     }
@@ -93,7 +91,7 @@ namespace rtps
 	//----------------------------------------------------------------------
     System::~System()
     {
-        printf("System destructor\n");
+        dout<<"System destructor"<<endl;
         if (pos_vbo)//&& managed)
         {
             glBindBuffer(1, pos_vbo);
@@ -198,7 +196,7 @@ namespace rtps
 	//----------------------------------------------------------------------
     void System::printTimers()
     {
-        printf("Number of Particles: %d\n", num);
+        cout<<"Number of Particles:"<< num<<endl;
         timers.printAll();
         std::ostringstream oss; 
         oss << "sph_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num; 
@@ -220,55 +218,55 @@ namespace rtps
         std::fill(uivec.begin(), uivec.end(), 0);
         // VBO creation, TODO: should be abstracted to another class
         pos_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        printf("pos vbo: %d\n", pos_vbo);
+        dout<<"pos vbo: "<< pos_vbo<<endl;
         col_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        printf("color vbo: %d\n", col_vbo);
+        dout<<"color vbo: "<< color_vbo<<endl;
         velocity_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        printf("velocity vbo: %d\n", velocity_vbo);
+        dout<<"velocity vbo: "<< velocity_vbo<<endl;
         force_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        printf("force vbo: %d\n", force_vbo);
+        dout<<"force vbo: "<< force_vbo<<endl;
         active_cells_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        printf("active_cells vbo: %d\n", active_cells_vbo);
+        dout<<"active cells vbo: "<< active_cells_vbo<<endl;
         // end VBO creation
 
         //vbo buffers
-        cl_position_u = Buffer<float4>(ps->cli, pos_vbo);
-        cl_position_s = Buffer<float4>(ps->cli, f4vec);
-        cl_color_u = Buffer<float4>(ps->cli, col_vbo);
-        cl_color_s = Buffer<float4>(ps->cli, f4vec);
-        cl_velocity_u = Buffer<float4>(ps->cli, velocity_vbo);
-        cl_velocity_s = Buffer<float4>(ps->cli, f4vec);
-        cl_force_s = Buffer<float4>(ps->cli, force_vbo);
-        //cl_force_s = Buffer<float4>(ps->cli, f4vec);
-        cl_active_cells = Buffer<float4>(ps->cli, active_cells_vbo);
-        cl_mass_u = Buffer<float>(ps->cli, fvec);
-        cl_mass_s = Buffer<float>(ps->cli, fvec);
-        cl_objectIndex_u = Buffer<unsigned int>(ps->cli, uivec);
-        cl_objectIndex_s = Buffer<unsigned int>(ps->cli, uivec);
+        cl_position_u = Buffer<float4>(cli, pos_vbo);
+        cl_position_s = Buffer<float4>(cli, f4vec);
+        cl_color_u = Buffer<float4>(cli, col_vbo);
+        cl_color_s = Buffer<float4>(cli, f4vec);
+        cl_velocity_u = Buffer<float4>(cli, velocity_vbo);
+        cl_velocity_s = Buffer<float4>(cli, f4vec);
+        cl_force_s = Buffer<float4>(cli, force_vbo);
+        //cl_force_s = Buffer<float4>(cli, f4vec);
+        cl_active_cells = Buffer<float4>(cli, active_cells_vbo);
+        cl_mass_u = Buffer<float>(cli, fvec);
+        cl_mass_s = Buffer<float>(cli, fvec);
+        cl_objectIndex_u = Buffer<unsigned int>(cli, uivec);
+        cl_objectIndex_s = Buffer<unsigned int>(cli, uivec);
 
         //setup debug arrays
         std::vector<int4> cliv(max_num);
         std::fill(cliv.begin(), cliv.end(),int4(0.0f, 0.0f, 0.0f, 0.0f));
-        clf_debug = Buffer<float4>(ps->cli, f4vec);
-        cli_debug = Buffer<int4>(ps->cli, cliv);
+        clf_debug = Buffer<float4>(cli, f4vec);
+        cli_debug = Buffer<int4>(cli, cliv);
         
         //Gravity
-        cl_pointSources = Buffer<float4>(ps->cli, maxGravSources, float4(0.0f,0.0f,0.0f,0.0f));
-        cl_massSources = Buffer<float>(ps->cli, maxGravSources, 0.0f);
+        cl_pointSources = Buffer<float4>(cli, maxGravSources, float4(0.0f,0.0f,0.0f,0.0f));
+        cl_massSources = Buffer<float>(cli, maxGravSources, 0.0f);
 
         std::vector<unsigned int> keys(max_num);
         //to get around limits of bitonic sort only handling powers of 2
         std::fill(keys.begin(), keys.end(), INT_MAX);
-        cl_sort_indices  = Buffer<unsigned int>(ps->cli, keys);
-        cl_sort_hashes   = Buffer<unsigned int>(ps->cli, keys);
+        cl_sort_indices  = Buffer<unsigned int>(cli, keys);
+        cl_sort_hashes   = Buffer<unsigned int>(cli, keys);
 
         // For bitonic sort. Remove when bitonic sort no longer used
         // Currently, there is an error in the Radix Sort (just run both
         // sorts and compare outputs visually
-        cl_sort_output_hashes = Buffer<unsigned int>(ps->cli, keys);
-        cl_sort_output_indices = Buffer<unsigned int>(ps->cli, keys);
+        cl_sort_output_hashes = Buffer<unsigned int>(cli, keys);
+        cl_sort_output_indices = Buffer<unsigned int>(cli, keys);
 
-		printf("keys.size= %d\n", keys.size()); // 
+		dout<<"keys.size= "<< keys.size()<<endl; // 
      }
 
 	//----------------------------------------------------------------------
@@ -364,7 +362,7 @@ namespace rtps
         cl_position_u.acquire();
         cl_position_u.copyToDevice(poss);
         cl_position_u.release();
-        ps->cli->queue.finish();
+        cli->queue.finish();
     }
 	//----------------------------------------------------------------------
     void System::pushParticles(vector<float4> pos, float4 velo, float4 color, float mass)
@@ -381,23 +379,23 @@ namespace rtps
         switch(ps->settings->getRenderType())
         {
             case RTPSettings::SPRITE_RENDER:
-                renderer = new SpriteRender(pos_vbo,col_vbo,num,ps->cli, ps->settings);
+                renderer = new SpriteRender(pos_vbo,col_vbo,num,cli, ps->settings);
                 //printf("spacing for radius %f\n", spacing);
                 break;
             case RTPSettings::SCREEN_SPACE_RENDER:
                 //renderer = new ScreenSpaceRender();
-                renderer = new SSFRender(pos_vbo,col_vbo,num,ps->cli, ps->settings);
+                renderer = new SSFRender(pos_vbo,col_vbo,num,cli, ps->settings);
                 break;
             case RTPSettings::RENDER:
-                renderer = new Render(pos_vbo,col_vbo,num,ps->cli, ps->settings);
+                renderer = new Render(pos_vbo,col_vbo,num,cli, ps->settings);
                 break;
             case RTPSettings::SPHERE3D_RENDER:
                 printf("new Sphere3DRender\n");
-                renderer = new Sphere3DRender(pos_vbo,col_vbo,num,ps->cli, ps->settings);
+                renderer = new Sphere3DRender(pos_vbo,col_vbo,num,cli, ps->settings);
                 break;
             default:
                 //should be an error
-                renderer = new Render(pos_vbo,col_vbo,num,ps->cli, ps->settings);
+                renderer = new Render(pos_vbo,col_vbo,num,cli, ps->settings);
                 break;
         }
         //renderer->setParticleRadius(spacing*0.5);
@@ -453,7 +451,7 @@ namespace rtps
             exit(0);
         }
 
-        ps->cli->queue.finish();
+        cli->queue.finish();
 
         /*
         int nbc = 10;
@@ -478,7 +476,7 @@ namespace rtps
               cl_sort_indices.getDevicePtr());
         */
 
-        ps->cli->queue.finish();
+        cli->queue.finish();
 #if 0
     
         printf("********* Bitonic Sort Diagnostics **************\n");
@@ -501,11 +499,11 @@ namespace rtps
     void System::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int voxelResolution,float4 velo, float4 color,float mass)
     {
         glFinish();
-        //cl::Image3DGL img(ps->cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
+        //cl::Image3DGL img(cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,tex3d);
         //std::vector<cl::Memory> objs;
         //objs.push_back(img);
-        //ps->cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
-        //ps->cli->queue.finish();
+        //cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
+        //cli->queue.finish();
         //acquireGLBuffers();
         //int tmpnum = m2p.execute(cl_position_u,cl_color_u,cl_velocity_u,num,img,scale,min,world,resolution,//debug
         //        clf_debug,
@@ -540,8 +538,8 @@ namespace rtps
         pushParticles(vec,velo,color,mass);
         //renderer->setNum(num);
         //hash_and_sort();
-        //ps->cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
-        //ps->cli->queue.finish();
+        //cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
+        //cli->queue.finish();
         //releaseGLBuffers(); 
     }
     void System::acquireGLBuffers()

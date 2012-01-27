@@ -117,7 +117,6 @@ namespace rtps
 
         //constants
         settings->SetSetting("epsilon", 1E-6);
-        settings->SetSetting("pi", M_PI);       //delicious
 
         //CL parameters
         settings->SetSetting("num_particles", 0);
@@ -154,7 +153,6 @@ namespace rtps
 
         //constants
         sphp.EPSILON = settings->GetSettingAs<float>("epsilon");
-        sphp.PI = settings->GetSettingAs<float>("pi");       //delicious
         //Kernel Coefficients
         sphp.wpoly6_coef = settings->GetSettingAs<float>("wpoly6");
         sphp.wpoly6_d_coef = settings->GetSettingAs<float>("wpoly6_d");
@@ -176,6 +174,4 @@ namespace rtps
         cl_sphp.copyToDevice(vparams,0);
         settings->updated();
     }
-
-
 }
