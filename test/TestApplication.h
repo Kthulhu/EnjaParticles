@@ -12,7 +12,7 @@ namespace rtps
     class TestApplication
     {
         public:
-            TestApplication();
+            TestApplication(std::istream& is);
             ~TestApplication();
             void KeyboardCallback(unsigned char key, int x, int y);
             void RenderCallback();
@@ -25,6 +25,10 @@ namespace rtps
             void drawString(const char *str, int x, int y, float color[4], void *font);
             void initGL();
             void readParamFile(std::istream& is);
+            GLuint getWindowHeight() const;
+            GLuint getWindowWidth() const;
+            void setWindowHeight(GLuint windowHeight);
+            void setWindowWidth(GLuint windowWidth); 
         private:
             GLuint windowWidth,windowHeight;
             std::map<std::string,System*> systems;
@@ -32,10 +36,18 @@ namespace rtps
             std::map<std::string,ParticleShape*> pShapes;
             std::map<std::string,GLuint> meshVBOs;
             std::map<std::string,GLuint> meshIBOs;
+            ShaderLibrary* lib;
             std::string renderType;
+            float3 rotation; //may want to consider quaternions for this at some point.
+            float3 translation;
+            int2 mousePos;
+            int mouseButtons;
+
+            float4 gridMax,gridMin;
+            float sizeScale;
+            float mass;
             CL* cli;
             bool paused;
-            bool renderVelocity = false;
     };
 };
 #endif

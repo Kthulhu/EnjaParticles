@@ -40,7 +40,7 @@ namespace rtps
 {
 
 //----------------------------------------------------------------------
-FLOCK::FLOCK(RTPS *psfr, int n):System(psfr,n)
+FLOCK::FLOCK(RTPSSettings* set, CL* c):System(set,c)
 {
     //seed random
     srand ( time(NULL) );
@@ -212,7 +212,7 @@ void FLOCK::updateGPU()
 
         if(flock_params.w_sep > 0.f || flock_params.w_align > 0.f || flock_params.w_coh > 0.f || flock_params.w_goal > 0.f || flock_params.w_avoid > 0.f){
             rules.execute(   num,
-                settings->target,
+                settings->GetSettingAs<float4>("target"),
                 cl_position_s,
                 cl_velocity_s,
                 cl_flockmates_s,
@@ -243,8 +243,8 @@ void FLOCK::integrate()
 {
     timers["integrate"]->start();
     euler_integration.execute(num,
-        settings->dt,
-        settings->two_dimensional,
+        settings->GetSettingAs<float>("time_step"),
+        settings->GetSettingAs<bool>("two_dimensional"),
         cl_position_u,
         cl_position_s,
         cl_velocity_u,
@@ -350,7 +350,7 @@ void FLOCK::prepareSorted()
 int FLOCK::addHose(int total_n, float4 center, float4 velocity, float radius, float4 color)
 {
     radius *= spacing;
-    Hose* hose = new Hose(settings->dt, total_n, center, velocity, radius, spacing, color);
+    Hose* hose = new Hose(settings->GetSettingAs<float>("time_step"), total_n, center, velocity, radius, spacing, color);
     hoses.push_back(hose);
     return hoses.size()-1;
 
@@ -409,7 +409,7 @@ void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
     cl_color_u.release();
     cl_position_u.release();
 
-#else
+#endif
     num += nn;  //keep track of number of particles we use
 }
 

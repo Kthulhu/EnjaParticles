@@ -26,7 +26,7 @@
 
 namespace rtps
 {
-
+/*
     float SPH::Wviscosity(float4 r, float h)
     {
         //from simple SPH in Krog's thesis
@@ -38,7 +38,7 @@ namespace rtps
 
     }
 
-    /*void SPH::cpuViscosity()
+    void SPH::cpuViscosity()
     {
 
         float scale = sphp.simulation_scale;

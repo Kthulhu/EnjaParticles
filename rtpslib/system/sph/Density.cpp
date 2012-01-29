@@ -130,7 +130,7 @@ namespace rtps
 
 
 
-    float SPH::Wpoly6(float4 r, float h)
+    /*float SPH::Wpoly6(float4 r, float h)
     {
         float h9 = h*h*h * h*h*h * h*h*h;
         float alpha = 315.f/64.0f/sphp.PI/h9;
@@ -141,7 +141,7 @@ namespace rtps
     }
 
 
-    /*void SPH::cpuDensity()
+    void SPH::cpuDensity()
     {
         float h = sphp.smoothing_distance;
         //stuff from Tim's code (need to match #s to papers)

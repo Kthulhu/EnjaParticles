@@ -75,7 +75,7 @@ namespace rtps
 
         }
 
-        System(RTPSSettings* settings);
+        System(RTPSSettings* set, CL* c);
         virtual ~System();
         virtual Domain& getGrid()
         {

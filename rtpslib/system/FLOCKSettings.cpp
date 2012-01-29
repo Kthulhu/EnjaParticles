@@ -34,8 +34,8 @@ namespace rtps{
         //messing with smoothing distance, making it really small to remove interaction still results in weird force values
         float smoothing_distance = 2.0f * rest_distance;
 
-        float4 dmin = grid->getBndMin();
-        float4 dmax = grid->getBndMax();
+        float4 dmin = grid.getBndMin();
+        float4 dmax = grid.getBndMax();
         float domain_vol = (dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z);
         float VP = 2 * .0262144 / max_num;              //Particle Volume [ m^3 ]
         

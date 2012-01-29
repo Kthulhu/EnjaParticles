@@ -33,7 +33,7 @@ Buffer<T>::Buffer(CL *cli, int num ,T data)
 
     std::vector<T> vec(num);
     std::fill(vec.begin(), vec.end(), data);
-    printf("vec size = %d\n",vec.size());
+    std::cout<<"vec size = "<<vec.size()<<std::endl;
     
     cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err));
     copyToDevice(vec);

@@ -45,8 +45,8 @@
 
 namespace rtps
 {
-    #ifndef debugf
-        #ifdef DEBUG
+    #ifndef dout 
+        //#ifdef DEBUG
         //#ifndef DEBUG_MAX_LINE_LEN
         //#define DEBUG_MAX_LINE_LEN 1024
         //#endif
@@ -62,11 +62,11 @@ namespace rtps
         //    #define debugf(format, ...) dprint(__FILE__,__LINE__,__func__,format , __VA_ARGS__);
         //    #define debugm(format) dprint(__FILE__,__LINE__,format);
             #define dout std::cout<<__FILE__<<": "<<__LINE__<<": "<<__func__<<": "
-        #else
+        /*#else
         //    #define debugf(format, ...) ((void)0)
             #define dout 0 && std::cout
         //    #define debugm(format) ((void)0);
-        #endif
+        #endif*/
     #endif
     char RTPS_EXPORT *file_contents(const char *filename, int *length);
     //Added this to use C++ standard file reading. I am attempting to deprecate

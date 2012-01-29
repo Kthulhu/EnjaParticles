@@ -34,6 +34,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "CLL.h"
 #ifdef WIN32

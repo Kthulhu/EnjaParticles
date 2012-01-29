@@ -25,25 +25,12 @@
 #ifndef RTPS_RTPS_H_INCLUDED
 #define RTPS_RTPS_H_INCLUDED
 
-#include <vector>
-
 //System API
 #include <system/System.h>
 
-
-//initial value API
-//TODO probably shouldn't be included here
-#include <domain/IV.h>
-
 //settings class to configure the framework
-#include <RTPSettings.h>
+#include <RTPSSettings.h>
 
-
-//defines a few handy utility functions
-//TODO should not be included here
-#include <util.h>
-//defines useful structs like float3 and float4
-#include <structs.h>
 //OpenCL API
 #include <opencl/CLL.h>
 
@@ -62,7 +49,6 @@ namespace rtps
 
     class System;
     class RTPS
-    
     {
     public:
         //default constructor
@@ -73,7 +59,7 @@ namespace rtps
 
         //~RTPS();
 
-        static System* getSystemInstance(RTPSSettings*, CL* cli);
+        static System* generateSystemInstance(RTPSSettings*, CL* cli);
         //void Init();
 
         //Keep track of settings

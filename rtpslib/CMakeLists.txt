@@ -69,7 +69,7 @@ set (rtpslib_INCLUDES
 #library source files (don't explicitly give file extension, inferred from source type)
 set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/RTPS
-    ${rtpslib_SOURCE_DIR}/RTPSettings
+    ${rtpslib_SOURCE_DIR}/RTPSSettings
     ${rtpslib_SOURCE_DIR}/util
     ${rtpslib_SOURCE_DIR}/structs
     #${rtpslib_SOURCE_DIR}/timege    #gordon's timer class

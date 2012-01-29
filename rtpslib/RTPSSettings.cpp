@@ -23,6 +23,8 @@
 
 
 #include "RTPSSettings.h"
+#include "util.h"
+using namespace std;
 namespace rtps
 {
     //Fixme: This need to go somewhere else
@@ -100,18 +102,18 @@ namespace rtps
 */
     RTPSSettings::~RTPSSettings()
     {
-        printf("settings destructing!\n");
+        dout<<"settings destructing!"<<endl;
     }
 
     void RTPSSettings::printSettings()
     {
-        printf("RTPS Settings\n");
+        cout<<"RTPS Settings"<<endl;
         typedef std::map <std::string, std::string> MapType;
 
         MapType::const_iterator end = settings.end();
         for(MapType::const_iterator it = settings.begin(); it != end; ++it)
         {
-            printf("%s: %s\n", it->first.c_str(), it->second.c_str());
+            cout<<it->first.c_str()<<": " <<it->second.c_str()<<endl;
         }
     }
 

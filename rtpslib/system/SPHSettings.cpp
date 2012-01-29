@@ -50,8 +50,8 @@ namespace rtps
         float smoothing_distance = 2.0f * rest_distance;//interaction radius
 
 
-        float4 dmin = grid->getBndMin();
-        float4 dmax = grid->getBndMax();
+        float4 dmin = grid.getBndMin();
+        float4 dmax = grid.getBndMax();
         //printf("dmin: %f %f %f\n", dmin.x, dmin.y, dmin.z);
         //printf("dmax: %f %f %f\n", dmax.x, dmax.y, dmax.z);
         float domain_vol = (dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z);
@@ -98,7 +98,7 @@ namespace rtps
         settings->SetSetting("wvisc_dd", 45./(pi*h6) );
 
         //dynamic params
-        settings->SetSetting("gravity", float4(0.0f,0.0f,-9.8f,0.0f); // -9.8 m/sec^2
+        settings->SetSetting("gravity", float4(0.0f,0.0f,-9.8f,0.0f)); // -9.8 m/sec^2
         settings->SetSetting("gas_constant", 1.5f);
         settings->SetSetting("viscosity", 1.0f);
         settings->SetSetting("velocity_limit", 600.0f);

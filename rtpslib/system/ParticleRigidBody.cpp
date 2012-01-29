@@ -241,7 +241,7 @@ namespace rtps
         {
             //euler();
             euler.execute(num,
-                settings->dt,
+                settings->GetSettingAs<float>("time_step"),
                 cl_comLinearForce,
                 cl_comTorqueForce,
                 cl_comVel,
@@ -250,7 +250,7 @@ namespace rtps
                 cl_comRot,
                 cl_invInertialTensor,
                 cl_rbMass,
-                    float4(0.0,0.0,prbp.gravity,0.0),
+                prbp.gravity,
                 rbParticleIndex.size(),
                 //debug
                 cl_prbp,
@@ -530,8 +530,8 @@ namespace rtps
         float rest_distance = .87 * pow(mass/rho0, 1.f/3.f);   //rest distance between particles [ m ]
         float smoothing_distance = 2.0f * rest_distance;//interaction radius
 
-        float4 dmin = grid->getBndMin();
-        float4 dmax = grid->getBndMax();
+        float4 dmin = grid.getBndMin();
+        float4 dmax = grid.getBndMax();
         float domain_vol = (dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z);
 
         //ratio between particle radius in simulation coords and world coords

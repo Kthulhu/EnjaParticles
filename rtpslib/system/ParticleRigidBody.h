@@ -66,7 +66,7 @@ namespace rtps
     class RTPS_EXPORT ParticleRigidBody : public System
     {
     public:
-        ParticleRigidBody(RTPS *ps, int num);
+        ParticleRigidBody(RTPSSettings* set, CL* c);
         ~ParticleRigidBody();
 
         void update();

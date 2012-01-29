@@ -23,6 +23,8 @@
 
 
 #include "boids.h"
+#include <iostream>
+using namespace std;
 
 //----------------------------------------------------------------------
 Boids::Boids(VF& pos_) : pos(pos_)
@@ -95,7 +97,7 @@ float4 Boids::avg_separ(VI& neigh, VF& pos, int i)
 	pos[i].print("***** pos *****");
 	pos[i].printd("***** pos_d *****");
 
-	printf("neigh size= %d\n", neigh.size());
+	cout<<"neigh size= "<< neigh.size();
 	//if (neigh.size() > 10) exit(0);
 
 	for (int k=0; k < neigh.size(); k++) {
@@ -133,8 +135,8 @@ void Boids::update()
 	float desired_sep = DESIRED_SEPARATION;
 
 
-	printf("========== ENTER UPDATE ===============\n");
-	printf("pos.size= %d\n", pos.size());
+	cout<<"========== ENTER UPDATE ==============="<<endl;
+	cout<<"pos.size= "<< pos.size()<<endl;
 	for (int i=0; i < pos.size(); i++) {
 		VI neigh;
 		neighbors(pos, i, neigh); 

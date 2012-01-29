@@ -79,7 +79,7 @@ namespace rtps
         {
             leapfrog = LeapFrog(sph_source_dir, cli, timers["leapfrog_gpu"]);
         }
-        else if (settings->GetSettingAs("integrator")=="euler")
+        else if (settings->GetSettingAs<string>("integrator")=="euler")
         {
             euler = Euler(sph_source_dir, cli, timers["euler_gpu"]);
         }
@@ -459,7 +459,7 @@ namespace rtps
     {
         //in sph we just use sph spacing
         radius *= spacing;
-        Hose *hose = new Hose(settings->dt, total_n, center, velocity, radius, spacing, color);
+        Hose *hose = new Hose(settings->GetSettingAs<float>("time_step"), total_n, center, velocity, radius, spacing, color);
         hoses.push_back(hose);
         //return the index
         return hoses.size()-1;

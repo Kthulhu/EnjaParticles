@@ -21,15 +21,14 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 
-
-#include "GL/glew.h"
-#include <RTPS.h>
-//#include "system/Simple.h"
-#include <system/SPH.h>
-#include <system/FLOCK.h>
-#include <system/ParticleRigidBody.h>
-
 #include <string.h>
+
+#include "RTPS.h"
+#include "util.h"
+#include "system/SPH.h"
+#include "system/FLOCK.h"
+#include "system/ParticleRigidBody.h"
+
 using namespace std;
 
 namespace rtps
@@ -74,29 +73,34 @@ printf("done with constructor\n");
         //delete renderer;
     }*/
 
-    void RTPS::GenerateSystemInstance(RTPSSettings* settings, CL* cli)
+    System* RTPS::generateSystemInstance(RTPSSettings* settings, CL* cli)
     {
         //this should already be done, but in blender its not
         //whats best way to check if stuff like glGenBuffers has been inited?
         //glewInit();
 
-        dout<<"init: settings->system: "<< settings->GetSettingsAs<string>("system")<<endl;
+        System* system=NULL;
+        dout<<"init: settings->system: "<< settings->GetSettingAs<string>("system")<<endl;
         //TODO choose based on settings
-        if (settings->GetSettingsAs<string>("system") == "sph")
+        if (settings->GetSettingAs<string>("system") == "sph")
         {
             dout<<"*** sph system 1  ***"<<endl;
             //FIXME: I set max gravity sources to 5. This should be configurable.
             system = new SPH(settings,cli);
         }
-        else if (settings->GetSettingsAs<string>("system")  == "flock")
+        else if (settings->GetSettingAs<string>("system")  == "flock")
         {
             dout<<"flock system"<<endl;
             system = new FLOCK(settings,cli);
         }
-        else if (settings->GetSettingsAs<string>("system")  == "rigidbody")
+        else if (settings->GetSettingAs<string>("system")  == "rigidbody")
         {
             dout<<"*** particleRigidBody system 1  ***"<<endl;
             system = new ParticleRigidBody(settings,cli);
+        }
+        else
+        {
+            cerr<<"ERROR! No system of type: "<<settings->GetSettingAs<string>("system")<<". Please choose a valid system."<<endl;
         }
     }
 

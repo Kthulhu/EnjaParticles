@@ -28,6 +28,7 @@
 #include <string>
 #include <map>
 #include <sstream>
+#include <iostream>
 
 //#include "domain/Domain.h"
 #ifdef WIN32

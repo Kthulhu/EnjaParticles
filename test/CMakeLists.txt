@@ -52,6 +52,8 @@ set (test_INCLUDES
 #    )
 
 set (test_SOURCES
+    ParamParser
+    TestApplication
     main_test.cpp
     )
 

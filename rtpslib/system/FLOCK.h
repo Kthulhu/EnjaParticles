@@ -65,7 +65,7 @@ class RTPS_EXPORT FLOCK : public System
 
 
 public:
-    FLOCK(RTPS *ps, int num);
+    FLOCK(RTPSSettings* set, CL* c);
     ~FLOCK();
 
     void update();
