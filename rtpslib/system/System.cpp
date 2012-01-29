@@ -51,7 +51,7 @@ namespace rtps
 
         max_num = settings->GetSettingAs<unsigned int>("max_num_particles");
         num = settings->GetSettingAs<unsigned int>("num_particles");
-        this->maxGravSources=maxGravSources;
+        maxGravSources=settings->GetSettingAs<unsigned int>("max_gravity_sources");
         activeParticle = 0;
 		// I should be able to not specify this, but GPU restrictions ...
         //seed random
@@ -62,17 +62,19 @@ namespace rtps
         setupTimers();
         //*** end Initialization
 #ifdef CPU
-        cout<<"RUNNING ON THE CPU"<<endl;
+        dout<<"RUNNING ON THE CPU"<<endl;
 #endif
 #ifdef GPU
-        cout<<"RUNNING ON THE GPU"<<endl;
+        dout<<"RUNNING ON THE GPU"<<endl;
         prepareSorted();
 
+        dout<<"Here"<<endl;
         //should be more cross platform
         string common_source_dir = settings->GetSettingAs<string>("rtps_path") + "/" + std::string(COMMON_CL_SOURCE_DIR);
         cli->addIncludeDir(common_source_dir);
         dout<<common_source_dir.c_str()<<endl;
 
+        dout<<"Here"<<endl;
         hash = Hash(common_source_dir, cli, timers["hash_gpu"]);
         gravity = Gravity(common_source_dir, cli);
         bitonic = Bitonic<unsigned int>(common_source_dir, cli );
@@ -80,6 +82,7 @@ namespace rtps
         cellindices = CellIndices(common_source_dir, cli, timers["ci_gpu"] );
         permute = Permute( common_source_dir, cli, timers["perm_gpu"] );
         m2p = MeshToParticles(common_source_dir, cli, timers["meshtoparticles_gpu"]);
+        dout<<"Here"<<endl;
 #endif
 
     }
@@ -212,8 +215,10 @@ namespace rtps
 
         vector<unsigned int> uivec(max_num);
         std::fill(uivec.begin(), uivec.end(), 0);
+        dout<<"Here"<<endl;
         // VBO creation, TODO: should be abstracted to another class
         pos_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        dout<<"Here"<<endl;
         dout<<"pos vbo: "<< pos_vbo<<endl;
         col_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         dout<<"color vbo: "<< col_vbo<<endl;
@@ -223,8 +228,11 @@ namespace rtps
         dout<<"force vbo: "<< force_vbo<<endl;
         active_cells_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         dout<<"active cells vbo: "<< active_cells_vbo<<endl;
+        dout<<"address of cli = "<<cli<<endl;
         // end VBO creation
 
+        try
+        {
         //vbo buffers
         cl_position_u = Buffer<float4>(cli, pos_vbo);
         cl_position_s = Buffer<float4>(cli, f4vec);
@@ -239,12 +247,14 @@ namespace rtps
         cl_mass_s = Buffer<float>(cli, fvec);
         cl_objectIndex_u = Buffer<unsigned int>(cli, uivec);
         cl_objectIndex_s = Buffer<unsigned int>(cli, uivec);
+        dout<<"Here"<<endl;
 
         //setup debug arrays
         std::vector<int4> cliv(max_num);
         std::fill(cliv.begin(), cliv.end(),int4(0.0f, 0.0f, 0.0f, 0.0f));
         clf_debug = Buffer<float4>(cli, f4vec);
         cli_debug = Buffer<int4>(cli, cliv);
+        dout<<"Here"<<endl;
         
         //Gravity
         cl_pointSources = Buffer<float4>(cli, maxGravSources, float4(0.0f,0.0f,0.0f,0.0f));
@@ -261,8 +271,12 @@ namespace rtps
         // sorts and compare outputs visually
         cl_sort_output_hashes = Buffer<unsigned int>(cli, keys);
         cl_sort_output_indices = Buffer<unsigned int>(cli, keys);
-
 		dout<<"keys.size= "<< keys.size()<<endl; // 
+        }
+        catch (cl::Error er)
+        {
+            cerr<<"ERROR: "<<er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
+        }
      }
 
 	//----------------------------------------------------------------------

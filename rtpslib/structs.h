@@ -162,6 +162,10 @@ namespace rtps
             m[12]= n; m[13]= o; m[14]= p; m[15]= q;
         }
     } float16;
+#ifdef WIN32
+#pragma pack(push,16)
+#endif
+
     // IJ
     typedef struct float4
     {
@@ -332,8 +336,13 @@ namespace rtps
         }
 
 
-    } float4;
-
+    } float4
+#ifndef WIN32
+	__attribute__((aligned(16)));
+#else
+		;
+        #pragma pack(pop)
+#endif
 
     // size: 4*4 = 16 floats
     // shared memory = 65,536 bytes = 16,384 floats

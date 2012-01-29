@@ -143,7 +143,7 @@ namespace rtps
         sphp.velocity_limit = settings->GetSettingAs<float>("velocity_limit");
         sphp.xsph_factor = settings->GetSettingAs<float>("xsph_factor");
         sphp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2
-        sphp.friction_coef = settings->GetSettingAs<float>("friction");
+        sphp.friction_coef = settings->GetSettingAs<float>("friction_kinetic");
         sphp.restitution_coef = settings->GetSettingAs<float>("restitution");
         //next 3 not used at the moment
         sphp.shear = settings->GetSettingAs<float>("shear");
@@ -171,7 +171,10 @@ namespace rtps
         //update the OpenCL buffer
         //std::vector<SPHParams> vparams();
         //vparams.push_back(sphp);
+        dout<<"here"<<endl;
+        dout<<" sizeof sphp = "<<sizeof(sphp)<<endl;
         cl_sphp.copyToDevice(sphp,0);
         settings->updated();
+        dout<<"here"<<endl;
     }
 }

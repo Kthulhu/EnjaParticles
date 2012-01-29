@@ -54,7 +54,7 @@ namespace rtps
 
         //settings->printSettings();
 
-        spacing = settings->GetSettingAs<float>("Spacing");
+        spacing = settings->GetSettingAs<float>("spacing");
 
         //ParticleRigidBody settings depend on number of particles used
         //calculateParticleRigidBodySettings();

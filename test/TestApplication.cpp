@@ -40,8 +40,12 @@ namespace rtps
     TestApplication::TestApplication(istream& is)
     {
        glewInit(); 
+       GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object"); 
+       dout<<"GLEW supported?: "<<(bGLEW?"true":"false")<<endl;
        windowWidth=800;
        windowWidth=600;
+       cli = new CL();
+       
        readParamFile(is);
        //Fixme: This is a bad way to make sure the directory is correct.
 

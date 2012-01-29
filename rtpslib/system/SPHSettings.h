@@ -52,7 +52,6 @@ namespace rtps
         float viscosity;
         float velocity_limit;
         float xsph_factor;
-        float4 gravity; // -9.8 m/sec^2
 
         float friction_coef;
         float restitution_coef;
@@ -79,6 +78,7 @@ namespace rtps
         int num;
         int max_num;
 
+        float4 gravity; // -9.8 m/sec^2
         /*
         void print()
         {

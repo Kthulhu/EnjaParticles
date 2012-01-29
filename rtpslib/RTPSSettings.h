@@ -30,6 +30,8 @@
 #include <sstream>
 #include <iostream>
 
+#include "util.h"
+
 //#include "domain/Domain.h"
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
@@ -119,6 +121,7 @@ namespace rtps
         {
             if (settings.find(key) == settings.end()) 
             {
+                dout<<"key = "<<key<< " was not found! Using default value "<<defaultval<<std::endl;
                 RT ret = ss_typecast<RT>(defaultval);
                 return ret;
             }
@@ -132,7 +135,7 @@ namespace rtps
             std::ostringstream oss; 
             oss << value; 
             settings[key] = oss.str(); 
-            std::cout << "setting: " << key << " | " << value << std::endl;//printf("setting: %s %s\n", settings[key].c_str());
+            dout << "setting: " << key << " | " << value << std::endl;//printf("setting: %s %s\n", settings[key].c_str());
             changed = true;
         }
     

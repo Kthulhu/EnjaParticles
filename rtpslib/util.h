@@ -61,7 +61,7 @@ namespace rtps
         //    }
         //    #define debugf(format, ...) dprint(__FILE__,__LINE__,__func__,format , __VA_ARGS__);
         //    #define debugm(format) dprint(__FILE__,__LINE__,format);
-            #define dout std::cout<<__FILE__<<": "<<__LINE__<<": "<<__func__<<": "
+            #define dout std::cout<<"\033[35m"<<__FILE__<<": \033[34m"<<__LINE__<<": \033[33m"<<__func__<<": \033[0m"
         /*#else
         //    #define debugf(format, ...) ((void)0)
             #define dout 0 && std::cout

@@ -47,26 +47,31 @@ namespace rtps
 	//----------------------------------------------------------------------
     SPH::SPH(RTPSSettings* set, CL* c):System(set,c)
     {
-        spacing = settings->GetSettingAs<float>("Spacing");
-
-        setupDomain(sphp.smoothing_distance/sphp.simulation_scale,sphp.simulation_scale);
-
+        dout<<"Here"<<endl;
         setupTimers();
 
+        dout<<"Here"<<endl;
         calculate();
         updateParams();
+        setupDomain(sphp.smoothing_distance/sphp.simulation_scale,sphp.simulation_scale);
 
+        dout<<"Here"<<endl;
+        spacing = settings->GetSettingAs<float>("spacing");
         std::vector<SPHParams> vparams(0);
         vparams.push_back(sphp);
         cl_sphp = Buffer<SPHParams>(cli, vparams);
+        dout<<"Here"<<endl;
 #ifdef GPU
         dout<<"RUNNING ON THE GPU"<<endl;
         prepareSorted();
 
+        dout<<"Here"<<endl;
         //should be more cross platform
         string sph_source_dir = settings->GetSettingAs<string>("rtps_path") + "/" + string(SPH_CL_SOURCE_DIR);
+        dout<<"Here"<<endl;
         cli->addIncludeDir(sph_source_dir);
 
+        dout<<"Here"<<endl;
         forceRB = RigidBodyForce(sph_source_dir, cli, timers["force_rigidbody_gpu"]);
         density = Density(sph_source_dir, cli, timers["density_gpu"]);
         force = Force(sph_source_dir, cli, timers["force_gpu"]);
@@ -74,6 +79,7 @@ namespace rtps
         collision_tri = CollisionTriangle(sph_source_dir, cli, timers["ct_gpu"], 2048); //TODO expose max_triangles as a parameter
 		
 
+        dout<<"Here"<<endl;
         //could generalize this to other integration methods later (leap frog, RK4)
         if (settings->GetSettingAs<string>("integrator")=="leapfrog")
         {
@@ -83,6 +89,7 @@ namespace rtps
         {
             euler = Euler(sph_source_dir, cli, timers["euler_gpu"]);
         }
+        dout<<"Here"<<endl;
 #endif
     }
 
@@ -418,28 +425,32 @@ namespace rtps
 	//----------------------------------------------------------------------
     void SPH::prepareSorted()
     {
-
+        dout<<"Here"<<endl;
         vector<float4> f4vec(max_num);
         vector<float> fvec(max_num);
         fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         fill(fvec.begin(), fvec.end(), 0.0f);
 
+        dout<<"Here"<<endl;
         //pure opencl buffers: these are deprecated
         cl_veleval_u = Buffer<float4>(cli, f4vec);
         cl_veleval_s = Buffer<float4>(cli, f4vec);
         cl_density_s = Buffer<float>(cli, fvec);
         cl_xsph_s = Buffer<float4>(cli, f4vec);
 
+        dout<<"Here"<<endl;
         //TODO make a helper constructor for buffer to make a cl_mem from a struct
         //Setup Grid Parameter structs
         vector<GridParams> gparams(0);
         gparams.push_back(grid_params);
         cl_GridParams = Buffer<GridParams>(cli, gparams);
 
+        dout<<"Here"<<endl;
         //scaled Grid Parameters
         vector<GridParams> sgparams(0);
         sgparams.push_back(grid_params_scaled);
         cl_GridParamsScaled = Buffer<GridParams>(cli, sgparams);
+        dout<<"Here"<<endl;
         // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
         // That is a problem since the number of
         // occupied cells could be much less than the number of grid elements.

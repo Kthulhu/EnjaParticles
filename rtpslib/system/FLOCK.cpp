@@ -52,7 +52,7 @@ FLOCK::FLOCK(RTPSSettings* set, CL* c):System(set,c)
     calculate();
     updateParams();
 
-    spacing = settings->GetSettingAs<float>("Spacing");
+    spacing = settings->GetSettingAs<float>("spacing");
 
     //set up the grid
     setupDomain(flock_params.smoothing_distance/flock_params.simulation_scale,flock_params.simulation_scale);

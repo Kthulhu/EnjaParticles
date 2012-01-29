@@ -44,7 +44,6 @@ typedef struct SPHParams
     float viscosity;
     float velocity_limit;
     float xsph_factor;
-    float4 gravity; // -9.8 m/sec^2
 
     float friction_coef;
     float restitution_coef;
@@ -70,6 +69,8 @@ typedef struct SPHParams
     //CL parameters
     int num;
     int max_num;
+
+    float4 gravity; // -9.8 m/sec^2
 
 } SPHParams
 
