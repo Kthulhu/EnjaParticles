@@ -48,14 +48,24 @@ namespace rtps
                     int numPoint,
                     Buffer<float4>& pointSources,
                     Buffer<float>& massSources,
-                    float alpha,
+                    Buffer<float>& alphaSources,
                     Buffer<float4>& pos,
                     Buffer<float4>& accel,
+                    float scale);
+            void execute(int numPart,
+                    int numPoint,
+                    Buffer<float4>& pointSources,
+                    Buffer<float>& massSources,
+                    Buffer<float>& alphaSources,
+                    Buffer<float4>& pos,
+                    Buffer<float>& mass,
+                    Buffer<float4>& force,
                     float scale);
 
         private:
             CL* cli;
             Kernel k_gravity;
+            Kernel k_gravityForce;
     };
 }
 

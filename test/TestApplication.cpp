@@ -24,6 +24,7 @@
 #include "TestApplication.h"
 #include "ParamParser.h"
 #include "RTPS.h"
+#include "../rtpslib/render/SSEffect.h"
 
 #include <sstream>
 #include <float.h>
@@ -39,17 +40,39 @@ namespace rtps
 {
     TestApplication::TestApplication(istream& is)
     {
-       glewInit(); 
-       GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object"); 
-       dout<<"GLEW supported?: "<<(bGLEW?"true":"false")<<endl;
-       windowWidth=800;
-       windowWidth=600;
-       cli = new CL();
-       
-       readParamFile(is);
-       //Fixme: This is a bad way to make sure the directory is correct.
+        glewInit(); 
+        GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object"); 
+        windowWidth=800;
+        windowWidth=600;
+        cli = new CL();
 
-       lib=new ShaderLibrary();
+        renderType="default";
+        readParamFile(is);
+        //Fixme: This is a bad way to make sure the directory is correct.
+        lib=new ShaderLibrary();
+        RenderSettings rs;
+        //rs.blending=false;
+        rs.blending=false;
+        float nf[2];
+        glGetFloatv(GL_DEPTH_RANGE,nf);
+        rs.near = nf[0];
+        rs.far = nf[1];
+        rs.particleRadius = systems["water"]->getSpacing()*20.f;
+        rs.windowWidth=windowWidth;
+        rs.windowHeight=windowHeight;
+        lib = new ShaderLibrary();
+        lib->initializeShaders(GLSL_BIN_DIR);
+        effects["default"]=new ParticleEffect(rs,*lib);
+        //effects["sprite"]=new ParticleEffect();
+        rs.blending=true;
+        rs.particleRadius =systems["water"]->getSpacing()*.4f;
+        effects["ssfr"]=new SSEffect(rs, *lib);
+        translation.x = -2.00f;
+        translation.y = -2.70f;//300.f;
+        translation.z = 3.50f;
+        rotation.x=0.0f;
+        rotation.y=0.0f;
+        mass=1.0f;
     }
 
     void TestApplication::setWindowHeight(GLuint windowHeight) {
@@ -169,13 +192,13 @@ namespace rtps
                     float innerRadius=1.0f;
                     float outerRadius=4.0f;
                     float thickness=2.0f;
-                    systems["water"]->addTorus(systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles"),center,innerRadius,outerRadius,thickness);
+                    systems["water"]->addTorus(systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/2,center,innerRadius,outerRadius,thickness);
                     return;
                 }
             case 'r': //drop a rectangle
                 {
 
-                    float4 col1 = float4(1., 0.9, 0., 1.);
+                    float4 col1 = float4(0.5, 0.9, 0.75, 1.);
 
                     float4 size = float4(1.,1.,1.,0.f);
                     size=size*sizeScale;
@@ -185,10 +208,12 @@ namespace rtps
                     float4 position = float4(0.0f, 0.0f,gridMax.z-(size.z/2.f),1.0f);
                     position.x = mid.x-(size.x/2.0f);
                     position.y = mid.y-(size.y/2.0f);
-                    systems["rb1"]->addBox(systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles"), position, position+size, false, col1,mass);
+                    position.w = 0.0f;
+                    systems["rb1"]->addBox(1000, position, position+size, false, col1,mass);
                     return;
                 }
             case 'v':
+                renderVelocity=!renderVelocity;
                 return;
             case 'o':
                 renderType="default";
@@ -237,6 +262,7 @@ namespace rtps
     void TestApplication::RenderCallback()
     {
 
+        glClearColor(.9, .9, .9, 1.0);
         //ps->system->sprayHoses();;
         /*if(!voxelized)
         {
@@ -301,10 +327,10 @@ namespace rtps
             //Systems with the different effects.
             for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
             {
-                /*if(renderVelocity)
+                if(renderVelocity)
                 {
                     effects[renderType]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
-                }*/
+                }
                 effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
             }
             /*if(render_movie)
@@ -399,7 +425,7 @@ namespace rtps
             {
                 i->second->integrate();
                 i->second->postProcess();
-                i->second->acquireGLBuffers();
+                i->second->releaseGLBuffers();
             }
             /*systems["water"]->acquireGLBuffers();
             systems["rb1"]->acquireGLBuffers();
@@ -415,7 +441,6 @@ namespace rtps
             systems["water"]->releaseGLBuffers();
             systems["rb1"]->releaseGLBuffers();*/
         }
-        glutPostRedisplay();
     }
     void TestApplication::ResetSimulations()
     {
@@ -471,10 +496,27 @@ namespace rtps
             #else
                 sysSettings[i]->SetSetting("rtps_path","./bin");
             #endif
+            //Fixme::This is hacky. I need to determine an efficient way to do simulation scaling
+            //for rigid bodies to work well with sph.
+            if(sysSettings[i]->GetSettingAs<string>("system")=="rigidbody")
+            {
+                sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
+                sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
+            }
             systems[names[i]]=RTPS::generateSystemInstance(sysSettings[i],cli);
+
         }
         gridMin = systems["water"]->getSettings()->GetSettingAs<float4>("domain_min");
         gridMax = systems["water"]->getSettings()->GetSettingAs<float4>("domain_max");
+        for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        {
+            for(map<string,System*>::iterator j = systems.begin(); j!=systems.end(); j++)
+            {
+                if(i==j)
+                    continue;
+                i->second->addInteractionSystem(j->second);
+            }
+        }
     }
 
     GLuint TestApplication::getWindowHeight() const {

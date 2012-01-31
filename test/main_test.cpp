@@ -33,7 +33,7 @@
 
 //#include "BunnyMesh.h"
 #include "TestApplication.h"
-
+#include "../rtpslib/util.h"
 using namespace rtps;
 using namespace std;
 TestApplication* app=NULL;
@@ -68,6 +68,7 @@ void timerCB(int ms)
 {
     glutTimerFunc(ms, timerCB, ms);
     app->TimerCallback(ms);
+    glutPostRedisplay();
 }
 //----------------------------------------------------------------------
 int main(int argc, char** argv)
@@ -91,7 +92,7 @@ int main(int argc, char** argv)
         
     ifstream is(paramFile.c_str(),ifstream::in);
     app=new TestApplication(is);
-
+    
     glutDisplayFunc(appRender); //main rendering function
     glutTimerFunc(30, timerCB, 30); //determin a minimum time between frames
     glutKeyboardFunc(appKeyboard);

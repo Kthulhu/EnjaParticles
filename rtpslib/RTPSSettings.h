@@ -51,63 +51,16 @@ namespace rtps
     class RTPS_EXPORT RTPSSettings 
     {
     public:
-        //decide which system to use
-        /*enum SysType
-        {
-            Simple, SPH, FLOCK, PARTICLE_RIGIDBODY
-        };
-        SysType system;
-
-        enum RenderType
-        {
-            RENDER = 0, SPRITE_RENDER, SCREEN_SPACE_RENDER, SPHERE3D_RENDER
-        };*/
 
         RTPSSettings();
-        /*
-        RTPSettings(SysType system, int max_particles, float dt);
-        RTPSettings(SysType system, int max_particles, float dt, Domain *grid);
-
-        //collision
-        RTPSettings(SysType system, int max_particles, float dt, Domain *grid, bool tri_collision);
-
-        //flock
-        RTPSettings(SysType system, int max_particles, float dt, Domain* grid, float maxspeed, float mindist, float searchradius, float color[], float w_sep, float w_align, float w_coh);
-
-		// (GE) TEMPORARY WHILE WAITING FOR REFACTORING
-		void setMaxOuterParticles(int max_outer_particles) {
-			this->max_outer_particles = nlpo2(max_outer_particles);
-		}
-		int getMaxOuterParticles() {
-			return this->max_outer_particles;
-		}*/
-
         //without this, windows was crashing with a ValidHeapPointer
         //assertion error. Indicates the heap may be corrupted by 
         //something in here
         ~RTPSSettings();
-        /*
-        //TODO get rid of all variables, just use map
-        //maximum number of particles a system can hold
-        int max_particles;
-        //maximum number of outer (ghost, solid object) particles a system can hold
-        int max_outer_particles; 
-        //the bounding domain of the system
-        Domain *grid; //TODO keep this and make private
-        //time step per iteration
-        float dt;
-        //triangle collision?
-        bool tri_collision;
-
-        // FLOCK: target of goal rule
-        float4 target;
-
-        // FLOCK: 2D simulation
-        bool two_dimensional;*/
-
-        bool hasChanged() { return changed; };
-        void updated() { changed = false; } //for now we are assuming only one consumer (one system using the settings)
-
+ 
+        bool hasChanged() { return changed; }
+        //for now we are assuming only one consumer (one system using the settings)
+        void updated() { changed = false; } 
         void printSettings();
 
 		//----------------------------------------------------------------------
@@ -121,7 +74,7 @@ namespace rtps
         {
             if (settings.find(key) == settings.end()) 
             {
-                dout<<"key = "<<key<< " was not found! Using default value "<<defaultval<<std::endl;
+                //dout<<"key = "<<key<< " was not found! Using default value "<<defaultval<<std::endl;
                 RT ret = ss_typecast<RT>(defaultval);
                 return ret;
             }
@@ -135,7 +88,7 @@ namespace rtps
             std::ostringstream oss; 
             oss << value; 
             settings[key] = oss.str(); 
-            dout << "setting: " << key << " | " << value << std::endl;//printf("setting: %s %s\n", settings[key].c_str());
+            //dout << "setting: " << key << " | " << value << std::endl;//printf("setting: %s %s\n", settings[key].c_str());
             changed = true;
         }
     
@@ -145,14 +98,7 @@ namespace rtps
     private:
         std::map<std::string, std::string> settings;
         bool changed;
-        
-        /*// Added by GE
-        float render_radius_scale;
-        float render_blur_scale;
-        RenderType render_type;
-        bool use_glsl;
-        bool use_alpha_blending;*/
-
+ 
         // This routine is adapted from post on GameDev:
         // http://www.gamedev.net/community/forums/topic.asp?topic_id=190991
         // Should be safer to use this than atoi. Performs worse, but our
@@ -166,81 +112,6 @@ namespace rtps
             //temp_ss.operator>>(num);
             return num;
         }
-
-    /*public:
-        Domain* getDomain()
-        {
-            return grid;
-        }
-        void setDomain(Domain *domain)//should this pass by reference?
-        {
-            grid = domain;
-        }
-
-        //TODO: remove these when we switch to Map
-        float getRadiusScale()
-        {
-            return render_radius_scale;
-        }
-        void setRadiusScale(float scale)
-        {
-            render_radius_scale = scale;
-        }
-
-        float getBlurScale()
-        {
-            return render_blur_scale;
-        }
-        void setBlurScale(float scale)
-        {
-            render_blur_scale = scale;
-        }
-
-        int getRenderType()
-        {
-            return render_type;
-        }
-        void setRenderType(RenderType type)
-        {
-            render_type = type;
-        }
-
-        int getUseAlphaBlending()
-        {
-            return use_alpha_blending;
-        }
-        void setUseAlphaBlending(bool use_alpha)
-        {
-            use_alpha_blending = use_alpha;
-        }
-
-        int getUseGLSL()
-        {
-            return use_glsl;
-        }
-        void setUseGLSL(bool use_glsl)
-        {
-            this->use_glsl = use_glsl;
-        }
-
-        float4 getTarget()
-        {
-            return target;
-        }
-        void setTarget(float4 t)
-        {
-            target = t;
-            target.print("target");
-        }
-
-        int getDimension()
-        {
-            return two_dimensional;
-        }
-        void setDimension(bool dim)
-        {
-            two_dimensional = dim;
-        }*/
     };
 
 };

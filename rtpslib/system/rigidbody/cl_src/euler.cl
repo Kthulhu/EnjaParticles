@@ -94,5 +94,5 @@ __kernel void euler(
     comAngVel[i] = w;
     comRot[i] = q;
     
-    clf[i] = q;
+    clf[i] = tf;
 }

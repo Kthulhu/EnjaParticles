@@ -30,15 +30,10 @@
 //Struct which gets passed to OpenCL routines
 typedef struct ParticleRigidBodyParams
 {
-    float mass;
-    float rest_distance;
     float smoothing_distance;
     float simulation_scale;
 
     //dynamic params
-    float boundary_stiffness;
-    float boundary_dampening;
-    float boundary_distance;
     float4 gravity; // -9.8 m/sec^2
 
     float friction_coef;
@@ -54,7 +49,7 @@ typedef struct ParticleRigidBodyParams
     int num;
     int max_num;
 
-} ParticleRigidBodyParams
+} ParticleRigidBodyParams;
 
 
 

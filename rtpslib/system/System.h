@@ -165,10 +165,6 @@ namespace rtps
         virtual void prepareSorted();
         virtual int setupTimers();
         void addPointSource(float4& pointSource, float massSource);
-        void setAlpha(float newAlpha)
-        {
-            alpha = newAlpha;
-        }
         void addInteractionSystem(System* interact)
         {
             interactionSystem.push_back(interact);
@@ -239,7 +235,7 @@ namespace rtps
         //Gravity
         Buffer<float4> cl_pointSources;
         Buffer<float> cl_massSources;
-        float alpha;
+        Buffer<float> cl_alphaSources;
         int numGravSources;
         int maxGravSources;
         

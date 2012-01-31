@@ -46,6 +46,7 @@ namespace rtps
                     Buffer<float4>& pos_s,
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& linear_force_s,
+                    Buffer<float>& mass_s,
                     Buffer<unsigned int>& objectIndex_s,
                     //Buffer<float4>& torque_force_s,
                     Buffer<unsigned int>& indices,

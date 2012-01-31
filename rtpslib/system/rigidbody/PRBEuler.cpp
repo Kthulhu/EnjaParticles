@@ -85,7 +85,7 @@ namespace rtps
         //int local_size = 128;
         k_euler.execute(numRBs);//, local_size);
 
-#if 0 //printouts    
+#if 1 //printouts    
         //DEBUGING
         
         if(numRBs > 0)// && choice == 0)

@@ -45,29 +45,7 @@
 
 namespace rtps
 {
-    #ifndef dout 
-        //#ifdef DEBUG
-        //#ifndef DEBUG_MAX_LINE_LEN
-        //#define DEBUG_MAX_LINE_LEN 1024
-        //#endif
-        //    void dprint(const char* file, int line, const char* func, const char* msg, ...);
-
-        //    void dprint(const char* file, const char* func, int line, const char* msg)
-        //    {
-        //        if (msg)
-        //        {
-        //            printf("\033[35m%s %d: \033[34m%s(): \033[33m%s\033[0m\n",file,func,line,msg);
-        //        }
-        //    }
-        //    #define debugf(format, ...) dprint(__FILE__,__LINE__,__func__,format , __VA_ARGS__);
-        //    #define debugm(format) dprint(__FILE__,__LINE__,format);
-            #define dout std::cout<<"\033[35m"<<__FILE__<<": \033[34m"<<__LINE__<<": \033[33m"<<__func__<<": \033[0m"
-        /*#else
-        //    #define debugf(format, ...) ((void)0)
-            #define dout 0 && std::cout
-        //    #define debugm(format) ((void)0);
-        #endif*/
-    #endif
+    
     char RTPS_EXPORT *file_contents(const char *filename, int *length);
     //Added this to use C++ standard file reading. I am attempting to deprecate
     //C-style code and anything that unnecessarily uses dynamic memory. ASY 12/14/2011

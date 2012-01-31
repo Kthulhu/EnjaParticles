@@ -29,7 +29,7 @@
 #include <iostream>
 #include <math.h>
 #include <boost/tokenizer.hpp>
-
+#include "debug.h"
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
         #define RTPS_EXPORT __declspec(dllexport)
@@ -176,6 +176,10 @@ namespace rtps
 
         float4()
         {
+            x=0.0f;
+            y=0.0f;
+            z=0.0f;
+            w=0.0f;
         };
         float4(const float3& f, float ww):
         x(f.x),
@@ -301,7 +305,7 @@ namespace rtps
             float4 m = float4(d*b.x, d*b.y, d*b.z, d*b.w);
             return m;
         }
-        friend float4 operator*(float16& mat, float4& b)
+        friend float4 operator*(const float16& mat, float4& b)
         {
             float4 retval(0.0f,0.0f,0.0f,0.0f);
             retval.x=mat.m[0]*b.x+mat.m[1]*b.y+mat.m[2]*b.z+mat.m[3]*b.w;
@@ -320,6 +324,7 @@ namespace rtps
                 os<<__n.x<<" "<<__n.y<<" "<<__n.z<<" "<<__n.w;
                 return os;
         }
+
         /*float4& operator/(float r)
         {
             x/=r;
@@ -352,8 +357,35 @@ namespace rtps
         float4 verts[3];
         float4 normal;    //should pack this in verts array
     } Triangle;
+    
+    //Helper Read functions for Parameters.
+    template<typename scalar>
+    std::istream& operator>>(std::istream& is, std::vector<scalar>& __n)
+    {
+        scalar s;
+        while(is.good())
+        {
+            is>>s;
+            __n.push_back(s);
+        }
+        
+        return is;
+    }
 
-
+    /*std::istream& operator>>(std::istream& is, std::vector<float>& __n)
+    {
+        float f; 
+        while(is.good())
+        {
+            is>>f;
+            __n.push_back(f);
+        }
+        for(int i=0;i<__n.size();i++)
+        {
+            dout<<"float "<<i<<" "<<__n[i]<<std::endl;
+        }
+        return is;
+    }*/
     //maybe these helper functions should go elsewhere? 
     //or be functions of the structs
     RTPS_EXPORT float magnitude(float4 vec);

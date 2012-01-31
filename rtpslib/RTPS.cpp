@@ -34,45 +34,6 @@ using namespace std;
 namespace rtps
 {
 
-    /*RTPS::RTPS()
-    {
-        cli = new CL();
-        cl_managed = true;
-        //settings will be the default constructor
-        Init();
-printf("done with constructor\n");
-    }
-
-    RTPS::RTPS(RTPSettings *s)
-    {
-        cli = new CL();
-        cl_managed = true;
-        settings = s;
-        Init();
-        printf("done with constructor\n");
-    }
-
-    RTPS::RTPS(RTPSettings *s, CL* _cli)
-    {
-        cli = _cli;
-        cl_managed = false;
-        settings = s;
-        Init();
-printf("done with constructor\n");
-    }
-
-    RTPS::~RTPS()
-    {
-        printf("RTPS destructor\n");
-        delete settings;
-        delete system;
-        if(cl_managed)
-        {
-            delete cli;
-        }
-        //delete renderer;
-    }*/
-
     System* RTPS::generateSystemInstance(RTPSSettings* settings, CL* cli)
     {
         //this should already be done, but in blender its not
@@ -101,25 +62,8 @@ printf("done with constructor\n");
         else
         {
             cerr<<"ERROR! No system of type: "<<settings->GetSettingAs<string>("system")<<". Please choose a valid system."<<endl;
+            return NULL;
         }
     }
-
-    /*void RTPS::update()
-    {
-        //eventually we will support more systems
-        //then we will want to iterate over them
-        //or have more complex behavior if they interact
-        system->update();
-    }
-
-    void RTPS::render()
-    {
-        system->render();
-    }
-
-    void RTPS::printTimers()
-    {
-            system->printTimers();
-    }*/
 };
 

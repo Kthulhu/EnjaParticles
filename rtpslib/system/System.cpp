@@ -74,7 +74,6 @@ namespace rtps
         cli->addIncludeDir(common_source_dir);
         dout<<common_source_dir.c_str()<<endl;
 
-        dout<<"Here"<<endl;
         hash = Hash(common_source_dir, cli, timers["hash_gpu"]);
         gravity = Gravity(common_source_dir, cli);
         bitonic = Bitonic<unsigned int>(common_source_dir, cli );
@@ -82,7 +81,6 @@ namespace rtps
         cellindices = CellIndices(common_source_dir, cli, timers["ci_gpu"] );
         permute = Permute( common_source_dir, cli, timers["perm_gpu"] );
         m2p = MeshToParticles(common_source_dir, cli, timers["meshtoparticles_gpu"]);
-        dout<<"Here"<<endl;
 #endif
 
     }
@@ -254,11 +252,24 @@ namespace rtps
         std::fill(cliv.begin(), cliv.end(),int4(0.0f, 0.0f, 0.0f, 0.0f));
         clf_debug = Buffer<float4>(cli, f4vec);
         cli_debug = Buffer<int4>(cli, cliv);
-        dout<<"Here"<<endl;
         
+        dout<<"grav_sources = "<<settings->GetSettingAs<string >("gravity_sources")<<endl;
+        dout<<"grav_mass = "<<settings->GetSettingAs<string >("gravity_mass")<<endl;
+        dout<<"grav_alphas = "<<settings->GetSettingAs<string >("gravity_alphas")<<endl;
+
         //Gravity
-        cl_pointSources = Buffer<float4>(cli, maxGravSources, float4(0.0f,0.0f,0.0f,0.0f));
-        cl_massSources = Buffer<float>(cli, maxGravSources, 0.0f);
+        vector<float4> grav_sources = settings->GetSettingAs<vector<float4> >("gravity_sources");
+        cl_pointSources = Buffer<float4>(cli, grav_sources);
+        vector<float> grav_masses = settings->GetSettingAs<vector<float> >("gravity_mass");
+        cl_massSources = Buffer<float>(cli, grav_masses);
+        vector<float> grav_alphas = settings->GetSettingAs<vector<float> >("gravity_alphas");
+        cl_alphaSources = Buffer<float>(cli, grav_alphas);
+        for(int i=0;i<grav_alphas.size();i++)
+        {
+            dout<<"Alphas # "<<i<<": "<<grav_alphas[i]<<std::endl;
+        } 
+        numGravSources=grav_sources.size();
+        maxGravSources=grav_sources.size();
 
         std::vector<unsigned int> keys(max_num);
         //to get around limits of bitonic sort only handling powers of 2

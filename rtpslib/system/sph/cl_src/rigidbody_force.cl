@@ -79,7 +79,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 
         float ln_res =log(.95); 
         
-        float damp = -2.*ln_res*(sqrt((stiff*(massnorm))/((ln_res*ln_res)+(sphp->PI*sphp->PI))));
+        float damp = -2.*ln_res*(sqrt((stiff*(massnorm))/((ln_res*ln_res)+(M_PI_F*M_PI_F))));
         float4 dampeningForce = damp*(velj-veli);
         //force *= sphp->mass;// * idi * idj;
         //FIXME: I think mass should be a part of one of these formulas. -ASY

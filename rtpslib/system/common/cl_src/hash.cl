@@ -148,7 +148,6 @@ __kernel void hash(
     clf[6].w = sphp->wvisc_dd_coef;
 
     clf[7].x = sphp->num;
-    clf[7].y = sphp->nb_vars; // for combined variables (vars_sorted, etc.)
     clf[7].z = sphp->choice; // which kind of calculation to invoke
     clf[7].w = sphp->max_num;
 */

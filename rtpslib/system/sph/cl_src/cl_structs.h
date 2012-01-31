@@ -72,7 +72,7 @@ typedef struct SPHParams
 
     float4 gravity; // -9.8 m/sec^2
 
-} SPHParams
+} SPHParams;
 
 
 // Will be local variable

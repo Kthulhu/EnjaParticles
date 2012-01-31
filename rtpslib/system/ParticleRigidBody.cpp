@@ -216,6 +216,7 @@ namespace rtps
                 cl_velocity_s,
                 //cl_veleval_s,
                 cl_force_s,
+                cl_mass_s,
                 cl_objectIndex_s,
                 //cl_spring_coef_s,
                 //cl_dampening_coef_s,
@@ -228,6 +229,15 @@ namespace rtps
                 clf_debug,
                 cli_debug);
             timers["force"]->stop();
+            gravity.execute(num,
+                    numGravSources,
+                    cl_pointSources,
+                    cl_massSources,
+                    cl_alphaSources,
+                    cl_position_s,
+                    cl_mass_s,
+                    cl_force_s,
+                    prbp.simulation_scale);
         }
 
 
@@ -434,8 +444,10 @@ namespace rtps
         for(int i = 0;i<pos.size();i++)
         {
             float4 tmp = (pos[i]-com);
+            dout<<tmp<<endl;
             tmp*=prbp.simulation_scale;
             tmp.w = 1.0f;
+            dout<<tmp<<endl;
             pos_l.push_back(tmp);
             mass_p.push_back(mass/nn);
             //char tmpchar[32];
@@ -463,6 +475,14 @@ namespace rtps
         float4 comAngVel=float4(0.0f,0.0f,0.0f,0.0f);;
         comAngVel=invInertialTensor*angMomentum;
 
+        dout<<"position: "<<com<<endl;
+        dout<<"velocity: "<<comVel<<endl;
+        dout<<"ang momentum: "<<angMomentum<<endl;
+        dout<<"mass: "<<mass<<endl;
+        dout<<"Inertial Tensor: "<<endl;
+        for(int i =0;i<16;i++)
+            cout<<i<<": "<<invInertialTensor.m[i]<<" ,";
+        cout<<endl;
         vector<unsigned int> index(nn);
         std::fill(index.begin(), index.end(), curRigidbodyID);
         curRigidbodyID++; 
@@ -524,51 +544,10 @@ namespace rtps
     void ParticleRigidBody::calculate()
     {
         //This shouldn't be here. We should just be able to set the rest distance
-        float rho0 = settings->GetSettingAs<float>("rest_density");                              //rest density [kg/m^3 ]
-        float mass = (0.0256/(int)log2(settings->GetSettingAs<unsigned int>("max_num_particles"))); //Particle Mass [ kg ]
-        float VP = mass/rho0;
-        float rest_distance = .87 * pow(mass/rho0, 1.f/3.f);   //rest distance between particles [ m ]
-        float smoothing_distance = 2.0f * rest_distance;//interaction radius
-
         float4 dmin = grid.getBndMin();
         float4 dmax = grid.getBndMax();
-        float domain_vol = (dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z);
-
-        //ratio between particle radius in simulation coords and world coords
-        float simulation_scale = pow(.5f * VP * max_num / domain_vol, 1.f/3.f); 
-       
-        settings->SetSetting("mass", mass);
-        settings->SetSetting("rest_distance", rest_distance);
-        settings->SetSetting("smoothing_distance", smoothing_distance);
-        settings->SetSetting("simulation_scale", simulation_scale);
-
-		// Why did Ian choose the 2nd line
-        float boundary_distance = .5f * rest_distance;
-        //float boundary_distance =  smoothing_distance;
-
-        settings->SetSetting("boundary_distance", boundary_distance);
-        float spacing = (smoothing_distance / simulation_scale);
-        //float spacing = smoothing_distance / simulation_scale;
+        spacing = settings->GetSettingAs<float>("smoothing_distance") /settings->GetSettingAs<float>("simulation_scale");
         settings->SetSetting("spacing", spacing);
-		// Why did Ian choose the 2nd line
-
-        /*settings->SetSetting("gravity", float4(0.0f,0.0f,-9.8f,0.0f); // -9.8 m/sec^2
-        settings->SetSetting("gas_constant", 1.5f);
-        settings->SetSetting("viscosity", 1.0f);
-        settings->SetSetting("velocity_limit", 600.0f);
-        settings->SetSetting("xsph_factor", .1f);
-        settings->SetSetting("friction_kinetic", 0.2f);
-        settings->SetSetting("friction_static", 0.0f);
-        settings->SetSetting("boundary_stiffness", 20000.0f);
-        settings->SetSetting("boundary_dampening", 256.0f);
-
-        
-        //next 4 not used at the moment
-        settings->SetSetting("restitution", 0.0f);
-        settings->SetSetting("shear", 0.0f);
-        settings->SetSetting("attraction", 0.0f);
-        settings->SetSetting("spring", 0.0f);*/
-
         //constants
         settings->SetSetting("epsilon", 1E-6);
 
@@ -581,21 +560,15 @@ namespace rtps
 	//----------------------------------------------------------------------
     void ParticleRigidBody::updateParams()
     {
-
-        
         //update all the members of the prbp struct
-        prbp.mass = settings->GetSettingAs<float>("mass");
-        prbp.rest_distance = settings->GetSettingAs<float>("rest_distance");
         prbp.smoothing_distance = settings->GetSettingAs<float>("smoothing_distance");
         prbp.simulation_scale = settings->GetSettingAs<float>("simulation_scale");
         
         //dynamic params
-        prbp.boundary_stiffness = settings->GetSettingAs<float>("boundary_stiffness");
-        prbp.boundary_dampening = settings->GetSettingAs<float>("boundary_dampening");
-        prbp.boundary_distance = settings->GetSettingAs<float>("boundary_distance");
         prbp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2
         prbp.friction_coef = settings->GetSettingAs<float>("friction");
         prbp.restitution_coef = settings->GetSettingAs<float>("restitution");
+        prbp.penetration_fact = settings->GetSettingAs<float>("penetration_factor");
         //next 3 not used at the moment
         prbp.shear = settings->GetSettingAs<float>("shear");
         prbp.attraction = settings->GetSettingAs<float>("attraction");
@@ -609,6 +582,11 @@ namespace rtps
         prbp.num = settings->GetSettingAs<int>("num_particles");
         prbp.max_num = settings->GetSettingAs<int>("max_num_particles");
 
+        dout<<"smooth : "<<prbp.smoothing_distance<<endl;
+        dout<<"scale : "<<prbp.simulation_scale<<endl;
+        dout<<"gravity : "<<prbp.gravity<<endl;
+        dout<<"penetration : "<<prbp.penetration_fact<<endl;
+        dout<<"restitution : "<<prbp.restitution_coef<<endl;
         //update the OpenCL buffer
         //std::vector<SPHParams> vparams();
         //vparams.push_back(prbp);

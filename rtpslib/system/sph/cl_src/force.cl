@@ -81,9 +81,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 
         //form simple SPH in Krog's thesis
 
-        float rest_density = 1000.f;
-        float Pi = sphp->K*(di - rest_density);
-        float Pj = sphp->K*(dj - rest_density);
+        float Pi = sphp->K*(di - sphp->rest_density);
+        float Pj = sphp->K*(dj - sphp->rest_density);
 
         //playing with quartic kernel
         //dWijdr = 2.0f/3.0f  - 9.0f * q*q / 8.0f + 19.0f * q*q*q / 24.0f - 5.0f * q*q*q*q / 32.0f; (need derivative of this)
@@ -151,7 +150,6 @@ __kernel void force_update(
                        )
 {
     // particle index
-    int nb_vars = sphp->nb_vars;
     int num = sphp->num;
     //int numParticles = get_global_size(0);
     //int num = get_global_size(0);

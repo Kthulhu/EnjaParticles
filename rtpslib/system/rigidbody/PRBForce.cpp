@@ -52,6 +52,7 @@ namespace rtps
                     Buffer<float4>& pos_s,
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& linear_force_s,
+                    Buffer<float>& mass_s,
                     Buffer<unsigned int>& objectIndex_s,
                     //Buffer<float4>& torque_force_s,
                     Buffer<unsigned int>& indices,
@@ -68,6 +69,7 @@ namespace rtps
         k_force.setArg(iarg++, pos_s.getDevicePtr());
         k_force.setArg(iarg++, veleval_s.getDevicePtr());
         k_force.setArg(iarg++, linear_force_s.getDevicePtr());
+        k_force.setArg(iarg++, mass_s.getDevicePtr());
         k_force.setArg(iarg++, objectIndex_s.getDevicePtr());
         //k_force.setArg(iarg++, torque_force_s.getDevicePtr());
         k_force.setArg(iarg++, indices.getDevicePtr());
@@ -94,13 +96,13 @@ namespace rtps
             printf("ERROR(force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-#if 0 //printouts    
+#if 1 //printouts    
         //DEBUGING
-        
+    
         if(num > 0)// && choice == 0)
         {
             printf("============================================\n");
-            printf("***** PRINT neighbors diagnostics ******\n");
+            printf("***** PRINT Rigid Body Forces ******\n");
             printf("num %d\n", num);
 
             std::vector<int4> cli(num);

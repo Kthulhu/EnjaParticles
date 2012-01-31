@@ -94,7 +94,6 @@ __kernel void density_update(
                        )
 {
     // particle index
-    int nb_vars = sphp->nb_vars;
     int num = sphp->num;
     //int numParticles = get_global_size(0);
     //int num = get_global_size(0);

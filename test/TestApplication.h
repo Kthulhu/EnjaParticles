@@ -47,7 +47,7 @@ namespace rtps
             float sizeScale;
             float mass;
             CL* cli;
-            bool paused;
+            bool paused,renderVelocity;
     };
 };
 #endif

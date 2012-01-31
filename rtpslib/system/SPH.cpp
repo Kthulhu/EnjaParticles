@@ -50,6 +50,9 @@ namespace rtps
         dout<<"Here"<<endl;
         setupTimers();
 
+        std::vector<SPHParams> vparams(0);
+        vparams.push_back(sphp);
+        cl_sphp = Buffer<SPHParams>(cli, vparams);
         dout<<"Here"<<endl;
         calculate();
         updateParams();
@@ -57,9 +60,6 @@ namespace rtps
 
         dout<<"Here"<<endl;
         spacing = settings->GetSettingAs<float>("spacing");
-        std::vector<SPHParams> vparams(0);
-        vparams.push_back(sphp);
-        cl_sphp = Buffer<SPHParams>(cli, vparams);
         dout<<"Here"<<endl;
 #ifdef GPU
         dout<<"RUNNING ON THE GPU"<<endl;
@@ -285,7 +285,7 @@ namespace rtps
                     numGravSources,
                     cl_pointSources,
                     cl_massSources,
-                    alpha,
+                    cl_alphaSources,
                     cl_position_s,
                     cl_force_s,
                     sphp.simulation_scale);
