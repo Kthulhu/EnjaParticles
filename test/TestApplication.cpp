@@ -42,14 +42,14 @@ namespace rtps
     {
         glewInit(); 
         GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object"); 
-        windowWidth=800;
-        windowWidth=600;
+        windowWidth=640;
+        windowWidth=480;
         cli = new CL();
 
         renderType="default";
         readParamFile(is);
+        initGL();
         //Fixme: This is a bad way to make sure the directory is correct.
-        lib=new ShaderLibrary();
         RenderSettings rs;
         //rs.blending=false;
         rs.blending=false;
@@ -57,6 +57,9 @@ namespace rtps
         glGetFloatv(GL_DEPTH_RANGE,nf);
         rs.near = nf[0];
         rs.far = nf[1];
+        dout<<"near = "<<rs.near<<endl;
+        dout<<"far = "<<rs.far<<endl;
+        dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
         rs.particleRadius = systems["water"]->getSpacing()*20.f;
         rs.windowWidth=windowWidth;
         rs.windowHeight=windowHeight;

@@ -9,10 +9,10 @@ SET(CMAKE_BUILD_TYPE "Debug")
 
 #need to include FindOPENCL.cmake to
 SET( RTPS_CMAKE_MODULE_PATH
-     ${rtpsuite_SOURCE_DIR}/cmake
+     ./cmake
 )
 SET( OPENCL_INCLUDE_DIR 
-    ${rtpsuite_SOURCE_DIR}/opencl10)
+    ./opencl10)
 
 message("rtps_cmake_module_path: ${RTPS_CMAKE_MODULE_PATH}\n")
 
@@ -30,6 +30,6 @@ message("rtps install dir relative: ${RTPS_INSTALL_DIR_REL}")
 INSTALL(CODE "FILE(MAKE_DIRECTORY ${RTPS_INSTALL_DIR})")
 #INSTALL(CODE "message(\"hmm: ${RTPS_INSTALL_DIR}\")")
 
-ADD_SUBDIRECTORY (${rtpsuite_SOURCE_DIR}/rtpslib)
-ADD_SUBDIRECTORY (${rtpsuite_SOURCE_DIR}/test)
+ADD_SUBDIRECTORY (./rtpslib)
+ADD_SUBDIRECTORY (./test)
 

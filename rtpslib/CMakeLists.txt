@@ -52,131 +52,131 @@ set (rtpslib_INCLUDES
     ${GLEW_INCLUDE_PATH}
     #${BASE_DIR}/opencl10
     ${OPENCL_INCLUDE_DIR}
-    ${rtpslib_SOURCE_DIR}
-    ${rtpslib_SOURCE_DIR}/system
-    ${rtpslib_SOURCE_DIR}/system/sph
-    ${rtpslib_SOURCE_DIR}/system/flock
-    ${rtpslib_SOURCE_DIR}/system/rigidbody
-    ${rtpslib_SOURCE_DIR}/system/common
-    ${rtpslib_SOURCE_DIR}/render
-    ${rtpslib_SOURCE_DIR}/render/util
-    ${rtpslib_SOURCE_DIR}/domain
-    ${rtpslib_SOURCE_DIR}/opencl
-    ${rtpslib_SOURCE_DIR}/matrix_library
-    #${rtpslib_SOURCE_DIR}/opencl/bitonic_sort/src
+    ./
+    ./system
+    ./system/sph
+    ./system/flock
+    ./system/rigidbody
+    ./system/common
+    ./render
+    ./render/util
+    ./domain
+    ./opencl
+    ./matrix_library
+    #./opencl/bitonic_sort/src
 )    
 
 #library source files (don't explicitly give file extension, inferred from source type)
 set (rtpslib_SOURCES
-    ${rtpslib_SOURCE_DIR}/RTPS
-    ${rtpslib_SOURCE_DIR}/RTPSSettings
-    ${rtpslib_SOURCE_DIR}/util
-    ${rtpslib_SOURCE_DIR}/structs
-    #${rtpslib_SOURCE_DIR}/timege    #gordon's timer class
-    ${rtpslib_SOURCE_DIR}/timer_eb  #evan's timer class
-    ${rtpslib_SOURCE_DIR}/rtps_common
+    ./RTPS
+    ./RTPSSettings
+    ./util
+    ./structs
+    #./timege    #gordon's timer class
+    ./timer_eb  #evan's timer class
+    ./rtps_common
 
-    #${rtpslib_SOURCE_DIR}/render/Render
-    #${rtpslib_SOURCE_DIR}/render/SpriteRender
-    #${rtpslib_SOURCE_DIR}/render/SSFRender
-    #${rtpslib_SOURCE_DIR}/render/Sphere3DRender
-    ${rtpslib_SOURCE_DIR}/render/Shader
-    ${rtpslib_SOURCE_DIR}/render/ParticleEffect
-    ${rtpslib_SOURCE_DIR}/render/SSEffect
-    ${rtpslib_SOURCE_DIR}/render/StreamlineEffect
-    ${rtpslib_SOURCE_DIR}/render/ShaderLibrary
-    ${rtpslib_SOURCE_DIR}/render/RenderUtils
-    ${rtpslib_SOURCE_DIR}/render/util/stb_image.c
-    ${rtpslib_SOURCE_DIR}/render/util/stb_image_write.h
+    #./render/Render
+    #./render/SpriteRender
+    #./render/SSFRender
+    #./render/Sphere3DRender
+    ./render/Shader
+    ./render/ParticleEffect
+    ./render/SSEffect
+    ./render/StreamlineEffect
+    ./render/ShaderLibrary
+    ./render/RenderUtils
+    ./render/util/stb_image.c
+    ./render/util/stb_image_write.h
 
-    ${rtpslib_SOURCE_DIR}/domain/Domain
-    ${rtpslib_SOURCE_DIR}/domain/IV
-    # ${rtpslib_SOURCE_DIR}/system/common/Hose
+    ./domain/Domain
+    ./domain/IV
+    # ./system/common/Hose
     
 
     # common use for all systems
-    ${rtpslib_SOURCE_DIR}/system/common/Hose
-    ${rtpslib_SOURCE_DIR}/system/common/Hash
-    ${rtpslib_SOURCE_DIR}/system/common/CellIndices
-    ${rtpslib_SOURCE_DIR}/system/common/Permute
-    ${rtpslib_SOURCE_DIR}/system/common/Sample
-    ${rtpslib_SOURCE_DIR}/system/common/Gravity
+    ./system/common/Hose
+    ./system/common/Hash
+    ./system/common/CellIndices
+    ./system/common/Permute
+    ./system/common/Sample
+    ./system/common/Gravity
 	
-    ${rtpslib_SOURCE_DIR}/system/System
+    ./system/System
     
     # Simple
-    #${rtpslib_SOURCE_DIR}/system/Simple.cpp
-    #${rtpslib_SOURCE_DIR}/system/simple/ForceField
-    #${rtpslib_SOURCE_DIR}/system/simple/Euler
+    #./system/Simple.cpp
+    #./system/simple/ForceField
+    #./system/simple/Euler
     	
 	# SPH
-    ${rtpslib_SOURCE_DIR}/system/SPH.cpp
-    ${rtpslib_SOURCE_DIR}/system/SPHSettings.cpp
+    ./system/SPH.cpp
+    ./system/SPHSettings.cpp
 
 
-    ${rtpslib_SOURCE_DIR}/system/sph/Euler
-    ${rtpslib_SOURCE_DIR}/system/sph/LeapFrog
-    ${rtpslib_SOURCE_DIR}/system/sph/Lifetime
-    ${rtpslib_SOURCE_DIR}/system/sph/Density
-    ${rtpslib_SOURCE_DIR}/system/sph/Force
-    ${rtpslib_SOURCE_DIR}/system/sph/RigidBodyForce
-    ${rtpslib_SOURCE_DIR}/system/sph/Collision_wall
-    ${rtpslib_SOURCE_DIR}/system/sph/Collision_triangle
+    ./system/sph/Euler
+    ./system/sph/LeapFrog
+    ./system/sph/Lifetime
+    ./system/sph/Density
+    ./system/sph/Force
+    ./system/sph/RigidBodyForce
+    ./system/sph/Collision_wall
+    ./system/sph/Collision_triangle
 
     
     #### these are CPU only
-    ${rtpslib_SOURCE_DIR}/system/sph/Pressure
-    ${rtpslib_SOURCE_DIR}/system/sph/Viscosity
-    ${rtpslib_SOURCE_DIR}/system/sph/XSPH
+    ./system/sph/Pressure
+    ./system/sph/Viscosity
+    ./system/sph/XSPH
     ####
 
 
 	# FLOCK
-    ${rtpslib_SOURCE_DIR}/system/FLOCK.cpp
-    ${rtpslib_SOURCE_DIR}/system/FLOCKSettings.cpp
-    ${rtpslib_SOURCE_DIR}/system/flock/EulerIntegration
-    ${rtpslib_SOURCE_DIR}/system/flock/Rules
+    ./system/FLOCK.cpp
+    ./system/FLOCKSettings.cpp
+    ./system/flock/EulerIntegration
+    ./system/flock/Rules
 
     # Added by GE
-    ${rtpslib_SOURCE_DIR}/system/boids
+    ./system/boids
     ####
 
-    ${rtpslib_SOURCE_DIR}/system/ParticleShape
+    ./system/ParticleShape
 
     #ParticleRigidBody 
-    ${rtpslib_SOURCE_DIR}/system/ParticleRigidBody
+    ./system/ParticleRigidBody
     # Rigidbody dynamics.
-    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBEuler
-    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBLeapFrog
-    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForce
-    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForceFluid
-    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBSegmentedScan
-    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBUpdateParticles
+    ./system/rigidbody/PRBEuler
+    ./system/rigidbody/PRBLeapFrog
+    ./system/rigidbody/PRBForce
+    ./system/rigidbody/PRBForceFluid
+    ./system/rigidbody/PRBSegmentedScan
+    ./system/rigidbody/PRBUpdateParticles
 
 
-    ${rtpslib_SOURCE_DIR}/system/common/MeshToParticles
+    ./system/common/MeshToParticles
     )
 
 IF (WIN32)
     set (rtpslib_SOURCES 
     	${rtpslib_SOURCES}
-    	${rtpslib_SOURCE_DIR}/gtod_windows
+    	./gtod_windows
     )
 ENDIF ()
 
 
 IF(WITH_OPENCL)
 SET(rtpslib_SOURCES ${rtpslib_SOURCES}
-    ${rtpslib_SOURCE_DIR}/opencl/CLL
-    ${rtpslib_SOURCE_DIR}/opencl/Kernel
-    #${rtpslib_SOURCE_DIR}/opencl/Buffer #template class
+    ./opencl/CLL
+    ./opencl/Kernel
+    #./opencl/Buffer #template class
 
-    #${rtpslib_SOURCE_DIR}/opencl/bitonic_sort/src/oclBitonicSort_launcher
-    #${rtpslib_SOURCE_DIR}/opencl/bitonic_sort/src/BitonicSort #template class
+    #./opencl/bitonic_sort/src/oclBitonicSort_launcher
+    #./opencl/bitonic_sort/src/BitonicSort #template class
     #these should probably be in the OpenCL classes
-    #${rtpslib_SOURCE_DIR}/system/sph/Scopy
-    #${rtpslib_SOURCE_DIR}/system/flock/Scopy
-    #${rtpslib_SOURCE_DIR}/system/sph/SetInt
+    #./system/sph/Scopy
+    #./system/flock/Scopy
+    #./system/sph/SetInt
     )
 ENDIF(WITH_OPENCL)
 
@@ -198,12 +198,12 @@ TARGET_LINK_LIBRARIES (rtps
 #Doxygen
 #find_package(Doxygen REQUIRED)
 find_package(Doxygen)
-set(DOXYGEN_INPUT   ${rtpslib_SOURCE_DIR}/doc/doxyfile)
+set(DOXYGEN_INPUT   ./doc/doxyfile)
 set(DOXYGEN_OUTPUT  ${rtpslib_BINARY_DIR}/html/index.html)
 file(MAKE_DIRECTORY ${rtpslib_BINARY_DIR}/html)
 
 configure_file(
-  ${rtpslib_SOURCE_DIR}/doc/doxyfile
+  ./doc/doxyfile
   ${DOXYGEN_INPUT} @ONLY
 )
 
@@ -225,7 +225,7 @@ ADD_SUBDIRECTORY(system/flock)
 ADD_SUBDIRECTORY(system/rigidbody)
 
 MAKE_DIRECTORY(${rtpslib_BINARY_DIR}/shaders)
-FILE(COPY ${rtpslib_SOURCE_DIR}/render/shaders/ DESTINATION ${rtpslib_BINARY_DIR}/shaders/)
+FILE(COPY ./render/shaders/ DESTINATION ${rtpslib_BINARY_DIR}/shaders/)
 
 #IF(WIN32)
 install (TARGETS rtps DESTINATION ${rtpsuite_BINARY_DIR}/bin)

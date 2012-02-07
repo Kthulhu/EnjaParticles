@@ -95,7 +95,6 @@ namespace rtps
     void SSEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num)
     {
 
-        dout<<"Here"<<endl;
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 

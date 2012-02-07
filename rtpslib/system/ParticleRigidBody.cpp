@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes ParticleRigidBody fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -56,6 +56,7 @@ namespace rtps
 
         spacing = settings->GetSettingAs<float>("spacing");
 
+        static_num=0;
         //ParticleRigidBody settings depend on number of particles used
         //calculateParticleRigidBodySettings();
         //set up the grid
@@ -65,7 +66,7 @@ namespace rtps
 
 #ifdef GPU
         dout<<"RUNNING ON THE GPU"<<endl;
-        
+
         //setup the sorted and unsorted arrays
         prepareSorted();
 
@@ -76,7 +77,7 @@ namespace rtps
         forceFluid = PRBForceFluid(rigidbody_source_dir, cli, timers["force_fluid_gpu"]);
         sscan = PRBSegmentedScan(rigidbody_source_dir, cli, timers["segmented_scan_gpu"]);
         updateParticles = PRBUpdateParticles(rigidbody_source_dir, cli, timers["update_particles_gpu"]);
-		
+
 
         //could generalize this to other integration methods later (leap frog, RK4)
         if (settings->GetSettingAs<string>("integrator")=="leapfrog")
@@ -168,7 +169,7 @@ namespace rtps
             timers["permute"]->stop();
 			//printf("exit after fluid permute\n");
 			//if (num > 0) exit(0);
- 
+
 			//---------------------
             /*if (nc <= num && nc >= 0)
             {
@@ -188,7 +189,7 @@ namespace rtps
                 cl_position_s.copyToHost(deleted_pos, nc); //damn these will always be out of bounds here!
                 cl_velocity_s.copyToHost(deleted_vel, nc);
 
- 
+
                 num = nc;
                 settings->SetSetting("Number of Particles", num);
                 //prbp.num = num;
@@ -202,13 +203,12 @@ namespace rtps
                 hash_and_sort();
                                 //we've changed num and copied sorted to unsorted. skip this iteration and do next one
                 //this doesn't work because sorted force etc. are having an effect?
-                //continue; 
+                //continue;
             }*/
 
 
 			//-------------------------------------
             //if(num >0) printf("force\n");
-            //FIXME: Needs to calculate linear force and torque forces.
             timers["force"]->start();
             force.execute(   num,
                 //cl_vars_sorted,
@@ -280,8 +280,8 @@ namespace rtps
                 cl_velocity_s,
                 cl_veleval_u,
                 cl_linear_force_u,
-                //cl_vars_unsorted, 
-                //cl_vars_sorted, 
+                //cl_vars_unsorted,
+                //cl_vars_sorted,
                 cl_sort_indices,
                 cl_prbp,
                 //debug
@@ -290,8 +290,8 @@ namespace rtps
              */
         }
 
-		// Perhaps I am messed up by Courant condition if cloud point 
-		// velocities are too large? 
+		// Perhaps I am messed up by Courant condition if cloud point
+		// velocities are too large?
 
 		static int count=0;
 
@@ -302,7 +302,7 @@ namespace rtps
 	//----------------------------------------------------------------------
     void ParticleRigidBody::call_prep(int stage)
     {
-		// copy from sorted to unsorted arrays at the beginning of each 
+		// copy from sorted to unsorted arrays at the beginning of each
 		// iteration
 		// copy from cl_position_s to cl_position_u
 		// Only called if number of fluid particles changes from one iteration
@@ -322,10 +322,10 @@ namespace rtps
         timers["integrate"] = new EB::Timer("Integration function", time_offset);
         timers["leapfrog_gpu"] = new EB::Timer("LeapFrog Integration GPU kernel execution", time_offset);
         timers["euler_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset);
-        timers["segmented_scan"] = new EB::Timer("Segmented scan function", time_offset); 
-        timers["segmented_scan_gpu"] = new EB::Timer("Segmented scan GPU kernel execution", time_offset); 
-        timers["update_particles"] = new EB::Timer("Update Particles function", time_offset); 
-        timers["update_particles_gpu"] = new EB::Timer("Update Particles GPU kernel execution", time_offset); 
+        timers["segmented_scan"] = new EB::Timer("Segmented scan function", time_offset);
+        timers["segmented_scan_gpu"] = new EB::Timer("Segmented scan GPU kernel execution", time_offset);
+        timers["update_particles"] = new EB::Timer("Update Particles function", time_offset);
+        timers["update_particles_gpu"] = new EB::Timer("Update Particles GPU kernel execution", time_offset);
         return 0;
     }
 
@@ -350,7 +350,9 @@ namespace rtps
         fill(rotf4Vec.begin(), rotf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 1.0f));
         fill(rbfVec.begin(), rbfVec.end(),0.0f);
         fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
-
+        staticVBO = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+        cl_static_position_u=Buffer<float4>(cli,staticVBO);
+        cl_static_position_s=Buffer<float4>(cli,f4Vec);
         cl_position_l = Buffer<float4>(cli, f4Vec);
         cl_veleval_u = Buffer<float4>(cli, f4Vec);
         cl_veleval_s = Buffer<float4>(cli, f4Vec);
@@ -375,7 +377,7 @@ namespace rtps
         vector<GridParams> sgparams(0);
         sgparams.push_back(grid_params_scaled);
         cl_GridParamsScaled = Buffer<GridParams>(cli, sgparams);
-                // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
+        // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
         // That is a problem since the number of
         // occupied cells could be much less than the number of grid elements.
         dout<<"Number of Grid Cells "<< grid_params.nb_cells<<endl;
@@ -416,8 +418,8 @@ namespace rtps
         //std::fill(vels.begin(), vels.end(),iv);
 
         /*float spring = settings->GetSettingAs<float>("penetration_factor")*settings->GetSettingAs<float>("velocity_limit")*(mass/nn)/prbp.smoothing_distance;
-        float ln_res =log(settings->GetSettingAs<float>("restitution")); 
-        
+        float ln_res =log(settings->GetSettingAs<float>("restitution"));
+
         float dampening = -2.*ln_res*(sqrt((spring*(mass/nn))/((ln_res*ln_res)+(M_PI*M_PI))));
         //spring = -spring;
         std::vector<float> spring_co(nn);
@@ -430,107 +432,123 @@ namespace rtps
         printf("restitution = %f\n",settings->GetSettingAs<float>("Restitution"));
         settings->SetSetting("Boundary Stiffness", spring);
         settings->SetSetting("Boundary Dampening", dampening);*/
-        //calculate center of mass.
-        float4 com(0.0f,0.0f,0.0f,0.0f);
-        for(int i = 0;i<pos.size();i++)
-        {
-            com+=pos[i];
-        }
-        com/=pos.size();
-        com.w=1.0f;
-        rbParticleIndex.push_back(int2(num,num+nn));
-        vector<float4> pos_l;
-        vector<float> mass_p;
-        for(int i = 0;i<pos.size();i++)
-        {
-            float4 tmp = (pos[i]-com);
-            dout<<tmp<<endl;
-            tmp*=prbp.simulation_scale;
-            tmp.w = 1.0f;
-            dout<<tmp<<endl;
-            pos_l.push_back(tmp);
-            mass_p.push_back(mass/nn);
-            //char tmpchar[32];
-            //sprintf(tmpchar,"pos_l[%d]",i);
-            //tmp.print(tmpchar);
-        }
-        //vector<float4> scaled_pos_l(pos_l.size());
-        //for(int i = 0; i< pos_l.size();i++)
-        //{
-        //    scaled_pos_l[i]=pos_l[i]*prbp.simulation_scale;
-        //}
-        float16 invInertialTensor = calculateInvInertialTensor(pos_l,mass);
-        float4 comVel=float4(0.0f,0.0f,0.0f,0.0f);
-        float4 angMomentum =float4(0.0f,0.0f,0.0f,0.0f);
-        for(int i = 0;i<vels.size();i++)
-        {
-           comVel=comVel+vels[i]; 
-           float4 r = pos[i]-com;
-           
-           angMomentum.x+=r.y*vels[i].z-r.z*vels[i].y; 
-           angMomentum.y+=r.z*vels[i].x-r.x*vels[i].z; 
-           angMomentum.z+=r.x*vels[i].y-r.y*vels[i].x; 
-        }
-        angMomentum*=mass_p[0];
-        float4 comAngVel=float4(0.0f,0.0f,0.0f,0.0f);;
-        comAngVel=invInertialTensor*angMomentum;
-
-        dout<<"position: "<<com<<endl;
-        dout<<"velocity: "<<comVel<<endl;
-        dout<<"ang momentum: "<<angMomentum<<endl;
-        dout<<"mass: "<<mass<<endl;
-        dout<<"Inertial Tensor: "<<endl;
-        for(int i =0;i<16;i++)
-            cout<<i<<": "<<invInertialTensor.m[i]<<" ,";
-        cout<<endl;
-        vector<unsigned int> index(nn);
-        std::fill(index.begin(), index.end(), curRigidbodyID);
-        curRigidbodyID++; 
-#ifdef GPU
+        //ifmass is 0.0f then the rigid-body is considered static and should not go in
+        //the normal static array. This will save a lot of time because there is no need
+        //to resort/hash static positions because they do not change.
         glFinish();
-        cl_position_u.acquire();
-        cl_color_u.acquire();
-        cl_velocity_u.acquire();
+        if(mass!=0.0f)
+        {
+            //calculate center of mass.
+            float4 com(0.0f,0.0f,0.0f,0.0f);
+            for(int i = 0;i<pos.size();i++)
+            {
+                com+=pos[i];
+            }
+            com/=pos.size();
+            com.w=1.0f;
+            rbParticleIndex.push_back(int2(num,num+nn));
+            vector<float4> pos_l;
+            vector<float> mass_p;
+            for(int i = 0;i<pos.size();i++)
+            {
+                float4 tmp = (pos[i]-com);
+                dout<<tmp<<endl;
+                tmp*=prbp.simulation_scale;
+                tmp.w = 1.0f;
+                dout<<tmp<<endl;
+                pos_l.push_back(tmp);
+                mass_p.push_back(mass/nn);
+                //char tmpchar[32];
+                //sprintf(tmpchar,"pos_l[%d]",i);
+                //tmp.print(tmpchar);
+            }
+            //vector<float4> scaled_pos_l(pos_l.size());
+            //for(int i = 0; i< pos_l.size();i++)
+            //{
+            //    scaled_pos_l[i]=pos_l[i]*prbp.simulation_scale;
+            //}
+            float16 invInertialTensor = calculateInvInertialTensor(pos_l,mass);
+            float4 comVel=float4(0.0f,0.0f,0.0f,0.0f);
+            float4 angMomentum =float4(0.0f,0.0f,0.0f,0.0f);
+            for(int i = 0;i<vels.size();i++)
+            {
+               comVel=comVel+vels[i];
+               float4 r = pos[i]-com;
 
-        //printf("about to prep 0\n");
-        //call_prep(0);
-        //printf("done with prep 0\n");
+               angMomentum.x+=r.y*vels[i].z-r.z*vels[i].y;
+               angMomentum.y+=r.z*vels[i].x-r.x*vels[i].z;
+               angMomentum.z+=r.x*vels[i].y-r.y*vels[i].x;
+            }
+            angMomentum*=mass_p[0];
+            float4 comAngVel=float4(0.0f,0.0f,0.0f,0.0f);;
+            comAngVel=invInertialTensor*angMomentum;
 
-		// Allocate max_num particles on the GPU. That wastes memory, but is useful. 
-		// There should be a way to update this during the simulation. 
-        cl_position_u.copyToDevice(pos, num);
-        cl_color_u.copyToDevice(cols, num);
-        cl_velocity_u.copyToDevice(vels, num);
-        cl_position_l.copyToDevice(pos_l,num);
-        cl_mass_u.copyToDevice(mass_p, num);
-        cl_comVel.copyToDevice(comVel, rbParticleIndex.size()-1);
-        cl_comAngVel.copyToDevice(comAngVel, rbParticleIndex.size()-1);
-        cl_objectIndex_u.copyToDevice(index, num);
-        /*cl_spring_coef_u.copyToDevice(spring_co, num);
-        cl_dampening_coef_u.copyToDevice(dampening_co, num);*/
-        vector<float4> comVec;
-        comVec.push_back(com);
-        cl_comPos.copyToDevice(comVec,rbParticleIndex.size()-1);
-        vector<float> rbm;
-        rbm.push_back(mass);
-        cl_rbMass.copyToDevice(rbm,rbParticleIndex.size()-1);
-        vector<float16> invInertial;
-        invInertial.push_back(invInertialTensor);
-        cl_invInertialTensor.copyToDevice(invInertial,rbParticleIndex.size()-1);
-        //cl_rbParticleIndex.copyToDevice(rbParticleIndex,rbParticleIndex.size()-1,);
-        cl_rbParticleIndex.copyToDevice(rbParticleIndex);
-        dout<<"particle index start = "<<rbParticleIndex.back().x <<" end = "<<rbParticleIndex.back().y<<endl;
-        dout<<"rbParticleIndex.size() = "<<rbParticleIndex.size()<<endl;
+            dout<<"position: "<<com<<endl;
+            dout<<"velocity: "<<comVel<<endl;
+            dout<<"ang momentum: "<<angMomentum<<endl;
+            dout<<"mass: "<<mass<<endl;
+            dout<<"Inertial Tensor: "<<endl;
+            for(int i =0;i<16;i++)
+                cout<<i<<": "<<invInertialTensor.m[i]<<" ,";
+            cout<<endl;
+            vector<unsigned int> index(nn);
+            std::fill(index.begin(), index.end(), curRigidbodyID);
+            curRigidbodyID++;
+    #ifdef GPU
+            glFinish();
+            cl_position_u.acquire();
+            cl_color_u.acquire();
+            cl_velocity_u.acquire();
 
-        settings->SetSetting("num_particles", num+nn);
-        updateParams();
+            //printf("about to prep 0\n");
+            //call_prep(0);
+            //printf("done with prep 0\n");
 
-        cl_position_u.release();
-        cl_color_u.release();
-        cl_velocity_u.release();
-#endif
-        num += nn;  //keep track of number of particles we use
-        dout<<"num = "<<num<<endl;
+            // Allocate max_num particles on the GPU. That wastes memory, but is useful.
+            // There should be a way to update this during the simulation.
+            cl_position_u.copyToDevice(pos, num);
+            cl_color_u.copyToDevice(cols, num);
+            cl_velocity_u.copyToDevice(vels, num);
+            cl_position_l.copyToDevice(pos_l,num);
+            cl_mass_u.copyToDevice(mass_p, num);
+            cl_comVel.copyToDevice(comVel, rbParticleIndex.size()-1);
+            cl_comAngVel.copyToDevice(comAngVel, rbParticleIndex.size()-1);
+            cl_objectIndex_u.copyToDevice(index, num);
+            /*cl_spring_coef_u.copyToDevice(spring_co, num);
+            cl_dampening_coef_u.copyToDevice(dampening_co, num);*/
+            vector<float4> comVec;
+            comVec.push_back(com);
+            cl_comPos.copyToDevice(comVec,rbParticleIndex.size()-1);
+            vector<float> rbm;
+            rbm.push_back(mass);
+            cl_rbMass.copyToDevice(rbm,rbParticleIndex.size()-1);
+            vector<float16> invInertial;
+            invInertial.push_back(invInertialTensor);
+            cl_invInertialTensor.copyToDevice(invInertial,rbParticleIndex.size()-1);
+            //cl_rbParticleIndex.copyToDevice(rbParticleIndex,rbParticleIndex.size()-1,);
+            cl_rbParticleIndex.copyToDevice(rbParticleIndex);
+            dout<<"particle index start = "<<rbParticleIndex.back().x <<" end = "<<rbParticleIndex.back().y<<endl;
+            dout<<"rbParticleIndex.size() = "<<rbParticleIndex.size()<<endl;
+
+            settings->SetSetting("num_particles", num+nn);
+            updateParams();
+
+            cl_position_u.release();
+            cl_color_u.release();
+            cl_velocity_u.release();
+    #endif
+            num += nn;  //keep track of number of particles we use
+            dout<<"num = "<<num<<endl;
+        }
+        else
+        {
+            glFinish();
+            cl_static_position_u.acquire();
+            cl_static_position_u.copyToDevice(pos, static_num);
+            cl_static_position_u.release();
+            static_num+=nn;
+            //Fixme: Need to rehash/sort static particles if new object is added.
+        }
         //renderer->setNum(num);
     }
 	//----------------------------------------------------------------------
@@ -554,7 +572,7 @@ namespace rtps
         //CL parameters
         settings->SetSetting("num_particles", 0);
     }
-   
+
 
 
 	//----------------------------------------------------------------------
@@ -563,7 +581,7 @@ namespace rtps
         //update all the members of the prbp struct
         prbp.smoothing_distance = settings->GetSettingAs<float>("smoothing_distance");
         prbp.simulation_scale = settings->GetSettingAs<float>("simulation_scale");
-        
+
         //dynamic params
         prbp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2
         prbp.friction_coef = settings->GetSettingAs<float>("friction");
@@ -592,7 +610,7 @@ namespace rtps
         //vparams.push_back(prbp);
         cl_prbp.copyToDevice(prbp,0);
         settings->updated();
-     
+
     }
     void ParticleRigidBody::interact()
     {
@@ -619,8 +637,8 @@ namespace rtps
                     clf_debug,
                     cli_debug);
                 timers["force_fluid"]->stop();
-            } 
-            
+            }
+
             timers["segmented_scan"]->start();
             sscan.execute(num,
                     cl_position_l,
@@ -652,7 +670,7 @@ namespace rtps
                     //debug params
                     clf_debug,
                     cli_debug);
-            timers["update_particles"]->start();        
+            timers["update_particles"]->start();
     }
     float16 ParticleRigidBody::calculateInvInertialTensor(vector<float4>& pos, float mass)
     {
@@ -713,7 +731,7 @@ namespace rtps
         invit.m[13] = 0.0f;
         invit.m[14] = 0.0f;
         invit.m[15] = 0.0f;
-        
-       return invit; 
+
+       return invit;
     }
 }; //end namespace

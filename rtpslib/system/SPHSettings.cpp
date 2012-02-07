@@ -48,6 +48,7 @@ namespace rtps
         float rest_distance = .87 * pow(mass/rho0, 1.f/3.f);   //rest distance between particles [ m ]
         //float rest_distance = pow(VP, 1.f/3.f);     //rest distance between particles [ m ]
         float smoothing_distance = 2.0f * rest_distance;//interaction radius
+        //float smoothing_distance = rest_distance/2.0f;//interaction radius
 
 
         float4 dmin = grid.getBndMin();
@@ -78,8 +79,8 @@ namespace rtps
         //float boundary_distance =  smoothing_distance;
 
         settings->SetSetting("boundary_distance", boundary_distance);
-        float spacing = (rest_distance / simulation_scale);
-        //float spacing = smoothing_distance / simulation_scale;
+        //float spacing = (rest_distance / simulation_scale);
+        float spacing = smoothing_distance / simulation_scale;
         settings->SetSetting("spacing", spacing);
 
         float pi = M_PI;
@@ -98,22 +99,22 @@ namespace rtps
         settings->SetSetting("wvisc_dd", 45./(pi*h6) );
 
         //dynamic params
-        settings->SetSetting("gravity", float4(0.0f,0.0f,-9.8f,0.0f)); // -9.8 m/sec^2
-        settings->SetSetting("gas_constant", 1.5f);
-        settings->SetSetting("viscosity", 1.0f);
-        settings->SetSetting("velocity_limit", 600.0f);
-        settings->SetSetting("xsph_factor", .1f);
-        settings->SetSetting("friction_kinetic", 0.2f);
-        settings->SetSetting("friction_static", 0.0f);
-        settings->SetSetting("boundary_stiffness", 20000.0f);
-        settings->SetSetting("boundary_dampening", 256.0f);
+        //settings->SetSetting("gravity", float4(0.0f,0.0f,-9.8f,0.0f)); // -9.8 m/sec^2
+        //settings->SetSetting("gas_constant", 1.5f);
+        //settings->SetSetting("viscosity", 1.0f);
+        //settings->SetSetting("velocity_limit", 600.0f);
+        //settings->SetSetting("xsph_factor", .1f);
+        //settings->SetSetting("friction_kinetic", 0.2f);
+        //settings->SetSetting("friction_static", 0.0f);
+        //settings->SetSetting("boundary_stiffness", 20000.0f);
+        //settings->SetSetting("boundary_dampening", 256.0f);
 
 
         //next 4 not used at the moment
-        settings->SetSetting("restitution", 0.0f);
-        settings->SetSetting("shear", 0.0f);
-        settings->SetSetting("attraction", 0.0f);
-        settings->SetSetting("spring", 0.0f);
+        //settings->SetSetting("restitution", 0.0f);
+        //settings->SetSetting("shear", 0.0f);
+        //settings->SetSetting("attraction", 0.0f);
+        //settings->SetSetting("spring", 0.0f);
 
         //constants
         settings->SetSetting("epsilon", 1E-6);
@@ -172,6 +173,7 @@ namespace rtps
         //std::vector<SPHParams> vparams();
         //vparams.push_back(sphp);
         dout<<"here"<<endl;
+        dout<<"gas constant "<<sphp.K<<endl;
         dout<<" sizeof sphp = "<<sizeof(sphp)<<endl;
         cl_sphp.copyToDevice(sphp,0);
         settings->updated();

@@ -79,13 +79,19 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
 		//|GLUT_STEREO //if you want stereo you must uncomment this.
 		);
-    glutInitWindowSize(800, 600);
-    glutInitWindowPosition (glutGet(GLUT_SCREEN_WIDTH)/2 - 800/2, 
-                            glutGet(GLUT_SCREEN_HEIGHT)/2 - 600/2);
+    glutInitWindowSize(640, 480);
+    glutInitWindowPosition (glutGet(GLUT_SCREEN_WIDTH)/2 - 640/2, 
+                            glutGet(GLUT_SCREEN_HEIGHT)/2 - 480/2);
     std::stringstream ss;
     ss << "Real-Time Particle System " << std::ends;
     glutWindowHandle = glutCreateWindow(ss.str().c_str());
 
+    glutDisplayFunc(appRender); //main rendering function
+    glutTimerFunc(30, timerCB, 30); //determin a minimum time between frames
+    glutKeyboardFunc(appKeyboard);
+    glutMouseFunc(appMouse);
+    glutMotionFunc(appMotion);
+    glutReshapeFunc(resizeWindow);
     if(argc>1)
         paramFile = argv[1];
     dout<<paramFile<<endl;
@@ -93,12 +99,6 @@ int main(int argc, char** argv)
     ifstream is(paramFile.c_str(),ifstream::in);
     app=new TestApplication(is);
     
-    glutDisplayFunc(appRender); //main rendering function
-    glutTimerFunc(30, timerCB, 30); //determin a minimum time between frames
-    glutKeyboardFunc(appKeyboard);
-    glutMouseFunc(appMouse);
-    glutMotionFunc(appMotion);
-    glutReshapeFunc(resizeWindow);
 
     glutMainLoop();
     return 0;
