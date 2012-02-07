@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -39,18 +39,23 @@ using namespace std;
 TestApplication* app=NULL;
 int glutWindowHandle = 0;
 
-
+void cleanUp()
+{
+    delete app;
+    app = NULL;
+    dout<<"Here"<<endl;
+}
 void appKeyboard(unsigned char key, int x, int y)
 {
+    if(key =='q')
+    {
+        exit(0);
+    }
     app->KeyboardCallback(key,x,y);
 }
 void appRender()
 {
     app->RenderCallback();
-}
-void appDestroy()
-{
-    delete app;
 }
 void appMouse(int button, int state, int x, int y)
 {
@@ -73,14 +78,14 @@ void timerCB(int ms)
 //----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-    string paramFile="test.xml";
+    string paramFile="./bin/test1.xml";
     //initialize glut
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
 		//|GLUT_STEREO //if you want stereo you must uncomment this.
 		);
     glutInitWindowSize(640, 480);
-    glutInitWindowPosition (glutGet(GLUT_SCREEN_WIDTH)/2 - 640/2, 
+    glutInitWindowPosition (glutGet(GLUT_SCREEN_WIDTH)/2 - 640/2,
                             glutGet(GLUT_SCREEN_HEIGHT)/2 - 480/2);
     std::stringstream ss;
     ss << "Real-Time Particle System " << std::ends;
@@ -95,11 +100,10 @@ int main(int argc, char** argv)
     if(argc>1)
         paramFile = argv[1];
     dout<<paramFile<<endl;
-        
+
     ifstream is(paramFile.c_str(),ifstream::in);
     app=new TestApplication(is);
-    
-
+    atexit(cleanUp);
     glutMainLoop();
     return 0;
 }

@@ -350,7 +350,7 @@ namespace rtps
         fill(rotf4Vec.begin(), rotf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 1.0f));
         fill(rbfVec.begin(), rbfVec.end(),0.0f);
         fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
-        staticVBO = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+        staticVBO = createVBO(&f4Vec[0], f4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_STATIC_DRAW);
         cl_static_position_u=Buffer<float4>(cli,staticVBO);
         cl_static_position_s=Buffer<float4>(cli,f4Vec);
         cl_position_l = Buffer<float4>(cli, f4Vec);

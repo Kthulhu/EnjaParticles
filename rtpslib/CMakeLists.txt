@@ -150,6 +150,7 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBLeapFrog
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForce
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForceFluid
+    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForceStatic
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBSegmentedScan
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBUpdateParticles
 
