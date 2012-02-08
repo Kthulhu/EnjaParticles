@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -40,8 +40,8 @@ namespace rtps
 {
     TestApplication::TestApplication(istream& is)
     {
-        glewInit(); 
-        GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object"); 
+        glewInit();
+        GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
         windowWidth=640;
         windowWidth=480;
         cli = new CL();
@@ -146,7 +146,7 @@ namespace rtps
                 systems["rb1"]->printTimers();
                 return;
             case '\033': // escape quits
-            case '\015': // Enter quits    
+            case '\015': // Enter quits
             case 'Q':    // Q quits
             case 'q':    // q (or escape) quits
                 // Cleanup up and quit
@@ -198,6 +198,14 @@ namespace rtps
                     systems["water"]->addTorus(systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/2,center,innerRadius,outerRadius,thickness);
                     return;
                 }
+                //add static floor
+            case 's'
+            {
+                float4 col1 = float4(0.0, 0.8, 0.2, 1.);
+                float4 size = float4(1.,1.,1.,0.f);
+                float4 position = float4(gridMin.x, gridMin.y,1.f,1.0f);
+                systems["rb1"]->addBox(1000, position, float4(gridMax.x,gridMax.y,2.0f,1.0f), false, col1,0.0f);
+            }
             case 'r': //drop a rectangle
                 {
 
@@ -290,7 +298,7 @@ namespace rtps
                     max.z=z;
             }
             cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
-            cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl; 
+            cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
             bunnyShape = new ParticleShape(min,max,systems["rb1"]->getSpacing(),3.0f);
             bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
             //write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
@@ -321,7 +329,7 @@ namespace rtps
             glVertexPointer(3, GL_FLOAT, 0, 0);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
             glEnableClientState( GL_VERTEX_ARRAY );
-            glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0); 
+            glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0);
             glDisableClientState( GL_VERTEX_ARRAY );
              */
 
@@ -423,7 +431,7 @@ namespace rtps
                 i->second->update();
                 i->second->interact();
             }
-            
+
             for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
             {
                 i->second->integrate();
@@ -485,7 +493,7 @@ namespace rtps
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
     }
-    
+
     void TestApplication::readParamFile(std::istream& is)
     {
         ParamParser p;

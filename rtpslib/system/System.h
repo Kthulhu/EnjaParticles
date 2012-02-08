@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -40,8 +40,8 @@
 #include <system/common/BitonicSort.h>
 #include <system/common/Radix.h>
 #include <system/common/CellIndices.h>
-#include <system/common/Permute.h> 
-#include <system/common/Gravity.h> 
+#include <system/common/Permute.h>
+#include <system/common/Gravity.h>
 
 #include <system/common/MeshToParticles.h>
 #include <timer_eb.h>
@@ -51,7 +51,7 @@
         #define RTPS_EXPORT __declspec(dllexport)
     #else
         #define RTPS_EXPORT __declspec(dllimport)
-	#endif 
+	#endif
 #else
     #define RTPS_EXPORT
 #endif
@@ -69,7 +69,7 @@ namespace rtps
         virtual void interact(){
         }
         virtual void integrate(){
-            
+
         }
         virtual void postProcess(){
 
@@ -109,11 +109,11 @@ namespace rtps
         //virtual void render();
 /*
         template <typename RT>
-        virtual RT GetSettingAs(std::string key, std::string defaultval = "0") 
+        virtual RT GetSettingAs(std::string key, std::string defaultval = "0")
         {
         };
         template <typename RT>
-        virtual void SetSetting(std::string key, RT value) 
+        virtual void SetSetting(std::string key, RT value)
         {
         };
 */
@@ -132,7 +132,7 @@ namespace rtps
         virtual void refillHose(int index, int refill)
         {
         };
- 
+
         /*
         virtual void addHose(int total_n, float4 center, float4 velocity, float radius, float spacing)
         {
@@ -157,7 +157,7 @@ namespace rtps
         //{
         //    return renderer;
         //}
-        
+
         void pushParticles(vector<float4> pos, float4 velo, float4 color=float4(1.0, 0.0, 0.0, 1.0),float mass = 0.0f);
         virtual void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0),float mass = 0.0f){return;}
         virtual void addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int voxelResolution,float4 velo=float4(0.0, 0.0, 0.0, 0.0), float4 color=float4(1.0, 0.0, 0.0, 1.0), float mass = 0.0f);
@@ -222,11 +222,6 @@ namespace rtps
         Buffer<GridParams>  cl_GridParams;
         Buffer<GridParams>  cl_GridParamsScaled;
 
-        Buffer<float>      cl_spring_coef_u;
-        Buffer<float>      cl_spring_coef_s;
-        Buffer<float>      cl_dampening_coef_u;
-        Buffer<float>      cl_dampening_coef_s;
-
         Buffer<float4>      clf_debug;  //just for debugging cl files
         Buffer<int4>        cli_debug;  //just for debugging cl files
         Bitonic<unsigned int> bitonic;
@@ -238,7 +233,7 @@ namespace rtps
         Buffer<float> cl_alphaSources;
         int numGravSources;
         int maxGravSources;
-        
+
         float spacing; //Particle rest distance in world coordinates
         //number of particles
         int num;
@@ -259,7 +254,7 @@ namespace rtps
         CellIndices cellindices;
         Permute permute;
         Gravity gravity;
-        MeshToParticles m2p; 
+        MeshToParticles m2p;
         vector<System*> interactionSystem;
 
         void hash_and_sort();

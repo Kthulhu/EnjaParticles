@@ -88,6 +88,7 @@ namespace rtps
         std::vector<float4> deleted_vel;
 
         void prepareSorted();
+        void prepareStaticRBs();
 
         //Maps a string name to an index in the following arrays
         //That allows for convenient lookup of rigid bodies.
@@ -129,12 +130,21 @@ namespace rtps
         Buffer<float4>      cl_static_position_u;
         Buffer<float4>      cl_static_position_s;
         GLuint staticVBO;
+        Buffer<unsigned int>    cl_cell_static_indices_start;
+        Buffer<unsigned int>    cl_cell_static_indices_end;
+        //Two arrays for bitonic sort (sort not done in place)
+        //should be moved to within bitonic
+        Buffer<unsigned int>    cl_sort_static_output_hashes;
+        Buffer<unsigned int>    cl_sort_static_output_indices;
+        Buffer<unsigned int>    cl_sort_static_hashes;
+        Buffer<unsigned int>    cl_sort_static_indices;
         unsigned int static_num;
 
         PRBLeapFrog leapfrog;
         PRBEuler euler;
         PRBForce force;
         PRBForceFluid forceFluid;
+        PRBForceStatic forceStatic;
         MeshToParticles m2p;
         //TODO: Need to implement Segmented scan for summing each rigid bodies particle
         //forces to find out the linear force and torque force on the center of mass.

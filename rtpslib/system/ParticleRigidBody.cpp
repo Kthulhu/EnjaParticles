@@ -75,6 +75,7 @@ namespace rtps
         cli->addIncludeDir(rigidbody_source_dir);
         force = PRBForce(rigidbody_source_dir, cli, timers["force_gpu"]);
         forceFluid = PRBForceFluid(rigidbody_source_dir, cli, timers["force_fluid_gpu"]);
+        forceStatic = PRBForceStatic(rigidbody_source_dir, cli, timers["force_static_gpu"]);
         sscan = PRBSegmentedScan(rigidbody_source_dir, cli, timers["segmented_scan_gpu"]);
         updateParticles = PRBUpdateParticles(rigidbody_source_dir, cli, timers["update_particles_gpu"]);
 
@@ -229,6 +230,21 @@ namespace rtps
                 clf_debug,
                 cli_debug);
             timers["force"]->stop();
+            timers["force_static"]->start();
+            forceStatic.execute(   num,
+                cl_position_s,
+                cl_velocity_s,
+                cl_force_s,
+                cl_mass_s,
+                cl_static_pos_s,
+                cl_sort_static_indices,
+                cl_cell_static_indices_start,
+                cl_cell_static_indices_end,
+                cl_prbp,
+                cl_GridParamsScaled,
+                clf_debug,
+                cli_debug);
+            timers["force_static"]->stop();
             gravity.execute(num,
                     numGravSources,
                     cl_pointSources,
@@ -319,6 +335,8 @@ namespace rtps
         int time_offset = 5;
         timers["force_fluid"] = new EB::Timer("Force Fluid function", time_offset);
         timers["force_fluid_gpu"] = new EB::Timer("Force Fluid GPU kernel execution", time_offset);
+        timers["force_static"] = new EB::Timer("Force Static function", time_offset);
+        timers["force_static_gpu"] = new EB::Timer("Force Static GPU kernel execution", time_offset);
         timers["integrate"] = new EB::Timer("Integration function", time_offset);
         timers["leapfrog_gpu"] = new EB::Timer("LeapFrog Integration GPU kernel execution", time_offset);
         timers["euler_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset);
@@ -387,8 +405,19 @@ namespace rtps
 
         cl_cell_indices_start = Buffer<unsigned int>(cli, gcells);
         cl_cell_indices_end   = Buffer<unsigned int>(cli, gcells);
-        //printf("gp.nb_points= %d\n", gp.nb_points); exit(0);
+        cl_cell_static_indices_start = Buffer<unsigned int>(cli, gcells);
+        cl_cell_static_indices_end   = Buffer<unsigned int>(cli, gcells);
+        std::vector<unsigned int> keys(max_num);
+        //to get around limits of bitonic sort only handling powers of 2
+        std::fill(keys.begin(), keys.end(), INT_MAX);
+        cl_static_sort_indices  = Buffer<unsigned int>(cli, keys);
+        cl_static_sort_hashes   = Buffer<unsigned int>(cli, keys);
 
+        // For bitonic sort. Remove when bitonic sort no longer used
+        // Currently, there is an error in the Radix Sort (just run both
+        // sorts and compare outputs visually
+        cl_static_sort_output_hashes = Buffer<unsigned int>(cli, keys);
+        cl_static_sort_output_indices = Buffer<unsigned int>(cli, keys);
      }
 
 	//----------------------------------------------------------------------
@@ -545,9 +574,10 @@ namespace rtps
             glFinish();
             cl_static_position_u.acquire();
             cl_static_position_u.copyToDevice(pos, static_num);
-            cl_static_position_u.release();
             static_num+=nn;
             //Fixme: Need to rehash/sort static particles if new object is added.
+            prepareStaticRBs();
+            cl_static_position_u.release();
         }
         //renderer->setNum(num);
     }
@@ -733,5 +763,35 @@ namespace rtps
         invit.m[15] = 0.0f;
 
        return invit;
+    }
+    ParticleRigidBody::prepareStaticRBs()
+    {
+        hash.execute(static_num,
+                cl_static_position_u,
+                cl_static_sort_hashes,
+                cl_static_sort_indices,
+                cl_GridParams,
+                clf_debug,
+                cli_debug);
+        try
+        {
+            int dir = 1;        // dir: direction
+            int arrayLength = nlpo2(static_num);
+            int batch = 1;
+            bitonic.Sort(batch,
+                        arrayLength,
+                        dir,
+                        &cl_static_sort_output_hashes,
+                        &cl_static_sort_output_indices,
+                        &cl_static_sort_hashes,
+                        &cl_static_sort_indices );
+
+        }
+        catch (cl::Error er)
+        {
+            cout<<"ERROR(bitonic sort): "<< er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
+        }
+
+        cli->queue.finish();
     }
 }; //end namespace
