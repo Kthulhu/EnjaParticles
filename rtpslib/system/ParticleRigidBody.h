@@ -32,23 +32,24 @@
 
 #include <string>
 
-#include <RTPS.h>
-#include <System.h>
-#include <Kernel.h>
-#include <Buffer.h>
+#include "../RTPS.h"
+#include "System.h"
 
-#include <Domain.h>
 #include "ParticleRigidBodyParams.h"
 
 #include <util.h>
 
-#include <rigidbody/PRBLeapFrog.h>
-#include <rigidbody/PRBEuler.h>
-#include <rigidbody/PRBForce.h>
-#include <rigidbody/PRBForceFluid.h>
-#include <rigidbody/PRBSegmentedScan.h>
-#include <rigidbody/PRBUpdateParticles.h>
+#include "rigidbody/PRBLeapFrog.h"
+#include "rigidbody/PRBEuler.h"
+#include "rigidbody/PRBForce.h"
+#include "rigidbody/PRBForceFluid.h"
+#include "rigidbody/PRBForceStatic.h"
+#include "rigidbody/PRBSegmentedScan.h"
+#include "rigidbody/PRBUpdateParticles.h"
 #include <structs.h>
+#include "../opencl/Kernel.h"
+#include "../opencl/Buffer.h"
+#include "../domain/Domain.h"
 
 #include <timer_eb.h>
 
@@ -79,7 +80,20 @@ namespace rtps
 
         std::vector<float4> getDeletedPos();
         std::vector<float4> getDeletedVel();
+        //TODO: Classes should be set up to better handle determining which vbos exist for each class
+        //consider creating a map for VBOs and buffers and then only instantiate ones that belong to that class.
+        unsigned int getStaticNum(){
+            return static_num;
+        }
+        //TODO: Classes should be set up to better handle determining which vbos exist for each class
+        //consider creating a map for VBOs and buffers and then only instantiate ones that belong to that class.
+        GLuint getStaticVBO(){
+            return staticVBO;
+        }
 
+        Buffer<float4>& getStaticPositionBuffer() {return cl_static_position_s;}
+        Buffer<unsigned int>& getStaticCellStartBuffer() {return cl_cell_static_indices_start;}
+        Buffer<unsigned int>& getStaticCellEndBuffer() {return cl_cell_static_indices_end;}
     private:
         unsigned int curRigidbodyID;
         ParticleRigidBodyParams prbp;

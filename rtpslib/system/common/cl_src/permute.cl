@@ -46,4 +46,15 @@ __kernel void permute(
 }
 //----------------------------------------------------------------------
 
+__kernel void permuteF4(       int num,
+                            __global float4* pos_u,
+                            __global float4* pos_s,
+                            __global uint* sort_indices
+                            )
+{
+    uint index = get_global_id(0);
+    if (index >= num) return;
+    uint sorted_index = sort_indices[index];
+    pos_s[index]     = pos_u[sorted_index];
+}
 #endif

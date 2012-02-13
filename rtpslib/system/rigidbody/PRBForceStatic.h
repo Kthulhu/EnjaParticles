@@ -22,18 +22,15 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_PARTICLE_RIGIDBODY_FORCE_FLUID_H_INCLUDED
-#define RTPS_PARTICLE_RIGIDBODY_FORCE_FLUID_H_INCLUDED
+#ifndef RTPS_PARTICLE_RIGIDBODY_FORCE_STATIC_H_INCLUDED
+#define RTPS_PARTICLE_RIGIDBODY_FORCE_STATIC_H_INCLUDED
 
-
-#include <CLL.h>
-#include <Buffer.h>
-#include <Kernel.h>
-#include <structs.h>
-#include <Domain.h>
+#include "../../opencl/CLL.h"
+#include "../../opencl/Buffer.h"
+#include "../../opencl/Kernel.h"
 #include <timer_eb.h>
-#include "ParticleRigidBodyParams.h"
-
+#include "../ParticleRigidBodyParams.h"
+#include <structs.h>
 
 namespace rtps
 {

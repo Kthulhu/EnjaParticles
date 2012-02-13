@@ -23,8 +23,9 @@
 #include <GL/glew.h>
 #include "TestApplication.h"
 #include "ParamParser.h"
-#include "RTPS.h"
+#include <RTPS.h>
 #include "../rtpslib/render/SSEffect.h"
+#include <../rtpslib/system/ParticleRigidBody.h>
 
 #include <sstream>
 #include <float.h>
@@ -199,12 +200,13 @@ namespace rtps
                     return;
                 }
                 //add static floor
-            case 's'
+            case 'u':
             {
                 float4 col1 = float4(0.0, 0.8, 0.2, 1.);
                 float4 size = float4(1.,1.,1.,0.f);
-                float4 position = float4(gridMin.x, gridMin.y,1.f,1.0f);
-                systems["rb1"]->addBox(1000, position, float4(gridMax.x,gridMax.y,2.0f,1.0f), false, col1,0.0f);
+                float4 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,.1f,1.0f);
+                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,.5f,1.0f), false, col1,0.0f);
+                return;
             }
             case 'r': //drop a rectangle
                 {
@@ -343,6 +345,12 @@ namespace rtps
                     effects[renderType]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
                 }
                 effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
+                //FIXME:This is a horrible way of doing this!!
+                if(i->first=="rb1")
+                {
+                    ParticleRigidBody* prb=((ParticleRigidBody*)i->second);
+                    effects[renderType]->render(prb->getStaticVBO(),prb->getColVBO(),prb->getStaticNum());
+                }
             }
             /*if(render_movie)
             {

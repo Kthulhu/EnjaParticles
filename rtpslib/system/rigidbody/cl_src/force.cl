@@ -73,19 +73,16 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
         float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
-        float stiff = (prbp->penetration_fact*600.*massnorm)/prbp->smoothing_distance;
-        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(r/rlen); 
+        float4 springForce = -(prbp->spring*massnorm)*(2.*prbp->smoothing_distance-rlen)*(r/rlen);
 
         float4 veli = vel[index_i]; // sorted
         float4 velj = vel[index_j];
 
-        float ln_res =log(prbp->restitution_coef); 
         
-        float dampening = -2.*ln_res*(sqrt((stiff*(massnorm))/((ln_res*ln_res)+(M_PI_F*M_PI_F))));
+        float dampening = -2.*prbp->restitution_coef*(sqrt(prbp->spring*massnorm*massnorm)/prbp->dampening_denom);
         float4 dampeningForce = dampening*(velj-veli);
         //force *= sphp->mass;// * idi * idj;
         pt->linear_force += (springForce+dampeningForce) * (float)iej;
-        pt->torque_force =(float4)(massnorm,stiff,ln_res,dampening);
         //pt->linear_force += r;//debug
     }
 }
@@ -125,7 +122,7 @@ __kernel void force_update(
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ prbp DEBUG_ARGV);
     
     linear_force[sort_indices[index]] = pt.linear_force; 
-    clf[sort_indices[index]] = pt.torque_force;
+    //clf[sort_indices[index]] = pt.torque_force;
 }
 
 /*-------------------------------------------------------------- */

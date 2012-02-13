@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -25,6 +25,8 @@
 #include "Permute.h"
 
 #include <string>
+#include <iostream>
+using namespace std;
 
 namespace rtps
 {
@@ -37,9 +39,9 @@ namespace rtps
         //printf("create permute kernel\n");
         path = path + "/permute.cl";
         k_permute = Kernel(cli, path, "permute");
-        
-    }
+        k_permuteF4 = Kernel(cli, path, "permuteF4");
 
+    }
     void Permute::execute(int num,
                     //input
                     Buffer<float4>& pos_u,
@@ -67,7 +69,7 @@ namespace rtps
                     Buffer<int4>& cli_debug)
     {
 
-        
+
         int iarg = 0;
         k_permute.setArg(iarg++, num);
         k_permute.setArg(iarg++, pos_u.getDevicePtr());
@@ -89,11 +91,11 @@ namespace rtps
         k_permute.setArg(iarg++, indices.getDevicePtr());
 
         int workSize = 64;
-        
+
         //printf("about to data structures\n");
         try
         {
-			//printf("k_permute (non-cloud): num= %d\n", num); 
+			//printf("k_permute (non-cloud): num= %d\n", num);
             float gputime = k_permute.execute(num, workSize);
             if(gputime > 0)
                 timer->set(gputime);
@@ -104,7 +106,7 @@ namespace rtps
             printf("ERROR(data structures): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-        
+
 #if 0
         //printPermuteDiagnostics();
 
@@ -115,7 +117,7 @@ namespace rtps
 
         std::vector<unsigned int> is(nbc);
         std::vector<unsigned int> ie(nbc);
-        
+
         ci_end.copyToHost(ie);
         ci_start.copyToHost(is);
 
@@ -180,6 +182,67 @@ namespace rtps
 
 
         //return nc;
+    }
+    void Permute::execute(int num,
+                    //input
+                    Buffer<float4>& pos_u,
+                    Buffer<float4>& pos_s,
+                    Buffer<unsigned int>& indices,
+                    //debug params
+                    Buffer<float4>& clf_debug,
+                    Buffer<int4>& cli_debug)
+    {
+
+
+        int iarg = 0;
+        k_permuteF4.setArg(iarg++, num);
+        k_permuteF4.setArg(iarg++, pos_u.getDevicePtr());
+        k_permuteF4.setArg(iarg++, pos_s.getDevicePtr());
+        k_permuteF4.setArg(iarg++, indices.getDevicePtr());
+
+        int workSize = 64;
+
+        //printf("about to data structures\n");
+        try
+        {
+            float gputime = k_permuteF4.execute(num, workSize);
+            if(gputime > 0)
+                timer->set(gputime);
+
+        }
+        catch (cl::Error er)
+        {
+            printf("ERROR(data structures): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
+        }
+
+#if 1
+            int nbc = num;
+            std::vector<float4> hpos_u(nbc);
+            std::vector<float4> hpos_s(nbc);
+            std::vector<unsigned int> hindices(nbc);
+
+
+			pos_u.copyToHost(hpos_u);
+			pos_s.copyToHost(hpos_s);
+			indices.copyToHost(hindices);
+
+            for (int i=0; i < num; i++)
+            {
+                cout<<"pos unsorted: "<< hpos_u[i].x<<" "<< hpos_u[i].y<<" "<< hpos_u[i].z<<" "<< hpos_u[i].w<<endl;
+            }
+
+            for (int i=0; i < num; i++)
+            {
+                cout<<"pos sorted: "<< hpos_s[i].x<<" "<< hpos_s[i].y<<" "<< hpos_s[i].z<<" "<< hpos_s[i].w<<endl;
+            }
+
+            for (int i=0; i < num; i++)
+            {
+                cout<<"indices: "<< hindices[i]<<endl;
+            }
+#endif
+
+
     }
 	//----------------------------------------------------------------------
 }

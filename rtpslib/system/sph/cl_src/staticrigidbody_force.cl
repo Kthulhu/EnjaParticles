@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-*
+* 
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-*
+* 
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-*
+* 
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-*
+* 
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -28,15 +28,15 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global float* mass, __global float4* pos_j
-#define ARGV pos, vel, linear_force, mass, pos_j
+#define ARGS __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j, float stiffness,float log_restitution, float dampening_denom
+#define ARGV pos, vel, force, mass, pos_j,stiffness,log_restitution, dampening_denom
 
 /*----------------------------------------------------------------------*/
 
 #include "cl_macros.h"
 #include "cl_structs.h"
 //Contains all of the Smoothing Kernels for SPH
-//#include "cl_kernels.h"
+#include "cl_kernels.h"
 
 
 //----------------------------------------------------------------------
@@ -47,31 +47,37 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
                         uint index_j,
                         float4 position_i,
                         __constant struct GridParams* gp,
-                        __constant struct ParticleRigidBodyParams* prbp
+                        __constant struct SPHParams* sphp
                         DEBUG_ARGS
                        )
 {
-    //int num = prbp->num;
-
     // get the particle info (in the current grid) to test against
-    float4 position_j = pos_j[index_j] * prbp->simulation_scale;
-    float4 r = (position_j - position_i);
+    float4 position_j = pos_j[index_j] * sphp->simulation_scale; 
+    float4 r = (position_j - position_i); 
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
 
     // is this particle within cutoff?
-    if (rlen <= 2.*prbp->smoothing_distance)
+    if (rlen <= 2* sphp->smoothing_distance)
     {
-        rlen = max(rlen, prbp->EPSILON);
-        float massnorm = ((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
-        float4 springForce = -(prbp->spring*massnorm)*(2.*prbp->smoothing_distance-rlen)*(r/rlen);
 
-        float4 veli = vel[index_i];
+        //iej is 0 when we are looking at same particle
+        //we allow calculations and just multiply force and xsph
+        //by iej to avoid branching
+        int iej = index_i != index_j;
 
-        float dampening = -2.*prbp->restitution_coef*(sqrt(prbp->spring*massnorm*massnorm)/prbp->dampening_denom);
+        // avoid divide by 0 in Wspiky_dr
+        rlen = max(rlen, sphp->EPSILON);
+
+        float massnorm=((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
+        float4 springForce = -(stiffness*massnorm)*(2.*sphp->smoothing_distance-rlen)*(r/rlen);
+
+        float4 veli = vel[index_i]; // sorted
+
+        float dampening = -2.*log_restitution*(sqrt(stiffness*massnorm*massnorm)/dampening_denom);
         float4 dampeningForce = dampening*(-veli);
-        pt->linear_force += (springForce+dampeningForce);
+        pt->force += (springForce+dampeningForce) * (float)iej;
     }
 }
 
@@ -84,29 +90,35 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 __kernel void force_update(
                        //__global float4* vars_sorted,
                        ARGS,
-                       __global int* sort_indices,
                        __global int*    cell_indexes_start,
                        __global int*    cell_indexes_end,
                        __constant struct GridParams* gp,
-                       __constant struct ParticleRigidBodyParams* prbp
+                       __constant struct SPHParams* sphp 
                        DEBUG_ARGS
                        )
 {
     // particle index
-    int num = prbp->num;
+    int num = sphp->num;
+    //int numParticles = get_global_size(0);
+    //int num = get_global_size(0);
+
     int index = get_global_id(0);
     if (index >= num) return;
 
-    float4 position_i = pos[index] * prbp->simulation_scale;
+    float4 position_i = pos[index] * sphp->simulation_scale;
+
+    //debuging
+    clf[index] = (float4)(99,0,0,0);
+    //cli[index].w = 0;
 
     // Do calculations on particles in neighboring cells
     PointData pt;
     zeroPoint(&pt);
 
-    IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ prbp DEBUG_ARGV);
-
-    linear_force[sort_indices[index]] += pt.linear_force;
-    clf[sort_indices[index]] = pt.linear_force;
+    //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
+    IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
+    force[index] += pt.force/sphp->mass;
+    clf[index].xyz = pt.force.xyz;
 }
 
 /*-------------------------------------------------------------- */

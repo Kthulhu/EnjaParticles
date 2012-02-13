@@ -231,13 +231,13 @@ namespace rtps
                 cli_debug);
             timers["force"]->stop();
             timers["force_static"]->start();
-            forceStatic.execute(   num,
+            forceStatic.execute( num,
                 cl_position_s,
                 cl_velocity_s,
                 cl_force_s,
                 cl_mass_s,
-                cl_static_pos_s,
-                cl_sort_static_indices,
+                cl_static_position_s,
+                cl_sort_indices,
                 cl_cell_static_indices_start,
                 cl_cell_static_indices_end,
                 cl_prbp,
@@ -410,14 +410,14 @@ namespace rtps
         std::vector<unsigned int> keys(max_num);
         //to get around limits of bitonic sort only handling powers of 2
         std::fill(keys.begin(), keys.end(), INT_MAX);
-        cl_static_sort_indices  = Buffer<unsigned int>(cli, keys);
-        cl_static_sort_hashes   = Buffer<unsigned int>(cli, keys);
+        cl_sort_static_indices  = Buffer<unsigned int>(cli, keys);
+        cl_sort_static_hashes   = Buffer<unsigned int>(cli, keys);
 
         // For bitonic sort. Remove when bitonic sort no longer used
         // Currently, there is an error in the Radix Sort (just run both
         // sorts and compare outputs visually
-        cl_static_sort_output_hashes = Buffer<unsigned int>(cli, keys);
-        cl_static_sort_output_indices = Buffer<unsigned int>(cli, keys);
+        cl_sort_static_output_hashes = Buffer<unsigned int>(cli, keys);
+        cl_sort_static_output_indices = Buffer<unsigned int>(cli, keys);
      }
 
 	//----------------------------------------------------------------------
@@ -431,36 +431,11 @@ namespace rtps
 			cout<<"pushParticles: exceeded max nb("<<max_num<<") of particles allowed"<<endl;
             return;
         }
-        //float rr = (rand() % 255)/255.0f;
-        //float4 color(rr, 0.0f, 1.0f - rr, 1.0f);
-        //printf("random: %f\n", rr);
-        //float4 color(1.0f,1.0f,1.0f,1.0f);
 
         vector<float4> cols(nn);
-        //printf("color: %f %f %f %f\n", color.x, color.y, color.z, color.w);
 
         fill(cols.begin(), cols.end(),color);
-        //float v = .5f;
-        //float v = 0.0f;
-        //float4 iv = float4(v, v, -v, 0.0f);
-        //float4 iv = float4(0, v, -.1, 0.0f);
-        //std::fill(vels.begin(), vels.end(),iv);
 
-        /*float spring = settings->GetSettingAs<float>("penetration_factor")*settings->GetSettingAs<float>("velocity_limit")*(mass/nn)/prbp.smoothing_distance;
-        float ln_res =log(settings->GetSettingAs<float>("restitution"));
-
-        float dampening = -2.*ln_res*(sqrt((spring*(mass/nn))/((ln_res*ln_res)+(M_PI*M_PI))));
-        //spring = -spring;
-        std::vector<float> spring_co(nn);
-        std::vector<float> dampening_co(nn);
-        std::fill(spring_co.begin(), spring_co.end(),spring);
-        std::fill(dampening_co.begin(), dampening_co.end(),dampening);
-
-        printf("spring = %f\n",spring);
-        printf("dampening = %f\n",dampening);
-        printf("restitution = %f\n",settings->GetSettingAs<float>("Restitution"));
-        settings->SetSetting("Boundary Stiffness", spring);
-        settings->SetSetting("Boundary Dampening", dampening);*/
         //ifmass is 0.0f then the rigid-body is considered static and should not go in
         //the normal static array. This will save a lot of time because there is no need
         //to resort/hash static positions because they do not change.
@@ -571,11 +546,9 @@ namespace rtps
         }
         else
         {
-            glFinish();
             cl_static_position_u.acquire();
             cl_static_position_u.copyToDevice(pos, static_num);
             static_num+=nn;
-            //Fixme: Need to rehash/sort static particles if new object is added.
             prepareStaticRBs();
             cl_static_position_u.release();
         }
@@ -598,6 +571,10 @@ namespace rtps
         settings->SetSetting("spacing", spacing);
         //constants
         settings->SetSetting("epsilon", 1E-6);
+        settings->SetSetting("spring",(settings->GetSettingAs<float>("penetration_factor")*settings->GetSettingAs<float>("velocity_limit"))/(settings->GetSettingAs<float>("smoothing_distance")*settings->GetSettingAs<float>("smoothing_distance")));
+        float ln_res =log(settings->GetSettingAs<float>("penetration_factor"));
+        settings->SetSetting("log_restitution",ln_res);
+        settings->SetSetting("dampening_denom",((ln_res*ln_res)+(M_PI*M_PI)));
 
         //CL parameters
         settings->SetSetting("num_particles", 0);
@@ -615,8 +592,8 @@ namespace rtps
         //dynamic params
         prbp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2
         prbp.friction_coef = settings->GetSettingAs<float>("friction");
-        prbp.restitution_coef = settings->GetSettingAs<float>("restitution");
-        prbp.penetration_fact = settings->GetSettingAs<float>("penetration_factor");
+        prbp.restitution_coef = settings->GetSettingAs<float>("log_restitution");
+        prbp.dampening_denom = settings->GetSettingAs<float>("dampening_denom");
         //next 3 not used at the moment
         prbp.shear = settings->GetSettingAs<float>("shear");
         prbp.attraction = settings->GetSettingAs<float>("attraction");
@@ -626,6 +603,7 @@ namespace rtps
         //constants
         prbp.EPSILON = settings->GetSettingAs<float>("epsilon");
 
+        prbp.static_stiffness = settings->GetSettingAs<float>("static_stiffness");
         //CL parameters
         prbp.num = settings->GetSettingAs<int>("num_particles");
         prbp.max_num = settings->GetSettingAs<int>("max_num_particles");
@@ -633,7 +611,8 @@ namespace rtps
         dout<<"smooth : "<<prbp.smoothing_distance<<endl;
         dout<<"scale : "<<prbp.simulation_scale<<endl;
         dout<<"gravity : "<<prbp.gravity<<endl;
-        dout<<"penetration : "<<prbp.penetration_fact<<endl;
+        dout<<"static_stiffness : "<<prbp.static_stiffness<<endl;
+        dout<<"denom : "<<prbp.dampening_denom<<endl;
         dout<<"restitution : "<<prbp.restitution_coef<<endl;
         //update the OpenCL buffer
         //std::vector<SPHParams> vparams();
@@ -764,12 +743,12 @@ namespace rtps
 
        return invit;
     }
-    ParticleRigidBody::prepareStaticRBs()
+    void ParticleRigidBody::prepareStaticRBs()
     {
         hash.execute(static_num,
                 cl_static_position_u,
-                cl_static_sort_hashes,
-                cl_static_sort_indices,
+                cl_sort_static_hashes,
+                cl_sort_static_indices,
                 cl_GridParams,
                 clf_debug,
                 cli_debug);
@@ -781,10 +760,10 @@ namespace rtps
             bitonic.Sort(batch,
                         arrayLength,
                         dir,
-                        &cl_static_sort_output_hashes,
-                        &cl_static_sort_output_indices,
-                        &cl_static_sort_hashes,
-                        &cl_static_sort_indices );
+                        &cl_sort_static_output_hashes,
+                        &cl_sort_static_output_indices,
+                        &cl_sort_static_hashes,
+                        &cl_sort_static_indices );
 
         }
         catch (cl::Error er)
@@ -792,6 +771,29 @@ namespace rtps
             cout<<"ERROR(bitonic sort): "<< er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
         }
 
-        cli->queue.finish();
+             timers["cellindices"]->start();
+            int nc = cellindices.execute(static_num,
+                cl_sort_static_hashes,
+                cl_sort_static_indices,
+                cl_cell_static_indices_start,
+                cl_cell_static_indices_end,
+                cl_GridParams,
+                grid_params.nb_cells,
+                clf_debug,
+                cli_debug);
+            timers["cellindices"]->stop();
+            dout<<"Static num: "<<endl;
+            dout<<"number of cells static rb: "<<nc<<endl;
+
+			//-----------------
+            timers["permute"]->start();
+            permute.execute(static_num,
+                cl_static_position_u,
+                cl_static_position_s,
+                cl_sort_static_indices,
+                clf_debug,
+                cli_debug);
+            timers["permute"]->stop();
+           cli->queue.finish();
     }
 }; //end namespace
