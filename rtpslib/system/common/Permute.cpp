@@ -215,7 +215,7 @@ namespace rtps
             printf("ERROR(data structures): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-#if 1
+#if 0
             int nbc = num;
             std::vector<float4> hpos_u(nbc);
             std::vector<float4> hpos_s(nbc);

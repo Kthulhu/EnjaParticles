@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -48,6 +48,7 @@ namespace rtps
     {
         settings = set;
         cli = c;
+        acquiredGL=false;
 
         max_num = settings->GetSettingAs<unsigned int>("max_num_particles");
         num = settings->GetSettingAs<unsigned int>("num_particles");
@@ -195,10 +196,10 @@ namespace rtps
     {
         cout<<"Number of Particles:"<< num<<endl;
         timers.printAll();
-        std::ostringstream oss; 
-        oss << "sph_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num; 
+        std::ostringstream oss;
+        oss << "sph_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num;
         //printf("oss: %s\n", (oss.str()).c_str());
-        timers.writeToFile(oss.str()); 
+        timers.writeToFile(oss.str());
         //renderer->printTimers();
     }
 
@@ -252,7 +253,7 @@ namespace rtps
         std::fill(cliv.begin(), cliv.end(),int4(0.0f, 0.0f, 0.0f, 0.0f));
         clf_debug = Buffer<float4>(cli, f4vec);
         cli_debug = Buffer<int4>(cli, cliv);
-        
+
         dout<<"grav_sources = "<<settings->GetSettingAs<string >("gravity_sources")<<endl;
         dout<<"grav_mass = "<<settings->GetSettingAs<string >("gravity_mass")<<endl;
         dout<<"grav_alphas = "<<settings->GetSettingAs<string >("gravity_alphas")<<endl;
@@ -267,7 +268,7 @@ namespace rtps
         for(int i=0;i<grav_alphas.size();i++)
         {
             dout<<"Alphas # "<<i<<": "<<grav_alphas[i]<<std::endl;
-        } 
+        }
         numGravSources=grav_sources.size();
         maxGravSources=grav_sources.size();
 
@@ -282,7 +283,7 @@ namespace rtps
         // sorts and compare outputs visually
         cl_sort_output_hashes = Buffer<unsigned int>(cli, keys);
         cl_sort_output_indices = Buffer<unsigned int>(cli, keys);
-		dout<<"keys.size= "<< keys.size()<<endl; // 
+		dout<<"keys.size= "<< keys.size()<<endl; //
         }
         catch (cl::Error er)
         {
@@ -352,13 +353,13 @@ namespace rtps
         vector<float4> torus = generateTorus(nn, center,innerRadius, outerRadius, thickness,spacing, scale, innerVel, outerVel,initVel);
         pushParticles(torus,initVel,color, mass);
     }
-    
+
     void System::addPointSource(float4& pointSource, float massSource)
     {
         if(numGravSources<maxGravSources)
         {
-           cl_pointSources.copyToDevice(pointSource,numGravSources); 
-           cl_massSources.copyToDevice(massSource,numGravSources); 
+           cl_pointSources.copyToDevice(pointSource,numGravSources);
+           cl_massSources.copyToDevice(massSource,numGravSources);
            numGravSources++;
         }
     }
@@ -387,20 +388,20 @@ namespace rtps
 	//----------------------------------------------------------------------
     void System::radix_sort()
     {
-    try 
-        {   
+    try
+        {
             int snum = nlpo2(num);
             if(snum < 1024)
-            {   
+            {
                 snum = 1024;
-            }   
-            //printf("sorting snum: %d", snum); 
+            }
+            //printf("sorting snum: %d", snum);
             radix.sort(snum, &cl_sort_hashes, &cl_sort_indices);
-        }   
-        catch (cl::Error er) 
-        {   
+        }
+        catch (cl::Error er)
+        {
             cout<<"ERROR(radix sort): "<< er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
-        }   
+        }
 
     }
 	//----------------------------------------------------------------------
@@ -419,8 +420,8 @@ namespace rtps
             int batch = 1;
 
             //printf("about to try sorting\n");
-            bitonic.Sort(batch, 
-                        arrayLength, 
+            bitonic.Sort(batch,
+                        arrayLength,
                         dir,
                         &cl_sort_output_hashes,
                         &cl_sort_output_indices,
@@ -439,7 +440,7 @@ namespace rtps
         int nbc = 10;
         std::vector<int> sh = cl_sort_hashes.copyToHost(nbc);
         std::vector<int> eci = cl_cell_indices_end.copyToHost(nbc);
-    
+
         for(int i = 0; i < nbc; i++)
         {
             printf("before[%d] %d eci: %d\n; ", i, sh[i], eci[i]);
@@ -452,15 +453,15 @@ namespace rtps
         cl_sort_indices.copyFromBuffer(cl_sort_output_indices, 0, 0, num);
 
         /*
-        scopy(num, cl_sort_output_hashes.getDevicePtr(), 
+        scopy(num, cl_sort_output_hashes.getDevicePtr(),
               cl_sort_hashes.getDevicePtr());
-        scopy(num, cl_sort_output_indices.getDevicePtr(), 
+        scopy(num, cl_sort_output_indices.getDevicePtr(),
               cl_sort_indices.getDevicePtr());
         */
 
         cli->queue.finish();
 #if 0
-    
+
         printf("********* Bitonic Sort Diagnostics **************\n");
         int nbc = 20;
         //sh = cl_sort_hashes.copyToHost(nbc);
@@ -469,7 +470,7 @@ namespace rtps
         std::vector<unsigned int> si = cl_sort_indices.copyToHost(nbc);
         //std::vector<int> eci = cl_cell_indices_end.copyToHost(nbc);
 
-    
+
         for(int i = 0; i < nbc; i++)
         {
             //printf("after[%d] %d eci: %d\n; ", i, sh[i], eci[i]);
@@ -517,6 +518,7 @@ namespace rtps
         cl_velocity_u.acquire();
         cl_force_s.acquire();
         cl_active_cells.acquire();
+        acquiredGL=true;
     }
     void System::releaseGLBuffers()
     {
@@ -525,5 +527,6 @@ namespace rtps
         cl_velocity_u.release();
         cl_force_s.release();
         cl_active_cells.release();
+        acquiredGL=false;
     }
 }; //end namespace

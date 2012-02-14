@@ -73,13 +73,13 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
         float massnorm=((mass[index_i]*mass_j[index_j])/(mass[index_i]+mass_j[index_j]));
-        float4 springForce = -(prbp->spring*massnorm)*(2.*prbp->smoothing_distance-rlen)*(r/rlen);
+        float stiff = (prbp->spring*massnorm);
+        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(r/rlen);
 
         float4 veli = vel[index_i]; // sorted
         float4 velj = vel[index_j];
 
-        float dampening = -2.*prbp->restitution_coef*(sqrt(prbp->spring*massnorm*massnorm)/prbp->dampening_denom);
-        float4 dampeningForce = dampening*(velj-veli);
+        float4 dampeningForce = prbp->dampening*sqrt(stiff*massnorm)*(velj-veli);
         pt->linear_force += (springForce+dampeningForce) * (float)iej;
         //pt->linear_force += r;//debug
     }

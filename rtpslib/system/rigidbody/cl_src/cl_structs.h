@@ -37,15 +37,13 @@ typedef struct ParticleRigidBodyParams
     float4 gravity; // -9.8 m/sec^2
 
     float friction_coef;
-    float restitution_coef;
-    float dampening_denom;
     float shear;
     float attraction;
     float spring;
+    float dampening;
     //constants
     float EPSILON;
 
-    float static_stiffness;
     //CL parameters
     int num;
     int max_num;

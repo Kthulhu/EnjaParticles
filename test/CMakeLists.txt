@@ -27,6 +27,9 @@ FIND_PACKAGE (OpenGL)
 FIND_PACKAGE (OPENCL)
 FIND_PACKAGE (GLEW)
 
+FIND_LIBRARY(ASSIMP_LIBRARIES assimp
+    PATHS ENV LD_LIBRARY_PATH
+)
 set (test_INCLUDES
     ${RTPS_DIR}
     ${GLUT_INCLUDE_PATH}
@@ -82,6 +85,7 @@ SET(LINK_LIBS
     ${OPENGL_LIBRARIES}
     ${OPENCL_LIBRARIES}
     ${GLEW_LIBRARY}
+    ${ASSIMP_LIBRARIES}
     # /opt/local/lib/libGLEW.a #for staticl linking when distributing. should do this more cmake way
     # /usr/lib/libGLEW.a #for static linking when distributing on linux. should do this more cmake way
 )

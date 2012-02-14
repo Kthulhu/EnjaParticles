@@ -51,8 +51,7 @@ namespace rtps
                     Buffer<SPHParams>& sphp,
                     Buffer<GridParams>& gp,
                     float stiffness,
-                    float log_restitution,
-                    float dampening_denom,
+                    float dampening,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);
@@ -68,8 +67,7 @@ namespace rtps
                     Buffer<SPHParams>& sphp,
                     Buffer<GridParams>& gp,
                     float stiffness,
-                    float log_restitution,
-                    float dampening_denom,
+                    float dampening,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);

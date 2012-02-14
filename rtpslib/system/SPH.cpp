@@ -521,9 +521,14 @@ namespace rtps
 
 #ifdef GPU
         glFinish();
-        cl_position_u.acquire();
-        cl_color_u.acquire();
-        cl_velocity_u.acquire();
+        //FIXME: This test is required because the way hoses are updated.
+        //We may want to investigate a better way of handling hose updates.
+        if(!acquiredGL)
+        {
+            cl_position_u.acquire();
+            cl_color_u.acquire();
+            cl_velocity_u.acquire();
+        }
 		// Allocate max_num particles on the GPU. That wastes memory, but is useful.
 		// There should be a way to update this during the simulation.
         cl_position_u.copyToDevice(pos, num);
@@ -532,9 +537,12 @@ namespace rtps
         cl_mass_u.copyToDevice(mass_p, num);
         settings->SetSetting("num_particles", num+nn);
         updateParams();
-        cl_position_u.release();
-        cl_color_u.release();
-        cl_velocity_u.release();
+        if(!acquiredGL)
+        {
+            cl_position_u.release();
+            cl_color_u.release();
+            cl_velocity_u.release();
+        }
 #endif
         num += nn;  //keep track of number of particles we use
         //renderer->setNum(num);
@@ -568,8 +576,7 @@ namespace rtps
                     //cl_GridParams,
                     cl_GridParamsScaled,
                     interactionSystem[j]->getSettings()->GetSettingAs<float>("spring"),
-                    interactionSystem[j]->getSettings()->GetSettingAs<float>("log_restitution"),
-                    interactionSystem[j]->getSettings()->GetSettingAs<float>("dampening_denom"),
+                    interactionSystem[j]->getSettings()->GetSettingAs<float>("dampening"),
                     clf_debug,
                     cli_debug);
                 timers["force_rigidbody"]->stop();
@@ -587,8 +594,7 @@ namespace rtps
                     cl_sphp,
                     cl_GridParamsScaled,
                     prb->getSettings()->GetSettingAs<float>("spring"),
-                    prb->getSettings()->GetSettingAs<float>("log_restitution"),
-                    prb->getSettings()->GetSettingAs<float>("dampening_denom"),
+                    prb->getSettings()->GetSettingAs<float>("dampening"),
                     clf_debug,
                     cli_debug);
                 timers["force_rigidbody"]->stop();

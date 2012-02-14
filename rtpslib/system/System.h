@@ -240,6 +240,7 @@ namespace rtps
         //Used for debug views of a specific particle;
         unsigned int activeParticle;
 
+        bool acquiredGL;
         GLuint pos_vbo;
         GLuint col_vbo;
         GLuint velocity_vbo;

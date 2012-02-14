@@ -66,8 +66,7 @@ namespace rtps
                     Buffer<SPHParams>& sphp,
                     Buffer<GridParams>& gp,
                     float stiffness,
-                    float log_restitution,
-                    float dampening_denom,
+                    float dampening,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
@@ -81,8 +80,7 @@ namespace rtps
         k_rigidbody_force.setArg(iarg++, rb_velocity_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, rb_mass_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, stiffness);
-        k_rigidbody_force.setArg(iarg++, log_restitution);
-        k_rigidbody_force.setArg(iarg++, dampening_denom);
+        k_rigidbody_force.setArg(iarg++, dampening);
         k_rigidbody_force.setArg(iarg++, ci_start.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, ci_end.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, gp.getDevicePtr());
@@ -149,8 +147,7 @@ namespace rtps
                     Buffer<SPHParams>& sphp,
                     Buffer<GridParams>& gp,
                     float stiffness,
-                    float log_restitution,
-                    float dampening_denom,
+                    float dampening,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
@@ -162,8 +159,7 @@ namespace rtps
         k_staticrigidbody_force.setArg(iarg++, mass_s.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, rb_pos_s.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, stiffness);
-        k_staticrigidbody_force.setArg(iarg++, log_restitution);
-        k_staticrigidbody_force.setArg(iarg++, dampening_denom);
+        k_staticrigidbody_force.setArg(iarg++, dampening);
         k_staticrigidbody_force.setArg(iarg++, ci_start.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, ci_end.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, gp.getDevicePtr());

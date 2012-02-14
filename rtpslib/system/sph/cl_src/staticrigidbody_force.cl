@@ -28,8 +28,8 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j, float stiffness,float log_restitution, float dampening_denom
-#define ARGV pos, vel, force, mass, pos_j,stiffness,log_restitution, dampening_denom
+#define ARGS __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j, float stiffness,float dampening
+#define ARGV pos, vel, force, mass, pos_j,stiffness, dampening
 
 /*----------------------------------------------------------------------*/
 
@@ -71,12 +71,12 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         rlen = max(rlen, sphp->EPSILON);
 
         float massnorm=((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
-        float4 springForce = -(stiffness*massnorm)*(2.*sphp->smoothing_distance-rlen)*(r/rlen);
+        float stiff = stiffness*massnorm;
+        float4 springForce = -stiff*(2.*sphp->smoothing_distance-rlen)*(r/rlen);
 
         float4 veli = vel[index_i]; // sorted
 
-        float dampening = -2.*log_restitution*(sqrt(stiffness*massnorm*massnorm)/dampening_denom);
-        float4 dampeningForce = dampening*(-veli);
+        float4 dampeningForce = dampening*sqrt(stiff*massnorm)*(-veli);
         pt->force += (springForce+dampeningForce) * (float)iej;
     }
 }

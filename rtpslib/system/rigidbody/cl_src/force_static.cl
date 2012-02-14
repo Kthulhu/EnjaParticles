@@ -65,12 +65,12 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     {
         rlen = max(rlen, prbp->EPSILON);
         float massnorm = ((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
-        float4 springForce = -(prbp->spring*massnorm)*(2.*prbp->smoothing_distance-rlen)*(r/rlen);
+        float stiff = (prbp->spring*massnorm);
+        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(r/rlen);
 
         float4 veli = vel[index_i];
 
-        float dampening = -2.*prbp->restitution_coef*(sqrt(prbp->spring*massnorm*massnorm)/prbp->dampening_denom);
-        float4 dampeningForce = dampening*(-veli);
+        float4 dampeningForce = prbp->dampening*sqrt(stiff*massnorm)*(-veli);
         pt->linear_force += (springForce+dampeningForce);
     }
 }

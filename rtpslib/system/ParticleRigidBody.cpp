@@ -368,7 +368,7 @@ namespace rtps
         fill(rotf4Vec.begin(), rotf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 1.0f));
         fill(rbfVec.begin(), rbfVec.end(),0.0f);
         fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
-        staticVBO = createVBO(&f4Vec[0], f4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+        staticVBO = createVBO(&f4Vec[0], f4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         cl_static_position_u=Buffer<float4>(cli,staticVBO);
         cl_static_position_s=Buffer<float4>(cli,f4Vec);
         cl_position_l = Buffer<float4>(cli, f4Vec);
@@ -499,7 +499,6 @@ namespace rtps
             std::fill(index.begin(), index.end(), curRigidbodyID);
             curRigidbodyID++;
     #ifdef GPU
-            glFinish();
             cl_position_u.acquire();
             cl_color_u.acquire();
             cl_velocity_u.acquire();
@@ -546,6 +545,11 @@ namespace rtps
         }
         else
         {
+            if (static_num + nn > max_num)
+            {
+                cout<<"pushParticles: exceeded max nb("<<max_num<<") of particles allowed"<<endl;
+                return;
+            }
             cl_static_position_u.acquire();
             cl_static_position_u.copyToDevice(pos, static_num);
             static_num+=nn;
@@ -572,9 +576,8 @@ namespace rtps
         //constants
         settings->SetSetting("epsilon", 1E-6);
         settings->SetSetting("spring",(settings->GetSettingAs<float>("penetration_factor")*settings->GetSettingAs<float>("velocity_limit"))/(settings->GetSettingAs<float>("smoothing_distance")*settings->GetSettingAs<float>("smoothing_distance")));
-        float ln_res =log(settings->GetSettingAs<float>("penetration_factor"));
-        settings->SetSetting("log_restitution",ln_res);
-        settings->SetSetting("dampening_denom",((ln_res*ln_res)+(M_PI*M_PI)));
+        float ln_res =log(settings->GetSettingAs<float>("restitution"));
+        settings->SetSetting("dampening",(2*-(ln_res))/sqrt((ln_res*ln_res)+(M_PI*M_PI)));
 
         //CL parameters
         settings->SetSetting("num_particles", 0);
@@ -592,8 +595,7 @@ namespace rtps
         //dynamic params
         prbp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2
         prbp.friction_coef = settings->GetSettingAs<float>("friction");
-        prbp.restitution_coef = settings->GetSettingAs<float>("log_restitution");
-        prbp.dampening_denom = settings->GetSettingAs<float>("dampening_denom");
+        prbp.dampening = settings->GetSettingAs<float>("dampening");
         //next 3 not used at the moment
         prbp.shear = settings->GetSettingAs<float>("shear");
         prbp.attraction = settings->GetSettingAs<float>("attraction");
@@ -603,7 +605,6 @@ namespace rtps
         //constants
         prbp.EPSILON = settings->GetSettingAs<float>("epsilon");
 
-        prbp.static_stiffness = settings->GetSettingAs<float>("static_stiffness");
         //CL parameters
         prbp.num = settings->GetSettingAs<int>("num_particles");
         prbp.max_num = settings->GetSettingAs<int>("max_num_particles");
@@ -611,9 +612,7 @@ namespace rtps
         dout<<"smooth : "<<prbp.smoothing_distance<<endl;
         dout<<"scale : "<<prbp.simulation_scale<<endl;
         dout<<"gravity : "<<prbp.gravity<<endl;
-        dout<<"static_stiffness : "<<prbp.static_stiffness<<endl;
-        dout<<"denom : "<<prbp.dampening_denom<<endl;
-        dout<<"restitution : "<<prbp.restitution_coef<<endl;
+        dout<<"dampening : "<<prbp.dampening<<endl;
         //update the OpenCL buffer
         //std::vector<SPHParams> vparams();
         //vparams.push_back(prbp);
@@ -782,8 +781,6 @@ namespace rtps
                 clf_debug,
                 cli_debug);
             timers["cellindices"]->stop();
-            dout<<"Static num: "<<endl;
-            dout<<"number of cells static rb: "<<nc<<endl;
 
 			//-----------------
             timers["permute"]->start();

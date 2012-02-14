@@ -36,7 +36,9 @@
     #include <GL/glut.h>
 //OpenCL stuff
 #endif
+
 using namespace std;
+
 namespace rtps
 {
     TestApplication::TestApplication(istream& is)
@@ -77,6 +79,13 @@ namespace rtps
         rotation.x=0.0f;
         rotation.y=0.0f;
         mass=1.0f;
+        string blendfile = "demo_scene.obj";
+
+        renderVelocity=false;
+        paused=false;
+        scene=NULL;
+        scene_list=0;
+        loadScene(blendfile);
     }
 
     void TestApplication::setWindowHeight(GLuint windowHeight) {
@@ -172,15 +181,12 @@ namespace rtps
             {
                 //spray hose
                 cout<<"about to make hose"<<endl;
-                float4 center(2., 2., .2, 1.);
-                //float4 velocity(.6, -.6, -.6, 0);
-                //float4 velocity(2., 5., -.8, 0);
-                float4 velocity(0., 0., 2., 0);
+                float4 center = float4(gridMin.x+3.0f, gridMin.y+3.0f,gridMax.z-2.0f,1.0f);
+                float4 col1 = float4(0.05, 0.15, 8., 0.1);
+                float4 velocity(0., 0., -2.f, 0);
+                float radius= 3.0f;
                 //sph sets spacing and multiplies by radius value
-                float4 col1 = float4(0., 0., 1., 1.);
-
-
-                systems["water"]->addHose(5000, center, velocity, 5, col1);
+                systems["water"]->addHose(50000, center, velocity,radius, col1);
                 return;
             }
             case 'n':
@@ -204,14 +210,27 @@ namespace rtps
             {
                 float4 col1 = float4(0.0, 0.8, 0.2, 1.);
                 float4 size = float4(1.,1.,1.,0.f);
-                float4 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,.1f,1.0f);
-                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,.5f,1.0f), false, col1,0.0f);
+                float4 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+.1f,1.0f);
+                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMin.z+.5f,1.0f), false, col1,0.0f);
+                dout<<"Here"<<endl;
+                position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
+                systems["rb1"]->addBox(1000, position, float4(gridMin.x+0.5f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                dout<<"Here"<<endl;
+                position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
+                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMin.y+0.5f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                dout<<"Here"<<endl;
+                position = float4(gridMax.x-0.5f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
+                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                dout<<"Here"<<endl;
+                position = float4(gridMin.x+0.1f, gridMax.y-0.5f,gridMin.z+0.1f,1.0f);
+                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                dout<<"Here"<<endl;
                 return;
             }
-            case 'r': //drop a rectangle
+            case 'R': //drop a rectangle
                 {
 
-                    float4 col1 = float4(0.5, 0.9, 0.75, 1.);
+                    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
 
                     float4 size = float4(1.,1.,1.,0.f);
                     size=size*sizeScale;
@@ -224,6 +243,18 @@ namespace rtps
                     position.w = 0.0f;
                     systems["rb1"]->addBox(1000, position, position+size, false, col1,mass);
                     return;
+                }
+
+            case 'r': //drop a ball
+                {
+                    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
+                    float size = 1.0f;
+                    size=size*sizeScale;
+                    float4 mid = (gridMax-gridMin);
+                    mid = mid/2.0f;
+                    mid.w = 0.0f;
+
+                    systems["rb1"]->addBall(1000, mid, size,false, col1,mass);
                 }
             case 'v':
                 renderVelocity=!renderVelocity;
@@ -335,7 +366,7 @@ namespace rtps
             glDisableClientState( GL_VERTEX_ARRAY );
              */
 
-            RenderUtils::renderBox(gridMin,gridMax,float4(0.0f,1.0,0.0f,1.0f));
+            //RenderUtils::renderBox(gridMin,gridMax,float4(0.0f,1.0,0.0f,1.0f));
             //FIXME: Have a method to give renderType to each System. That way we can have different
             //Systems with the different effects.
             for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
@@ -366,6 +397,11 @@ namespace rtps
             //frame_counter++;
         }*/
         //showMass();
+
+        glEnable(GL_BLEND);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        display();
+        glDisable(GL_BLEND);
         glutSwapBuffers();
 
     }
@@ -544,5 +580,24 @@ namespace rtps
 
     GLuint TestApplication::getWindowWidth() const {
         return windowWidth;
+    }
+
+    void TestApplication::loadScene(string& filename)
+    {
+        // we are taking one of the postprocessing presets to avoid
+        // spelling out 20+ single postprocessing flags here.
+        scene = aiImportFile(filename.c_str(),aiProcessPreset_TargetRealtime_MaxQuality);
+
+        if (scene) {
+            get_bounding_box(&scene_min,&scene_max);
+            scene_center.x = (scene_min.x + scene_max.x) / 2.0f;
+            scene_center.y = (scene_min.y + scene_max.y) / 2.0f;
+            scene_center.z = (scene_min.z + scene_max.z) / 2.0f;
+        }
+        else
+        {
+            cerr<<"Scene file couldn't be imported from: "<<filename<<endl;
+        }
+
     }
 };

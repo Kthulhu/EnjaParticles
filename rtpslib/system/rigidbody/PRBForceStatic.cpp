@@ -94,7 +94,7 @@ namespace rtps
             printf("ERROR(force_static ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-#if 1 //printouts
+#if 0 //printouts
         //DEBUGING
 
         if(num > 0)// && choice == 0)
