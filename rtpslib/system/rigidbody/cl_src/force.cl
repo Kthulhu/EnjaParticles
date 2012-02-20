@@ -59,7 +59,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
-    float normalR=r/sqrt(rlen);
+    float4 norm = r/rlen;
     // is this particle within cutoff?
     if((rlen <= 2.*prbp->smoothing_distance)&&objectIndex[index_i]!=objectIndex[index_j])
     {
@@ -67,25 +67,24 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         rlen = max(rlen, prbp->EPSILON);
         float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
         float stiff = (prbp->spring*massnorm);
-        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(r/rlen);
+        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(norm);
 
         float4 relvel = vel[index_j]-vel[index_i];
 
         float4 dampeningForce = prbp->dampening*sqrt(stiff*massnorm)*(relvel);
-        float4 normalForce=(springForce+dampeningForce); 
+        float4 normalForce=(springForce+dot(dampeningForce,norm)*norm); 
         
         relvel.w=0.0;
         normalForce.w=0.0;
-        float normalDot=dot(normalForce,normalForce);
         //Use Gram Schmidt process to find tangential velocity to the particle
-        float4 tangVel=relvel-((dot(relvel,normalForce)/normalDot)*normalForce);
+        float4 tangVel=relvel-dot(relvel,norm)*norm;
         float4 frictionalForce=0.0f;
         if(length(tangVel)>prbp->friction_static_threshold)
-            frictionalForce = -prbp->friction_dynamic*sqrt(normalDot)*(normalize(tangVel));
+            frictionalForce = -prbp->friction_dynamic*length(normalForce)*(normalize(tangVel));
         else
             frictionalForce = -prbp->friction_static*tangVel;
         
-        pt->linear_force += (normalForce+frictionalForce);
+        pt->linear_force += (springForce+dampeningForce+frictionalForce);
     }
 }
 

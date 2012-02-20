@@ -86,6 +86,7 @@ namespace rtps
         scene=NULL;
         scene_list=0;
         loadScene(blendfile);
+        build_shapes(scene, scene->mRootNode);
     }
 
     void TestApplication::setWindowHeight(GLuint windowHeight) {
@@ -106,6 +107,10 @@ namespace rtps
             delete i->second;
         }
         for(map<string,ParticleShape*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
+        {
+            delete i->second;
+        }
+        for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
         {
             delete i->second;
         }
@@ -715,35 +720,78 @@ namespace rtps
     {
         int i;
         unsigned int n = 0, t;
+
+        struct aiMatrix4x4 m = nd->mTransformation;
+
+
+        // update transform
+        aiTransposeMatrix4(&m);
+
+        float16 mat;
+        memcpy(&mat,&m,sizeof(float16));
+        /*for(int i =0;i<16;i++){
+            mat.m[i]=m[0][i];
+            dout<<"mat i "<<i<<" = "<<mat.m[i]<<endl;
+        }*/
         // draw all meshes assigned to this node
         for (; n < nd->mNumMeshes; ++n) {
             const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+            dout<<"num faces "<<mesh->mNumFaces<<endl;
+            Mesh* me=new Mesh();
+            unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
             for (t = 0; t < mesh->mNumFaces; ++t) {
                 const struct aiFace* face = &mesh->mFaces[t];
-
-
                 for(i = 0; i < face->mNumIndices; i++) {
-                    int index = face->mIndices[i];
-                    if(mesh->mColors[0] != NULL)
-                    {
-                        glColor4fv((GLfloat*)&mesh->mColors[0][index]);
-                    }
-                    if(mesh->mNormals != NULL)
-                        glNormal3fv(&mesh->mNormals[index].x);
-                    glVertex3fv(&mesh->mVertices[index].x);
+                    ibo[t*3+i]=face->mIndices[i];
                 }
-
-                glEnd();
             }
-
+            float* vbo = new float[mesh->mNumVertices*3];
+            float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
+            float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+            for(int i = 0; i<mesh->mNumVertices; i++)
+            {
+                float x = mesh->mVertices[i].x;
+                float y = mesh->mVertices[i].y;
+                float z = mesh->mVertices[i].z;
+                vbo[i*3]=x;
+                vbo[i*3+1]=y;
+                vbo[i*3+2]=z;
+                if(x<min.x)
+                    min.x=x;
+                if(x>max.x)
+                    max.x=x;
+                if(y<min.y)
+                    min.y=y;
+                if(y>max.y)
+                    max.y=y;
+                if(z<min.z)
+                    min.z=z;
+                if(z>max.z)
+                    max.z=z;
+            }
+            me->vbo=createVBO(vbo,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
+            me->vboSize=mesh->mNumVertices;
+            delete[] vbo;
+            me->ibo=createVBO(ibo, mesh->mNumFaces*3*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
+            me->iboSize=mesh->mNumFaces*3;
+            delete[] ibo;
+            stringstream s;
+            s<<"test"<<me->vbo<<endl;
+            meshs[s.str()]=me;
+            dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
+            dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
+            ParticleShape* shape = new ParticleShape(min,max,systems["rb1"]->getSpacing(),1.0f);
+            shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            dout<<"mesh name = "<<s<<endl;
+            pShapes[s.str()]=shape;
+            systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMaxDim(),float4(shape->getMin(),0.0f),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
         }
 
         // draw all children
         for (n = 0; n < nd->mNumChildren; ++n) {
-            recursive_render(sc, nd->mChildren[n]);
+            build_shapes(sc, nd->mChildren[n]);
         }
 
-        glPopMatrix();
     }
 
     // ----------------------------------------------------------------------------

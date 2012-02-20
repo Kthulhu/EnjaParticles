@@ -58,6 +58,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
+    float4 norm = r/rlen;
 
     // is this particle within cutoff?
     if (rlen <= 2* sphp->smoothing_distance)
@@ -71,26 +72,32 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, sphp->EPSILON);
 
-        float massnorm=((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
+        //need to have a better way of handling stiffness..
+        float massnorm=((mass[index_i]*0.20*mass[index_i])/(mass[index_i]+0.20*mass[index_i]));
         float stiff = rbParams.s0*massnorm;
-        float4 springForce = -stiff*(2.*sphp->smoothing_distance-rlen)*(r/rlen);
+        float4 springForce = -stiff*(2.*sphp->smoothing_distance-rlen)*(norm);
 
-        float4 relvel = -vel[index_i];
+        float4 relvel = vel[index_i];
 
-        float4 dampeningForce = rbParams.s1*sqrt(stiff*massnorm)*(relvel);
+        float4 normVel =dot(relvel,norm)*norm;
+        float4 dampeningForce = rbParams.s1*sqrt(stiff*massnorm)*(-normVel);
         float4 normalForce=(springForce+dampeningForce); 
         
+        float4 tanVel = vel[index_i]-normVel;
+        //Fixme: we need to stop the particles tangential velocity. How should I accomplish this?
+        float4 tanForce = -(mass[index_i]*tanVel)/0.003;
+        /*
         relvel.w=0.0;
         normalForce.w=0.0;
-        float normalDot=dot(normalForce,normalForce);
         //Use Gram Schmidt process to find tangential velocity to the particle
-        float4 tangVel=relvel-((dot(relvel,normalForce)/normalDot)*normalForce);
+        float4 tangVel=relvel-normVel;
         float4 frictionalForce=0.0f;
         if(length(tangVel)>rbParams.s2)
-            frictionalForce = -rbParams.s3*sqrt(normalDot)*(normalize(tangVel));
+            frictionalForce = -rbParams.s3*length(normalForce)*(normalize(tangVel));
         else
             frictionalForce = -rbParams.s4*tangVel;
-        pt->force += (normalForce+frictionalForce);
+        pt->force += (normalForce+frictionalForce);*/
+        pt->force+=normalForce;
     }
 }
 

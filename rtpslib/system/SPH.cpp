@@ -290,7 +290,7 @@ namespace rtps
                     cl_position_s,
                     cl_force_s,
                     sphp.simulation_scale);
-            //collision();
+           // collision();
 
         }
 
