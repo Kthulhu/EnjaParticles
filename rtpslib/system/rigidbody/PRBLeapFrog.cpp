@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -29,25 +29,25 @@ namespace rtps
     {
         cli = cli_;
         timer = timer_;
- 
+
         printf("create leapfrog kernel\n");
         path += "/leapfrog.cl";
         k_leapfrog = Kernel(cli, path, "leapfrog");
 
-    } 
+    }
     void PRBLeapFrog::execute(int num,
                     float dt,
-                    Buffer<float4>& pos_u,
-                    Buffer<float4>& pos_s,
-                    Buffer<float4>& vel_u,
-                    Buffer<float4>& vel_s,
-                    Buffer<float4>& veleval_u,
-                    Buffer<float4>& force_s,
-                    Buffer<float4>& xsph_s,
-                    //Buffer<float4>& uvars, 
-                    //Buffer<float4>& svars, 
-                    Buffer<unsigned int>& indices,
-                    //params
+                    Buffer<float4>& comLinearForce,
+                    Buffer<float4>& comTorqueForce,
+                    Buffer<float4>& comVel,
+                    Buffer<float4>& comAngVel,
+                    Buffer<float4>& comVelEval,
+                    Buffer<float4>& comAngVelEval,
+                    Buffer<float4>& comPos,
+                    Buffer<float4>& comRot,
+                    Buffer<float16>& inertialTensor,
+                    Buffer<float>& rbMass,
+                    int numRBs,
                     Buffer<ParticleRigidBodyParams>& prbp,
                     //debug params
                     Buffer<float4>& clf_debug,
@@ -55,27 +55,29 @@ namespace rtps
     {
 
         int iargs = 0;
-        //k_leapfrog.setArg(iargs++, uvars.getDevicePtr());
-        //k_leapfrog.setArg(iargs++, svars.getDevicePtr());
-        k_leapfrog.setArg(iargs++, pos_u.getDevicePtr());
-        k_leapfrog.setArg(iargs++, pos_s.getDevicePtr());
-        k_leapfrog.setArg(iargs++, vel_u.getDevicePtr());
-        k_leapfrog.setArg(iargs++, vel_s.getDevicePtr());
-        k_leapfrog.setArg(iargs++, veleval_u.getDevicePtr());
-        k_leapfrog.setArg(iargs++, force_s.getDevicePtr());
-        k_leapfrog.setArg(iargs++, indices.getDevicePtr());
-        //leapfrog.setArg(iargs++, color.getDevicePtr());
-        k_leapfrog.setArg(iargs++, prbp.getDevicePtr());
+        k_leapfrog.setArg(iargs++, comLinearForce.getDevicePtr());
+        k_leapfrog.setArg(iargs++, comTorqueForce.getDevicePtr());
+        k_leapfrog.setArg(iargs++, comVel.getDevicePtr());
+        k_leapfrog.setArg(iargs++, comAngVel.getDevicePtr());
+        k_leapfrog.setArg(iargs++, comVelEval.getDevicePtr());
+        k_leapfrog.setArg(iargs++, comAngVelEval.getDevicePtr());
+        k_leapfrog.setArg(iargs++, comPos.getDevicePtr());
+        k_leapfrog.setArg(iargs++, comRot.getDevicePtr());
+        k_leapfrog.setArg(iargs++, inertialTensor.getDevicePtr());
+        k_leapfrog.setArg(iargs++, rbMass.getDevicePtr());
         k_leapfrog.setArg(iargs++, dt); //time step
+        k_leapfrog.setArg(iargs++, prbp.getDevicePtr());
+        k_leapfrog.setArg(iargs++, clf_debug.getDevicePtr());
+        k_leapfrog.setArg(iargs++, cli_debug.getDevicePtr());
 
         int local_size = 128;
-        float gputime = k_leapfrog.execute(num, local_size);
+        float gputime = k_leapfrog.execute(numRBs, local_size);
         if(gputime > 0)
             timer->set(gputime);
 
 
     }
-        
+
 
 #if 0
 #define DENS 0
@@ -93,7 +95,7 @@ namespace rtps
             cl_vars_unsorted.copyToHost(uposs, POS*sphp.max_num);
 
             for (int i=0; i < nbc; i++)
-            //for (int i=0; i < 10; i++) 
+            //for (int i=0; i < 10; i++)
             {
                 poss[i] = poss[i] / sphp.simulation_scale;
                 //printf("-----\n");

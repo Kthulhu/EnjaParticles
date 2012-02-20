@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -28,7 +28,7 @@
  * The Buffer class abstracts the OpenCL Buffer and BufferGL classes
  * by providing some convenience methods
  *
- * we pass in an OpenCL instance  to the constructor 
+ * we pass in an OpenCL instance  to the constructor
  * which manages the underlying context and queues
  */
 
@@ -37,26 +37,12 @@
 #include <iostream>
 
 #include "CLL.h"
-#ifdef WIN32
-    //#if defined(rtps_EXPORTS)
-	//This needs to be handled better. For some reason the above ifdef works
-    // in all the other include files except this one.
-
-        #define RTPS_EXPORT __declspec(dllexport)
-
-    //#else
-    //    #define RTPS_EXPORT __declspec(dllimport)
-	//#endif 
-
-#else
-    #define RTPS_EXPORT
-#endif
 
 namespace rtps
 {
-    
+
     template <class T>
-    class RTPS_EXPORT Buffer
+    class Buffer
     {
     public:
         Buffer(){ cli=NULL; vbo_id=0; };
@@ -71,7 +57,7 @@ namespace rtps
 
         cl_mem getDevicePtr() { return cl_buffer[0](); }
         cl::Memory& getBuffer(int index) {return cl_buffer[index];};
-       
+
         //need to acquire and release arrays from OpenGL context if we have a VBO
         void acquire();
         void release();
@@ -91,7 +77,7 @@ namespace rtps
 
 
         void copyFromBuffer(Buffer<T> dst, size_t start_src, size_t start_dst, size_t size);
-        
+
 
         //these don't appear to be implemented. need to revisit
         void set(T val);
@@ -106,7 +92,7 @@ namespace rtps
         //cl::Memory cl_buffer;
         std::vector<cl::Memory> cl_buffer;
 		int nb_el; // measured in units of <T>
-		int nb_bytes; 
+		int nb_bytes;
 
         CL *cli;
 

@@ -45,7 +45,9 @@ namespace rtps
         //dynamic params
         float4 gravity; // -9.8 m/sec^2
 
-        float friction_coef;
+        float friction_dynamic;
+        float friction_static;
+        float friction_static_threshold;
         float shear;
         float attraction;
         float spring;

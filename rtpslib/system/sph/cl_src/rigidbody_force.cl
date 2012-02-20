@@ -28,8 +28,8 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j, float stiffness, float dampening
-#define ARGV pos, vel, force, mass, pos_j, vel_j, mass_j, stiffness, dampening
+#define ARGS __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j, float16 rbParams
+#define ARGV pos, vel, force, mass, pos_j, vel_j, mass_j, rbParams
 
 /*----------------------------------------------------------------------*/
 
@@ -61,25 +61,29 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     // is this particle within cutoff?
     if (rlen <= 2* sphp->smoothing_distance)
     {
-
-        //iej is 0 when we are looking at same particle
-        //we allow calculations and just multiply force and xsph
-        //by iej to avoid branching
-        int iej = index_i != index_j;
-
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, sphp->EPSILON);
 
         float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
-        float stiff=(stiffness*massnorm);
+        float stiff=(rbParams.s0*massnorm);
         float4 springForce = -stiff*(2.*sphp->smoothing_distance-rlen)*(r/rlen);
 
-        float4 veli = vel[index_i]; // sorted
-        float4 velj = vel_j[index_j];
+        float4 relvel =  vel_j[index_j]-vel[index_i];
 
-        float4 dampeningForce = dampening*sqrt(stiff*massnorm)*(velj-veli);
-        pt->force += (springForce+dampeningForce) * (float)iej;
-        //pt->linear_force += r;//debug
+        float4 dampeningForce = rbParams.s1*sqrt(stiff*massnorm)*(relvel);
+        float4 normalForce=(springForce+dampeningForce); 
+        
+        relvel.w=0.0;
+        normalForce.w=0.0;
+        float normalDot=dot(normalForce,normalForce);
+        //Use Gram Schmidt process to find tangential velocity to the particle
+        float4 tangVel=relvel-((dot(relvel,normalForce)/normalDot)*normalForce);
+        float4 frictionalForce=0.0f;
+        if(length(tangVel)>rbParams.s2)
+            frictionalForce = -rbParams.s3*sqrt(normalDot)*(normalize(tangVel));
+        else
+            frictionalForce = -rbParams.s4*tangVel;
+        pt->force += (normalForce+frictionalForce);
     }
 }
 

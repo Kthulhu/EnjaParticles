@@ -2,15 +2,16 @@
 #define RTPS_RADIX_SORT_H
 
 //defines a few handy utility functions
-#include <util.h>
+#include "../../util.h"
 //defines useful structs like float3 and float4
-#include <structs.h>
+#include "../../structs.h"
 //OpenCL API
-#include <opencl/CLL.h>
-#include <opencl/Buffer.h>
-#include <opencl/Kernel.h>
-#include <domain/Domain.h>
-#include <timer_eb.h>
+#include "../../opencl/CLL.h"
+#include "../../opencl/Buffer.h"
+#include "../../opencl/Kernel.h"
+#include "../../domain/Domain.h"
+#include "../../timer_eb.h"
+
 
 #include <vector>
 using namespace std;
@@ -20,11 +21,11 @@ using namespace std;
 #endif
 
 
-namespace rtps 
+namespace rtps
 {
 
 template <class T>
-class Radix 
+class Radix
 {
 public:
     static const uint LOCAL_SIZE_LIMIT = 512U;
@@ -48,14 +49,14 @@ public:
 
 private:
     Kernel k_scanNaive;
-    //Kernel k_radixSortBlockKeysValues; 
+    //Kernel k_radixSortBlockKeysValues;
     Kernel k_radixSortBlocksKeysValues;
     Kernel k_reorderDataKeysValues;
     Kernel k_findRadixOffsets;
     Kernel k_scanExclusiveLocal1;
     Kernel k_scanExclusiveLocal2;
     Kernel k_uniformUpdate;
- 
+
 
     CL *cli;
 

@@ -42,24 +42,22 @@ namespace rtps
             PRBLeapFrog() { cli = NULL; timer = NULL; };
             PRBLeapFrog(std::string path, CL* cli, EB::Timer* timer);
             void execute(int num,
-                        float dt,
-                        //input
-                        Buffer<float4>& pos_u,
-                        Buffer<float4>& pos_s,
-                        Buffer<float4>& vel_u,
-                        Buffer<float4>& vel_s,
-                        Buffer<float4>& veleval_u,
-                        Buffer<float4>& force_s,
-                        Buffer<float4>& xsph_s,
-                        //Buffer<float4>& uvars,
-                        //Buffer<float4>& svars,
-                        Buffer<unsigned int>& indices,
-                        //params
-                        Buffer<ParticleRigidBodyParams>& sphp,
-                        //debug
-                        Buffer<float4>& clf_debug,
-                        Buffer<int4>& cli_debug);
-
+                    float dt,
+                    Buffer<float4>& comLinearForce,
+                    Buffer<float4>& comTorqueForce,
+                    Buffer<float4>& comVel,
+                    Buffer<float4>& comAngVel,
+                    Buffer<float4>& comVelEval,
+                    Buffer<float4>& comAngVelEval,
+                    Buffer<float4>& comPos,
+                    Buffer<float4>& comRot,
+                    Buffer<float16>& inertialTensor,
+                    Buffer<float>& rbMass,
+                    int numRBs,
+                    Buffer<ParticleRigidBodyParams>& prbp,
+                    //debug params
+                    Buffer<float4>& clf_debug,
+                    Buffer<int4>& cli_debug);
         private:
             CL* cli;
             Kernel k_leapfrog;

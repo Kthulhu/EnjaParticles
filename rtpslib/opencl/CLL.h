@@ -27,7 +27,7 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 
-#include <CL/cl.hpp>
+#include "../../opencl10/CL/cl.hpp"
 
 #ifdef WIN32
     #if defined(rtps_EXPORTS)

@@ -564,7 +564,7 @@ namespace rtps
                 forceRB.execute(   num,
                     //cl_vars_sorted,
                     cl_position_s,
-                    cl_velocity_s,
+                    cl_veleval_s,
                     cl_force_s,
                     cl_mass_s,
                     interactionSystem[j]->getPositionBuffer(),
@@ -577,6 +577,9 @@ namespace rtps
                     cl_GridParamsScaled,
                     interactionSystem[j]->getSettings()->GetSettingAs<float>("spring"),
                     interactionSystem[j]->getSettings()->GetSettingAs<float>("dampening"),
+                    interactionSystem[j]->getSettings()->GetSettingAs<float>("friction_dynamic"),
+                    interactionSystem[j]->getSettings()->GetSettingAs<float>("friction_static"),
+                    interactionSystem[j]->getSettings()->GetSettingAs<float>("friction_static_threshold"),
                     clf_debug,
                     cli_debug);
                 timers["force_rigidbody"]->stop();
@@ -585,7 +588,7 @@ namespace rtps
                 ParticleRigidBody* prb = (ParticleRigidBody*)interactionSystem[j];
                 forceRB.execute(   num,
                     cl_position_s,
-                    cl_velocity_s,
+                    cl_veleval_s,
                     cl_force_s,
                     cl_mass_s,
                     prb->getStaticPositionBuffer(),
@@ -595,6 +598,9 @@ namespace rtps
                     cl_GridParamsScaled,
                     prb->getSettings()->GetSettingAs<float>("spring"),
                     prb->getSettings()->GetSettingAs<float>("dampening"),
+                    prb->getSettings()->GetSettingAs<float>("friction_dynamic"),
+                    prb->getSettings()->GetSettingAs<float>("friction_static"),
+                    prb->getSettings()->GetSettingAs<float>("friction_static_threshold"),
                     clf_debug,
                     cli_debug);
                 timers["force_rigidbody"]->stop();

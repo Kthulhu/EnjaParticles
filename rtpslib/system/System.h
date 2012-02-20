@@ -27,24 +27,24 @@
 
 #include "../domain/Domain.h"
 #include "ForceField.h"
-#include "RTPSSettings.h"
+#include "../RTPSSettings.h"
 //#include "../render/Render.h"
 //#include "../render/SpriteRender.h"
 //#include "../render/SSFRender.h"
 //#include "../render/Sphere3DRender.h"
 
-#include <opencl/Kernel.h>
-#include <opencl/Buffer.h>
-#include <domain/Domain.h>
-#include <system/common/Hash.h>
-#include <system/common/BitonicSort.h>
-#include <system/common/Radix.h>
-#include <system/common/CellIndices.h>
-#include <system/common/Permute.h>
-#include <system/common/Gravity.h>
+#include "../opencl/Kernel.h"
+#include "../opencl/Buffer.h"
+#include "../domain/Domain.h"
+#include "common/Hash.h"
+#include "common/BitonicSort.h"
+#include "common/Radix.h"
+#include "common/CellIndices.h"
+#include "common/Permute.h"
+#include "common/Gravity.h"
 
-#include <system/common/MeshToParticles.h>
-#include <timer_eb.h>
+#include "common/MeshToParticles.h"
+#include "../timer_eb.h"
 
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
@@ -56,7 +56,6 @@
     #define RTPS_EXPORT
 #endif
 
-#include<stdio.h>
 namespace rtps
 {
     class RTPS;

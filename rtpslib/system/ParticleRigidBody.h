@@ -124,6 +124,8 @@ namespace rtps
         Buffer<float4> cl_comRot;
         Buffer<float4> cl_comVel;
         Buffer<float4> cl_comAngVel;
+        Buffer<float4> cl_comVelEval;
+        Buffer<float4> cl_comAngVelEval;
         Buffer<float4> cl_comLinearForce;
         Buffer<float4> cl_comTorqueForce;
         Buffer<float16> cl_invInertialTensor;

@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -29,12 +29,12 @@ namespace rtps
     {
         cli = cli_;
         timer = timer_;
- 
+
         printf("create euler kernel\n");
         path += "/euler.cl";
         k_euler = Kernel(cli, path, "euler");
-    } 
-    
+    }
+
     void PRBEuler::execute(int num,
                     float dt,
                     /*Buffer<float4>& pos_u,
@@ -60,14 +60,6 @@ namespace rtps
     {
 
         int iargs = 0;
-        //k_euler.setArg(iargs++, uvars.getDevicePtr());
-        //k_euler.setArg(iargs++, svars.getDevicePtr());
-        /*k_euler.setArg(iargs++, pos_u.getDevicePtr());
-        k_euler.setArg(iargs++, pos_s.getDevicePtr());
-        k_euler.setArg(iargs++, vel_u.getDevicePtr());
-        k_euler.setArg(iargs++, vel_s.getDevicePtr());
-        k_euler.setArg(iargs++, linear_force_s.getDevicePtr());
-        k_euler.setArg(iargs++, torque_force_s.getDevicePtr());*/
         k_euler.setArg(iargs++,comLinearForce.getDevicePtr());
         k_euler.setArg(iargs++,comTorqueForce.getDevicePtr());
         k_euler.setArg(iargs++,comVel.getDevicePtr());
@@ -85,9 +77,9 @@ namespace rtps
         //int local_size = 128;
         k_euler.execute(numRBs);//, local_size);
 
-#if 0 //printouts    
+#if 0 //printouts
         //DEBUGING
-        
+
         if(numRBs > 0)// && choice == 0)
         {
             printf("============================================\n");
@@ -96,12 +88,12 @@ namespace rtps
 
             std::vector<int4> cli(numRBs);
             std::vector<float4> clf(numRBs);
-            
+
             cli_debug.copyToHost(cli);
             clf_debug.copyToHost(clf);
 
             for (int i=0; i < numRBs; i++)
-            //for (int i=0; i < 10; i++) 
+            //for (int i=0; i < 10; i++)
             {
                 //printf("-----\n");
                 printf("clf_debug: %08f, %08f, %08f, %08f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);

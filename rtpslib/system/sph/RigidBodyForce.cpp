@@ -67,6 +67,9 @@ namespace rtps
                     Buffer<GridParams>& gp,
                     float stiffness,
                     float dampening,
+                    float friction_dynamic,
+                    float friction_static,
+                    float friction_static_threshold,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
@@ -79,8 +82,13 @@ namespace rtps
         k_rigidbody_force.setArg(iarg++, rb_pos_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, rb_velocity_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, rb_mass_s.getDevicePtr());
-        k_rigidbody_force.setArg(iarg++, stiffness);
-        k_rigidbody_force.setArg(iarg++, dampening);
+        float16 rbParams;
+        rbParams.m[0]=stiffness;
+        rbParams.m[1]=dampening;
+        rbParams.m[2]=friction_dynamic;
+        rbParams.m[3]=friction_static;
+        rbParams.m[4]=friction_static_threshold;
+        k_rigidbody_force.setArg(iarg++, rbParams);
         k_rigidbody_force.setArg(iarg++, ci_start.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, ci_end.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, gp.getDevicePtr());
@@ -148,6 +156,9 @@ namespace rtps
                     Buffer<GridParams>& gp,
                     float stiffness,
                     float dampening,
+                    float friction_dynamic,
+                    float friction_static,
+                    float friction_static_threshold,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
@@ -158,8 +169,13 @@ namespace rtps
         k_staticrigidbody_force.setArg(iarg++, force_s.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, mass_s.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, rb_pos_s.getDevicePtr());
-        k_staticrigidbody_force.setArg(iarg++, stiffness);
-        k_staticrigidbody_force.setArg(iarg++, dampening);
+        float16 rbParams;
+        rbParams.m[0]=stiffness;
+        rbParams.m[1]=dampening;
+        rbParams.m[2]=friction_dynamic;
+        rbParams.m[3]=friction_static;
+        rbParams.m[4]=friction_static_threshold;
+        k_staticrigidbody_force.setArg(iarg++, rbParams);
         k_staticrigidbody_force.setArg(iarg++, ci_start.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, ci_end.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, gp.getDevicePtr());

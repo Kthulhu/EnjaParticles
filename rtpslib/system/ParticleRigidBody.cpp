@@ -270,8 +270,8 @@ namespace rtps
                 settings->GetSettingAs<float>("time_step"),
                 cl_comLinearForce,
                 cl_comTorqueForce,
-                cl_comVel,
-                cl_comAngVel,
+                cl_comVelEval,
+                cl_comAngVelEval,
                 cl_comPos,
                 cl_comRot,
                 cl_invInertialTensor,
@@ -288,26 +288,25 @@ namespace rtps
         else if (settings->GetSettingAs<string>("integrator")=="leapfrog")
         {
             //leapfrog();
-            /*leapfrog.execute(num,
-                settings->dt,
-                cl_position_u,
-                cl_position_s,
-                cl_velocity_u,
-                cl_velocity_s,
-                cl_veleval_u,
-                cl_linear_force_u,
-                //cl_vars_unsorted,
-                //cl_vars_sorted,
-                cl_sort_indices,
-                cl_prbp,
+            leapfrog.execute(num,
+                settings->GetSettingAs<float>("time_step"),
+                cl_comLinearForce,
+                cl_comTorqueForce,
+                cl_comVel,
+                cl_comAngVel,
+                cl_comVelEval,
+                cl_comAngVelEval,
+                cl_comPos,
+                cl_comRot,
+                cl_invInertialTensor,
+                cl_rbMass,
+                rbParticleIndex.size(),
                 //debug
+                cl_prbp,
                 clf_debug,
                 cli_debug);
-             */
-        }
 
-		// Perhaps I am messed up by Courant condition if cloud point
-		// velocities are too large?
+        }
 
 		static int count=0;
 
@@ -381,6 +380,8 @@ namespace rtps
         cl_comRot = Buffer<float4>(cli,rotf4Vec);
         cl_comVel = Buffer<float4>(cli,rbf4Vec);
         cl_comAngVel = Buffer<float4>(cli,rbf4Vec);
+        cl_comVelEval = Buffer<float4>(cli,rbf4Vec);
+        cl_comAngVelEval = Buffer<float4>(cli,rbf4Vec);
         cl_comLinearForce = Buffer<float4>(cli,rbf4Vec);
         cl_comTorqueForce = Buffer<float4>(cli,rbf4Vec);
         cl_invInertialTensor = Buffer<float16>(cli,rbf16Vec);
@@ -472,11 +473,11 @@ namespace rtps
             //    scaled_pos_l[i]=pos_l[i]*prbp.simulation_scale;
             //}
             float16 invInertialTensor = calculateInvInertialTensor(pos_l,mass);
-            float4 comVel=float4(0.0f,0.0f,0.0f,0.0f);
+            float4 comVelEval=float4(0.0f,0.0f,0.0f,0.0f);
             float4 angMomentum =float4(0.0f,0.0f,0.0f,0.0f);
             for(int i = 0;i<vels.size();i++)
             {
-               comVel=comVel+vels[i];
+               comVelEval=comVelEval+vels[i];
                float4 r = pos[i]-com;
 
                angMomentum.x+=r.y*vels[i].z-r.z*vels[i].y;
@@ -484,11 +485,11 @@ namespace rtps
                angMomentum.z+=r.x*vels[i].y-r.y*vels[i].x;
             }
             angMomentum*=mass_p[0];
-            float4 comAngVel=float4(0.0f,0.0f,0.0f,0.0f);;
-            comAngVel=invInertialTensor*angMomentum;
+            float4 comAngVelEval=float4(0.0f,0.0f,0.0f,0.0f);;
+            comAngVelEval=invInertialTensor*angMomentum;
 
             dout<<"position: "<<com<<endl;
-            dout<<"velocity: "<<comVel<<endl;
+            dout<<"velocity: "<<comVelEval<<endl;
             dout<<"ang momentum: "<<angMomentum<<endl;
             dout<<"mass: "<<mass<<endl;
             dout<<"Inertial Tensor: "<<endl;
@@ -514,8 +515,8 @@ namespace rtps
             cl_velocity_u.copyToDevice(vels, num);
             cl_position_l.copyToDevice(pos_l,num);
             cl_mass_u.copyToDevice(mass_p, num);
-            cl_comVel.copyToDevice(comVel, rbParticleIndex.size()-1);
-            cl_comAngVel.copyToDevice(comAngVel, rbParticleIndex.size()-1);
+            cl_comVelEval.copyToDevice(comVelEval, rbParticleIndex.size()-1);
+            cl_comAngVelEval.copyToDevice(comAngVelEval, rbParticleIndex.size()-1);
             cl_objectIndex_u.copyToDevice(index, num);
             /*cl_spring_coef_u.copyToDevice(spring_co, num);
             cl_dampening_coef_u.copyToDevice(dampening_co, num);*/
@@ -594,7 +595,9 @@ namespace rtps
 
         //dynamic params
         prbp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2
-        prbp.friction_coef = settings->GetSettingAs<float>("friction");
+        prbp.friction_dynamic = settings->GetSettingAs<float>("friction_dynamic");
+        prbp.friction_static = settings->GetSettingAs<float>("friction_static");
+        prbp.friction_static_threshold = settings->GetSettingAs<float>("friction_static_threshold");
         prbp.dampening = settings->GetSettingAs<float>("dampening");
         //next 3 not used at the moment
         prbp.shear = settings->GetSettingAs<float>("shear");
@@ -672,8 +675,8 @@ namespace rtps
                     cl_rbParticleIndex,
                     cl_comPos,
                     cl_comRot,
-                    cl_comVel,
-                    cl_comAngVel,
+                    cl_comVelEval,
+                    cl_comAngVelEval,
                     cl_prbp,
                     //debug params
                     clf_debug,

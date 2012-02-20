@@ -52,6 +52,9 @@ namespace rtps
                     Buffer<GridParams>& gp,
                     float stiffness,
                     float dampening,
+                    float friction_dynamic,
+                    float friction_static,
+                    float friction_static_threshold,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);
@@ -68,6 +71,9 @@ namespace rtps
                     Buffer<GridParams>& gp,
                     float stiffness,
                     float dampening,
+                    float friction_dynamic,
+                    float friction_static,
+                    float friction_static_threshold,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);
