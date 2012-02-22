@@ -47,7 +47,10 @@ namespace rtps
             //FIXME: These following methods are used for assimp to import modules. They should
             //probably be better. Currently they are almost verbatim from a loading example.
             void display();
-            void build_shapes (const struct aiScene *sc, const struct aiNode* nd);
+            void build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform=aiMatrix4x4(1.0f,0.0f,0.0f,0.0f,
+                                                                                                                            0.0f,1.0f,0.0f,0.0f,
+                                                                                                                            0.0f,0.0f,1.0f,0.0f,
+                                                                                                                            0.0f,0.0f,0.0f,1.0f) );
             void recursive_render (const struct aiScene *sc, const struct aiNode* nd);
             void apply_material(const struct aiMaterial *mtl);
             void set_float4(float f[4], float a, float b, float c, float d);

@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -35,7 +35,7 @@
         #define RTPS_EXPORT __declspec(dllexport)
     #else
         #define RTPS_EXPORT __declspec(dllimport)
-	#endif 
+	#endif
 #else
     #define RTPS_EXPORT
 #endif
@@ -161,6 +161,14 @@ namespace rtps
             m[8]= i; m[9]= j; m[10]= k; m[11]= l;
             m[12]= n; m[13]= o; m[14]= p; m[15]= q;
         }
+        void print(const char* msg=0)
+        {
+            printf("%s: %f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f\n",
+                    msg, m[0],m[1],m[2],m[3],
+                    m[4],m[5],m[6],m[7],
+                    m[8],m[9],m[10],m[11],
+                    m[12],m[13],m[14],m[15]);
+        }
     } float16;
 #ifdef WIN32
 #pragma pack(push,16)
@@ -206,7 +214,7 @@ namespace rtps
         {
             printf("%s: %e, %e, %e, %f\n", msg, x, y, z, w);
         }
-        
+
         void printd(const char* msg=0) {
             printf("%s: %18.11e, %18.11e, %18.11e, %f\n", msg, x, y, z, w);
         }
@@ -332,7 +340,7 @@ namespace rtps
             z/=r;
             w/=r;
             return *this;
-        }*/ 
+        }*/
 
         float length()
         {
@@ -357,7 +365,7 @@ namespace rtps
         float4 verts[3];
         float4 normal;    //should pack this in verts array
     } Triangle;
-    
+
     //Helper Read functions for Parameters.
     template<typename scalar>
     std::istream& operator>>(std::istream& is, std::vector<scalar>& __n)
@@ -368,13 +376,13 @@ namespace rtps
             is>>s;
             __n.push_back(s);
         }
-        
+
         return is;
     }
 
     /*std::istream& operator>>(std::istream& is, std::vector<float>& __n)
     {
-        float f; 
+        float f;
         while(is.good())
         {
             is>>f;
@@ -386,7 +394,7 @@ namespace rtps
         }
         return is;
     }*/
-    //maybe these helper functions should go elsewhere? 
+    //maybe these helper functions should go elsewhere?
     //or be functions of the structs
     RTPS_EXPORT float magnitude(float4 vec);
     RTPS_EXPORT float dist_squared(float4 vec);

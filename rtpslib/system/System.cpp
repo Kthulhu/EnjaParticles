@@ -479,7 +479,7 @@ namespace rtps
 
 #endif
     }
-    void System::addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int voxelResolution,float4 velo, float4 color,float mass)
+    void System::addParticleShape(GLuint tex3d,float min,float max,float16 world,int voxelResolution,float4 velo, float4 color,float mass)
     {
         glFinish();
         vector<float4> vec;
@@ -495,9 +495,9 @@ namespace rtps
                     if(image[(i*4)+(j*voxelResolution*4)+(k*voxelResolution*voxelResolution*4)]>0)
                     {
                         float4 pos;
-                        pos.x = (i/(float)voxelResolution)*scale+min.x;
-                        pos.y = (j/(float)voxelResolution)*scale+min.y;
-                        pos.z = (k/(float)voxelResolution)*scale+min.z;
+                        pos.x = (i/(float)voxelResolution)*max+min;
+                        pos.y = (j/(float)voxelResolution)*max+min;
+                        pos.z = (k/(float)voxelResolution)*max+min;
                         pos.w = 1.0f;
                         pos = world*pos;
                         vec.push_back(pos);
@@ -509,7 +509,10 @@ namespace rtps
         delete[] image;
 
         dout<<"Num particles from voxel = "<<vec.size()<<endl;
-        pushParticles(vec,velo,color,mass);
+        if(vec.size()==0)
+            cerr<<"3D texture is empty!!! Can't create particles!"<<endl;
+        else
+            pushParticles(vec,velo,color,mass);
     }
     void System::acquireGLBuffers()
     {

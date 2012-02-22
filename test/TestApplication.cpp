@@ -71,7 +71,7 @@ namespace rtps
         effects["default"]=new ParticleEffect(rs,*lib);
         //effects["sprite"]=new ParticleEffect();
         rs.blending=true;
-        rs.particleRadius =systems["water"]->getSpacing()*.4f;
+        rs.particleRadius =systems["water"]->getSpacing()*.5f;
         effects["ssfr"]=new SSEffect(rs, *lib);
         translation.x = -2.00f;
         translation.y = -2.70f;//300.f;
@@ -79,7 +79,9 @@ namespace rtps
         rotation.x=0.0f;
         rotation.y=0.0f;
         mass=1.0f;
-        string blendfile = "demo_scene.obj";
+        string blendfile = "demo_scene_monkey.obj";
+        //string blendfile = "demo_scene.obj";
+        //string blendfile = "demo_scene.3ds";
 
         renderVelocity=false;
         paused=false;
@@ -178,7 +180,7 @@ namespace rtps
                 cout<<"about to make hose"<<endl;
                 float4 center = float4(gridMin.x+3.0f, gridMin.y+3.0f,gridMax.z-2.0f,1.0f);
                 float4 col1 = float4(0.05, 0.15, 8., 0.1);
-                float4 velocity(0., 0., -2.f, 0);
+                float4 velocity(0., 0., -3.f, 0);
                 float radius= 3.0f;
                 //sph sets spacing and multiplies by radius value
                 systems["water"]->addHose(50000, center, velocity,radius, col1);
@@ -206,19 +208,19 @@ namespace rtps
                 float4 col1 = float4(0.0, 0.8, 0.2, 1.);
                 float4 size = float4(1.,1.,1.,0.f);
                 float4 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+.1f,1.0f);
-                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMin.z+.5f,1.0f), false, col1,0.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMin.z+.5f,1.0f), false, col1,0.0f);
                 dout<<"Here"<<endl;
                 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
-                systems["rb1"]->addBox(1000, position, float4(gridMin.x+0.5f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMin.x+0.5f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
                 dout<<"Here"<<endl;
                 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
-                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMin.y+0.5f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMin.y+0.5f,gridMax.z-.1f,1.0f), false, col1,0.0f);
                 dout<<"Here"<<endl;
                 position = float4(gridMax.x-0.5f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
-                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
                 dout<<"Here"<<endl;
                 position = float4(gridMin.x+0.1f, gridMax.y-0.5f,gridMin.z+0.1f,1.0f);
-                systems["rb1"]->addBox(1000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
                 dout<<"Here"<<endl;
                 return;
             }
@@ -281,10 +283,10 @@ namespace rtps
                 translation.y -= 0.1;
                 break;
             case '+':
-                mass*=10.0f;
+                mass+=0.1f;
                 break;
             case '-':
-                mass/=10.0f;
+                mass-=0.1f;
                 break;
             case '[':
                 sizeScale+=0.5f;
@@ -375,7 +377,7 @@ namespace rtps
                 if(i->first=="rb1")
                 {
                     ParticleRigidBody* prb=((ParticleRigidBody*)i->second);
-                    effects[renderType]->render(prb->getStaticVBO(),prb->getColVBO(),prb->getStaticNum());
+                    effects["default"]->render(prb->getStaticVBO(),prb->getColVBO(),prb->getStaticNum());
                 }
             }
             /*if(render_movie)
@@ -393,10 +395,28 @@ namespace rtps
         }*/
         //showMass();
 
-        glEnable(GL_BLEND);
+        /*glEnable(GL_BLEND);
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         display();
+        ///DEBUG!!---***
+        glColor4f(1.0f,0.0f,0.0f,1.0f);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        Mesh* m = meshs["test28"];
+        glBindBuffer(GL_ARRAY_BUFFER, m->vbo);
+        glVertexPointer(3, GL_FLOAT, 0, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->ibo);
+        glEnableClientState( GL_VERTEX_ARRAY );
+        //glTranslatef(-4.0f,-4.0f,-4.0f);
+        glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+        glDrawElements(GL_TRIANGLES,m->iboSize,GL_UNSIGNED_INT,0);
+        glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+        dout<<"vbo = "<<m->vbo<<" ibo = "<<m->ibo<<" iboSize = "<<m->iboSize<<endl;
+        glDisableClientState( GL_VERTEX_ARRAY );
+        ///DEBUG!!---***
         glDisable(GL_BLEND);
+        glEnable(GL_LIGHTING);*/
         glutSwapBuffers();
 
     }
@@ -448,6 +468,11 @@ namespace rtps
             h=1;
         }
         glViewport(0, 0, w, h);
+
+        for(map<string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+        {
+            i->second->setWindowDimensions(w,h);
+        }
 
         // projection
         glMatrixMode(GL_PROJECTION);
@@ -716,12 +741,19 @@ namespace rtps
         else
             glEnable(GL_CULL_FACE);
     }
-    void TestApplication::build_shapes (const struct aiScene *sc, const struct aiNode* nd)
+    void TestApplication::build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
     {
         int i;
         unsigned int n = 0, t;
 
         struct aiMatrix4x4 m = nd->mTransformation;
+        aiMultiplyMatrix4(&m,&parentTransform);
+        dout<<"Matrix:"<<endl;
+        dout<<"r1 "<<m.a1<<" "<<m.a2<<" "<<m.a3<<" "<<m.a4<<endl;
+        dout<<"r2 "<<m.b1<<" "<<m.b2<<" "<<m.b3<<" "<<m.b4<<endl;
+        dout<<"r3 "<<m.c1<<" "<<m.c2<<" "<<m.c3<<" "<<m.c4<<endl;
+        dout<<"r4 "<<m.d1<<" "<<m.d2<<" "<<m.d3<<" "<<m.d4<<endl;
+
 
 
         // update transform
@@ -729,6 +761,7 @@ namespace rtps
 
         float16 mat;
         memcpy(&mat,&m,sizeof(float16));
+
         /*for(int i =0;i<16;i++){
             mat.m[i]=m[0][i];
             dout<<"mat i "<<i<<" = "<<mat.m[i]<<endl;
@@ -737,37 +770,36 @@ namespace rtps
         for (; n < nd->mNumMeshes; ++n) {
             const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
             dout<<"num faces "<<mesh->mNumFaces<<endl;
+            float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
+            float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
             Mesh* me=new Mesh();
             unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
+            float* vbo = new float[mesh->mNumVertices*3];
             for (t = 0; t < mesh->mNumFaces; ++t) {
                 const struct aiFace* face = &mesh->mFaces[t];
                 for(i = 0; i < face->mNumIndices; i++) {
-                    ibo[t*3+i]=face->mIndices[i];
+                    unsigned int index = face->mIndices[i];
+                    ibo[t*3+i]=index;
+                    float x=mesh->mVertices[index].x;
+                    float y=mesh->mVertices[index].y;
+                    float z=mesh->mVertices[index].z;
+                    vbo[index*3]=x;
+                    vbo[index*3+1]=y;
+                    vbo[index*3+2]=z;
+            //        dout<<"index = "<<index<<"x = "<<x<<" "<<"y = "<<y<<" "<<"z = "<<z<<endl;
+                    if(x<min.x)
+                        min.x=x;
+                    if(x>max.x)
+                        max.x=x;
+                    if(y<min.y)
+                        min.y=y;
+                    if(y>max.y)
+                        max.y=y;
+                    if(z<min.z)
+                        min.z=z;
+                    if(z>max.z)
+                        max.z=z;
                 }
-            }
-            float* vbo = new float[mesh->mNumVertices*3];
-            float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
-            float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-            for(int i = 0; i<mesh->mNumVertices; i++)
-            {
-                float x = mesh->mVertices[i].x;
-                float y = mesh->mVertices[i].y;
-                float z = mesh->mVertices[i].z;
-                vbo[i*3]=x;
-                vbo[i*3+1]=y;
-                vbo[i*3+2]=z;
-                if(x<min.x)
-                    min.x=x;
-                if(x>max.x)
-                    max.x=x;
-                if(y<min.y)
-                    min.y=y;
-                if(y>max.y)
-                    max.y=y;
-                if(z<min.z)
-                    min.z=z;
-                if(z>max.z)
-                    max.z=z;
             }
             me->vbo=createVBO(vbo,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
             me->vboSize=mesh->mNumVertices;
@@ -776,20 +808,41 @@ namespace rtps
             me->iboSize=mesh->mNumFaces*3;
             delete[] ibo;
             stringstream s;
-            s<<"test"<<me->vbo<<endl;
+            s<<"test"<<mesh->mNumFaces;
             meshs[s.str()]=me;
             dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
             dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
-            ParticleShape* shape = new ParticleShape(min,max,systems["rb1"]->getSpacing(),1.0f);
-            shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            dout<<"mesh name = "<<s<<endl;
+            //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
+            float space = systems["rb1"]->getSpacing()/2.f;
+            float3 adjmin=float3(min.x-space,min.y-space,min.z-space);
+            float3 adjmax=float3(max.x+space,max.y+space,max.z+space);
+            space = systems["rb1"]->getSpacing();
+            ParticleShape* shape = new ParticleShape(adjmin,adjmax,space);
+            //shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
+            shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
+            s<<"surface";
+            RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
+            dout<<"mesh name = "<<s.str()<<endl;
+            dout<<"max dim = "<<shape->getMaxDim()<<endl;
+            dout<<"min dim = "<<shape->getMinDim()<<endl;
+            dout<<"min ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
+            dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
+            dout<<"spacing = "<<space<<endl;
+            float3 dim = max-min;
+            mat.m[3]=shape->getMinDim();
+            mat.m[7]=shape->getMinDim();
+            mat.m[11]=shape->getMinDim();
             pShapes[s.str()]=shape;
-            systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMaxDim(),float4(shape->getMin(),0.0f),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
+            //Debug!!****
+            //if(mesh->mNumFaces<50)
+                //systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
+                systems["rb1"]->addParticleShape(shape->getSurfaceTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
         }
 
         // draw all children
         for (n = 0; n < nd->mNumChildren; ++n) {
-            build_shapes(sc, nd->mChildren[n]);
+            build_shapes(sc, nd->mChildren[n],m);
         }
 
     }
@@ -829,6 +882,7 @@ namespace rtps
                     default: face_mode = GL_POLYGON; break;
                 }
 
+                //dout<<"Face mode = "<<face_mode<<" GL_TRIANGLES = "<<GL_TRIANGLES<<endl;
                 glBegin(face_mode);
 
                 for(i = 0; i < face->mNumIndices; i++) {
@@ -840,6 +894,7 @@ namespace rtps
                     if(mesh->mNormals != NULL)
                         glNormal3fv(&mesh->mNormals[index].x);
                     glVertex3fv(&mesh->mVertices[index].x);
+                    dout<<"index = "<<index<<"x = "<<mesh->mVertices[index].x<<" "<<"y = "<<mesh->mVertices[index].y<<" "<<"z = "<<mesh->mVertices[index].z<<endl;
                 }
 
                 glEnd();

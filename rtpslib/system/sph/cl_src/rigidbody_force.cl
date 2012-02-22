@@ -128,17 +128,18 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
-    float4 norm = r/rlen;
 
     // is this particle within cutoff?
     if (rlen <= 2* sphp->smoothing_distance)
     {
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, sphp->EPSILON);
-
+        float4 norm = r/rlen;
         float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
         float stiff=(rbParams.s0*massnorm);
-        float4 springForce = -stiff*(2.*sphp->smoothing_distance-rlen)*(norm);
+        //FIXME: I am arbitraily scaling the rigid body mass by .1 to reduce the stiffness
+        //between fluid and rigidbody.
+        float4 springForce = -0.2*stiff*(2.*sphp->smoothing_distance-rlen)*(norm);
 
         float4 relvel =  vel_j[index_j]-vel[index_i];
 

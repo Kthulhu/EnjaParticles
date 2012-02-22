@@ -60,14 +60,14 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
-    float4 norm = r/rlen;
     // is this particle within cutoff?
     if (rlen <= 2.*prbp->smoothing_distance)
     {
         rlen = max(rlen, prbp->EPSILON);
+        float4 norm = r/rlen;
         float massnorm=((mass[index_i]*mass_j[index_j])/(mass[index_i]+mass_j[index_j]));
         float stiff = (prbp->spring*massnorm);
-        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(norm);
+        float4 springForce = -0.2*stiff*(2.*prbp->smoothing_distance-rlen)*(norm);
 
         float4 relvel = vel[index_j]-vel[index_i];
 

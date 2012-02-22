@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -55,20 +55,23 @@ namespace rtps
         float4 dmax = grid.getBndMax();
         //printf("dmin: %f %f %f\n", dmin.x, dmin.y, dmin.z);
         //printf("dmax: %f %f %f\n", dmax.x, dmax.y, dmax.z);
-        float domain_vol = (dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z);
+        //FIXME: 4 should be a parameter. The simulation should be forced to scale 1-to-1 with
+        //the domain. Otherwise the only way to reduce the spacing is to increase the number of points.
+        float domain_vol = ((dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z))/4;
+
         //printf("domain volume: %f\n", domain_vol);
 
 
         //ratio between particle radius in simulation coords and world coords
-        //float simulation_scale = pow(1./ domain_vol,1.f/3.f); 
-        float simulation_scale = pow(.5f * VP * max_num/ domain_vol, 1.f/3.f); 
-        //float simulation_scale = pow(VP * 16000/ domain_vol, 1.f/3.f); 
+        //float simulation_scale = pow(1./ domain_vol,1.f/3.f);
+        float simulation_scale = pow(.5f * VP * max_num/ domain_vol, 1.f/3.f);
+        //float simulation_scale = pow(VP * 16000/ domain_vol, 1.f/3.f);
 
 		//int max_cloud_num = cloud->getMaxCloudNum();
 
 		// Cloud update (SHOULD NOT BE REQUIRED
         //settings->SetSetting("Maximum Number of Cloud Particles", max_cloud_num);
-       
+
         settings->SetSetting("mass", mass);
         settings->SetSetting("rest_distance", rest_distance);
         settings->SetSetting("smoothing_distance", smoothing_distance);
@@ -122,7 +125,7 @@ namespace rtps
         //CL parameters
         settings->SetSetting("num_particles", 0);
     }
-   
+
 
 
 	//----------------------------------------------------------------------
@@ -134,7 +137,7 @@ namespace rtps
         sphp.rest_distance = settings->GetSettingAs<float>("rest_distance");
         sphp.smoothing_distance = settings->GetSettingAs<float>("smoothing_distance");
         sphp.simulation_scale = settings->GetSettingAs<float>("simulation_scale");
-        
+
         //dynamic params
         sphp.boundary_stiffness = settings->GetSettingAs<float>("boundary_stiffness");
         sphp.boundary_dampening = settings->GetSettingAs<float>("boundary_dampening");

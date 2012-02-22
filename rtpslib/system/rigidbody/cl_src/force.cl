@@ -59,12 +59,12 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
-    float4 norm = r/rlen;
     // is this particle within cutoff?
     if((rlen <= 2.*prbp->smoothing_distance)&&objectIndex[index_i]!=objectIndex[index_j])
     {
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
+        float4 norm = r/rlen;
         float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
         float stiff = (prbp->spring*massnorm);
         float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(norm);
@@ -80,7 +80,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         float4 tangVel=relvel-dot(relvel,norm)*norm;
         float4 frictionalForce=0.0f;
         if(length(tangVel)>prbp->friction_static_threshold)
-            frictionalForce = -prbp->friction_dynamic*length(normalForce)*(normalize(tangVel));
+            //frictionalForce = -prbp->friction_dynamic*length(normalForce)*(normalize(tangVel));
+            frictionalForce = -prbp->friction_dynamic*tangVel;
         else
             frictionalForce = -prbp->friction_static*tangVel;
         

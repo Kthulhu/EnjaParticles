@@ -159,7 +159,7 @@ namespace rtps
 
         void pushParticles(vector<float4> pos, float4 velo, float4 color=float4(1.0, 0.0, 0.0, 1.0),float mass = 0.0f);
         virtual void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0),float mass = 0.0f){return;}
-        virtual void addParticleShape(GLuint tex3d,float scale,float4 min,float16 world,int voxelResolution,float4 velo=float4(0.0, 0.0, 0.0, 0.0), float4 color=float4(1.0, 0.0, 0.0, 1.0), float mass = 0.0f);
+        virtual void addParticleShape(GLuint tex3d,float min,float max,float16 world,int voxelResolution,float4 velo=float4(0.0, 0.0, 0.0, 0.0), float4 color=float4(1.0, 0.0, 0.0, 1.0), float mass = 0.0f);
         virtual void setupDomain(float cell_size, float sim_scale);
         virtual void prepareSorted();
         virtual int setupTimers();
