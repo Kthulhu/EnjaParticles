@@ -161,6 +161,33 @@ namespace rtps
             m[8]= i; m[9]= j; m[10]= k; m[11]= l;
             m[12]= n; m[13]= o; m[14]= p; m[15]= q;
         }
+        void transpose()
+        {
+            for(int i = 0; i<4; i++)
+            {
+                for(int j = i+1; j<4; j++)
+                {
+                    int index = i*4+j;
+                    int index2 = j*4+i;
+                    float tmp = m[index];
+                    m[index]=m[index2];
+                    m[index2]=tmp;
+                }
+            }
+        }
+        friend float16 operator*(const float16& lhs,const float16& rhs)
+        {
+            float16 retval;
+            for(int i = 0; i<16;i++)
+            {
+                for(int j = 0; j<4; j++)
+                {
+                    retval.m[i]+=lhs.m[(i/4)*4+j]*rhs.m[(i%4)+j*4];
+                }
+            }
+            return retval;
+        }
+
         void print(const char* msg=0)
         {
             printf("%s: %f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f\n",
@@ -218,8 +245,7 @@ namespace rtps
         void printd(const char* msg=0) {
             printf("%s: %18.11e, %18.11e, %18.11e, %f\n", msg, x, y, z, w);
         }
-
-        friend float4 operator-(float4& a, float4& b)
+                friend float4 operator-(float4& a, float4& b)
         {
             float4 c = float4(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w);
             return c;

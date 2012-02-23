@@ -79,8 +79,8 @@ namespace rtps
         rotation.x=0.0f;
         rotation.y=0.0f;
         mass=1.0f;
-        string blendfile = "demo_scene_monkey.obj";
-        //string blendfile = "demo_scene.obj";
+        //string blendfile = "demo_scene_monkey.obj";
+        string blendfile = "demo_scene.obj";
         //string blendfile = "demo_scene.3ds";
 
         renderVelocity=false;
@@ -209,19 +209,14 @@ namespace rtps
                 float4 size = float4(1.,1.,1.,0.f);
                 float4 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+.1f,1.0f);
                 systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMin.z+.5f,1.0f), false, col1,0.0f);
-                dout<<"Here"<<endl;
                 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
                 systems["rb1"]->addBox(10000, position, float4(gridMin.x+0.5f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
-                dout<<"Here"<<endl;
                 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
                 systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMin.y+0.5f,gridMax.z-.1f,1.0f), false, col1,0.0f);
-                dout<<"Here"<<endl;
                 position = float4(gridMax.x-0.5f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
                 systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
-                dout<<"Here"<<endl;
                 position = float4(gridMin.x+0.1f, gridMax.y-0.5f,gridMin.z+0.1f,1.0f);
                 systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
-                dout<<"Here"<<endl;
                 return;
             }
             case 'R': //drop a rectangle
@@ -395,11 +390,11 @@ namespace rtps
         }*/
         //showMass();
 
-        /*glEnable(GL_BLEND);
+        glEnable(GL_BLEND);
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         display();
         ///DEBUG!!---***
-        glColor4f(1.0f,0.0f,0.0f,1.0f);
+        /*glColor4f(1.0f,0.0f,0.0f,1.0f);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
@@ -412,11 +407,11 @@ namespace rtps
         glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
         glDrawElements(GL_TRIANGLES,m->iboSize,GL_UNSIGNED_INT,0);
         glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-        dout<<"vbo = "<<m->vbo<<" ibo = "<<m->ibo<<" iboSize = "<<m->iboSize<<endl;
+        //dout<<"vbo = "<<m->vbo<<" ibo = "<<m->ibo<<" iboSize = "<<m->iboSize<<endl;
         glDisableClientState( GL_VERTEX_ARRAY );
         ///DEBUG!!---***
-        glDisable(GL_BLEND);
         glEnable(GL_LIGHTING);*/
+        glDisable(GL_BLEND);
         glutSwapBuffers();
 
     }
@@ -764,7 +759,7 @@ namespace rtps
 
         /*for(int i =0;i<16;i++){
             mat.m[i]=m[0][i];
-            dout<<"mat i "<<i<<" = "<<mat.m[i]<<endl;
+            //dout<<"mat i "<<i<<" = "<<mat.m[i]<<endl;
         }*/
         // draw all meshes assigned to this node
         for (; n < nd->mNumMeshes; ++n) {
@@ -801,6 +796,7 @@ namespace rtps
                         max.z=z;
                 }
             }
+            me->modelMat=m;
             me->vbo=createVBO(vbo,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
             me->vboSize=mesh->mNumVertices;
             delete[] vbo;
@@ -818,9 +814,9 @@ namespace rtps
             float3 adjmax=float3(max.x+space,max.y+space,max.z+space);
             space = systems["rb1"]->getSpacing();
             ParticleShape* shape = new ParticleShape(adjmin,adjmax,space);
-            //shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
-            shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
+            shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
+            //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
             s<<"surface";
             RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
             dout<<"mesh name = "<<s.str()<<endl;
@@ -830,14 +826,31 @@ namespace rtps
             dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
             dout<<"spacing = "<<space<<endl;
             float3 dim = max-min;
-            mat.m[3]=shape->getMinDim();
-            mat.m[7]=shape->getMinDim();
-            mat.m[11]=shape->getMinDim();
+
+
+
+            float16 modelview;
+            float trans = (shape->getMaxDim()-shape->getMinDim())/2.0f+shape->getMinDim();
+            glMatrixMode(GL_MODELVIEW);
+            glPushMatrix();
+            glLoadIdentity();
+            glRotatef(-90, 0.0, 0.0, 1.0);
+            //glRotatef(rotation.x, 1.0, 0.0, 0.0);
+            glTranslatef(trans, -trans, -trans);
+            glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+            glPopMatrix();
+            modelview.print("modelview");
+            modelview.transpose();
+            mat.print("mat before");
+            mat = mat*modelview;
+            mat.print("mat after");
             pShapes[s.str()]=shape;
             //Debug!!****
             //if(mesh->mNumFaces<50)
-                //systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
-                systems["rb1"]->addParticleShape(shape->getSurfaceTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
+
+
+                systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
+                //systems["rb1"]->addParticleShape(shape->getSurfaceTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
         }
 
         // draw all children
@@ -894,7 +907,7 @@ namespace rtps
                     if(mesh->mNormals != NULL)
                         glNormal3fv(&mesh->mNormals[index].x);
                     glVertex3fv(&mesh->mVertices[index].x);
-                    dout<<"index = "<<index<<"x = "<<mesh->mVertices[index].x<<" "<<"y = "<<mesh->mVertices[index].y<<" "<<"z = "<<mesh->mVertices[index].z<<endl;
+                    //dout<<"index = "<<index<<"x = "<<mesh->mVertices[index].x<<" "<<"y = "<<mesh->mVertices[index].y<<" "<<"z = "<<mesh->mVertices[index].z<<endl;
                 }
 
                 glEnd();

@@ -127,6 +127,7 @@ namespace rtps
         //It correctly restores previous state.
         glEnable(GL_POINT_SMOOTH);
         glEnable(GL_LINE_SMOOTH);
+        glEnable(GL_MULTISAMPLE_EXT);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_CULL_FACE);
@@ -149,7 +150,9 @@ namespace rtps
         glEnableClientState( GL_VERTEX_ARRAY );
         glDisable(GL_TEXTURE_3D_EXT);
 
-        float curz=minDim;
+        float half = (maxDim-minDim)/2.0f;
+        float offset=half+minDim;
+        float curz=-half;
         glColor4f(1.0f,1.0f,1.0f,1.0f);
         for(int i = 0;i<voxelResolution; i++)
         {
@@ -158,12 +161,14 @@ namespace rtps
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
             // set a 2D orthographic projection
-            glOrtho(minDim, maxDim, minDim, maxDim ,curz ,curz+delz);
+            //glOrtho(minDim, maxDim, minDim, maxDim ,curz ,curz+delz);
+            glOrtho(-half, half, -half, half ,curz ,curz+delz);
             curz+=delz;
             glMatrixMode(GL_MODELVIEW);
             glPushMatrix();
             glLoadIdentity();
 
+            glTranslatef(-(offset),-(offset),-(offset));
             glScalef(scale,scale,scale);
             glDrawElements(GL_TRIANGLES,length,GL_UNSIGNED_INT,0);
 
@@ -179,6 +184,7 @@ namespace rtps
         glViewport(v[0],v[1],v[2],v[3]);
         glDisable(GL_POINT_SMOOTH);
         glDisable(GL_LINE_SMOOTH);
+        glDisable(GL_MULTISAMPLE_EXT);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glDrawBuffer(GL_BACK);
         glClearColor(col[0],col[1],col[2],col[3]);
@@ -235,9 +241,10 @@ namespace rtps
         glEnableClientState( GL_VERTEX_ARRAY );
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_TEXTURE_3D_EXT);
-        float halfMaxDim=maxDim/2.0f;
-
-        float curz=minDim;
+        float half=(maxDim-minDim)/2.0f;
+        float offset=half+minDim;
+        float curz=-half;
+        glColor4f(1.0f,1.0f,1.0f,1.0f);
         for(int i = 0;i<voxelResolution; i++)
         {
             if(i>0)
@@ -260,16 +267,17 @@ namespace rtps
 
 
             //glOrtho(min.x, min.x+maxDim, min.y, min.y+maxDim ,min.z+delz*i ,min.z+delz*(i+1));
-            glOrtho(minDim, maxDim, minDim, maxDim ,curz ,curz+delz);
+            //glOrtho(minDim, maxDim, minDim, maxDim ,curz ,curz+delz);
+            glOrtho(-half, half, -half, half ,curz ,curz+delz);
             //dout<<"MinDim = "<<minDim<<" MaxDim = "<<maxDim<<" curz = "<<curz<<" delz = "<<delz<<std::endl;
-            dout<<"-halfDim = "<<-halfMaxDim<<" halfMaxDim = "<<halfMaxDim<<std::endl;
+//            dout<<"-halfDim = "<<-halfMaxDim<<" halfMaxDim = "<<halfMaxDim<<std::endl;
             curz+=delz;
             glMatrixMode(GL_MODELVIEW);
             glPushMatrix();
             glLoadIdentity();
 
+            glTranslatef(-(offset),-(offset),-(offset));
             glScalef(scale,scale,scale);
-            glColor4f(1.0f,1.0f,1.0f,1.0f);
             glDrawElements(GL_TRIANGLES,length,GL_UNSIGNED_INT,0);
             glPopMatrix();
             glFlush();

@@ -19,8 +19,9 @@ namespace rtps
     {
         aiMatrix4x4 modelMat;
         GLuint vbo;
-        unsigned int vboSize;
+        GLuint colbo;
         GLuint ibo;
+        unsigned int vboSize;
         unsigned int iboSize;
     };
    class TestApplication

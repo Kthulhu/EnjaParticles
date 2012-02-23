@@ -486,6 +486,8 @@ namespace rtps
         glBindTexture(GL_TEXTURE_3D_EXT,tex3d);
         GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
         glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
+        float scale = max-min;
+        world.print("world trans matrix");
         for(int k = 0; k<voxelResolution; k++)
         {
             for(int j=0; j<voxelResolution; j++)
@@ -495,11 +497,13 @@ namespace rtps
                     if(image[(i*4)+(j*voxelResolution*4)+(k*voxelResolution*voxelResolution*4)]>0)
                     {
                         float4 pos;
-                        pos.x = (i/(float)voxelResolution)*max+min;
-                        pos.y = (j/(float)voxelResolution)*max+min;
-                        pos.z = (k/(float)voxelResolution)*max+min;
+                        pos.x = ((i/(float)voxelResolution)-0.5f)*scale;
+                        pos.y = ((j/(float)voxelResolution)-0.5f)*scale;
+                        pos.z = ((k/(float)voxelResolution)-0.5f)*scale;
                         pos.w = 1.0f;
+                        //pos.print("Pos before world translation");
                         pos = world*pos;
+                        //pos.print("Pos after world translation");
                         vec.push_back(pos);
                     }
                 }
