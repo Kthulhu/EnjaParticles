@@ -150,8 +150,8 @@ namespace rtps
         glEnableClientState( GL_VERTEX_ARRAY );
         glDisable(GL_TEXTURE_3D_EXT);
 
-        float half = (maxDim-minDim)/2.0f;
-        float offset=half+minDim;
+        float mid=(maxDim+minDim)/2.0f;
+        float half=mid-minDim;
         float curz=-half;
         glColor4f(1.0f,1.0f,1.0f,1.0f);
         for(int i = 0;i<voxelResolution; i++)
@@ -168,7 +168,7 @@ namespace rtps
             glPushMatrix();
             glLoadIdentity();
 
-            glTranslatef(-(offset),-(offset),-(offset));
+            glTranslatef(-(mid),-(mid),-(mid));
             glScalef(scale,scale,scale);
             glDrawElements(GL_TRIANGLES,length,GL_UNSIGNED_INT,0);
 
@@ -241,8 +241,8 @@ namespace rtps
         glEnableClientState( GL_VERTEX_ARRAY );
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_TEXTURE_3D_EXT);
-        float half=(maxDim-minDim)/2.0f;
-        float offset=half+minDim;
+        float mid=(maxDim+minDim)/2.0f;
+        float half=mid-minDim;
         float curz=-half;
         glColor4f(1.0f,1.0f,1.0f,1.0f);
         for(int i = 0;i<voxelResolution; i++)
@@ -276,7 +276,7 @@ namespace rtps
             glPushMatrix();
             glLoadIdentity();
 
-            glTranslatef(-(offset),-(offset),-(offset));
+            glTranslatef(-(mid),-(mid),-(mid));
             glScalef(scale,scale,scale);
             glDrawElements(GL_TRIANGLES,length,GL_UNSIGNED_INT,0);
             glPopMatrix();

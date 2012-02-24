@@ -73,9 +73,9 @@ namespace rtps
         rs.blending=true;
         rs.particleRadius =systems["water"]->getSpacing()*.5f;
         effects["ssfr"]=new SSEffect(rs, *lib);
-        translation.x = -2.00f;
-        translation.y = -2.70f;//300.f;
-        translation.z = 3.50f;
+        translation.x = -5.00f;
+        translation.y = -5.00f;//300.f;
+        translation.z = 5.00f;
         rotation.x=0.0f;
         rotation.y=0.0f;
         mass=1.0f;
@@ -141,7 +141,7 @@ namespace rtps
                 nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/8;
                 float4 min = float4(2.5f, 2.5f, 2.5f, 1.0f);
                 float4 max = float4(7.5f, 7.5f, 7.5f, 1.0f);
-                float4 col1 = float4(0., 0., 1., 0.05);
+                float4 col1 = float4(0.05, 0.15, 8., 0.1);
                 systems["water"]->addBox(nn, min, max, false,col1);
                 //ps2->system->addBox(nn, min, max, false);
                 return;
@@ -178,9 +178,9 @@ namespace rtps
             {
                 //spray hose
                 cout<<"about to make hose"<<endl;
-                float4 center = float4(gridMin.x+3.0f, gridMin.y+3.0f,gridMax.z-2.0f,1.0f);
                 float4 col1 = float4(0.05, 0.15, 8., 0.1);
-                float4 velocity(0., 0., -3.f, 0);
+                float4 center = float4(gridMin.x+3.0f, gridMin.y+3.0f,gridMax.z-0.5f,1.0f);
+                float4 velocity(0., 0., -7.f, 0);
                 float radius= 3.0f;
                 //sph sets spacing and multiplies by radius value
                 systems["water"]->addHose(50000, center, velocity,radius, col1);
@@ -247,6 +247,7 @@ namespace rtps
                     mid.w = 0.0f;
 
                     systems["rb1"]->addBall(1000, mid, size,false, col1,mass);
+                    return;
                 }
             case 'v':
                 renderVelocity=!renderVelocity;
@@ -345,12 +346,33 @@ namespace rtps
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
             glRotatef(-90, 1.0, 0.0, 0.0);
+
             glRotatef(rotation.x, 1.0, 0.0, 0.0);
             glRotatef(rotation.y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
             glTranslatef(translation.x, translation.z, translation.y);
+            //Draw Origin - Found code at http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=248059
+
+            float ORG[3] = {0,0,0};
+
+            float XP[3] = {1,0,0}, XN[3] = {-1,0,0},
+                  YP[3] = {0,1,0}, YN[3] = {0,-1,0},
+                  ZP[3] = {0,0,1}, ZN[3] = {0,0,-1};
+            glLineWidth (20.0);
+            glBegin (GL_LINES);
+            glColor3f (1,0,0); // X axis is red.
+            glVertex3fv (ORG);
+            glVertex3fv (XP );
+            glColor3f (0,1,0); // Y axis is green.
+            glVertex3fv (ORG);
+            glVertex3fv (YP );
+            glColor3f (0,0,1); // z axis is blue.
+            glVertex3fv (ORG);
+            glVertex3fv (ZP );
+            glEnd();
+            glLineWidth (1.0);
 
 
-            /*glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
+                        /*glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
             glVertexPointer(3, GL_FLOAT, 0, 0);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
             glEnableClientState( GL_VERTEX_ARRAY );
@@ -369,11 +391,11 @@ namespace rtps
                 }
                 effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
                 //FIXME:This is a horrible way of doing this!!
-                if(i->first=="rb1")
+                /*if(i->first=="rb1")
                 {
                     ParticleRigidBody* prb=((ParticleRigidBody*)i->second);
                     effects["default"]->render(prb->getStaticVBO(),prb->getColVBO(),prb->getStaticNum());
-                }
+                }*/
             }
             /*if(render_movie)
             {
@@ -809,19 +831,24 @@ namespace rtps
             dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
             dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
             //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
-            float space = systems["rb1"]->getSpacing()/2.f;
+            /*float space = systems["rb1"]->getSpacing()/2.f;
             float3 adjmin=float3(min.x-space,min.y-space,min.z-space);
             float3 adjmax=float3(max.x+space,max.y+space,max.z+space);
             space = systems["rb1"]->getSpacing();
-            ParticleShape* shape = new ParticleShape(adjmin,adjmax,space);
+            ParticleShape* shape = new ParticleShape(adjmin,adjmax,space);*/
+            float space = systems["rb1"]->getSpacing();
+            ParticleShape* shape = new ParticleShape(min,max,space);
+
             shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
             RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
             //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
             s<<"surface";
             RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
+            float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
             dout<<"mesh name = "<<s.str()<<endl;
             dout<<"max dim = "<<shape->getMaxDim()<<endl;
             dout<<"min dim = "<<shape->getMinDim()<<endl;
+            dout<<"Trans = "<<trans<<endl;
             dout<<"min ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
             dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
             dout<<"spacing = "<<space<<endl;
@@ -830,13 +857,14 @@ namespace rtps
 
 
             float16 modelview;
-            float trans = (shape->getMaxDim()-shape->getMinDim())/2.0f+shape->getMinDim();
             glMatrixMode(GL_MODELVIEW);
             glPushMatrix();
             glLoadIdentity();
-            glRotatef(-90, 0.0, 0.0, 1.0);
             //glRotatef(rotation.x, 1.0, 0.0, 0.0);
-            glTranslatef(trans, -trans, -trans);
+            glTranslatef(trans, trans, trans);
+            glRotatef(-180, 1.0, 0.0, 0.0);
+            glRotatef(-90, 0.0, 0.0, 1.0);
+            //glTranslatef(translation.x, translation.z, translation.y);
             glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
             glPopMatrix();
             modelview.print("modelview");

@@ -487,23 +487,33 @@ namespace rtps
         GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
         glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
         float scale = max-min;
-        world.print("world trans matrix");
+        bool firstPart=false;
         for(int k = 0; k<voxelResolution; k++)
         {
             for(int j=0; j<voxelResolution; j++)
             {
                 for(int i=0;i<voxelResolution;i++)
                 {
+                    //Check the red channel. If it is non zero then we need a particle here.
                     if(image[(i*4)+(j*voxelResolution*4)+(k*voxelResolution*voxelResolution*4)]>0)
                     {
                         float4 pos;
-                        pos.x = ((i/(float)voxelResolution)-0.5f)*scale;
-                        pos.y = ((j/(float)voxelResolution)-0.5f)*scale;
-                        pos.z = ((k/(float)voxelResolution)-0.5f)*scale;
+                        pos.x = ((j/(float)(voxelResolution-1))-0.5f)*scale;
+                        pos.y = ((i/(float)(voxelResolution-1))-0.5f)*scale;
+                        pos.z = ((k/(float)(voxelResolution-1))-0.5f)*scale;
                         pos.w = 1.0f;
-                        //pos.print("Pos before world translation");
+                        if(!firstPart)
+                        {
+                            pos.print("Pos before world translation");
+                            dout<<"Here"<<endl;
+                        }
                         pos = world*pos;
-                        //pos.print("Pos after world translation");
+                        if(!firstPart)
+                        {
+                            pos.print("Pos after world translation");
+                            dout<<"Here"<<endl;
+                            firstPart=true;
+                        }
                         vec.push_back(pos);
                     }
                 }
