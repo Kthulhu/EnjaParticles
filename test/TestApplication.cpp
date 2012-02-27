@@ -79,8 +79,8 @@ namespace rtps
         rotation.x=0.0f;
         rotation.y=0.0f;
         mass=1.0f;
-        //string blendfile = "demo_scene_monkey.obj";
-        string blendfile = "demo_scene.obj";
+        string blendfile = "demo_scene_monkey.obj";
+        //string blendfile = "demo_scene.obj";
         //string blendfile = "demo_scene.3ds";
 
         renderVelocity=false;
