@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -58,13 +58,13 @@ namespace rtps
         SHADER_DEPTH=0,SHADER_CURVATURE_FLOW,SHADER_FRESNEL
     };*/
 
-    class ShaderLibrary 
+    class ShaderLibrary
     {
     public:
         ShaderLibrary()
         {
         }
-        std::map<std::string,Shader> shaders;    
+        std::map<std::string,Shader> shaders;
         void initializeShaders(std::string shaderSrc)
         {
             std::string vert,frag,geom,tessCont,tessEval;
@@ -104,6 +104,14 @@ namespace rtps
             shaders["vectorShader"].attachGeometryParam(GL_GEOMETRY_OUTPUT_TYPE_EXT,GL_LINE_STRIP);
             addShader("vectorShader",vert,frag,geom,tessCont,tessEval);
             vert = frag = geom="";
+            readFile(shaderSrc+"/render_instanced_vert.glsl",vert);
+            readFile(shaderSrc+"/render_instanced_frag.glsl",frag);
+            addShader("renderInstancedShader",vert,frag,geom,tessCont,tessEval);
+            vert = frag = geom="";
+            readFile(shaderSrc+"/render_lit_vert.glsl",vert);
+            readFile(shaderSrc+"/render_lit_frag.glsl",frag);
+            addShader("renderLitShader",vert,frag,geom,tessCont,tessEval);
+            //readFile(shaderSrc+"/renderInstanced_geom.glsl",geom);
         }
 
         void addShader(const std::string& name, const std::string& vert,
@@ -119,7 +127,7 @@ namespace rtps
 #endif
             std::cout<<"Program = "<<shaders[name].compileProgram()<<std::endl;
         }
-    };  
+    };
 }
 
 #endif

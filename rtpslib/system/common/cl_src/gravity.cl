@@ -21,16 +21,17 @@ __kernel void gravity(int numPart,
     for(int i = 0; i<numPoint; i++)
     {
         float4 vect = scale*(pointSources[i]-pos[index]);
-        float3 direction = normalize(vect.xyz);
-        float dist2 = dot(vect.xyz,vect.xyz);
+        vect.w=0.0f;
+        float4 direction = normalize(vect);
+        float dist2 = dot(vect,vect);
         float mag = alpha[i]*massSources[i];
-        float cutoff = 0.5*scale;
+        float cutoff = 0.5f*scale;
         cutoff*=cutoff;
         if(dist2<cutoff)
             mag/=-cutoff;
         else
             mag/=dist2;
-        accel[index] += (float4)((mag*direction),0.0f);        
+        accel[index] += (mag*direction);
     }
 }
 //----------------------------------------------------------------------
@@ -51,16 +52,19 @@ __kernel void gravityForce(int numPart,
     for(int i = 0; i<numPoint; i++)
     {
         float4 vect = scale*(pointSources[i]-pos[index]);
-        float3 direction = normalize(vect.xyz);
-        float dist2 = dot(vect.xyz,vect.xyz);
+        vect.w=0.0f;
+        float4 direction = normalize(vect);
+        float dist2 = dot(vect,vect);
         float mag = alpha[i]*massSources[i];
-        float cutoff = 0.5*scale;
+        float cutoff = 0.5f*scale;
         cutoff*=cutoff;
         if(dist2<cutoff)
             mag/=-cutoff;
         else
             mag/=dist2;
-        force[index] += ((float4)((mag*direction),0.0f))*mass[index];        
+        force[index] += (mag*direction.xyzw)*mass[index];
+        //force[index]+=(mag * (float4)(1.0f,1.0f,1.0f,0.0f))*mass[index];
+        //force[index]+=direction;
     }
 }
 

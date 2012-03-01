@@ -427,7 +427,12 @@ namespace rtps
         //cut = 1;
 
         int nn = pos.size();
-        if (num + nn > max_num)
+        if(nn==0)
+        {
+            cout<<"No particles to add."<<endl;
+            return;
+        }
+        else if (num + nn > max_num)
         {
 			cout<<"pushParticles: exceeded max nb("<<max_num<<") of particles allowed"<<endl;
             return;

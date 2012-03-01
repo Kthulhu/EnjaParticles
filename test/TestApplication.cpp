@@ -25,6 +25,7 @@
 #include "ParamParser.h"
 #include <RTPS.h>
 #include "../rtpslib/render/SSEffect.h"
+#include "../rtpslib/render/MeshEffect.h"
 #include <../rtpslib/system/ParticleRigidBody.h>
 
 #include <sstream>
@@ -73,14 +74,16 @@ namespace rtps
         rs.blending=true;
         rs.particleRadius =systems["water"]->getSpacing()*.5f;
         effects["ssfr"]=new SSEffect(rs, *lib);
+        effects["mesh"]=new MeshEffect(rs, *lib);
         translation.x = -5.00f;
         translation.y = -5.00f;//300.f;
         translation.z = 5.00f;
         rotation.x=0.0f;
         rotation.y=0.0f;
         mass=1.0f;
-        string blendfile = "demo_scene_monkey.obj";
-        //string blendfile = "demo_scene.obj";
+        sizeScale=1.0f;
+        //string blendfile = "demo_scene_monkey.obj";
+        string blendfile = "demo_scene.obj";
         //string blendfile = "demo_scene.3ds";
 
         renderVelocity=false;
@@ -179,8 +182,8 @@ namespace rtps
                 //spray hose
                 cout<<"about to make hose"<<endl;
                 float4 col1 = float4(0.05, 0.15, 8., 0.1);
-                float4 center = float4(gridMin.x+3.0f, gridMin.y+3.0f,gridMax.z-0.5f,1.0f);
-                float4 velocity(0., 0., -7.f, 0);
+                float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-0.5f,1.0f);
+                float4 velocity(-1.f, -1.f, -4.f, 0);
                 float radius= 3.0f;
                 //sph sets spacing and multiplies by radius value
                 systems["water"]->addHose(50000, center, velocity,radius, col1);
@@ -968,17 +971,22 @@ namespace rtps
         glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 
 
-        if(scene_list == 0) {
+        /*if(scene_list == 0) {
             scene_list = glGenLists(1);
             glNewList(scene_list, GL_COMPILE);
                 // now begin at the root node of the imported data and traverse
                 // the scenegraph by multiplying subsequent local transforms
                 // together on GL's matrix stack.
-            recursive_render(scene, scene->mRootNode);
+            //recursive_render(scene, scene->mRootNode);
             glEndList();
-        }
+        }*/
 
-        glCallList(scene_list);
+
+        //glCallList(scene_list);
+        for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
+        {
+            effects["mesh"]->render(i->second);
+        }
         glDisable(GL_LIGHTING);
         glDisable(GL_NORMALIZE);
     }

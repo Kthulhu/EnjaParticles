@@ -40,9 +40,10 @@
             <param name="gravity_sources">2.5 2.5 2.5 1.0 7.5 7.5 7.5 1.0</param>
             <param name="gravity" >0.0 0.0 -9.8 0.0</param>
             <param name="velocity_limit" >600.0</param>
+            <param name="static_stiffness">60</param>
             <param name="friction" >0.0</param>
-            <param name="penetration_factor" >0.01</param>
-            <param name="restitution" >0.01</param>
+            <param name="penetration_factor" >0.5</param>
+            <param name="restitution" >0.95</param>
             <param name="integrator" >euler</param>
             <param name="time_step" >0.003</param>
         </parameters>
