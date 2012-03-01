@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -22,9 +22,19 @@
 ****************************************************************************************/
 
 
-//#include "Buffer.h"
 
-//namespace rtps {
+template <class T>
+Buffer<T>::Buffer(CL *cli, int num ,T data)
+{
+    this->cli = cli;
+
+    std::vector<T> vec(num);
+    std::fill(vec.begin(), vec.end(), data);
+    std::cout<<"vec size = "<<vec.size()<<std::endl;
+
+    cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err));
+    copyToDevice(vec);
+}
 
 template <class T>
 Buffer<T>::Buffer(CL *cli, const std::vector<T> &data)
@@ -96,6 +106,15 @@ void Buffer<T>::release()
     cli->queue.finish();
 }
 
+template <class T>
+void Buffer<T>::copyToDevice(const T& data,int start)
+{
+    T d[1];
+    d[0]=data;
+    cl::Event event;
+    cli->err = cli->queue.enqueueWriteBuffer(*((cl::Buffer*)&cl_buffer[0]), CL_TRUE, start*sizeof(T), sizeof(T), &d, NULL, &event);
+    cli->queue.finish();
+}
 
 template <class T>
 void Buffer<T>::copyToDevice(const std::vector<T> &data)
@@ -141,7 +160,7 @@ std::vector<T> Buffer<T>::copyToHost(int num, int start)
     std::vector<T> data(num);
     //TODO pass back a pointer instead of a copy
     //std::vector<T> data = new std::vector<T>(num);
-    
+
     cl::Event event;
     cli->err = cli->queue.enqueueReadBuffer(*((cl::Buffer*)&cl_buffer[0]), CL_TRUE, start*sizeof(T), data.size()*sizeof(T), &data[0], NULL, &event);
     cli->queue.finish();
@@ -170,7 +189,7 @@ void Buffer<T>::copyToHost(std::vector<T> &data, int start)
 template <class T>
 void Buffer<T>::copyFromBuffer(Buffer<T> src, size_t start_src, size_t start_dst, size_t size)
 {
-    /* 
+    /*
      * copies contents from the source buffer to this buffer
      */
 

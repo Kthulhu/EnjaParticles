@@ -25,106 +25,62 @@
 
 #include "cl_macros.h"
 #include "cl_structs.h"
-
+#include "Quaternion.h"
 
 __kernel void leapfrog(
-                      //__global float4* vars_unsorted, 
-                      //__global float4* vars_sorted, 
-                      __global float4* pos_u,
-                      __global float4* pos_s,
-                      __global float4* vel_u,
-                      __global float4* vel_s,
-                      __global float4* veleval_u,
-                      __global float4* force_s,
-                      __global float4* xsph_s,
-                      __global int* sort_indices,  
-                      //		__global float4* color,
-                      __constant struct SPHParams* sphp, 
-                      float dt)
+                   __global float4* comLinearForce,
+                   __global float4* comTorqueForce,
+                   __global float4* comVel,
+                   __global float4* comAngVel,
+                   __global float4* comVelEval,
+                   __global float4* comAngVelEval,
+                   __global float4* comPos,
+                   __global float4* comRot, 
+                   __global float16* inertialTensor, 
+                   __global float* rbMass, 
+                   float dt,
+                    __constant struct ParticleRigidBodyParams* prbp
+                    DEBUG_ARGS)
 {
     unsigned int i = get_global_id(0);
-    //int num = get_global_size(0); // for access functions in cl_macros.h
-    int num = sphp->num;
-    if (i >= num) return;
+    float4 p = comPos[i]*prbp->simulation_scale ;
+    float4 v = comVel[i];
+    float4 lf = comLinearForce[i];
+    Quaternion q = comRot[i];
+    float4 w = comAngVel[i];
+    float4 tf = comTorqueForce[i];
 
-    /*
-    float4 p = pos(i);
-    float4 v = vel(i);
-    float4 f = force(i);
-    */
+    lf+=rbMass[i]*prbp->gravity;
 
-    float4 p = pos_s[i] * sphp->simulation_scale;
-    float4 v = vel_s[i];
-    float4 f = force_s[i];
-
-
-
-
-    //external force is gravity
-    //Make gravity a vector...
-    f.y += sphp->gravity;
-    f.w = 0.f;
-
-    float speed = length(f);
-    if (speed > sphp->velocity_limit) //velocity limit, need to pass in as struct
+    float4 a = lf/rbMass[i];
+    a.w=0.0f;
+    float speed = length(a);
+    if (speed > 600.0f) //velocity limit, need to pass in as struct
     {
-        f *= sphp->velocity_limit/speed;
+        a *= 600.0f/speed;
     }
 
-    float4 vnext = v + dt*f;
-    //float4 vnext = v;// + dt*f;
-    vnext += sphp->xsph_factor * xsph_s[i];
+    float4 vnext = v + dt*a;
 
     float4 veval = 0.5f*(v+vnext);
-
-#if 0
-    //crazy velocity freezing effect
-    float x = p.x / sphp->simulation_scale;
-    if (x > 4.)
-    {
-        float mv = length( (float4)(vnext.xyz, 0.0f));
-        //vnext /= mv;
-        //vnext *= log(mv); 
-        //this should be changed to decay with lifetime
-        veval = (float4)(0.0, 0.0, 0.0, 0.0);
-        vnext = (float4)(0.0, 0.0, 0.0, 0.0);
-    }
-#endif
-
-
-    p += dt * vnext;
+    p += dt*vnext;
+    p.xyz/=prbp->simulation_scale;
     p.w = 1.0f; //just in case
-
-    //Not sure why we put them back in unsorted order
-    //might as well write them back in order and save some memory access costs
-    //uint originalIndex = sort_indices[i];
-    //uint originalIndex = i;
-
-    //float dens = density(i);
-    p.xyz /= sphp->simulation_scale;
-
-
-    //unsorted_pos(originalIndex) = (float4)(pos(i).xyz / sphp->simulation_scale, 1.);
-    //unsorted_pos(originalIndex)     = (float4)(p.xyz, dens);
-    //unsorted_pos(originalIndex)     = p;
-    ///unsorted_vel(originalIndex)     = vnext;
-    ///unsorted_veleval(originalIndex) = veval; 
-    ///positions[originalIndex]        = (float4)(p.xyz, 1.0f);  // for plotting
-    
-    vel_u[i] = vnext;
-    veleval_u[i] = veval; 
-    pos_u[i] = (float4)(p.xyz, 1.0f);  // for plotting
-    
-    
-    
-    //	color[originalIndex]			= surface(i);
-    //positions[originalIndex] = unsorted_pos(originalIndex);
-    //positions[i] = unsorted_pos(i);
-
-    // FOR DEBUGGING
-    //unsorted_force(originalIndex) 	= f; // FOR DEBUGGING ONLY
-    //unsorted_density(originalIndex) = dens; // FOR DEBUGGING ONLY
-    //positions[originalIndex] 		= (float4)(p.xyz, dens);  // for plotting
+    //need to fix torque scaling.
+    float4 L = dt*(tf);
+    L.w = 0.0f;
+    float4 wnext = w; 
+    wnext.x+= dot(inertialTensor[i].s0123,L);
+    wnext.y+= dot(inertialTensor[i].s4567,L);
+    wnext.z+= dot(inertialTensor[i].s89ab,L);
+    wnext.w = 0.0f;
+    float4 weval=0.5f*(w+wnext);
+    Quaternion dq = qtSet(w,sqrt(dot(dt*wnext,dt*wnext)));
+    q = qtMul(dq,q);
+    comVel[i] = vnext;
+    comVelEval[i] = veval;
+    comPos[i] = p;
+    comAngVel[i] = wnext;
+    comAngVelEval[i] = weval;
+    comRot[i] = q;
 }
-
-

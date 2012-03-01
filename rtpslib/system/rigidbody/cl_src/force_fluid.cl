@@ -60,34 +60,33 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
-
     // is this particle within cutoff?
     if (rlen <= 2.*prbp->smoothing_distance)
     {
-
-        //iej is 0 when we are looking at same particle
-        //we allow calculations and just multiply force and xsph
-        //by iej to avoid branching
-        int iej = index_i != index_j;
-
-        // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
+        float4 norm = r/rlen;
         float massnorm=((mass[index_i]*mass_j[index_j])/(mass[index_i]+mass_j[index_j]));
-        float stiff = (prbp->penetration_fact*600.*massnorm)/prbp->smoothing_distance;
-        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(r/rlen); 
+        float stiff = (prbp->spring*massnorm);
+        float4 springForce = -0.2*stiff*(2.*prbp->smoothing_distance-rlen)*(norm);
 
-        float4 veli = vel[index_i]; // sorted
-        float4 velj = vel_j[index_j];
+        float4 relvel = vel[index_j]-vel[index_i];
 
-        float ln_res =log(prbp->restitution_coef); 
-        
-        float dampening = -2.*ln_res*(sqrt((stiff*(massnorm))/((ln_res*ln_res)+(prbp->PI*prbp->PI))));
-        float4 dampeningForce = dampening*(velj-veli);
-        //force *= sphp->mass;// * idi * idj;
-        //FIXME: I think mass should be a part of one of these formulas. -ASY
-        //This should be ok. Mass implicitly defines the spring and dampening
-        //forces. Also mass divides the force to obtain acceleration.
-        pt->linear_force += (springForce+dampeningForce) * (float)iej;
+        float4 dampeningForce = prbp->dampening*sqrt(stiff*massnorm)*(relvel);
+        float4 normalForce=(springForce+dampeningForce); 
+
+        /*relvel.w=0.0;
+        normalForce.w=0.0;
+        float normalDot=dot(normalForce,normalForce);
+        //Use Gram Schmidt process to find tangential velocity to the particle
+        float4 tangVel=relvel-((dot(relvel,normalForce)/normalDot)*normalForce);
+        float4 frictionalForce=0.0f;
+        if(length(tangVel)>prbp->friction_static_threshold)
+            frictionalForce = -prbp->friction_dynamic*sqrt(normalDot)*(normalize(tangVel));
+        else
+            frictionalForce = -prbp->friction_static*tangVel;
+        */
+        pt->linear_force +=normalForce; //(normalForce+frictionalForce);
+
         //pt->linear_force += r;//debug
     }
 }
@@ -110,7 +109,6 @@ __kernel void force_update(
                        )
 {
     // particle index
-    int nb_vars = prbp->nb_vars;
     int num = prbp->num;
     //int numParticles = get_global_size(0);
     //int num = get_global_size(0);

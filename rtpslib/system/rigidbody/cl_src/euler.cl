@@ -32,9 +32,6 @@ float magnitude(float4 vec)
 }       
 
 __kernel void euler(
-                   //__global float4* vars_unsorted, 
-                   //__global float4* vars_sorted, 
-                   //__global float4* positions,  // for VBO 
                    __global float4* comLinearForce,
                    __global float4* comTorqueForce,
                    __global float4* comVel,
@@ -43,7 +40,7 @@ __kernel void euler(
                    __global float4* comRot, 
                    __global float16* inertialTensor, 
                    __global float* rbMass, 
-        float4 gravity,
+                    float4 gravity,
                    float dt,
                     __constant struct ParticleRigidBodyParams* prbp
                     DEBUG_ARGS)
@@ -94,5 +91,5 @@ __kernel void euler(
     comAngVel[i] = w;
     comRot[i] = q;
     
-    clf[i] = q;
+    clf[i] = tf;
 }

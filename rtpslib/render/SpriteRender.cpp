@@ -30,7 +30,7 @@
 using namespace std;
 namespace rtps
 {
-    SpriteRender::SpriteRender(GLuint pos, GLuint col, int n, CL* cli, RTPSettings* _settings):Render(pos,col,n,cli,_settings)
+    SpriteRender::SpriteRender(GLuint pos, GLuint col, int n, CL* cli, RTPSSettings* _settings):Render(pos,col,n,cli,_settings)
     {
         string path(GLSL_SOURCE_DIR);
         string filename = settings->GetSettingAs<string>("render_texture");

@@ -25,25 +25,12 @@
 #ifndef RTPS_RTPS_H_INCLUDED
 #define RTPS_RTPS_H_INCLUDED
 
-#include <vector>
-
 //System API
 #include <system/System.h>
 
-
-//initial value API
-//TODO probably shouldn't be included here
-#include <domain/IV.h>
-
 //settings class to configure the framework
-#include <RTPSettings.h>
+#include <RTPSSettings.h>
 
-
-//defines a few handy utility functions
-//TODO should not be included here
-#include <util.h>
-//defines useful structs like float3 and float4
-#include <structs.h>
 //OpenCL API
 #include <opencl/CLL.h>
 
@@ -61,43 +48,10 @@ namespace rtps
 {
 
     class System;
-    class RTPS_EXPORT RTPS
-    
+    class RTPS
     {
     public:
-        //default constructor
-        RTPS();
-        //Setup CL, Render, initial values and System based on settings
-        RTPS(RTPSettings *s);
-        RTPS(RTPSettings *s, CL* _cli);
-
-        ~RTPS();
-
-        void Init();
-
-        //Keep track of settings
-        RTPSettings *settings;
-        
-        //OpenCL abstraction instance
-        //TODO shouldn't be public
-        CL *cli;
-
-        //will be instanciated as a specific subclass like SPH or Boids
-        //TODO shouldn't be public? right now we expose various methods from the system
-        System *system;
-        //std::vector<System> systems;
-
-        //initial value helper
-        //IV iv;
-
-        void update();
- //       void render();
-
-        void printTimers();
-
-    private:
-        bool cl_managed;
-        
+        static System* generateSystemInstance(RTPSSettings*, CL* cli);
     };
 }
 

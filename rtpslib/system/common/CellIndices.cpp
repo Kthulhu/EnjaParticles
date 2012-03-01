@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -36,7 +36,7 @@ namespace rtps
         //printf("create cellindices kernel\n");
         path = path + "/cellindices.cl";
         k_cellindices = Kernel(cli, path, "cellindices");
-        
+
     }
 
     int CellIndices::execute(int num,
@@ -76,7 +76,7 @@ namespace rtps
         int nb_bytes = (workSize+1)*sizeof(int);
         k_cellindices.setArgShared(iarg++, nb_bytes);
 
-        
+
         //printf("about to data structures\n");
         try
         {
@@ -95,13 +95,13 @@ namespace rtps
         std::vector<unsigned int> num_changed(1);
         ci_start.copyToHost(num_changed, nb_cells);
         //ci_end.copyToHost(num_changed, nb_cells);
-       
+
         int nc = num_changed[0];
 		//printf("cell indices: (num_changed) nc= %d\n", nc);
         //printf("Num Changed: %d\n", nc);
 
         //if(num > 0 && nc < 0) { exit(0); }
-        
+
 #if 0
         //printCellIndicesDiagnostics();
 
@@ -115,7 +115,7 @@ namespace rtps
         std::vector<unsigned int> ie(nbc);
         std::vector<unsigned int> in(nbc);
         std::vector<unsigned int> hhash(nbc);
-        
+
         ci_end.copyToHost(ie);
         ci_start.copyToHost(is);
         indices.copyToHost(in);
@@ -153,7 +153,7 @@ namespace rtps
             //svars.copyToHost(poss, POS*sphp.max_num);
 
             //for (int i=0; i < nbc; i++)
-            for (int i=0; i < 10; i++) 
+            for (int i=0; i < 10; i++)
             {
                 poss[i] = poss[i] / sphp.simulation_scale;
                 //printf("-----\n");

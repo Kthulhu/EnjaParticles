@@ -28,7 +28,6 @@
 //Initial Value functions
 #include <vector>
 #include "../structs.h"
-#include <vector>
 #include "../rtps_common.h"
 using namespace std;
 
@@ -37,6 +36,7 @@ namespace rtps
 
     RTPS_EXPORT vector<float4> addRect(int num, float4 min, float4 max, float spacing, float scale);
     RTPS_EXPORT vector<float4> addSphere(int num, float4 center, float radius, float spacing, float scale);
+	RTPS_EXPORT std::vector<float4> generateTorus(int num, float4 center, float radius_in, float radius_out, float thickness, float spacing, float scale, float innerVel, float outerVel, std::vector<float4>& initVel);
     RTPS_EXPORT std::vector<float4> addDisc(int num, float4 center, float4 u, float4 v, float radius, float spacing);
     RTPS_EXPORT std::vector<float4> addDiscRandom(int num, float4 center, float4 vel, float4 u, float4 v, float radius, float spacing);
 

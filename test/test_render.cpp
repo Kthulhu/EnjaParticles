@@ -27,6 +27,7 @@
 #include <math.h>
 #include <map>
 #include <time.h>
+#include <float.h>
 
 //#include <utils.h>
 //#include <string.h>
@@ -34,6 +35,7 @@
 #include <sstream>
 #include <iomanip>
 
+#include <fstream>
 #include <GL/glew.h>
 #if defined __APPLE__ || defined(MACOSX)
     #include <GLUT/glut.h>
@@ -47,8 +49,13 @@
 #include <render/SSEffect.h>
 #include <render/StreamlineEffect.h>
 #include <render/ShaderLibrary.h>
+#include <system/common/Sample.h>
 //#include "timege.h"
 #include "../rtpslib/render/util/stb_image_write.h"
+#include "BunnyMesh.h"
+#include "ParamParser.h"
+#include "util.h"
+#include <system/ParticleShape.h>
 
 using namespace rtps;
 
@@ -128,14 +135,21 @@ rtps::RTPS* sph=NULL;
 rtps::RTPS* rb=NULL;
 rtps::Domain* grid=NULL;
 rtps::Domain* grid2=NULL;
+rtps::Sample* sampleKernel=NULL;
 std::map<std::string,rtps::ParticleEffect*> effects;
+rtps::StreamlineEffect* streamline = NULL;
 rtps::ShaderLibrary* lib = NULL;
+rtps::ParticleShape* bunnyShape = NULL;
 std::string renderType = "default";
 bool renderVelocity = false;
+bool paused = false;
+bool voxelized = false;
+GLuint bunnyVBO=0;
+GLuint bunnyIBO=0;
 
-//#define NUM_PARTICLES 524288
+#define NUM_PARTICLES 524288
 //#define NUM_PARTICLES 262144
-#define NUM_PARTICLES 65536
+//#define NUM_PARTICLES 65536
 //#define NUM_PARTICLES 32768
 //#define NUM_PARTICLES 16384
 //#define NUM_PARTICLES 10000
@@ -151,7 +165,32 @@ bool renderVelocity = false;
 
 
 
+void write3DTextureToDisc(GLuint tex,int voxelResolution, const char* filename)
+{
+    printf("writing %s texture to disc.\n",filename);
+    glBindTexture(GL_TEXTURE_3D_EXT,tex);
+    GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
+    //GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*3];
+    glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
+    //glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGB,GL_UNSIGNED_BYTE,image);
+    GLubyte* tmp2Dimg = new GLubyte[voxelResolution*voxelResolution*4];
+    //GLubyte* tmp2Dimg = new GLubyte[voxelResolution*voxelResolution*3];
+    for(int i = 0; i<voxelResolution; i++)
+    {
+        char fname[128];
+        sprintf(fname,"%s-%03d.png",filename,i);
+        memcpy(tmp2Dimg,image+(i*(voxelResolution*voxelResolution*4)),sizeof(GLubyte)*voxelResolution*voxelResolution*4);
+        //memcpy(tmp2Dimg,image+(i*(voxelResolution*voxelResolution*3)),sizeof(GLubyte)*voxelResolution*voxelResolution*3);
+        if (!stbi_write_png(fname,voxelResolution,voxelResolution,4,(void*)tmp2Dimg,0))
+        //if (!stbi_write_png(fname,voxelResolution,voxelResolution,3,(void*)tmp2Dimg,0))
+        {
+            printf("failed to write image %s",filename);
+        }
+    }
+    glBindTexture(GL_TEXTURE_3D_EXT,0);
+    delete[] image;
 
+}
 //timers
 //GE::Time *ts[3];
 
@@ -168,10 +207,10 @@ float rand_float(float mn, float mx)
 //----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-
+/*
     //initialize glut
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
 		//|GLUT_STEREO //if you want stereo you must uncomment this.
 		);
     glutInitWindowSize(window_width, window_height);
@@ -297,6 +336,18 @@ int main(int argc, char** argv)
     //initialize the OpenGL scene for rendering
     init_gl();
 
+    int gIndices[3*BUNNY_NUM_TRIANGLES];
+    for(int i = 0; i<BUNNY_NUM_TRIANGLES;i++)
+    {
+        gIndices[(i*3)]=gIndicesBunny[i][0];
+        gIndices[(i*3)+1]=gIndicesBunny[i][1];
+        gIndices[(i*3)+2]=gIndicesBunny[i][2];
+    }
+
+    
+    bunnyVBO = createVBO(gVerticesBunny, 3*BUNNY_NUM_VERTICES*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
+    bunnyIBO = createVBO(gIndices, 3*BUNNY_NUM_TRIANGLES*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
+    
     RenderSettings rs;
     //rs.blending=false;
     rs.blending=false;
@@ -314,9 +365,23 @@ int main(int argc, char** argv)
     rs.blending=true;
     rs.particleRadius = sph->system->getSpacing()*.4f;
     effects["ssfr"]=new SSEffect(rs, *lib);
-    effects["streamline"]=new StreamlineEffect(rs, *lib,100,100);
+    int tmp = NUM_PARTICLES/100;
+    vector<unsigned int> indices(100);
+    for(int i = 0;i<100;i++)
+    {
+        indices[i]=tmp*i;      
+    }
+    streamline=new StreamlineEffect(rs, *lib,100,100,indices,cli);
+    float4 point(2.5f,2.5f,2.5f,1.0f);
+    float4 point2(7.5f,7.5f,7.5f,1.0f);
+    sph->system->addPointSource(point,1.0f);
+    sph->system->addPointSource(point2,1.5f);
+    sph->system->setAlpha(0.05f);*/
 
-    glutMainLoop();
+    rtps::ParamParser p;
+    ifstream file("./bin/test1.xml", std::ifstream::in);
+    p.readParameterFile(file);
+    //glutMainLoop();
     return 0;
 }
 
@@ -324,8 +389,36 @@ int main(int argc, char** argv)
 void appRender()
 {
 
-    //ps->system->sprayHoses();
-
+        //ps->system->sprayHoses();;
+    if(!voxelized)
+    {
+       float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
+        float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+        for(int i = 0; i<BUNNY_NUM_VERTICES; i++)
+        {
+            float x = gVerticesBunny[(i*3)];
+            float y = gVerticesBunny[(i*3)+1];
+            float z = gVerticesBunny[(i*3)+2];
+            if(x<min.x)
+                min.x=x;
+            if(x>max.x)
+                max.x=x;
+            if(y<min.y)
+                min.y=y;
+            if(y>max.y)
+                max.y=y;
+            if(z<min.z)
+                min.z=z;
+            if(z>max.z)
+                max.z=z;
+        }
+        cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
+        cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl; 
+        bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),3.0f);
+        bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
+        //write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
+        voxelized=true;
+    }
     glEnable(GL_DEPTH_TEST);
     if (stereo_enabled)
     {
@@ -345,17 +438,24 @@ void appRender()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
+        
+        
+        glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
+        glVertexPointer(3, GL_FLOAT, 0, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
+        glEnableClientState( GL_VERTEX_ARRAY );
+        glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0); 
+        glDisableClientState( GL_VERTEX_ARRAY );
+        
         RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
         if(renderVelocity)
         {
             effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
             effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
         }
-        effects["streamline"]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-        /*
+        //streamline->render();
         effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
         effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-         */
 //	sph->render();
 //        rb->render();
         //ps3->render();
@@ -366,6 +466,7 @@ void appRender()
         }
 
     }
+
 
     if(render_movie)
     {
@@ -386,6 +487,9 @@ void appKeyboard(unsigned char key, int x, int y)
     float4 max;
     switch (key)
     {
+        case ' ':
+            paused=!paused;
+            return;
         case 'e': //dam break
         {
             nn = NUM_PARTICLES/2;
@@ -419,10 +523,20 @@ void appKeyboard(unsigned char key, int x, int y)
             appDestroy();
             return;
         case 'b':
-            printf("deleting willy nilly\n");
+        {
+            //matrix is to position the rigidbody at 7,7,7 with no rotations.
+            float16 mat(1.0f,0.0f,0.0f,7.0f,
+                    0.0f,1.0f,0.0f,7.0f,
+                    0.0f,0.0f,1.0f,7.0f,
+                    0.0f,0.0f,0.0f,1.0f);
+            float4 velocity(0.0f,0.0f,0.0f,0.0f);
+            float4 color(1.0f,0.0f,0.0f,1.0f);
+            rb->system->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),float4(bunnyShape->getMin(),0.0f),mat,bunnyShape->getVoxelResolution(),velocity,color,mass);
+            /*printf("deleting willy nilly\n");
             sph->system->testDelete();
-            rb->system->testDelete();
+            rb->system->testDelete();*/
             return;
+        }
         case 'h':
         {
             //spray hose
@@ -446,17 +560,12 @@ void appKeyboard(unsigned char key, int x, int y)
             break;
         case 't': //place a cube for collision
             {
-                nn = 512;
-                float cw = .25;
-                float4 cen = float4(cw, cw, cw-.1, 1.0f);
-                make_cube(triangles, cen, cw);
-                cen = float4(1+cw, 1+cw, cw-.1, 1.0f);
-                make_cube(triangles, cen, cw);
-                cen = float4(1+3*cw, 1+3*cw, cw-.1, 1.0f);
-                make_cube(triangles, cen, cw);
-                cen = float4(3.5, 3.5, cw-.1, 1.0f);
-                make_cube(triangles, cen, cw);
-                sph->system->loadTriangles(triangles);
+                float4 center=(grid->getBndMin()+grid->getBndMax());
+                center/=2.0f;
+                float innerRadius=1.0f;
+                float outerRadius=4.0f;
+                float thickness=2.0f;
+                sph->system->addTorus(NUM_PARTICLES,center,innerRadius,outerRadius,thickness);
                 return;
             }
         case 'r': //drop a rectangle
@@ -568,20 +677,24 @@ void init_gl()
 void timerCB(int ms)
 {
     glutTimerFunc(ms, timerCB, ms);
-    glFinish();
-    sph->system->acquireGLBuffers();
-    rb->system->acquireGLBuffers();
-    sph->system->update();
-    rb->system->update();
-    sph->system->interact();
-    rb->system->interact();
-    sph->system->integrate();
-    rb->system->integrate();
-    sph->system->postProcess();
-    rb->system->postProcess();
-    sph->system->releaseGLBuffers();
-    rb->system->releaseGLBuffers();
-
+    if(!paused)
+    {
+        glFinish();
+        sph->system->acquireGLBuffers();
+        rb->system->acquireGLBuffers();
+        sph->system->update();
+        rb->system->update();
+        sph->system->interact();
+        rb->system->interact();
+        sph->system->integrate();
+        rb->system->integrate();
+        sph->system->postProcess();
+        rb->system->postProcess();
+        streamline->addStreamLine(sph->system->getPositionBufferUnsorted(),sph->system->getColorBufferUnsorted(),sph->system->getNum());
+        //streamline->addStreamLine(rb->system->getPositionBufferUnsorted(),rb->system->getColorBufferUnsorted(),rb->system->getNum());
+        sph->system->releaseGLBuffers();
+        rb->system->releaseGLBuffers();
+    }
     //ps3->update();
     glutPostRedisplay();
 }
@@ -599,6 +712,7 @@ void appDestroy()
         delete i->second;
     }
     delete lib;
+    delete streamline;
 
 
     if (glutWindowHandle)glutDestroyWindow(glutWindowHandle);
@@ -785,9 +899,14 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
+        RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
+        if(renderVelocity)
+        {
+            effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
+            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
+        }
+        effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
         effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-        effects[renderType]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
-        RenderUtils::renderBox(grid->getMin(),grid->getMax(),float4(0.0f,1.0,0.0f,1.0f));
 //        sph->render();
 //        rb->render();
         draw_collision_boxes();
@@ -816,9 +935,14 @@ void render_stereo()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
+        RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
+        if(renderVelocity)
+        {
+            effects[renderType]->renderVector(sph->system->getPosVBO(),sph->system->getVelocityVBO(),sph->system->getNum());
+            effects[renderType]->renderVector(rb->system->getPosVBO(),rb->system->getVelocityVBO(),rb->system->getNum());
+        }
+        effects["default"]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
         effects[renderType]->render(sph->system->getPosVBO(),sph->system->getColVBO(),sph->system->getNum());
-        effects[renderType]->render(rb->system->getPosVBO(),rb->system->getColVBO(),rb->system->getNum());
-        RenderUtils::renderBox(grid->getMin(),grid->getMax(),float4(0.0f,1.0,0.0f,1.0f));
 //        sph->render();
 //        rb->render();
         draw_collision_boxes();

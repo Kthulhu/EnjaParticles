@@ -42,7 +42,7 @@ namespace rtps
     class RTPS_EXPORT SSFRender : public Render
     {
     public:
-        SSFRender(GLuint pos, GLuint col, int n, CL* cli, RTPSettings* _settings);
+        SSFRender(GLuint pos, GLuint col, int n, CL* cli, RTPSSettings* _settings);
         ~SSFRender();
         void smoothDepth();
         virtual void render();

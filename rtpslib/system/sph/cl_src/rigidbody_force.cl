@@ -28,8 +28,8 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j, float stiffness, float dampening
-#define ARGV pos, vel, force, mass, pos_j, vel_j, mass_j, stiffness, dampening
+#define ARGS __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j, float16 rbParams
+#define ARGV pos, vel, force, mass, pos_j, vel_j, mass_j, rbParams
 
 /*----------------------------------------------------------------------*/
 
@@ -38,7 +38,78 @@
 //Contains all of the Smoothing Kernels for SPH
 #include "cl_kernels.h"
 
+//----------------------------------------------------------------------
+/*inline void ForNeighbor(//__global float4*  vars_sorted,
+                        ARGS,
+                        PointData* pt,
+                        uint index_i,
+                        uint index_j,
+                        float4 position_i,
+                        __constant struct GridParams* gp,
+                        __constant struct SPHParams* sphp
+                        DEBUG_ARGS
+                       )
+{
+    int num = sphp->num;
 
+    // get the particle info (in the current grid) to test against
+    float4 position_j = pos[index_j] * sphp->simulation_scale; 
+    float4 r = (position_i - position_j); 
+    r.w = 0.f; // I stored density in 4th component
+    // |r|
+    float rlen = length(r);
+
+    // is this particle within cutoff?
+    if (rlen <= sphp->smoothing_distance)
+    {
+
+        //iej is 0 when we are looking at same particle
+        //we allow calculations and just multiply force and xsph
+        //by iej to avoid branching
+        int iej = index_i != index_j;
+
+        // avoid divide by 0 in Wspiky_dr
+        rlen = max(rlen, sphp->EPSILON);
+
+        float dWijdr = Wspiky_dr(rlen, sphp->smoothing_distance, sphp);
+
+        float di = density[index_i];  // should not repeat di
+        float dj = mass[index_j]/(sphp->smoothing_distance*sphp->smoothing_distance*sphp->smoothing_distance);
+        float idj = 1.0/dj;
+
+        //form simple SPH in Krog's thesis
+        float Pi = sphp->K*(di - sphp->rest_density);//+sphp->rest_density;
+        //float Pj = sphp->K*(dj - sphp->rest_density);//+sphp->rest_density;
+
+
+        float kern = dWijdr * (Pi + Pj) * idj;
+
+        float4 veli = veleval[index_i]; // sorted
+        float4 velj = veleval[index_j];
+
+#if 1
+        // Add viscous forces
+        float dWijlapl = Wvisc_lapl(rlen, sphp->smoothing_distance, sphp);
+        float4 visc = (velj-veli) * dWijlapl * idj;
+        pt->viscosity+= visc*(float)iej;
+
+#endif
+
+#if 1
+        // Add XSPH stabilization term
+        // the poly6 kernel calculation seems to be wrong, using rlen as a vector when it is a float...
+        float Wijpol6 = Wpoly6(r, sphp->smoothing_distance, sphp);
+        //float Wijpol6 = sphp->wpoly6_coef * Wpoly6(rlen, sphp->smoothing_distance, sphp);
+        float4 xsph = (Wijpol6 * (velj-veli)/(di+dj));
+        pt->xsph += xsph * (float)iej;
+        pt->xsph.w = 0.f;
+#endif
+
+        pt->force += r * kern * (float)iej;
+        pt->force.w = 0.f;
+
+    }
+}*/
 //----------------------------------------------------------------------
 inline void ForNeighbor(//__global float4*  vars_sorted,
                         ARGS,
@@ -61,30 +132,36 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     // is this particle within cutoff?
     if (rlen <= 2* sphp->smoothing_distance)
     {
-
-        //iej is 0 when we are looking at same particle
-        //we allow calculations and just multiply force and xsph
-        //by iej to avoid branching
-        int iej = index_i != index_j;
-
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, sphp->EPSILON);
+        float4 norm = r/rlen;
+        float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
+        float stiff=(rbParams.s0*massnorm);
+        //FIXME: I am arbitraily scaling the rigid body mass by .1 to reduce the stiffness
+        //between fluid and rigidbody.
+        float4 springForce = -0.2*stiff*(2.*sphp->smoothing_distance-rlen)*(norm);
 
-        float massnorm=((mass[index_i]*mass_j[index_j])/(mass[index_i]+mass_j[index_j]));
-        float stiff = (.5*600.*massnorm)/sphp->smoothing_distance;
-        float4 springForce = -stiff*(2.*sphp->smoothing_distance-rlen)*(r/rlen); 
+        float4 relvel =  vel_j[index_j]-vel[index_i];
 
-        float4 veli = vel[index_i]; // sorted
-        float4 velj = vel_j[index_j];
-
-        float ln_res =log(.95); 
+        float4 normVel = dot(relvel,norm)*norm;
+        float4 dampeningForce = rbParams.s1*sqrt(stiff*massnorm)*(normVel);
+        float4 normalForce=(springForce+dampeningForce); 
+        //vel[index_i]=dot(vel[index_i],norm)*norm+vel_j[index_j]-dot(vel_j[index_j],norm)*norm;
         
-        float damp = -2.*ln_res*(sqrt((stiff*(massnorm))/((ln_res*ln_res)+(sphp->PI*sphp->PI))));
-        float4 dampeningForce = damp*(velj-veli);
-        //force *= sphp->mass;// * idi * idj;
-        //FIXME: I think mass should be a part of one of these formulas. -ASY
-        pt->force += (springForce+dampeningForce) * (float)iej;
-        //pt->linear_force += r;//debug
+        float4 tanVel = vel[index_i]+normVel;
+        float4 tanForce = -(mass[index_i]*tanVel)/0.003;
+        /*relvel.w=0.0;
+        normalForce.w=0.0;
+        //Use Gram Schmidt process to find tangential velocity to the particle
+        float4 tangVel=relvel-normVel;
+        float4 frictionalForce=0.0f;
+        if(length(tangVel)>rbParams.s2)
+            frictionalForce = -rbParams.s3*length(normalForce)*(normalize(tangVel));
+        else
+            frictionalForce = -rbParams.s4*tangVel;
+        pt->force += (normalForce+frictionalForce);
+        */
+        pt->force += normalForce;
     }
 }
 

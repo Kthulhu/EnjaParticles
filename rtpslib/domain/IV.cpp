@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -23,11 +23,12 @@
 
 
 #include "IV.h"
-#include <vector>
 
 //for random
 #include<stdlib.h>
 #include<time.h>
+#include<math.h>
+#define PI 3.1415962
 
 namespace rtps
 {
@@ -71,7 +72,7 @@ namespace rtps
 
 					float4& n = normals[i];
 
-					// account. Can fix later when we are refining. 
+					// account. Can fix later when we are refining.
 					n.x = 0.;
 					n.y = 0.;
 					n.z = 1.;
@@ -83,6 +84,81 @@ namespace rtps
             }
         }
         rvec.resize(i);
+        return rvec;
+    }
+	std::vector<float4> generateTorus(int num, float4 center, float radius_in, float radius_out, float thickness, float spacing, float scale, float innerVel, float outerVel, vector<float4>& initVel)
+    {
+        std::vector<float4> rvec;
+        radius_out=ceil(radius_out/spacing)*spacing;
+        radius_in=floor(radius_in/spacing)*spacing;
+        float zmin = center.z-thickness/2.0f;
+        float zmax = center.z+thickness/2.0f;
+        float xmin = center.x-radius_out;
+        float xmax = center.x+radius_out;
+        float ymin = center.y-radius_out;
+        float ymax = center.y+radius_out;
+        center.w = 0.0f;
+        int i =0;
+        float rInSq=radius_in*radius_in;
+        float rOutSq=radius_out*radius_out;
+        for(float z=zmin;z<=zmax;z+=spacing)
+        {
+            for (float y = ymin; y <=ymax; y+=spacing)
+            {
+                for (float x = xmin; x <=xmax; x+=spacing)
+                {
+                    float4 pos;
+                    pos.x=x;
+                    pos.y=y;
+                    pos.z=z;
+                    pos.w=0.0f;
+                    float4 direction = (pos-center);
+                    float r = (direction.x*direction.x)+(direction.y*direction.y);
+                    if(r>rOutSq || r<rInSq)
+                        continue;
+                    float theta = atan2(direction.y,direction.x);//acos(direction.x/r);
+                    float t = (r-radius_in)/(radius_out-radius_in);
+                    float vMag= innerVel*(1-t)+outerVel*t;
+                    float4 velocity;
+                    velocity.x=vMag*-sin(theta);
+                    velocity.y=vMag*cos(theta);
+                    velocity.z=0.0f;
+                    velocity.w=0.0f;
+                    initVel.push_back(velocity);
+                    pos.w=1.0f;
+                    rvec.push_back(pos);
+                    i++;
+                }
+            }
+        }
+        /*for(float z=zmin;z<=zmax;z+=spacing)
+        {
+            for(float r=radius_in;r<=radius_out;r+=spacing)
+            {
+                float t = (r-radius_in)/(radius_out-radius_in);
+                float vMag= innerVel*(1-t)+outerVel*t;
+                int N = ceil((2.0f*PI*r)/spacing);
+                N+=N%2;
+                float delTheta = (2.0f*PI)/N;
+                for(float theta=0.0f;theta<2.0f*PI;theta+=delTheta)
+                {
+                    if(i>=num) break;
+                    float4 pos;
+                    pos.x=r*cos(theta)+center.x;
+                    pos.y=r*sin(theta)+center.y;
+                    pos.z=z;
+                    pos.w=1.0f;
+                    float4 velocity;
+                    velocity.x=vMag*-sin(theta);
+                    velocity.y=vMag*cos(theta);
+                    velocity.z=0.0f;
+                    velocity.w=0.0f;
+                    initVel.push_back(velocity);
+                    rvec.push_back(pos);
+                    i++;
+                }
+            }
+        }*/
         return rvec;
     }
 //----------------------------------------------------------------------
@@ -146,7 +222,7 @@ namespace rtps
         for (float z = zmin; z <= zmax+.0*(zmax-zmin); z+=spacing) {
         for (float y = ymin; y <= ymax+.0*(ymax-ymin); y+=spacing) {
         for (float x = xmin; x <= xmax+.0*(xmax-xmin); x+=spacing) {
-            if (i >= num) break;				
+            if (i >= num) break;
             rvec[i] = float4(x,y,z,1.0f);
     //        rvec[i].print("pos[i]");
             i++;
@@ -238,7 +314,7 @@ namespace rtps
     {
         /*
          * randomly space the particles on a grid, rather than evenly
-         * randomize the velocity within some bounds 
+         * randomize the velocity within some bounds
          * so each particle needs its own velocity
          */
 
@@ -248,8 +324,8 @@ namespace rtps
         printf("num: %d\n", num);
         //spacing *= 1.1f; //should probably just figure out whats up with my spacing
         printf("spacing: %f\n", spacing);
-        float pert = .1f*spacing;   //amount of perterbation
-        float vpert = 100.f;
+        float pert = .05f*spacing;   //amount of perterbation
+        float vpert = 10.f;
 
         float4 umin = -radius*u;
         float4 wmin = -radius*w;
@@ -299,7 +375,7 @@ namespace rtps
      *  The size of the return vector will be the actual number of particles used to fill the rectangle
      */
 
-        srand(time(NULL));	
+        srand(time(NULL));
 
         printf("random num: %f\n", rand()/(float) RAND_MAX);
         //spacing *= 1.1f;
@@ -317,8 +393,8 @@ namespace rtps
         for (float z = zmin; z <= zmax; z+=spacing) {
         for (float y = ymin; y <= ymax; y+=spacing) {
         for (float x = xmin; x <= xmax; x+=spacing) {
-            if (i >= num) break;	
-    //printf("adding particles: %f, %f, %f\n", x, y, z);			
+            if (i >= num) break;
+    //printf("adding particles: %f, %f, %f\n", x, y, z);
             rvec[i] = float4(x-rand()/RAND_MAX,y-rand()/RAND_MAX,z-rand()/RAND_MAX,1.0f);
 
 
@@ -336,8 +412,8 @@ namespace rtps
      * Create a rectangle with at most num particles in it.
      *  The size of the return vector will be the actual number of particles used to fill the rectangle
      */
-        srand(time(NULL));	
-        
+        srand(time(NULL));
+
         //spacing *= 1.1;
 
         float xmin = (center.x - radius)  / scale;
@@ -346,7 +422,7 @@ namespace rtps
         float ymax = (center.y + radius)  / scale;
         float zmin = (center.z - radius)  / scale;
         float zmax = (center.z + radius)  / scale;
-        
+
         float r2 = radius*radius;
         float d2 = 0.0f;
 
@@ -355,7 +431,7 @@ namespace rtps
         for (float z = zmin; z <= zmax; z+=spacing) {
         for (float y = ymin; y <= ymax; y+=spacing) {
         for (float x = xmin; x <= xmax; x+=spacing) {
-            if (i >= num) break;				
+            if (i >= num) break;
             d2 = (x - center.x)*(x - center.x) + (y - center.y)*(y - center.y) + (z - center.z)*(z - center.z);
             if(d2 > r2) continue;
             rvec[i] = float4(x-rand()/RAND_MAX,y-rand()/RAND_MAX,z-rand()/RAND_MAX,1.0f);
@@ -368,8 +444,8 @@ namespace rtps
     std::vector<float4> addRandArrangement(int num, float scale, float4 dmin, float4 dmax)
     {
 
-            srand(time(NULL));	
-        
+            srand(time(NULL));
+
             std::vector<float4> rvec(num);
         int i=0;
 
@@ -428,8 +504,8 @@ namespace rtps
 					float4 n(x-center.x, y-center.y, z-center.z, 0.);
                     d2 = (x - center.x)*(x - center.x) + (y - center.y)*(y - center.y) + (z - center.z)*(z - center.z);
 
-					// ideally, replace r2out by r2out-spacing/2 to take radius of particle into 
-					// account. Can fix later when we are refining. 
+					// ideally, replace r2out by r2out-spacing/2 to take radius of particle into
+					// account. Can fix later when we are refining.
                     if (d2 > r2out || d2 < r2in) continue;
 					float4 r(x,y,z,1.0f);
 					float sqi = sqrt(1. / (n.x*n.x + n.y*n.y + n.z*n.z));

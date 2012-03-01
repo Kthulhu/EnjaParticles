@@ -40,14 +40,20 @@ using namespace std;
 namespace rtps
 {
 
-    StreamlineEffect::StreamlineEffect(RenderSettings rs, ShaderLibrary& lib, unsigned int maxLength, unsigned int num):ParticleEffect(rs,lib)
+    StreamlineEffect::StreamlineEffect(RenderSettings rs, ShaderLibrary& lib, unsigned int maxLength, unsigned int num, vector<unsigned int>& indices, CL* cli):ParticleEffect(rs,lib)
     {
         m_maxSLLength=maxLength;
         m_numSL = num;
-        vector<float4> f4vec(m_maxSLLength*m_numSL);
+        m_curSLIndex = 1;
+        vector<float4> f4vec((m_maxSLLength+1)*m_numSL);
         std::fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         m_streamLineCP = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         m_streamLineColor = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        m_clStreamLineCP=Buffer<float4>(cli,m_streamLineCP);
+        m_clStreamLineColor=Buffer<float4>(cli,m_streamLineColor);
+        m_clSampleIndices=Buffer<unsigned int>(cli,indices);
+
+        sample = Sample("./bin/"+std::string(COMMON_CL_SOURCE_DIR), cli);
     }
 
     
@@ -61,33 +67,20 @@ namespace rtps
             glDeleteBuffers(1, &m_streamLineColor);
     }
 
-    void StreamlineEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num)
+    void StreamlineEffect::render()
     {
-
-        unsigned int offset = num/m_numSL;
-        cout<<"offset: "<<offset<<endl;
-        //glBufferData(GL_COPY_READ_BUFFER, sizeof(float) * 2 * 3, NULL, GL_STATIC_COPY);
-        if(m_curSLLength!=m_maxSLLength)
-        {
-        //   m_curSLLength=-1;
-            glBindBuffer(GL_COPY_READ_BUFFER, posVBO);
-            glBindBuffer(GL_COPY_WRITE_BUFFER, m_streamLineCP);
-            glCopyBufferSubData(GL_COPY_READ_BUFFER,GL_COPY_WRITE_BUFFER,sizeof(float4)*offset,sizeof(float4)*++m_curSLLength,sizeof(float4)*m_numSL );
-            glBindBuffer(GL_COPY_READ_BUFFER, colVBO);
-            glBindBuffer(GL_COPY_WRITE_BUFFER, m_streamLineColor);
-            glCopyBufferSubData(GL_COPY_READ_BUFFER,GL_COPY_WRITE_BUFFER,sizeof(float4)*offset,sizeof(float4)*m_curSLLength,sizeof(float4)*m_numSL );
-        }
         glBindBuffer(GL_ARRAY_BUFFER, m_streamLineCP);
         glVertexPointer(4, GL_FLOAT, 0, (char *) NULL);
         glBindBuffer(GL_ARRAY_BUFFER, m_streamLineColor);
         glColorPointer(4, GL_FLOAT, 0, (char *) NULL);
 
-        if(m_curSLLength>1)
+        if(m_curSLIndex>2)
         {
             glEnableClientState(GL_VERTEX_ARRAY);
             glEnableClientState(GL_COLOR_ARRAY);
             for(unsigned int i = 0; i<m_numSL; i++)
-                glDrawArrays(GL_LINE_STRIP, i*m_curSLLength, m_curSLLength);
+                glDrawArrays(GL_LINE_STRIP, (i*m_maxSLLength)+1, m_curSLIndex);
+            //glDrawArrays(GL_LINE_STRIP, 0, m_curSLIndex);
             glDisableClientState(GL_COLOR_ARRAY);
             glDisableClientState(GL_VERTEX_ARRAY);
         }
@@ -95,6 +88,22 @@ namespace rtps
         glFinish();
     }
   
+    void StreamlineEffect::addStreamLine(Buffer<float4>& pos, Buffer<float4>& col, unsigned int num)
+    {
+        if(num>0)
+        {
+            m_clStreamLineCP.acquire();
+            m_clStreamLineColor.acquire();
+            sample.execute(num,pos,m_maxSLLength,m_clStreamLineCP,m_clSampleIndices, m_curSLIndex,m_maxSLLength); 
+            sample.execute(num,col,m_maxSLLength,m_clStreamLineColor,m_clSampleIndices, m_curSLIndex,m_maxSLLength); 
+            m_clStreamLineCP.release();
+            m_clStreamLineColor.release();
+            if(m_curSLIndex==m_maxSLLength)
+                m_curSLIndex = 0;
+            else
+                m_curSLIndex++;
+        }
+    }
 }
 
 

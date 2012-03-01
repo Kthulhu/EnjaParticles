@@ -52,10 +52,10 @@ set (rtpslib_INCLUDES
     ${GLEW_INCLUDE_PATH}
     #${BASE_DIR}/opencl10
     ${OPENCL_INCLUDE_DIR}
-    ${rtpslib_SOURCE_DIR}
-    ${rtpslib_SOURCE_DIR}/system
-    ${rtpslib_SOURCE_DIR}/system/sph
-    ${rtpslib_SOURCE_DIR}/system/flock
+    ./
+    ./system
+    ./system/sph
+    ./system/flock
     ${rtpslib_SOURCE_DIR}/system/rigidbody
     ${rtpslib_SOURCE_DIR}/system/common
     ${rtpslib_SOURCE_DIR}/render
@@ -69,7 +69,7 @@ set (rtpslib_INCLUDES
 #library source files (don't explicitly give file extension, inferred from source type)
 set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/RTPS
-    ${rtpslib_SOURCE_DIR}/RTPSettings
+    ${rtpslib_SOURCE_DIR}/RTPSSettings
     ${rtpslib_SOURCE_DIR}/util
     ${rtpslib_SOURCE_DIR}/structs
     #${rtpslib_SOURCE_DIR}/timege    #gordon's timer class
@@ -83,6 +83,7 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/render/Shader
     ${rtpslib_SOURCE_DIR}/render/ParticleEffect
     ${rtpslib_SOURCE_DIR}/render/SSEffect
+    ${rtpslib_SOURCE_DIR}/render/MeshEffect
     ${rtpslib_SOURCE_DIR}/render/StreamlineEffect
     ${rtpslib_SOURCE_DIR}/render/ShaderLibrary
     ${rtpslib_SOURCE_DIR}/render/RenderUtils
@@ -99,6 +100,8 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/common/Hash
     ${rtpslib_SOURCE_DIR}/system/common/CellIndices
     ${rtpslib_SOURCE_DIR}/system/common/Permute
+    ${rtpslib_SOURCE_DIR}/system/common/Sample
+    ${rtpslib_SOURCE_DIR}/system/common/Gravity
 	
     ${rtpslib_SOURCE_DIR}/system/System
     
@@ -139,13 +142,16 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/boids
     ####
 
+    ${rtpslib_SOURCE_DIR}/system/ParticleShape
+
     #ParticleRigidBody 
-    ${rtpslib_SOURCE_DIR}/system/ParticleRigidBody.cpp
+    ${rtpslib_SOURCE_DIR}/system/ParticleRigidBody
     # Rigidbody dynamics.
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBEuler
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBLeapFrog
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForce
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForceFluid
+    ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBForceStatic
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBSegmentedScan
     ${rtpslib_SOURCE_DIR}/system/rigidbody/PRBUpdateParticles
 

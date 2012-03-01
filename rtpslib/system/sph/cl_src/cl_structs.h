@@ -27,40 +27,35 @@
 
 #include "../cl_common/cl_structs.h"
 
-typedef struct CLOUDParams
-{
-	int num; // nb cloud points
-} CLOUDParams;
-
 typedef struct SPHParams
 {
+    float rest_density;
     float mass;
     float rest_distance;
     float smoothing_distance;
     float simulation_scale;
 
+    //dynamic params
     float boundary_stiffness;
     float boundary_dampening;
     float boundary_distance;
-    float K;        //speed of sound
-    
+    float K;        //gas constant
+
     float viscosity;
     float velocity_limit;
     float xsph_factor;
-    float gravity; // -9.8 m/sec^2
 
     float friction_coef;
     float restitution_coef;
     float shear;
     float attraction;
-
     float spring;
+
     //constants
     float EPSILON;
-    float PI;       //delicious
-    //kernel coefficients
-    float wpoly6_coef;
 
+    //Kernel Coefficients
+    float wpoly6_coef;
     float wpoly6_d_coef;
     float wpoly6_dd_coef; // laplacian
     float wspiky_coef;
@@ -71,13 +66,11 @@ typedef struct SPHParams
     float wvisc_d_coef;
     float wvisc_dd_coef;
 
+    //CL parameters
     int num;
-    int nb_vars; // for combined variables (vars_sorted, etc.)
-    int choice; // which kind of calculation to invoke
     int max_num;
 
-    int cloud_num; // nb cloud points
-    int max_cloud_num;
+    float4 gravity; // -9.8 m/sec^2
 
 } SPHParams;
 

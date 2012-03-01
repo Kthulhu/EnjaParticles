@@ -209,7 +209,7 @@ int main(int argc, char** argv)
     //grid->setBndMax( float4(4, 4, 4, 0));
 
     //rtps::Domain grid = Domain(float4(0,0,0,0), float4(2, 2, 2, 0));
-	rtps::RTPSettings* settings = new rtps::RTPSettings(rtps::RTPSettings::PARTICLE_RIGIDBODY, NUM_PARTICLES, DT, grid);
+	rtps::RTPSSettings* settings = new rtps::RTPSSettings(rtps::RTPSSettings::PARTICLE_RIGIDBODY, NUM_PARTICLES, DT, grid);
     
 
     //should be argv[0]
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
 #endif
 
     //settings->setRenderType(RTPSettings::SCREEN_SPACE_RENDER);
-    settings->setRenderType(RTPSettings::RENDER);
+    settings->setRenderType(RTPSSettings::RENDER);
     //settings.setRenderType(RTPSettings::SPRITE_RENDER);
     settings->setRadiusScale(0.4);
     settings->setBlurScale(1.0);

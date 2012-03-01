@@ -45,7 +45,7 @@ namespace rtps
     //{
     //}
     //----------------------------------------------------------------------
-    Render::Render(GLuint pos, GLuint col, int n, CL* cli, RTPSettings* _settings)
+    Render::Render(GLuint pos, GLuint col, int n, CL* cli, RTPSSettings* _settings)
     {
         this->settings = _settings;
      

@@ -46,25 +46,48 @@
 
 #include "../structs.h"
 #include "../timer_eb.h"
+#include "../system/common/Sample.h"
 #include "ParticleEffect.h"
+#include "../opencl/Buffer.h"
+#include "../opencl/CLL.h"
 
 namespace rtps
 {
     class StreamlineEffect : public ParticleEffect
     {
     public:
-        StreamlineEffect(RenderSettings rs, ShaderLibrary& lib, unsigned int maxLength, unsigned int num);
+        StreamlineEffect(RenderSettings rs, ShaderLibrary& lib, unsigned int maxLength, unsigned int num,std::vector<unsigned int>& indices, CL* cli);
         ~StreamlineEffect();
 
-        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num);
-        void writeBuffersToDisk();
+        void render();
+        void addStreamLine(Buffer<float4>& pos, Buffer<float4>& col, unsigned int num);
+        /*Buffer<float4> getStreamLineBuffer()
+        {
+            return m_clStreamLineCP;
+        }
+        Buffer<float4> getStreamLineColorBuffer()
+        {
+            return m_clStreamLineColor;
+        }
+        unsigned int getNumberOfSL()
+        {
+            return m_numSL;
+        }
+        unsigned int getCurrentSLIndex()
+        {
+            return m_curSLIndex;
+        }*/
 
     protected:
         unsigned int m_maxSLLength;
-        unsigned int m_curSLLength;
+        unsigned int m_curSLIndex;
         unsigned int m_numSL;
         GLuint m_streamLineCP;
         GLuint m_streamLineColor;
+        Buffer<float4> m_clStreamLineCP;
+        Buffer<float4> m_clStreamLineColor;
+        Buffer<unsigned int> m_clSampleIndices;
+        Sample sample;
     };  
 }
 

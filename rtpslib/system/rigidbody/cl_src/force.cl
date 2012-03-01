@@ -28,9 +28,9 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force/*, __global float* spring_coef, __global float* dampening_coef*/
+#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global float* mass, __global uint* objectIndex/*, __global float* spring_coef, __global float* dampening_coef*/
 //, __global float4* torque_force
-#define ARGV pos, vel, linear_force 
+#define ARGV pos, vel, linear_force, mass , objectIndex
 
 /*----------------------------------------------------------------------*/
 
@@ -52,7 +52,6 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
                         DEBUG_ARGS
                        )
 {
-    //int num = prbp->num;
 
     // get the particle info (in the current grid) to test against
     float4 position_j = pos[index_j] * prbp->simulation_scale; 
@@ -60,29 +59,33 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
-
     // is this particle within cutoff?
-    if (rlen <= 2.*prbp->smoothing_distance)
+    if((rlen <= 2.*prbp->smoothing_distance)&&objectIndex[index_i]!=objectIndex[index_j])
     {
-
-        //iej is 0 when we are looking at same particle
-        //we allow calculations and just multiply force and xsph
-        //by iej to avoid branching
-        int iej = index_i != index_j;
-
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
+        float4 norm = r/rlen;
+        float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
+        float stiff = (prbp->spring*massnorm);
+        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(norm);
 
-        float4 springForce = -prbp->boundary_stiffness*(2.*prbp->smoothing_distance-rlen)*(r/rlen); 
+        float4 relvel = vel[index_j]-vel[index_i];
 
-        float4 veli = vel[index_i]; // sorted
-        float4 velj = vel[index_j];
-
-        float4 dampeningForce = prbp->boundary_dampening*(velj-veli);
-        //force *= sphp->mass;// * idi * idj;
-        //FIXME: I think mass should be a part of one of these formulas. -ASY
-        pt->linear_force += (springForce+dampeningForce) * (float)iej;
-        //pt->linear_force += r;//debug
+        float4 dampeningForce = prbp->dampening*sqrt(stiff*massnorm)*(relvel);
+        float4 normalForce=(springForce+dot(dampeningForce,norm)*norm); 
+        
+        relvel.w=0.0;
+        normalForce.w=0.0;
+        //Use Gram Schmidt process to find tangential velocity to the particle
+        float4 tangVel=relvel-dot(relvel,norm)*norm;
+        float4 frictionalForce=0.0f;
+        if(length(tangVel)>prbp->friction_static_threshold)
+            //frictionalForce = -prbp->friction_dynamic*length(normalForce)*(normalize(tangVel));
+            frictionalForce = -prbp->friction_dynamic*tangVel;
+        else
+            frictionalForce = -prbp->friction_static*tangVel;
+        
+        pt->linear_force += (springForce+dampeningForce+frictionalForce);
     }
 }
 
@@ -121,7 +124,7 @@ __kernel void force_update(
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ prbp DEBUG_ARGV);
     
     linear_force[sort_indices[index]] = pt.linear_force; 
-    clf[sort_indices[index]].xyz = pt.linear_force.xyz;
+    //clf[sort_indices[index]] = pt.torque_force;
 }
 
 /*-------------------------------------------------------------- */

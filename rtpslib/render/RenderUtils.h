@@ -58,6 +58,7 @@ namespace rtps
         static void renderQuad(float4 min, float4 max, GLuint tex = 0); //put in render utils
         static void writeTextures(const std::map<std::string,GLuint>& texs);
         static int writeTexture(GLuint tex, const std::string& filename, bool depth);
+        static void write3DTextureToDisc(GLuint tex,int voxelResolution, const char* filename);
         static GLuint loadTexture(const std::string& texFile, const std::string& texName);
         static void convertDepthToRGB(const GLfloat* depth, GLuint size, GLubyte* rgb);
     };  

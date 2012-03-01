@@ -63,8 +63,9 @@ __kernel void leapfrog(
 
     //external force is gravity
     //Make gravity a vector...
+    f+=sphp->gravity;
     //f.y += sphp->gravity;
-    f.z += sphp->gravity;//sphp->mass*sphp->gravity;
+    //f.z += sphp->gravity;//sphp->mass*sphp->gravity;
     f.w = 0.f;
     
     float speed = length(f);
@@ -85,7 +86,7 @@ __kernel void leapfrog(
 
     //Not sure why we put them back in unsorted order
     //might as well write them back in order and save some memory access costs
-    //uint originalIndex = sort_indices[i];
+    uint originalIndex = sort_indices[i];
     //uint originalIndex = i;
 
     //float dens = density(i);
@@ -99,12 +100,15 @@ __kernel void leapfrog(
     ///unsorted_veleval(originalIndex) = veval; 
     ///positions[originalIndex]        = (float4)(p.xyz, 1.0f);  // for plotting
     
-    vel_u[i] = vnext;
+    /*vel_u[i] = vnext;
     veleval_u[i] = veval; 
     color_u[i] = color_s[i];
-    pos_u[i] = (float4)(p.xyz, 1.0f);  // for plotting
+    pos_u[i] = (float4)(p.xyz, 1.0f);**/  // for plotting
     
-    
+    vel_u[originalIndex] = vnext;
+    veleval_u[originalIndex] = veval; 
+    color_u[originalIndex] = color_s[i];
+    pos_u[originalIndex] = (float4)(p.xyz, 1.0f);
     
     //	color[originalIndex]			= surface(i);
     //positions[originalIndex] = unsorted_pos(originalIndex);

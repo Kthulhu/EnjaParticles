@@ -19,6 +19,8 @@ __kernel void permute(
                             __global float4*   color_s,
                             __global float*   mass_u,
                             __global float*   mass_s,
+                            __global uint*   objectIndex_u,
+                            __global uint*   objectIndex_s,
                             /*__global float*   spring_coef_u,
                             __global float*   spring_coef_s,
                             __global float*   dampening_coef_u,
@@ -36,6 +38,7 @@ __kernel void permute(
     veleval_s[index] = veleval_u[sorted_index]; // not sure if needed
     color_s[index]   = color_u[sorted_index];
     mass_s[index]   = mass_u[sorted_index];
+    objectIndex_s[index]   = objectIndex_u[sorted_index];
     /*spring_coef_s[index]   = spring_coef_u[sorted_index];
     /*spring_coef_s[index]   = spring_coef_u[sorted_index];
     dampening_coef_s[index]   = dampening_coef_u[sorted_index];*/
@@ -43,4 +46,15 @@ __kernel void permute(
 }
 //----------------------------------------------------------------------
 
+__kernel void permuteF4(       int num,
+                            __global float4* pos_u,
+                            __global float4* pos_s,
+                            __global uint* sort_indices
+                            )
+{
+    uint index = get_global_id(0);
+    if (index >= num) return;
+    uint sorted_index = sort_indices[index];
+    pos_s[index]     = pos_u[sorted_index];
+}
 #endif

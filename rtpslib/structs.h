@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -26,14 +26,16 @@
 #define RTPS_STRUCTS_H_INCLUDED
 
 #include <stdio.h>
+#include <iostream>
 #include <math.h>
-
+#include <boost/tokenizer.hpp>
+#include "debug.h"
 #ifdef WIN32
     #if defined(rtps_EXPORTS)
         #define RTPS_EXPORT __declspec(dllexport)
     #else
         #define RTPS_EXPORT __declspec(dllimport)
-	#endif 
+	#endif
 #else
     #define RTPS_EXPORT
 #endif
@@ -53,6 +55,18 @@ namespace rtps
             this->x = x;
             this->y = y;
             this->z = z;
+        }
+        friend float3 operator-(float3& a, float3& b)
+        {
+            float3 c = float3(a.x-b.x, a.y-b.y, a.z-b.z);
+            return c;
+        }
+        float3& operator*(float b)
+        {
+            x*=b;
+            y*=b;
+            z*=b;
+            return *this;
         }
     } float3;
 
@@ -125,6 +139,67 @@ namespace rtps
         }
     } int4;
 
+    //temporary
+    typedef struct float16
+    {
+        float m[16];
+
+        float16()
+        {
+            m[0]= 0; m[1]= 0; m[2]= 0; m[3]= 0;
+            m[4]= 0; m[5]= 0; m[6]= 0; m[7]= 0;
+            m[8]= 0; m[9]= 0; m[10]= 0; m[11]= 0;
+            m[12]= 0; m[13]= 0; m[14]= 0; m[15]= 0;
+        }
+        float16(float a, float b, float c, float d,
+                float e, float f, float g, float h,
+                float i, float j, float k, float l,
+                float n, float o, float p, float q)
+        {
+            m[0]= a; m[1]= b; m[2]= c; m[3]= d;
+            m[4]= e; m[5]= f; m[6]= g; m[7]= h;
+            m[8]= i; m[9]= j; m[10]= k; m[11]= l;
+            m[12]= n; m[13]= o; m[14]= p; m[15]= q;
+        }
+        void transpose()
+        {
+            for(int i = 0; i<4; i++)
+            {
+                for(int j = i+1; j<4; j++)
+                {
+                    int index = i*4+j;
+                    int index2 = j*4+i;
+                    float tmp = m[index];
+                    m[index]=m[index2];
+                    m[index2]=tmp;
+                }
+            }
+        }
+        friend float16 operator*(const float16& lhs,const float16& rhs)
+        {
+            float16 retval;
+            for(int i = 0; i<16;i++)
+            {
+                for(int j = 0; j<4; j++)
+                {
+                    retval.m[i]+=lhs.m[(i/4)*4+j]*rhs.m[(i%4)+j*4];
+                }
+            }
+            return retval;
+        }
+
+        void print(const char* msg=0)
+        {
+            printf("%s: %f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f\n",
+                    msg, m[0],m[1],m[2],m[3],
+                    m[4],m[5],m[6],m[7],
+                    m[8],m[9],m[10],m[11],
+                    m[12],m[13],m[14],m[15]);
+        }
+    } float16;
+#ifdef WIN32
+#pragma pack(push,16)
+#endif
 
     // IJ
     typedef struct float4
@@ -136,7 +211,17 @@ namespace rtps
 
         float4()
         {
+            x=0.0f;
+            y=0.0f;
+            z=0.0f;
+            w=0.0f;
         };
+        float4(const float3& f, float ww):
+        x(f.x),
+        y(f.y),
+        z(f.z),
+        w(ww)
+        {}
         float4(float xx, float yy, float zz, float ww):
         x(xx),
         y(yy),
@@ -156,12 +241,11 @@ namespace rtps
         {
             printf("%s: %e, %e, %e, %f\n", msg, x, y, z, w);
         }
-        
+
         void printd(const char* msg=0) {
             printf("%s: %18.11e, %18.11e, %18.11e, %f\n", msg, x, y, z, w);
         }
-
-        friend float4 operator-(float4& a, float4& b)
+                friend float4 operator-(float4& a, float4& b)
         {
             float4 c = float4(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w);
             return c;
@@ -255,6 +339,34 @@ namespace rtps
             float4 m = float4(d*b.x, d*b.y, d*b.z, d*b.w);
             return m;
         }
+        friend float4 operator*(const float16& mat, float4& b)
+        {
+            float4 retval(0.0f,0.0f,0.0f,0.0f);
+            retval.x=mat.m[0]*b.x+mat.m[1]*b.y+mat.m[2]*b.z+mat.m[3]*b.w;
+            retval.y=mat.m[4]*b.x+mat.m[5]*b.y+mat.m[6]*b.z+mat.m[7]*b.w;
+            retval.z=mat.m[8]*b.x+mat.m[9]*b.y+mat.m[10]*b.z+mat.m[11]*b.w;
+            retval.w=mat.m[12]*b.x+mat.m[13]*b.y+mat.m[14]*b.z+mat.m[15]*b.w;
+            return retval;
+        }
+        friend std::istream& operator>>(std::istream& is, float4& __n)
+        {
+                is>>__n.x>>__n.y>>__n.z>>__n.w;
+                return is;
+        }
+        friend std::ostream& operator<<(std::ostream& os, float4& __n)
+        {
+                os<<__n.x<<" "<<__n.y<<" "<<__n.z<<" "<<__n.w;
+                return os;
+        }
+
+        /*float4& operator/(float r)
+        {
+            x/=r;
+            y/=r;
+            z/=r;
+            w/=r;
+            return *this;
+        }*/
 
         float length()
         {
@@ -263,13 +375,14 @@ namespace rtps
         }
 
 
-    } float4;
+    } float4
+#ifndef WIN32
+	__attribute__((aligned(16)));
+#else
+		;
+        #pragma pack(pop)
+#endif
 
-    //temporary
-    typedef struct float16
-    {
-        float m[16];
-    } float16;
     // size: 4*4 = 16 floats
     // shared memory = 65,536 bytes = 16,384 floats
     //               = 1024 triangles
@@ -279,8 +392,35 @@ namespace rtps
         float4 normal;    //should pack this in verts array
     } Triangle;
 
+    //Helper Read functions for Parameters.
+    template<typename scalar>
+    std::istream& operator>>(std::istream& is, std::vector<scalar>& __n)
+    {
+        scalar s;
+        while(is.good())
+        {
+            is>>s;
+            __n.push_back(s);
+        }
 
-    //maybe these helper functions should go elsewhere? 
+        return is;
+    }
+
+    /*std::istream& operator>>(std::istream& is, std::vector<float>& __n)
+    {
+        float f;
+        while(is.good())
+        {
+            is>>f;
+            __n.push_back(f);
+        }
+        for(int i=0;i<__n.size();i++)
+        {
+            dout<<"float "<<i<<" "<<__n[i]<<std::endl;
+        }
+        return is;
+    }*/
+    //maybe these helper functions should go elsewhere?
     //or be functions of the structs
     RTPS_EXPORT float magnitude(float4 vec);
     RTPS_EXPORT float dist_squared(float4 vec);

@@ -65,7 +65,7 @@ class RTPS_EXPORT FLOCK : public System
 
 
 public:
-    FLOCK(RTPS *ps, int num);
+    FLOCK(RTPSSettings* set, CL* c);
     ~FLOCK();
 
     void update();
@@ -86,10 +86,6 @@ public:
 private:
     FLOCKParameters flock_params;
 
-    std::string flock_source_dir;
-
-    int nb_var;
-    
     //keep track of hoses
     std::vector<Hose*> hoses;   
     

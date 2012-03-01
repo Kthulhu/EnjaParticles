@@ -30,7 +30,7 @@
 using namespace std;
 namespace rtps
 {
-    Sphere3DRender::Sphere3DRender(GLuint pos, GLuint col, int n, CL* cli, RTPSettings* _settings):Render(pos,col,n,cli,_settings)
+    Sphere3DRender::Sphere3DRender(GLuint pos, GLuint col, int n, CL* cli, RTPSSettings* _settings):Render(pos,col,n,cli,_settings)
     {
     	pos_vbo = pos;
     	col_vbo = col;

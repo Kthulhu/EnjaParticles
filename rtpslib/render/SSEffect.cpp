@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -83,7 +83,7 @@ namespace rtps
                 glUseProgram(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram());
                 glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"depthTex"),0);
                 glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"width"),m_settings.windowWidth);
-                glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"height"),m_settings.windowHeight); 
+                glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"height"),m_settings.windowHeight);
                 glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram(),"iterations"),40);
                 break;
             default:
@@ -120,7 +120,7 @@ namespace rtps
             glBlendFunc(GL_ONE, GL_ONE);
         }
 
-        
+
         //glViewport(0, 0, m_settings.windowWidth-xywh[0], m_settings.windowHeight-xywh[1]);
 
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
@@ -246,7 +246,7 @@ namespace rtps
 
         glPopClientAttrib();
         glPopAttrib();
-        
+
         //glEnable(GL_LIGHTING);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -340,13 +340,12 @@ namespace rtps
 
     }
 
-    /*void SSEffect::setWindowDimensions(GLuint width, GLuint height)
+    void SSEffect::setWindowDimensions(GLuint width, GLuint height)
     {
         deleteFramebufferTextures();
-        m_settings.windowWidth = width;
-        m_settings.windowHeight = height; 
+        ParticleEffect::setWindowDimensions(width,height);
         createFramebufferTextures();
-        glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,fbos[0]);
+        glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness"],0);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT1_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColor"],0);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT2_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"],0);
@@ -356,5 +355,5 @@ namespace rtps
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
     }
-    */
+
 };

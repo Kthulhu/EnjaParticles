@@ -38,6 +38,7 @@
 
 #include "CLL.h"
 #include "../util.h"
+using namespace std;
 
 namespace rtps
 {
@@ -152,8 +153,8 @@ namespace rtps
     {
         std::vector<cl::Platform> platforms;
         err = cl::Platform::get(&platforms);
-        printf("cl::Platform::get(): %s\n", oclErrorString(err));
-        printf("platforms.size(): %zd\n", platforms.size());
+        dout<<"cl::Platform::get(): "<< oclErrorString(err)<<endl;
+        dout<<"platforms.size(): "<< platforms.size()<<endl;
 
         deviceUsed = 0;
         int platformNum = 0;
@@ -161,24 +162,25 @@ namespace rtps
                 err = platforms[platformNum].getDevices(CL_DEVICE_TYPE_GPU, &devices);    
         }catch(cl::Error er)
         {
-            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            cerr<<"ERROR: "<< er.what()<<"("<< oclErrorString(er.err())<<")"<<endl;
+            
             try{
                 if(platforms.size()==2)
                         err = platforms[++platformNum].getDevices(CL_DEVICE_TYPE_GPU, &devices);
             }
             catch(cl::Error er2)
             {
-                printf("ERROR: %s(%s)\n", er2.what(), oclErrorString(er2.err()));
+                cerr<<"ERROR: "<< er2.what()<<"("<< oclErrorString(er2.err())<<")"<<endl;
             }
         
         }
         
-        printf("getDevices: %s\n", oclErrorString(err));
-        printf("devices.size(): %zd\n", devices.size());
+        dout<<"getDevices: "<< oclErrorString(err)<<endl;
+        dout<<"devices.size(): "<< devices.size()<<endl;
         //const char* s = devices[0].getInfo<CL_DEVICE_EXTENSIONS>().c_str();
         //printf("extensions: \n %s \n", s);
         int t = devices.front().getInfo<CL_DEVICE_TYPE>();
-        printf("type: \n %d %d \n", t, CL_DEVICE_TYPE_GPU);
+        dout<<"device type: "<< t<<" GPU Type: " << CL_DEVICE_TYPE_GPU<<endl;
 
         //assume sharing for now, at some point we should implement a check
         //to make sure the devices can do context sharing
@@ -206,7 +208,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            cerr<<"ERROR: "<<er.what()<<"("<< oclErrorString(er.err())<<")"<<endl;
         }
 #else
 #if defined WIN32 // Win32
@@ -224,7 +226,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            cerr<<"ERROR: "<<er.what()<<"("<< oclErrorString(er.err())<<")"<<endl;
         }
 #else
         cl_context_properties props[] = 
@@ -237,11 +239,12 @@ namespace rtps
         //cl_context cxGPUContext = clCreateContext(props, 1, &cdDevices[uiDeviceUsed], NULL, NULL, &err);
         try
         {
+            dout<<"cur context = "<<props[1]<<" cur display = "<<props[3]<<" platform = "<< props[5]<<endl;
             context = cl::Context(CL_DEVICE_TYPE_GPU, props);
         }
         catch (cl::Error er)
         {
-            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            cerr<<"ERROR: "<<er.what()<<"("<< oclErrorString(er.err())<<")"<<endl;
         }
 #endif
 #endif
@@ -274,7 +277,7 @@ namespace rtps
         }
         catch (cl::Error er)
         {
-            printf("ERROR: %s(%s)\n", er.what(), oclErrorString(er.err()));
+            cerr<<"ERROR: "<<er.what()<<"("<< oclErrorString(er.err())<<")"<<endl;
         }
     }
 

@@ -21,111 +21,49 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 
+#include <string.h>
 
-#include "GL/glew.h"
-#include <RTPS.h>
-//#include "system/Simple.h"
-#include <system/SPH.h>
-#include <system/FLOCK.h>
-#include <system/ParticleRigidBody.h>
+#include "RTPS.h"
+#include "util.h"
+#include "system/SPH.h"
+#include "system/FLOCK.h"
+#include "system/ParticleRigidBody.h"
 
+using namespace std;
 
 namespace rtps
 {
 
-    RTPS::RTPS()
-    {
-        cli = new CL();
-        cl_managed = true;
-        //settings will be the default constructor
-        Init();
-printf("done with constructor\n");
-    }
-
-    RTPS::RTPS(RTPSettings *s)
-    {
-        cli = new CL();
-        cl_managed = true;
-        settings = s;
-        Init();
-        printf("done with constructor\n");
-    }
-
-    RTPS::RTPS(RTPSettings *s, CL* _cli)
-    {
-        cli = _cli;
-        cl_managed = false;
-        settings = s;
-        Init();
-printf("done with constructor\n");
-    }
-
-    RTPS::~RTPS()
-    {
-        printf("RTPS destructor\n");
-        delete settings;
-        delete system;
-        if(cl_managed)
-        {
-            delete cli;
-        }
-        //delete renderer;
-    }
-
-    void RTPS::Init()
+    System* RTPS::generateSystemInstance(RTPSSettings* settings, CL* cli)
     {
         //this should already be done, but in blender its not
         //whats best way to check if stuff like glGenBuffers has been inited?
-        glewInit();
+        //glewInit();
 
-        system = NULL;
-
-        printf("init: settings->system: %d\n", settings->system);
-        
+        System* system=NULL;
+        dout<<"init: settings->system: "<< settings->GetSettingAs<string>("system")<<endl;
         //TODO choose based on settings
-        if (settings->system == RTPSettings::Simple)
+        if (settings->GetSettingAs<string>("system") == "sph")
         {
-            printf("simple system\n");
-            system = new System(this, settings->max_particles);
-            //system = new Simple(this, settings->max_particles);
+            dout<<"*** sph system 1  ***"<<endl;
+            //FIXME: I set max gravity sources to 5. This should be configurable.
+            system = new SPH(settings,cli);
         }
-        else if (settings->system == RTPSettings::SPH)
+        else if (settings->GetSettingAs<string>("system")  == "flock")
         {
-            printf("*** sph system 1  ***\n");
-			settings->setMaxOuterParticles(4096*4);
-            system = new SPH(this, settings->max_particles, settings->max_outer_particles);
-			printf("max: %d\n", settings->max_outer_particles);
+            dout<<"flock system"<<endl;
+            system = new FLOCK(settings,cli);
         }
-        else if (settings->system == RTPSettings::FLOCK)
+        else if (settings->GetSettingAs<string>("system")  == "rigidbody")
         {
-            printf("flock system\n");
-            system = new FLOCK(this, settings->max_particles);
+            dout<<"*** particleRigidBody system 1  ***"<<endl;
+            system = new ParticleRigidBody(settings,cli);
         }
-        else if (settings->system == RTPSettings::PARTICLE_RIGIDBODY)
+        else
         {
-            printf("*** particleRigidBody system 1  ***\n");
-            system = new ParticleRigidBody(this, settings->max_particles);
+            cerr<<"ERROR! No system of type: "<<settings->GetSettingAs<string>("system")<<". Please choose a valid system."<<endl;
+            return NULL;
         }
-
-        printf("created system in RTPS\n");
-    }
-
-    void RTPS::update()
-    {
-        //eventually we will support more systems
-        //then we will want to iterate over them
-        //or have more complex behavior if they interact
-        system->update();
-    }
-
-/*    void RTPS::render()
-    {
-        system->render();
-    }*/
-
-    void RTPS::printTimers()
-    {
-            system->printTimers();
     }
 };
 

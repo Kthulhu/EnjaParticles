@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<main>
+    <system type="sph" name="water">
+        <parameters type="system">
+            <param name="sub_intervals">1</param>
+            <param name="domain_min" >0.0 0.0 0.0 0.0</param>
+            <param name="domain_max" >10.0 10.0 10.0 0.0</param>
+            <param name="rest_density" >1000.0</param>
+            <param name="max_num_particles" >65536</param>
+            <param name="gravity_alphas">0.00 0.00</param>
+            <param name="gravity_mass">1.0 1.5</param>
+            <param name="gravity_sources">2.5 2.5 2.5 1.0 7.5 7.5 7.5 1.0</param>
+            <param name="gravity" >0.0 0.0 -9.8 0.0</param>
+            <param name="gas_constant" >1.0</param>
+            <param name="viscosity" >0.001</param>
+            <param name="velocity_limit" >600.0</param>
+            <param name="xsph_factor" >0.15</param>
+            <param name="friction_kinetic" >0.0</param>
+            <param name="friction static" >0.0</param>
+            <param name="boundary_stiffness" >20000.0</param>
+            <param name="boundary_dampening" >256.0</param>
+            <param name="integrator" >leapfrog</param>
+            <param name="time_step" >0.003</param>
+        </parameters>
+        <parameters type="render">
+            <param name="render_type" >default</param>
+            <param name="render_velocities" >false</param>
+            <param name="render_blending" >true</param>
+        </parameters>
+    </system>
+    <system type="rigidbody" name="rb1">
+        <parameters type="system">
+            <param name="sub_intervals">1</param>
+            <param name="domain_min" >0.0 0.0 0.0 0.0</param>
+            <param name="domain_max" >10.0 10.0 10.0 0.0</param>
+            <param name="max_num_particles" >65536</param>
+            <!--<param name="max_gravity_sources">5</param>-->
+            <param name="gravity_alphas">0.00 0.00</param>
+            <param name="gravity_mass">1.0 1.5</param>
+            <param name="gravity_sources">2.5 2.5 2.5 1.0 7.5 7.5 7.5 1.0</param>
+            <param name="gravity" >0.0 0.0 -9.8 0.0</param>
+            <param name="velocity_limit" >600.0</param>
+            <param name="static_stiffness">60</param>
+            <param name="friction" >0.0</param>
+            <param name="penetration_factor" >0.5</param>
+            <param name="restitution" >0.95</param>
+            <param name="integrator" >euler</param>
+            <param name="time_step" >0.003</param>
+        </parameters>
+        <parameters type="render">
+            <param name="render_type" >default</param>
+            <param name="render_velocities" >false</param>
+            <param name="render_blending" >false</param>
+        </parameters>
+    </system>
+</main>

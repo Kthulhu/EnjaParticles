@@ -9,7 +9,7 @@ SET(CMAKE_BUILD_TYPE "Debug")
 
 #need to include FindOPENCL.cmake to
 SET( RTPS_CMAKE_MODULE_PATH
-     ${rtpsuite_SOURCE_DIR}/cmake
+     ./cmake
 )
 SET( OPENCL_INCLUDE_DIR 
     ${rtpsuite_SOURCE_DIR}/opencl10)

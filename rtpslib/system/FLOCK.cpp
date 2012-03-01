@@ -40,22 +40,19 @@ namespace rtps
 {
 
 //----------------------------------------------------------------------
-FLOCK::FLOCK(RTPS *psfr, int n):System(psfr,n)
+FLOCK::FLOCK(RTPSSettings* set, CL* c):System(set,c)
 {
-    resource_path = ps->settings->GetSettingAs<std::string>("rtps_path");
-    printf("resource path: %s\n", resource_path.c_str());
-
     //seed random
     srand ( time(NULL) );
 
     std::vector<FLOCKParameters> vparams(0);
     vparams.push_back(flock_params);
-    cl_FLOCKParameters= Buffer<FLOCKParameters>(ps->cli, vparams);
+    cl_FLOCKParameters= Buffer<FLOCKParameters>(cli, vparams);
 
     calculate();
     updateParams();
 
-    spacing = settings->GetSettingAs<float>("Spacing");
+    spacing = settings->GetSettingAs<float>("spacing");
 
     //set up the grid
     setupDomain(flock_params.smoothing_distance/flock_params.simulation_scale,flock_params.simulation_scale);
@@ -67,18 +64,18 @@ FLOCK::FLOCK(RTPS *psfr, int n):System(psfr,n)
     prepareSorted();
 
 #ifdef CPU
-    printf("RUNNING ON THE CPU\n");
+    dout<<"RUNNING ON THE CPU"<<endl;
 #endif
 #ifdef GPU
-    printf("RUNNING ON THE GPU\n");
+    dout<<"RUNNING ON THE GPU"<<endl;
 
     //should be more cross platform
-    flock_source_dir = resource_path + "/" + std::string(FLOCK_CL_SOURCE_DIR);
+    string flock_source_dir = settings->GetSettingAs<string>("rtps_path") + "/" + std::string(FLOCK_CL_SOURCE_DIR);
 
-    ps->cli->addIncludeDir(flock_source_dir);
+    cli->addIncludeDir(flock_source_dir);
     
-    rules = Rules(flock_source_dir, ps->cli, timers["rules_gpu"]);
-    euler_integration = EulerIntegration(flock_source_dir, ps->cli, timers["euler_gpu"]);
+    rules = Rules(flock_source_dir, cli, timers["rules_gpu"]);
+    euler_integration = EulerIntegration(flock_source_dir, cli, timers["euler_gpu"]);
 #endif
         //renderer->setParticleRadius(spacing);
 }
@@ -133,20 +130,18 @@ void FLOCK::update()
 //----------------------------------------------------------------------
 void FLOCK::updateGPU()
 {
-#if 0 
     //mymese debbug
-    printf("smoth_dist: %f\n", flock_params.smoothing_distance);
-    printf("radius: %f\n", flock_params.search_radius);
-    printf("min dist: %f \n", flock_params.min_dist);
-#endif
+    dout<<"smoth_dist: "<< flock_params.smoothing_distance<<endl;
+    dout<<"radius: "<< flock_params.search_radius<<endl;
+    dout<<"min dist: "<< flock_params.min_dist<<endl;
 
     timers["update"]->start();
 
-    if(settings->has_changed())
+    if(settings->hasChanged())
         updateParams();
 
     //sub-intervals
-    int sub_intervals = 1;  //should be a setting
+    int sub_intervals = settings->GetSettingAs<float>("sub_intervals");  //should be a setting
     
     for (int i=0; i < sub_intervals; i++)
     {
@@ -182,6 +177,8 @@ void FLOCK::updateGPU()
             cl_color_s,
             cl_mass_u,
             cl_mass_s,
+            cl_objectIndex_u,
+            cl_objectIndex_s,
             cl_sort_indices,
             cl_GridParams,
             clf_debug,
@@ -190,8 +187,8 @@ void FLOCK::updateGPU()
 
         if (nc <= num && nc >= 0)
         {
-            printf("SOME PARTICLES WERE DELETED!\n");
-            printf("nc: %d num: %d\n", nc, num);
+            dout<<"SOME PARTICLES WERE DELETED!"<<endl;
+            dout<<"nc: "<<nc<<" num: "<<num<<endl;
 
             deleted_pos.resize(num-nc);
             deleted_vel.resize(num-nc);
@@ -200,7 +197,7 @@ void FLOCK::updateGPU()
             cl_velocity_s.copyToHost(deleted_vel, nc);
  
             num = nc;
-            settings->SetSetting("Number of Particles", num);
+            settings->SetSetting("num_particles", num);
             
             updateParams();
             //renderer->setNum(flock_params.num);
@@ -215,7 +212,7 @@ void FLOCK::updateGPU()
 
         if(flock_params.w_sep > 0.f || flock_params.w_align > 0.f || flock_params.w_coh > 0.f || flock_params.w_goal > 0.f || flock_params.w_avoid > 0.f){
             rules.execute(   num,
-                settings->target,
+                settings->GetSettingAs<float4>("target"),
                 cl_position_s,
                 cl_velocity_s,
                 cl_flockmates_s,
@@ -246,8 +243,8 @@ void FLOCK::integrate()
 {
     timers["integrate"]->start();
     euler_integration.execute(num,
-        settings->dt,
-        settings->two_dimensional,
+        settings->GetSettingAs<float>("time_step"),
+        settings->GetSettingAs<bool>("two_dimensional"),
         cl_position_u,
         cl_position_s,
         cl_velocity_u,
@@ -269,10 +266,10 @@ void FLOCK::integrate()
 #if 0  
     if(num > 0)
     {
-        std::vector<int4> cli(num);
+        vector<int4> cli(num);
         cli_debug.copyToHost(cli);
 
-        std::vector<float4> clf(num);
+        vector<float4> clf(num);
         clf_debug.copyToHost(clf);
 
         for(int i = 0; i < 4; i++)
@@ -317,36 +314,35 @@ void FLOCK::prepareSorted()
  
     vector<int4> i4Vec(max_num);
     vector<float4> f4Vec(max_num);
-    std::fill(i4Vec.begin(), i4Vec.end(), int4(0,0,0,0));
-    std::fill(f4Vec.begin(), f4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
-    cl_flockmates_s= Buffer<int4>(ps->cli, flockmates);
-    cl_separation_s = Buffer<float4>(ps->cli, separation);
-    cl_alignment_s = Buffer<float4>(ps->cli, alignment);
-    cl_cohesion_s = Buffer<float4>(ps->cli, cohesion);
-    cl_goal_s = Buffer<float4>(ps->cli, goal);
-    cl_avoid_s = Buffer<float4>(ps->cli, avoid);
-    cl_leaderfollowing_s = Buffer<float4>(ps->cli, leaderfollowing);
+    fill(i4Vec.begin(), i4Vec.end(), int4(0,0,0,0));
+    fill(f4Vec.begin(), f4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+    cl_flockmates_s= Buffer<int4>(cli, flockmates);
+    cl_separation_s = Buffer<float4>(cli, separation);
+    cl_alignment_s = Buffer<float4>(cli, alignment);
+    cl_cohesion_s = Buffer<float4>(cli, cohesion);
+    cl_goal_s = Buffer<float4>(cli, goal);
+    cl_avoid_s = Buffer<float4>(cli, avoid);
+    cl_leaderfollowing_s = Buffer<float4>(cli, leaderfollowing);
             //TODO make a helper constructor for buffer to make a cl_mem from a struct
         //Setup Grid Parameter structs
-        std::vector<GridParams> gparams(0);
+        vector<GridParams> gparams(0);
         gparams.push_back(grid_params);
-        cl_GridParams = Buffer<GridParams>(ps->cli, gparams);
+        cl_GridParams = Buffer<GridParams>(cli, gparams);
 
         //scaled Grid Parameters
-        std::vector<GridParams> sgparams(0);
+        vector<GridParams> sgparams(0);
         sgparams.push_back(grid_params_scaled);
-        cl_GridParamsScaled = Buffer<GridParams>(ps->cli, sgparams);
+        cl_GridParamsScaled = Buffer<GridParams>(cli, sgparams);
                 // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
         // That is a problem since the number of
         // occupied cells could be much less than the number of grid elements.
-        printf("%d\n", grid_params.nb_cells);
-        std::vector<unsigned int> gcells(grid_params.nb_cells+1);
+        dout<<"Number of Grid Cells: "<< grid_params.nb_cells<<endl;
+        vector<unsigned int> gcells(grid_params.nb_cells+1);
         int minus = 0xffffffff;
         std::fill(gcells.begin(), gcells.end(), 666);
 
-        cl_cell_indices_start = Buffer<unsigned int>(ps->cli, gcells);
-        cl_cell_indices_end   = Buffer<unsigned int>(ps->cli, gcells);
-        //printf("gp.nb_points= %d\n", gp.nb_points); exit(0);
+        cl_cell_indices_start = Buffer<unsigned int>(cli, gcells);
+        cl_cell_indices_end   = Buffer<unsigned int>(cli, gcells);
 
 }
 
@@ -354,7 +350,7 @@ void FLOCK::prepareSorted()
 int FLOCK::addHose(int total_n, float4 center, float4 velocity, float radius, float4 color)
 {
     radius *= spacing;
-    Hose* hose = new Hose(ps->settings->dt, total_n, center, velocity, radius, spacing, color);
+    Hose* hose = new Hose(settings->GetSettingAs<float>("time_step"), total_n, center, velocity, radius, spacing, color);
     hoses.push_back(hose);
     return hoses.size()-1;
 
@@ -389,8 +385,8 @@ void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
     // if we have reach max num of particles, then return
     if (num + nn > max_num) {return;}
     
-    std::vector<float4> cols(nn);
-    std::fill(cols.begin(), cols.end(),color); //BLENDER
+    vector<float4> cols(nn);
+    fill(cols.begin(), cols.end(),color); //BLENDER
 
 #ifdef CPU
     std::copy(pos.begin(), pos.end(), positions.begin()+num);
@@ -400,24 +396,21 @@ void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
     glFinish();
     cl_position_u.acquire();
     cl_color_u.acquire();
+    cl_velocity_u.acquire();
  
     cl_position_u.copyToDevice(pos, num);
     cl_color_u.copyToDevice(cols, num);
     cl_velocity_u.copyToDevice(vels, num);
 
-    settings->SetSetting("Number of Particles", num+nn);
+    settings->SetSetting("num_particles", num+nn);
     updateParams();
 
-    num += nn;  //keep track of number of particles we use
-    
+    cl_velocity_u.release();
     cl_color_u.release();
     cl_position_u.release();
 
-#else
-    num += nn;  //keep track of number of particles we use
 #endif
-
-	//renderer->setNum(num);
+    num += nn;  //keep track of number of particles we use
 }
 
 //----------------------------------------------------------------------

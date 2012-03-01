@@ -1,10 +1,10 @@
 #ifndef RTPS_BITONIC_SORT_H
 #define RTPS_BITONIC_SORT_H
 
-#include <opencl/CLL.h>
-#include <opencl/Kernel.h>
-#include <opencl/Buffer.h>
-//#include "../opencl/Scopy.h"
+//OpenCL API
+#include "../../opencl/CLL.h"
+#include "../../opencl/Buffer.h"
+#include "../../opencl/Kernel.h"
 
 #ifndef uint
 #define uint unsigned int
@@ -24,7 +24,7 @@ public:
     Bitonic( std::string source_dir, CL *cli );
 
     int Sort(int batch, int arrayLength, int dir,
-                Buffer<T> *dstkey, Buffer<T> *dstval, 
+                Buffer<T> *dstkey, Buffer<T> *dstval,
                 Buffer<T> *srckey, Buffer<T> *srcval);
     void loadKernels(std::string source_dir);
 

@@ -30,6 +30,7 @@
 namespace rtps
 {
 
+    /*
     float SPH::Wspiky(float4 r, float h)
     {
         float h6 = h*h*h * h*h*h;
@@ -39,7 +40,6 @@ namespace rtps
         float Wij = alpha * hr2*hr2/rlen;
         return Wij;
     }
-    /*
         //stuff from Tim's code (need to match #s to papers)
         //float alpha = 315.f/208.f/sphp->PI/h/h/h;
         //float R = sqrt(r2/re2);

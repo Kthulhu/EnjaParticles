@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -27,49 +27,27 @@
 
 #include "../cl_common/cl_structs.h"
 
+//Struct which gets passed to OpenCL routines
 typedef struct ParticleRigidBodyParams
 {
-    float mass;
-    float rest_distance;
     float smoothing_distance;
     float simulation_scale;
 
-    float boundary_stiffness;
-    float boundary_dampening;
-    float boundary_distance;
-    //float K;        //speed of sound
-    
-    //float viscosity;
-    //float velocity_limit;
-    //float xsph_factor;
-    float gravity; // -9.8 m/sec^2
+    //dynamic params
+    float4 gravity; // -9.8 m/sec^2
 
-    float friction_coef;
-    float restitution_coef;
-    float penetration_fact;
+    float friction_dynamic;
+    float friction_static;
+    float friction_static_threshold;
     float shear;
     float attraction;
-
     float spring;
+    float dampening;
     //constants
     float EPSILON;
-    float PI;       //delicious
-    //kernel coefficients
-    float wpoly6_coef;
 
-    float wpoly6_d_coef;
-    float wpoly6_dd_coef; // laplacian
-    float wspiky_coef;
-    float wspiky_d_coef;
-
-    float wspiky_dd_coef;
-    float wvisc_coef;
-    float wvisc_d_coef;
-    float wvisc_dd_coef;
-
+    //CL parameters
     int num;
-    int nb_vars; // for combined variables (vars_sorted, etc.)
-    int choice; // which kind of calculation to invoke
     int max_num;
 
 } ParticleRigidBodyParams;
