@@ -71,8 +71,8 @@ namespace rtps
     public:
         MeshEffect();
         ~MeshEffect();
-        virtual void renderInstanced(Mesh& mesh, GLuint pos, GLuint quat,unsigned int number);
-        virtual void render(Mesh& mesh);
+        virtual void renderInstanced(Mesh* mesh, GLuint pos, GLuint quat,unsigned int number);
+        virtual void render(Mesh* mesh);
     };
 };
 

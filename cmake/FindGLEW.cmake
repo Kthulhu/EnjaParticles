@@ -48,6 +48,8 @@ ELSE (WIN32)
         /usr/local/lib
         /sw/lib
         /opt/local/lib
+	#necessary on ubuntu 12.04. They appear to be restructuring the lib directories.
+	/usr/lib/x86_64-linux-gnu/
         DOC "The GLEW library"
 		NO_DEFAULT_PATH)
 ENDIF (WIN32)
