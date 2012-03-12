@@ -80,9 +80,10 @@ namespace rtps
         translation.z = 5.00f;
         rotation.x=0.0f;
         rotation.y=0.0f;
-        lightpos.x=0.0f;
-        lightpos.y=0.0f;
-        lightpos.z=0.0f;
+        light.diffuse.x=0.5;light.diffuse.y=0.5;light.diffuse.z=0.5;
+        light.ambient.x=0.2;light.ambient.y=0.2;light.ambient.z=0.2;
+        light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
+        light.pos.x=0.0f; light.pos.y=0.0f; light.pos.z=0.0f;
         mass=1.0f;
         sizeScale=1.0f;
         //string blendfile = "demo_scene_monkey.obj";
@@ -268,22 +269,22 @@ namespace rtps
             case 'C':
                 return;
             case '2':
-                lightpos.z -= 0.1;
+                light.pos.z -= 0.1;
                 break;
             case '6':
-                lightpos.x += 0.1;
+                light.pos.x += 0.1;
                 break;
             case '8':
-                lightpos.z += 0.1;
+                light.pos.z += 0.1;
                 break;
             case '4':
-                lightpos.x -= 0.1;
+                light.pos.x -= 0.1;
                 break;
             case '3':
-                lightpos.y += 0.1;
+                light.pos.y += 0.1;
                 break;
             case '1':
-                lightpos.y -= 0.1;
+                light.pos.y -= 0.1;
                 break;
             case 'w':
                 translation.z -= 0.1;
@@ -723,36 +724,37 @@ namespace rtps
 
         max = 1;
         aiGetMaterialFloatArray(mtl,AI_MATKEY_OPACITY,&opacity,&max);
+        mesh->material.opacity = opacity;
         dout<<"Opacity: "<< opacity<<" Max "<<max<<std::endl;
         set_float4(c, 0.8f, 0.8f, 0.8f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
             color4_to_float4(&diffuse, c);
         c[3]=opacity;
-        memcpy(mesh->material.diffuse,c,sizeof(float4));
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, c);
+        memcpy(&mesh->material.diffuse.x,c,sizeof(float3));
+        //glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, c);
 
         dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_SPECULAR, &specular))
             color4_to_float4(&specular, c);
         c[3]=opacity;
-        memcpy(mesh->material.specular,c,sizeof(float4));
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
+        memcpy(&mesh->material.specular.x,c,sizeof(float3));
+        //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
 
         dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         set_float4(c, 0.2f, 0.2f, 0.2f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_AMBIENT, &ambient))
             color4_to_float4(&ambient, c);
         c[3]=opacity;
-        memcpy(mesh->material.ambient,c,sizeof(float4));
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, c);
+        memcpy(&mesh->material.ambient.x,c,sizeof(float3));
+        //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, c);
 
         dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_EMISSIVE, &emission))
             color4_to_float4(&emission, c);
         c[3]=opacity;
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, c);
+        //glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, c);
 
         dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         max = 1;
@@ -762,20 +764,21 @@ namespace rtps
             ret2 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS_STRENGTH, &strength, &max);
             if(ret2 == AI_SUCCESS)
             {
-                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess * strength);
+                //glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess * strength);
                 mesh->material.shininess=shininess*strength;
             }
             else
             {
-                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
-                mesh->material.shininess=shininess*strength;
+                //glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+                mesh->material.shininess=shininess;
             }
         }
         else {
-            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
-            set_float4(c, 0.0f, 0.0f, 0.0f, 0.0f);
-            c[3]=opacity;
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
+            mesh->material.shininess=0.0f;
+           // glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
+            //set_float4(c, 0.0f, 0.0f, 0.0f, 0.0f);
+            //c[3]=opacity;
+            //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
         }
 
         max = 1;
@@ -783,22 +786,7 @@ namespace rtps
             fill_mode = wireframe ? GL_LINE : GL_FILL;
         else
             fill_mode = GL_FILL;
-        glPolygonMode(GL_FRONT_AND_BACK, fill_mode);
-
-        max = 1;
-        if((AI_SUCCESS == aiGetMaterialIntegerArray(mtl, AI_MATKEY_TWOSIDED, &two_sided, &max)) && two_sided)
-            glDisable(GL_CULL_FACE);
-        else
-            glEnable(GL_CULL_FACE);
-        if( opacity<1.0f )
-            {
-                glEnable(GL_BLEND);
-                glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            }
-            else
-            {
-                glDisable(GL_BLEND);
-            }
+        //glPolygonMode(GL_FRONT_AND_BACK, fill_mode);
     }
     void TestApplication::build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
     {
@@ -828,10 +816,12 @@ namespace rtps
         // draw all meshes assigned to this node
         for (; n < nd->mNumMeshes; ++n) {
             const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+
             dout<<"num faces "<<mesh->mNumFaces<<endl;
             float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
             float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
             Mesh* me=new Mesh();
+            apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
             unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
             float* vbo = new float[mesh->mNumVertices*3];
             float* normals=NULL;
@@ -978,7 +968,7 @@ namespace rtps
         for (; n < nd->mNumMeshes; ++n) {
             const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
 
-            apply_material(sc->mMaterials[mesh->mMaterialIndex]);
+            //apply_material(sc->mMaterials[mesh->mMaterialIndex]);
 
             if(mesh->mNormals == NULL) {
                 glDisable(GL_LIGHTING);
@@ -1030,24 +1020,17 @@ namespace rtps
     {
         float tmp;
         glShadeModel(GL_SMOOTH);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
+        //glEnable(GL_LIGHTING);
+        /*glEnable(GL_LIGHT0);
         float val[]={0.2f,0.2f,0.2f,0.0f};
         glLightfv(GL_LIGHT0,GL_AMBIENT,val);
         float val1[] = {lightpos.x-1.0f,lightpos.y-1.0f,lightpos.z-1.0f,0.0f};
         glLightfv(GL_LIGHT0,GL_POSITION,val1);
         float val2[] = {.5f,0.5f,0.5f,0.0f};
         glLightfv(GL_LIGHT0,GL_DIFFUSE,val2);
+        */
         //float val3[] = {1.0f,1.0f,1.0f,0.0f};
         //glLightfv(GL_LIGHT0,GL_SPECULAR,val3);
-
-        glEnable(GL_LIGHT1);
-        float val5[] = {lightpos.x+1.0f,lightpos.y+1.0f,lightpos.z+1.0f,0.0f};
-        glLightfv(GL_LIGHT1,GL_POSITION,val5);
-        float val6[] = {.5f,0.5f,0.5f,0.0f};
-        glLightfv(GL_LIGHT1,GL_DIFFUSE,val6);
-        glEnable(GL_DEPTH_TEST);
-
         glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
         glEnable(GL_NORMALIZE);
 
@@ -1073,7 +1056,7 @@ namespace rtps
         //glCallList(scene_list);
         for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
         {
-            meshRenderer->render(i->second);
+            meshRenderer->render(i->second,light);
         }
         glDisable(GL_LIGHTING);
         glDisable(GL_NORMALIZE);

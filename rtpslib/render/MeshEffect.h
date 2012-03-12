@@ -53,23 +53,7 @@
 
 namespace rtps
 {
-    struct Light
-    {
 
-        float4 diffuse;
-        float4 specular;
-        float4 ambient;
-        float4 pos;
-    }
-
-    struct Material
-    {
-
-        float4 diffuse;
-        float4 specular;
-        float4 ambient;
-        float shininess;
-    }
     struct Mesh
     {
         aiMatrix4x4 modelMat;
@@ -91,8 +75,8 @@ namespace rtps
     public:
         MeshEffect(RenderSettings set, ShaderLibrary& lib);
         ~MeshEffect();
-        virtual void renderInstanced(Mesh* mesh, GLuint pos, GLuint quat,unsigned int number);
-        virtual void render(Mesh* mesh);
+        virtual void renderInstanced(Mesh* mesh, GLuint pos, GLuint quat,unsigned int number,Light& light);
+        virtual void render(Mesh* mesh, Light& light);
     };
 };
 

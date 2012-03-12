@@ -45,7 +45,7 @@ namespace rtps
                                                                                                                             0.0f,0.0f,1.0f,0.0f,
                                                                                                                             0.0f,0.0f,0.0f,1.0f) );
             void recursive_render (const struct aiScene *sc, const struct aiNode* nd);
-            void apply_material(const struct aiMaterial *mtl);
+            void apply_material(const struct aiMaterial *mtl, Mesh* mesh);
             void set_float4(float f[4], float a, float b, float c, float d);
             void color4_to_float4(const struct aiColor4D *c, float f[4]);
             void get_bounding_box (struct aiVector3D* min, struct aiVector3D* max);
@@ -66,7 +66,7 @@ namespace rtps
             std::string renderType;
             float3 rotation; //may want to consider quaternions for this at some point.
             float3 translation;
-            float4 lightpos;
+            Light light;
             int2 mousePos;
             int mouseButtons;
             // the global Assimp scene object

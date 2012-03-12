@@ -32,7 +32,7 @@ namespace rtps
     MeshEffect::MeshEffect(RenderSettings set, ShaderLibrary& lib):ParticleEffect(set,lib)
     {}
     MeshEffect::~MeshEffect(){}
-    void MeshEffect::render(Mesh* mesh)
+    void MeshEffect::render(Mesh* mesh,Light& light)
     {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -70,8 +70,17 @@ namespace rtps
         glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
         float16 project;
         glGetFloatv(GL_PROJECTION_MATRIX,project.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"modelview"),1,true,modelview.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"project"),1,true,project.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"modelview"),1,true,modelview.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"project"),1,true,project.m);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"light.diffuse"),1,&light.diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"light.specular"),1,&light.specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"light.ambient"),1,&light.ambient.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"light.pos"),1,&light.pos.x);
         glUseProgram(m_shaderLibrary.shaders["renderLitShader"].getProgram());
 
         modelview.print("modelview");
@@ -99,7 +108,7 @@ namespace rtps
         }
         glPopMatrix();
     }
-    void MeshEffect::renderInstanced(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size)
+    void MeshEffect::renderInstanced(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size,Light& light)
     {
         glEnableVertexAttribArray(0);
         glVertexAttribDivisorARB(0,0);

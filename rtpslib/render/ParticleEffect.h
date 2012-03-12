@@ -52,6 +52,24 @@
 
 namespace rtps
 {
+    struct Light
+    {
+
+        float3 diffuse;
+        float3 specular;
+        float3 ambient;
+        float3 pos;
+    };
+
+    struct Material
+    {
+
+        float3 diffuse;
+        float3 specular;
+        float3 ambient;
+        float shininess;
+        float opacity;
+    };
 
     /*enum Shaders
     {
