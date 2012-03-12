@@ -74,12 +74,15 @@ namespace rtps
         rs.blending=true;
         rs.particleRadius =systems["water"]->getSpacing()*.5f;
         effects["ssfr"]=new SSEffect(rs, *lib);
-        effects["mesh"]=new MeshEffect(rs, *lib);
+        meshRenderer=new MeshEffect(rs, *lib);
         translation.x = -5.00f;
         translation.y = -5.00f;//300.f;
         translation.z = 5.00f;
         rotation.x=0.0f;
         rotation.y=0.0f;
+        lightpos.x=0.0f;
+        lightpos.y=0.0f;
+        lightpos.z=0.0f;
         mass=1.0f;
         sizeScale=1.0f;
         //string blendfile = "demo_scene_monkey.obj";
@@ -119,6 +122,7 @@ namespace rtps
         {
             delete i->second;
         }
+        delete meshRenderer;
         delete cli;
         delete lib;
     }
@@ -263,6 +267,24 @@ namespace rtps
                 return;
             case 'C':
                 return;
+            case '2':
+                lightpos.z -= 0.1;
+                break;
+            case '6':
+                lightpos.x += 0.1;
+                break;
+            case '8':
+                lightpos.z += 0.1;
+                break;
+            case '4':
+                lightpos.x -= 0.1;
+                break;
+            case '3':
+                lightpos.y += 0.1;
+                break;
+            case '1':
+                lightpos.y -= 0.1;
+                break;
             case 'w':
                 translation.z -= 0.1;
                 break;
@@ -375,6 +397,7 @@ namespace rtps
             glLineWidth (1.0);
 
 
+            display();
                         /*glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
             glVertexPointer(3, GL_FLOAT, 0, 0);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
@@ -383,6 +406,7 @@ namespace rtps
             glDisableClientState( GL_VERTEX_ARRAY );
              */
 
+            glDisable(GL_DEPTH_TEST);
             //RenderUtils::renderBox(gridMin,gridMax,float4(0.0f,1.0,0.0f,1.0f));
             //FIXME: Have a method to give renderType to each System. That way we can have different
             //Systems with the different effects.
@@ -415,9 +439,6 @@ namespace rtps
         }*/
         //showMass();
 
-        glEnable(GL_BLEND);
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        display();
         ///DEBUG!!---***
         /*glColor4f(1.0f,0.0f,0.0f,1.0f);
         glDisable(GL_DEPTH_TEST);
@@ -760,6 +781,15 @@ namespace rtps
             glDisable(GL_CULL_FACE);
         else
             glEnable(GL_CULL_FACE);
+        if( opacity<1.0f )
+            {
+                glEnable(GL_BLEND);
+                glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            else
+            {
+                glDisable(GL_BLEND);
+            }
     }
     void TestApplication::build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
     {
@@ -915,6 +945,7 @@ namespace rtps
                 glEnable(GL_LIGHTING);
             }
 
+
             for (t = 0; t < mesh->mNumFaces; ++t) {
                 const struct aiFace* face = &mesh->mFaces[t];
                 GLenum face_mode;
@@ -928,6 +959,7 @@ namespace rtps
 
                 //dout<<"Face mode = "<<face_mode<<" GL_TRIANGLES = "<<GL_TRIANGLES<<endl;
                 glBegin(face_mode);
+
 
                 for(i = 0; i < face->mNumIndices; i++) {
                     int index = face->mIndices[i];
@@ -956,9 +988,23 @@ namespace rtps
     void TestApplication::display(void)
     {
         float tmp;
+        glShadeModel(GL_SMOOTH);
         glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);    // Uses default lighting parameters
+        glEnable(GL_LIGHT0);
+        float val[]={0.2f,0.2f,0.2f,0.0f};
+        glLightfv(GL_LIGHT0,GL_AMBIENT,val);
+        float val1[] = {lightpos.x-1.0f,lightpos.y-1.0f,lightpos.z-1.0f,0.0f};
+        glLightfv(GL_LIGHT0,GL_POSITION,val1);
+        float val2[] = {.5f,0.5f,0.5f,0.0f};
+        glLightfv(GL_LIGHT0,GL_DIFFUSE,val2);
+        //float val3[] = {1.0f,1.0f,1.0f,0.0f};
+        //glLightfv(GL_LIGHT0,GL_SPECULAR,val3);
 
+        glEnable(GL_LIGHT1);
+        float val5[] = {lightpos.x+1.0f,lightpos.y+1.0f,lightpos.z+1.0f,0.0f};
+        glLightfv(GL_LIGHT1,GL_POSITION,val5);
+        float val6[] = {.5f,0.5f,0.5f,0.0f};
+        glLightfv(GL_LIGHT1,GL_DIFFUSE,val6);
         glEnable(GL_DEPTH_TEST);
 
         glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
@@ -970,23 +1016,24 @@ namespace rtps
 
         glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 
+        glDisable(GL_CULL_FACE);
 
-        /*if(scene_list == 0) {
+        if(scene_list == 0) {
             scene_list = glGenLists(1);
             glNewList(scene_list, GL_COMPILE);
                 // now begin at the root node of the imported data and traverse
                 // the scenegraph by multiplying subsequent local transforms
                 // together on GL's matrix stack.
-            //recursive_render(scene, scene->mRootNode);
+            recursive_render(scene, scene->mRootNode);
             glEndList();
-        }*/
-
-
-        //glCallList(scene_list);
-        for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
-        {
-            effects["mesh"]->render(i->second);
         }
+
+
+        glCallList(scene_list);
+        /*for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
+        {
+            meshRenderer->render(i->second);
+        }*/
         glDisable(GL_LIGHTING);
         glDisable(GL_NORMALIZE);
     }

@@ -43,7 +43,10 @@
     #include <GL/gl.h>
 #endif
 
+
 #include <assimp/assimp.h>
+
+#include "ParticleEffect.h"
 #include "../structs.h"
 #include "../timer_eb.h"
 #include "ShaderLibrary.h"
@@ -66,10 +69,10 @@ namespace rtps
         unsigned int materialIndex;
         GLenum drawMode;
     };
-    class MeshEffect
+    class MeshEffect : public ParticleEffect
     {
     public:
-        MeshEffect();
+        MeshEffect(RenderSettings set, ShaderLibrary& lib);
         ~MeshEffect();
         virtual void renderInstanced(Mesh* mesh, GLuint pos, GLuint quat,unsigned int number);
         virtual void render(Mesh* mesh);

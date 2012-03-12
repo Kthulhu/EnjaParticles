@@ -224,11 +224,14 @@ namespace rtps
         {
             glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["depth"]);
         }
+        //FIXME:DEBUG
+        glDisable(GL_DEPTH_TEST);
         GLuint copyProgram = m_shaderLibrary.shaders["copyShader"].getProgram();
         glUseProgram(copyProgram);
         glUniform1i( glGetUniformLocation(copyProgram, "normalTex"),0);
         glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);
         RenderUtils::fullscreenQuad();
+        glEnable(GL_DEPTH_TEST);
 
 
         glUseProgram(0);

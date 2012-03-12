@@ -7,6 +7,7 @@
 #include "../rtpslib/system/System.h"
 #include "../rtpslib/system/ParticleShape.h"
 #include "../rtpslib/render/ParticleEffect.h"
+#include "../rtpslib/render/MeshEffect.h"
 #include <assimp/assimp.h>
 #include <assimp/aiPostProcess.h>
 #include <assimp/aiScene.h>
@@ -15,15 +16,6 @@
 #define aisgl_max(x,y) (y>x?y:x)
 namespace rtps
 {
-    struct Mesh
-    {
-        aiMatrix4x4 modelMat;
-        GLuint vbo;
-        GLuint colbo;
-        GLuint ibo;
-        unsigned int vboSize;
-        unsigned int iboSize;
-    };
    class TestApplication
     {
         public:
@@ -67,12 +59,14 @@ namespace rtps
             GLuint windowWidth,windowHeight;
             std::map<std::string,System*> systems;
             std::map<std::string,ParticleEffect*> effects;
+            MeshEffect* meshRenderer;
             std::map<std::string,ParticleShape*> pShapes;
             std::map<std::string,Mesh*> meshs;
             ShaderLibrary* lib;
             std::string renderType;
             float3 rotation; //may want to consider quaternions for this at some point.
             float3 translation;
+            float4 lightpos;
             int2 mousePos;
             int mouseButtons;
             // the global Assimp scene object

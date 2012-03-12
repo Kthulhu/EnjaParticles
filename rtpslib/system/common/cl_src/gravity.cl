@@ -22,7 +22,7 @@ __kernel void gravity(int numPart,
     {
         float4 vect = scale*(pointSources[i]-pos[index]);
         vect.w=0.0f;
-        float4 direction = normalize(vect);
+        float4 direction = fast_normalize(vect);
         float dist2 = dot(vect,vect);
         float mag = alpha[i]*massSources[i];
         float cutoff = 0.5f*scale;
@@ -53,7 +53,7 @@ __kernel void gravityForce(int numPart,
     {
         float4 vect = scale*(pointSources[i]-pos[index]);
         vect.w=0.0f;
-        float4 direction = normalize(vect);
+        float4 direction = fast_normalize(vect);
         float dist2 = dot(vect,vect);
         float mag = alpha[i]*massSources[i];
         float cutoff = 0.5f*scale;

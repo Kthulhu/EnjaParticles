@@ -9,6 +9,6 @@ void main(void)
         discard;
     }    
     gl_FragColor = texture2D(normalTex, gl_TexCoord[0].xy);
-    gl_FragDepth = fldepth; 
+    gl_FragDepth = fldepth;
 
 }

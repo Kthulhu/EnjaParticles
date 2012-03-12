@@ -23,14 +23,18 @@
 
 
 
+#include <GL/glew.h>
 #include "MeshEffect.h"
 
 using namespace std;
 namespace rtps
 {
+    MeshEffect::MeshEffect(RenderSettings set, ShaderLibrary& lib):ParticleEffect(set,lib)
+    {}
+    MeshEffect::~MeshEffect(){}
     void MeshEffect::render(Mesh* mesh)
     {
-        glMatrixMode(GL_MODEL_VIEW);
+        glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
         glMultMatrixf((float*)&mesh->modelMat);
         glEnableVertexAttribArray(0);
@@ -53,15 +57,22 @@ namespace rtps
         if(mesh->hasTexture)
         {
             glEnableVertexAttribArray(3);
-            glVertexAttributeDivisor(3,0);
             glBindBuffer(GL_ARRAY_BUFFER, mesh->texCoordsbo);
             glVertexAttribPointer(3,2,GL_FLOAT,GL_FALSE,0,0);
             glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D,tex);
+            glBindTexture(GL_TEXTURE_2D,mesh->tex);
         }
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
+        //TODO: Create My own matrix class to handle this. Or use boost. That way
+        //I can be opengl 3+ compliant.
+        float16 modelview;
+        glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+        float16 project;
+        glGetFloatv(GL_PROJECTION_MATRIX,project.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"modelview"),1,true,modelview.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"project"),1,true,project.m);
         glUseProgram(m_shaderLibrary.shaders["renderLitShader"].getProgram());
-        glDrawElementsInstancedEXT(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0,size);
+        glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
         glUseProgram(0);
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
@@ -78,16 +89,16 @@ namespace rtps
         }
         glPopMatrix();
     }
-    void MeshEffect::render(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size)
+    void MeshEffect::renderInstanced(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size)
     {
         glEnableVertexAttribArray(0);
-        glVertexAttributeDivisor(0,0);
+        glVertexAttribDivisorARB(0,0);
         glEnableVertexAttribArray(1);
-        glVertexAttributeDivisor(1,0);
+        glVertexAttribDivisorARB(1,0);
         glEnableVertexAttribArray(2);
-        glVertexAttributeDivisor(2,1);
+        glVertexAttribDivisorARB(2,1);
         glEnableVertexAttribArray(3);
-        glVertexAttributeDivisor(3,1);
+        glVertexAttribDivisorARB(3,1);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
         glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->colbo);
@@ -99,7 +110,7 @@ namespace rtps
         if(mesh->hasNormals)
         {
             glEnableVertexAttribArray(4);
-            glVertexAttributeDivisor(4,0);
+            glVertexAttribDivisorARB(4,0);
             glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
             glVertexAttribPointer(4,3,GL_FLOAT,GL_FALSE,0,0);
             glEnable(GL_LIGHTING);
@@ -111,14 +122,22 @@ namespace rtps
         if(mesh->hasTexture)
         {
             glEnableVertexAttribArray(5);
-            glVertexAttributeDivisor(5,0);
+            glVertexAttribDivisorARB(5,0);
             glBindBuffer(GL_ARRAY_BUFFER, mesh->texCoordsbo);
             glVertexAttribPointer(5,2,GL_FLOAT,GL_FALSE,0,0);
             glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D,tex);
+            glBindTexture(GL_TEXTURE_2D,mesh->tex);
         }
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
         glUseProgram(m_shaderLibrary.shaders["renderInstancedShader"].getProgram());
+        //TODO: Create My own matrix class to handle this. Or use boost. That way
+        //I can be opengl 3+ compliant.
+        float16 modelview;
+        glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+        float16 project;
+        glGetFloatv(GL_PROJECTION_MATRIX,project.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"modelview"),1,true,modelview.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"project"),1,true,project.m);
         glDrawElementsInstancedEXT(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0,size);
         glUseProgram(0);
         glDisableVertexAttribArray(0);
