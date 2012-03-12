@@ -38,11 +38,11 @@ namespace rtps
         glPushMatrix();
         glMultMatrixf((float*)&mesh->modelMat);
         glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
+        //glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
         glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
-        glBindBuffer(GL_ARRAY_BUFFER, mesh->colbo);
-        glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
+        //glBindBuffer(GL_ARRAY_BUFFER, mesh->colbo);
+        //glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
         if(mesh->hasNormals)
         {
             glEnableVertexAttribArray(2);
@@ -56,6 +56,7 @@ namespace rtps
         }
         if(mesh->hasTexture)
         {
+            dout<<"Here"<<endl;
             glEnableVertexAttribArray(3);
             glBindBuffer(GL_ARRAY_BUFFER, mesh->texCoordsbo);
             glVertexAttribPointer(3,2,GL_FLOAT,GL_FALSE,0,0);
@@ -72,10 +73,19 @@ namespace rtps
         glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"modelview"),1,true,modelview.m);
         glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"project"),1,true,project.m);
         glUseProgram(m_shaderLibrary.shaders["renderLitShader"].getProgram());
+
+        modelview.print("modelview");
+        project.print("projection");
+        dout<<"ibo "<<mesh->ibo<<endl;
+        dout<<"ibosize "<<mesh->iboSize<<endl;
+        dout<<"vbo "<<mesh->vbo<<endl;
+        dout<<"vbosize "<<mesh->vboSize<<endl;
+        dout<<"normals "<<mesh->normalbo<<endl;
+        dout<<"texcoords "<<mesh->texCoordsbo<<endl;
         glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
         glUseProgram(0);
         glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
+        //glDisableVertexAttribArray(1);
         if(mesh->hasNormals)
         {
             glDisableVertexAttribArray(2);

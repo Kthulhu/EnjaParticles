@@ -53,6 +53,23 @@
 
 namespace rtps
 {
+    struct Light
+    {
+
+        float4 diffuse;
+        float4 specular;
+        float4 ambient;
+        float4 pos;
+    }
+
+    struct Material
+    {
+
+        float4 diffuse;
+        float4 specular;
+        float4 ambient;
+        float shininess;
+    }
     struct Mesh
     {
         aiMatrix4x4 modelMat;
@@ -66,7 +83,7 @@ namespace rtps
         bool hasTexture;
         unsigned int vboSize;
         unsigned int iboSize;
-        unsigned int materialIndex;
+        Material material;
         GLenum drawMode;
     };
     class MeshEffect : public ParticleEffect

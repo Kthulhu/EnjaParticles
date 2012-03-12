@@ -706,7 +706,7 @@ namespace rtps
     }
 
     // ----------------------------------------------------------------------------
-    void TestApplication::apply_material(const struct aiMaterial *mtl)
+    void TestApplication::apply_material(const struct aiMaterial *mtl,Mesh* mesh)
     {
         float c[4];
 
@@ -728,6 +728,7 @@ namespace rtps
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
             color4_to_float4(&diffuse, c);
         c[3]=opacity;
+        memcpy(mesh->material.diffuse,c,sizeof(float4));
         glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, c);
 
         dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
@@ -735,6 +736,7 @@ namespace rtps
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_SPECULAR, &specular))
             color4_to_float4(&specular, c);
         c[3]=opacity;
+        memcpy(mesh->material.specular,c,sizeof(float4));
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
 
         dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
@@ -742,6 +744,7 @@ namespace rtps
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_AMBIENT, &ambient))
             color4_to_float4(&ambient, c);
         c[3]=opacity;
+        memcpy(mesh->material.ambient,c,sizeof(float4));
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, c);
 
         dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
@@ -758,9 +761,15 @@ namespace rtps
             max = 1;
             ret2 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS_STRENGTH, &strength, &max);
             if(ret2 == AI_SUCCESS)
+            {
                 glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess * strength);
+                mesh->material.shininess=shininess*strength;
+            }
             else
+            {
                 glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+                mesh->material.shininess=shininess*strength;
+            }
         }
         else {
             glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
@@ -825,6 +834,18 @@ namespace rtps
             Mesh* me=new Mesh();
             unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
             float* vbo = new float[mesh->mNumVertices*3];
+            float* normals=NULL;
+            if(mesh->HasNormals())
+            {
+                normals = new float[mesh->mNumVertices*3];
+                me->hasNormals=true;
+            }
+            float* texcoords=NULL;
+            if(mesh->HasTextureCoords(0))
+            {
+                texcoords = new float[mesh->mNumVertices*2];
+                me->hasTexture=true;
+            }
             for (t = 0; t < mesh->mNumFaces; ++t) {
                 const struct aiFace* face = &mesh->mFaces[t];
                 for(i = 0; i < face->mNumIndices; i++) {
@@ -836,6 +857,17 @@ namespace rtps
                     vbo[index*3]=x;
                     vbo[index*3+1]=y;
                     vbo[index*3+2]=z;
+                    if(normals)
+                    {
+                        normals[index*3]=mesh->mNormals[index].x;
+                        normals[index*3+1]=mesh->mNormals[index].y;
+                        normals[index*3+2]=mesh->mNormals[index].z;
+                    }
+                    if(texcoords)
+                    {
+                        texcoords[index*2]=mesh->mTextureCoords[0][index].x;
+                        texcoords[index*2+1]=mesh->mTextureCoords[0][index].y;
+                    }
             //        dout<<"index = "<<index<<"x = "<<x<<" "<<"y = "<<y<<" "<<"z = "<<z<<endl;
                     if(x<min.x)
                         min.x=x;
@@ -858,6 +890,15 @@ namespace rtps
             me->ibo=createVBO(ibo, mesh->mNumFaces*3*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
             me->iboSize=mesh->mNumFaces*3;
             delete[] ibo;
+            if(normals)
+            {
+                me->normalbo=createVBO(normals,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
+            }
+            if(texcoords)
+            {
+                me->texCoordsbo=createVBO(texcoords,mesh->mNumVertices*2*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
+            }
+
             stringstream s;
             s<<"test"<<mesh->mNumFaces;
             meshs[s.str()]=me;
@@ -1018,7 +1059,7 @@ namespace rtps
 
         glDisable(GL_CULL_FACE);
 
-        if(scene_list == 0) {
+        /*if(scene_list == 0) {
             scene_list = glGenLists(1);
             glNewList(scene_list, GL_COMPILE);
                 // now begin at the root node of the imported data and traverse
@@ -1026,14 +1067,14 @@ namespace rtps
                 // together on GL's matrix stack.
             recursive_render(scene, scene->mRootNode);
             glEndList();
-        }
+        }*/
 
 
-        glCallList(scene_list);
-        /*for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
+        //glCallList(scene_list);
+        for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
         {
             meshRenderer->render(i->second);
-        }*/
+        }
         glDisable(GL_LIGHTING);
         glDisable(GL_NORMALIZE);
     }

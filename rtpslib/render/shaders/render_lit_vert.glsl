@@ -3,9 +3,9 @@ uniform mat4 modelview;
 uniform mat4 project;
 
 layout (location = 0) in vec3 pos;
-layout (location = 1) in vec4 col;
+//layout (location = 1) in vec4 col;
 layout (location = 2) in vec3 normal;
-layout (location = 3) in vec2 texcoords;
+//layout (location = 3) in vec2 texcoords;
 
 out vec4 color;
 //out vec3 norm;
@@ -17,6 +17,7 @@ void main()
 
 //    float cosang = clamp(dot(lightDir,norm),0.0,1.0);
 //    color=intensity*col*cosang;
-    color = col;
+//    color = col;
+    color = gl_FrontColor;
     gl_Position= project*modelview*vec4(pos,1.0);
 }
