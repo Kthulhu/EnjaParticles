@@ -62,6 +62,7 @@ namespace rtps
             MeshEffect* meshRenderer;
             std::map<std::string,ParticleShape*> pShapes;
             std::map<std::string,Mesh*> meshs;
+            std::map<std::string,Mesh*> dynamicMeshs;
             ShaderLibrary* lib;
             std::string renderType;
             float3 rotation; //may want to consider quaternions for this at some point.
@@ -71,6 +72,7 @@ namespace rtps
             int mouseButtons;
             // the global Assimp scene object
             const struct aiScene* scene;
+            const struct aiScene* dynamicMeshScene;
             GLuint scene_list;
             struct aiVector3D scene_min, scene_max, scene_center;
 

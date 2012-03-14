@@ -80,22 +80,24 @@ namespace rtps
         translation.z = 5.00f;
         rotation.x=0.0f;
         rotation.y=0.0f;
-        light.diffuse.x=0.5;light.diffuse.y=0.5;light.diffuse.z=0.5;
-        light.ambient.x=0.2;light.ambient.y=0.2;light.ambient.z=0.2;
+        light.diffuse.x=1.0;light.diffuse.y=1.0;light.diffuse.z=1.0;
+        //light.ambient.x=0.3;light.ambient.y=0.3;light.ambient.z=0.3;
+        light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
         light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
-        light.pos.x=0.0f; light.pos.y=0.0f; light.pos.z=0.0f;
+        light.pos.x=5.0f; light.pos.y=5.0f; light.pos.z=5.0f;
         mass=1.0f;
         sizeScale=1.0f;
-        //string blendfile = "demo_scene_monkey.obj";
-        string blendfile = "demo_scene.obj";
-        //string blendfile = "demo_scene.3ds";
+        string scenefile = "demo_scene.obj";
 
         renderVelocity=false;
         paused=false;
         scene=NULL;
         scene_list=0;
-        loadScene(blendfile);
+        loadScene(scenefile);
+        string meshesfile = "demo_meshes_scene.obj";
+        loadMeshScene(meshsfile);
         build_shapes(scene, scene->mRootNode);
+        build_dynamic_shapes(scene, scene->mRootNode);
     }
 
     void TestApplication::setWindowHeight(GLuint windowHeight) {
@@ -246,15 +248,35 @@ namespace rtps
                 }
 
             case 'r': //drop a ball
-                {
-                    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
+            {
+                float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+                trans +=7.0f;
+                float16 modelview;
+                glMatrixMode(GL_MODELVIEW);
+                glPushMatrix();
+                glLoadIdentity();
+                //glRotatef(rotation.x, 1.0, 0.0, 0.0);
+                glTranslatef(trans, trans, trans);
+                glRotatef(-180, 1.0, 0.0, 0.0);
+                glRotatef(-90, 0.0, 0.0, 1.0);
+                //glTranslatef(translation.x, translation.z, translation.y);
+                glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+                glPopMatrix();
+                modelview.print("modelview");
+                modelview.transpose();
+                mat = mat*modelview;
+                shape=shapes[""]
+
+                systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),mass);
+
+                /*    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
                     float size = 1.0f;
                     size=size*sizeScale;
                     float4 mid = (gridMax-gridMin);
                     mid = mid/2.0f;
                     mid.w = 0.0f;
 
-                    systems["rb1"]->addBall(1000, mid, size,false, col1,mass);
+                    systems["rb1"]->addBall(1000, mid, size,false, col1,mass);*/
                     return;
                 }
             case 'v':
@@ -398,6 +420,7 @@ namespace rtps
             glLineWidth (1.0);
 
 
+            RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
             display();
                         /*glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
             glVertexPointer(3, GL_FLOAT, 0, 0);
@@ -788,6 +811,140 @@ namespace rtps
             fill_mode = GL_FILL;
         //glPolygonMode(GL_FRONT_AND_BACK, fill_mode);
     }
+    void TestApplication::build_dynamic_shapes (const struct aiScene *sc, const struct aiNode* nd)
+    {
+        int i;
+        unsigned int n = 0, t;
+
+        float16 mat;
+
+        for (; n < nd->mNumMeshes; ++n) {
+            const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+            float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
+            float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+            Mesh* me=new Mesh();
+            apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
+            unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
+            float* vbo = new float[mesh->mNumVertices*3];
+            float* normals=NULL;
+            if(mesh->HasNormals())
+            {
+                normals = new float[mesh->mNumVertices*3];
+                me->hasNormals=true;
+            }
+            float* texcoords=NULL;
+            if(mesh->HasTextureCoords(0))
+            {
+                texcoords = new float[mesh->mNumVertices*2];
+                me->hasTexture=true;
+            }
+            for (t = 0; t < mesh->mNumFaces; ++t) {
+                const struct aiFace* face = &mesh->mFaces[t];
+                for(i = 0; i < face->mNumIndices; i++) {
+                    unsigned int index = face->mIndices[i];
+                    ibo[t*3+i]=index;
+                    float x=mesh->mVertices[index].x;
+                    float y=mesh->mVertices[index].y;
+                    float z=mesh->mVertices[index].z;
+                    vbo[index*3]=x;
+                    vbo[index*3+1]=y;
+                    vbo[index*3+2]=z;
+                    if(normals)
+                    {
+                        normals[index*3]=mesh->mNormals[index].x;
+                        normals[index*3+1]=mesh->mNormals[index].y;
+                        normals[index*3+2]=mesh->mNormals[index].z;
+                    }
+                    if(texcoords)
+                    {
+                        texcoords[index*2]=mesh->mTextureCoords[0][index].x;
+                        texcoords[index*2+1]=mesh->mTextureCoords[0][index].y;
+                    }
+            //        dout<<"index = "<<index<<"x = "<<x<<" "<<"y = "<<y<<" "<<"z = "<<z<<endl;
+                    if(x<min.x)
+                        min.x=x;
+                    if(x>max.x)
+                        max.x=x;
+                    if(y<min.y)
+                        min.y=y;
+                    if(y>max.y)
+                        max.y=y;
+                    if(z<min.z)
+                        min.z=z;
+                    if(z>max.z)
+                        max.z=z;
+                }
+            }
+            me->modelMat=m;
+            me->vbo=createVBO(vbo,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
+            me->vboSize=mesh->mNumVertices;
+            delete[] vbo;
+            me->ibo=createVBO(ibo, mesh->mNumFaces*3*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
+            me->iboSize=mesh->mNumFaces*3;
+            delete[] ibo;
+            if(normals)
+            {
+                me->normalbo=createVBO(normals,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
+            }
+            if(texcoords)
+            {
+                me->texCoordsbo=createVBO(texcoords,mesh->mNumVertices*2*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
+            }
+
+            stringstream s;
+            s<<"test"<<mesh->mNumFaces;
+            meshs[s.str()]=me;
+            dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
+            dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
+            //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
+            float space = systems["rb1"]->getSpacing();
+            ParticleShape* shape = new ParticleShape(min,max,space);
+
+            shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
+            //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
+            pShapes[s.str()]=shape;
+
+            //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
+            dout<<"mesh name = "<<s.str()<<endl;
+            dout<<"max dim = "<<shape->getMaxDim()<<endl;
+            dout<<"min dim = "<<shape->getMinDim()<<endl;
+            dout<<"Trans = "<<trans<<endl;
+            dout<<"min ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
+            dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
+            dout<<"spacing = "<<space<<endl;
+            /*float3 dim = max-min;
+            float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+
+            float16 modelview;
+            glMatrixMode(GL_MODELVIEW);
+            glPushMatrix();
+            glLoadIdentity();
+            //glRotatef(rotation.x, 1.0, 0.0, 0.0);
+            glTranslatef(trans, trans, trans);
+            glRotatef(-180, 1.0, 0.0, 0.0);
+            glRotatef(-90, 0.0, 0.0, 1.0);
+            //glTranslatef(translation.x, translation.z, translation.y);
+            glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+            glPopMatrix();
+            modelview.print("modelview");
+            modelview.transpose();
+            mat.print("mat before");
+            mat = mat*modelview;
+            mat.print("mat after");
+
+            systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);*/
+                //systems["rb1"]->addParticleShape(shape->getSurfaceTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
+        }
+
+        // draw all children
+        for (n = 0; n < nd->mNumChildren; ++n) {
+            build_mesh_shapes(sc, nd->mChildren[n],m);
+        }
+
+    }
+
+
     void TestApplication::build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
     {
         int i;
@@ -795,13 +952,6 @@ namespace rtps
 
         struct aiMatrix4x4 m = nd->mTransformation;
         aiMultiplyMatrix4(&m,&parentTransform);
-        dout<<"Matrix:"<<endl;
-        dout<<"r1 "<<m.a1<<" "<<m.a2<<" "<<m.a3<<" "<<m.a4<<endl;
-        dout<<"r2 "<<m.b1<<" "<<m.b2<<" "<<m.b3<<" "<<m.b4<<endl;
-        dout<<"r3 "<<m.c1<<" "<<m.c2<<" "<<m.c3<<" "<<m.c4<<endl;
-        dout<<"r4 "<<m.d1<<" "<<m.d2<<" "<<m.d3<<" "<<m.d4<<endl;
-
-
 
         // update transform
         aiTransposeMatrix4(&m);
@@ -809,11 +959,6 @@ namespace rtps
         float16 mat;
         memcpy(&mat,&m,sizeof(float16));
 
-        /*for(int i =0;i<16;i++){
-            mat.m[i]=m[0][i];
-            //dout<<"mat i "<<i<<" = "<<mat.m[i]<<endl;
-        }*/
-        // draw all meshes assigned to this node
         for (; n < nd->mNumMeshes; ++n) {
             const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
 
@@ -1018,48 +1163,26 @@ namespace rtps
     }
     void TestApplication::display(void)
     {
+        dout<<"translation x "<<translation.x<<" y "<<translation.y<<" z "<<translation.z<<endl;
         float tmp;
-        glShadeModel(GL_SMOOTH);
-        //glEnable(GL_LIGHTING);
-        /*glEnable(GL_LIGHT0);
-        float val[]={0.2f,0.2f,0.2f,0.0f};
-        glLightfv(GL_LIGHT0,GL_AMBIENT,val);
-        float val1[] = {lightpos.x-1.0f,lightpos.y-1.0f,lightpos.z-1.0f,0.0f};
-        glLightfv(GL_LIGHT0,GL_POSITION,val1);
-        float val2[] = {.5f,0.5f,0.5f,0.0f};
-        glLightfv(GL_LIGHT0,GL_DIFFUSE,val2);
-        */
-        //float val3[] = {1.0f,1.0f,1.0f,0.0f};
-        //glLightfv(GL_LIGHT0,GL_SPECULAR,val3);
-        glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
         glEnable(GL_NORMALIZE);
-
-        // XXX docs say all polygons are emitted CCW, but tests show that some aren't.
-        if(getenv("MODEL_IS_BROKEN"))
-            glFrontFace(GL_CW);
-
-        glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-
-        glDisable(GL_CULL_FACE);
-
-        /*if(scene_list == 0) {
-            scene_list = glGenLists(1);
-            glNewList(scene_list, GL_COMPILE);
-                // now begin at the root node of the imported data and traverse
-                // the scenegraph by multiplying subsequent local transforms
-                // together on GL's matrix stack.
-            recursive_render(scene, scene->mRootNode);
-            glEndList();
-        }*/
-
-
-        //glCallList(scene_list);
+        glEnable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_DEPTH_TEST);
         for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
         {
             meshRenderer->render(i->second,light);
         }
-        glDisable(GL_LIGHTING);
+        glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
         glDisable(GL_NORMALIZE);
+        glDisable(GL_CULL_FACE);
+    }
+    void TestApplication::loadMeshScene(string& filename)
+    {
+        dynamicMeshScene = aiImportFile(filename.c_str(),aiProcessPreset_TargetRealtime_MaxQuality);
     }
     void TestApplication::loadScene(string& filename)
     {
