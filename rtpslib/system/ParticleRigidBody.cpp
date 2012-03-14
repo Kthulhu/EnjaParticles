@@ -368,6 +368,8 @@ namespace rtps
         fill(rbfVec.begin(), rbfVec.end(),0.0f);
         fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
         staticVBO = createVBO(&f4Vec[0], f4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        comPosVBO = createVBO(&rbf4Vec[0], rbf4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        comRotationVBO = createVBO(&rotf4Vec[0], rotf4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         cl_static_position_u=Buffer<float4>(cli,staticVBO);
         cl_static_position_s=Buffer<float4>(cli,f4Vec);
         cl_position_l = Buffer<float4>(cli, f4Vec);
@@ -376,8 +378,8 @@ namespace rtps
         //cl_density_s = Buffer<float>(cli, densities);
         cl_rbParticleIndex = Buffer<int2>(cli,rbParticleIndex);
         cl_rbMass = Buffer<float>(cli,rbfVec);
-        cl_comPos = Buffer<float4>(cli,rbf4Vec);
-        cl_comRot = Buffer<float4>(cli,rotf4Vec);
+        cl_comPos = Buffer<float4>(cli,comPosVBO);
+        cl_comRot = Buffer<float4>(cli,comRotationVBO);
         cl_comVel = Buffer<float4>(cli,rbf4Vec);
         cl_comAngVel = Buffer<float4>(cli,rbf4Vec);
         cl_comVelEval = Buffer<float4>(cli,rbf4Vec);
@@ -434,7 +436,7 @@ namespace rtps
         }
         else if (num + nn > max_num)
         {
-			cout<<"pushParticles: exceeded max nb("<<max_num<<") of particles allowed"<<endl;
+ 	    cout<<"pushParticles: exceeded max nb("<<max_num<<") of particles allowed"<<endl;
             return;
         }
 
@@ -462,10 +464,8 @@ namespace rtps
             for(int i = 0;i<pos.size();i++)
             {
                 float4 tmp = (pos[i]-com);
-                dout<<tmp<<endl;
                 tmp*=prbp.simulation_scale;
                 tmp.w = 1.0f;
-                dout<<tmp<<endl;
                 pos_l.push_back(tmp);
                 mass_p.push_back(mass/nn);
                 //char tmpchar[32];
@@ -493,11 +493,11 @@ namespace rtps
             float4 comAngVelEval=float4(0.0f,0.0f,0.0f,0.0f);;
             comAngVelEval=invInertialTensor*angMomentum;
 
-            dout<<"position: "<<com<<endl;
-            dout<<"velocity: "<<comVelEval<<endl;
-            dout<<"ang momentum: "<<angMomentum<<endl;
-            dout<<"mass: "<<mass<<endl;
-            dout<<"Inertial Tensor: "<<endl;
+            //dout<<"position: "<<com<<endl;
+            //dout<<"velocity: "<<comVelEval<<endl;
+            //dout<<"ang momentum: "<<angMomentum<<endl;
+            //dout<<"mass: "<<mass<<endl;
+            //dout<<"Inertial Tensor: "<<endl;
             for(int i =0;i<16;i++)
                 cout<<i<<": "<<invInertialTensor.m[i]<<" ,";
             cout<<endl;
@@ -508,6 +508,7 @@ namespace rtps
             cl_position_u.acquire();
             cl_color_u.acquire();
             cl_velocity_u.acquire();
+            cl_comPos.acquire();
 
             //printf("about to prep 0\n");
             //call_prep(0);
@@ -536,12 +537,13 @@ namespace rtps
             cl_invInertialTensor.copyToDevice(invInertial,rbParticleIndex.size()-1);
             //cl_rbParticleIndex.copyToDevice(rbParticleIndex,rbParticleIndex.size()-1,);
             cl_rbParticleIndex.copyToDevice(rbParticleIndex);
-            dout<<"particle index start = "<<rbParticleIndex.back().x <<" end = "<<rbParticleIndex.back().y<<endl;
-            dout<<"rbParticleIndex.size() = "<<rbParticleIndex.size()<<endl;
+            //dout<<"particle index start = "<<rbParticleIndex.back().x <<" end = "<<rbParticleIndex.back().y<<endl;
+            //dout<<"rbParticleIndex.size() = "<<rbParticleIndex.size()<<endl;
 
             settings->SetSetting("num_particles", num+nn);
             updateParams();
 
+            cl_comPos.release();
             cl_position_u.release();
             cl_color_u.release();
             cl_velocity_u.release();
@@ -800,5 +802,17 @@ namespace rtps
                 cli_debug);
             timers["permute"]->stop();
            cli->queue.finish();
+    }
+    void ParticleRigidBody::acquireGLBuffers()
+    {
+        cl_comPos.acquire();
+        cl_comRot.acquire();
+        System::acquireGLBuffers();
+    }
+    void ParticleRigidBody::releaseGLBuffers()
+    {
+        cl_comPos.release();
+        cl_comRot.release();
+        System::releaseGLBuffers();
     }
 }; //end namespace

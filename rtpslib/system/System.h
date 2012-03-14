@@ -179,7 +179,7 @@ namespace rtps
         Buffer<unsigned int>& getCellStartBuffer() {return cl_cell_indices_start;}
         Buffer<unsigned int>& getCellEndBuffer() {return cl_cell_indices_end;}
         float getSpacing(){return spacing;}
-        RTPSSettings* getSettings() {return settings;}
+        RTPSSettings* getSettings();
         virtual void acquireGLBuffers();
         virtual void releaseGLBuffers();
     protected:

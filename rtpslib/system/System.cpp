@@ -46,6 +46,8 @@ namespace rtps
 	//----------------------------------------------------------------------
     System::System(RTPSSettings* set, CL* c)
     {
+	dout<<"settings "<<set<<endl;
+
         settings = set;
         cli = c;
         acquiredGL=false;
@@ -120,6 +122,7 @@ namespace rtps
             glDeleteBuffers(1, (GLuint*)&active_cells_vbo);
             active_cells_vbo = 0;
         }
+	delete settings;
     }
 
 	//----------------------------------------------------------------------
@@ -502,18 +505,7 @@ namespace rtps
                         pos.y = ((i/(float)(voxelResolution-1))-0.5f)*scale;
                         pos.z = ((k/(float)(voxelResolution-1))-0.5f)*scale;
                         pos.w = 1.0f;
-                        if(!firstPart)
-                        {
-                            pos.print("Pos before world translation");
-                            dout<<"Here"<<endl;
-                        }
                         pos = world*pos;
-                        if(!firstPart)
-                        {
-                            pos.print("Pos after world translation");
-                            dout<<"Here"<<endl;
-                            firstPart=true;
-                        }
                         vec.push_back(pos);
                     }
                 }
@@ -546,4 +538,5 @@ namespace rtps
         cl_active_cells.release();
         acquiredGL=false;
     }
+    RTPSSettings* System::getSettings() {return settings;}
 }; //end namespace

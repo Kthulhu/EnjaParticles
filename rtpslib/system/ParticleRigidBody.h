@@ -90,10 +90,18 @@ namespace rtps
         GLuint getStaticVBO(){
             return staticVBO;
         }
+        GLuint getComPosVBO(){
+            return comPosVBO;
+        }
+        GLuint getComRotationVBO(){
+            return comRotationVBO;
+        }
 
         Buffer<float4>& getStaticPositionBuffer() {return cl_static_position_s;}
         Buffer<unsigned int>& getStaticCellStartBuffer() {return cl_cell_static_indices_start;}
         Buffer<unsigned int>& getStaticCellEndBuffer() {return cl_cell_static_indices_end;}
+        virtual void acquireGLBuffers();
+        virtual void releaseGLBuffers();
     private:
         unsigned int curRigidbodyID;
         ParticleRigidBodyParams prbp;
@@ -129,6 +137,9 @@ namespace rtps
         Buffer<float4> cl_comLinearForce;
         Buffer<float4> cl_comTorqueForce;
         Buffer<float16> cl_invInertialTensor;
+
+        GLuint comPosVBO;
+        GLuint comRotationVBO;
 
         //Parameter structs
         Buffer<ParticleRigidBodyParams>   cl_prbp;

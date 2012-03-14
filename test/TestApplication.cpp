@@ -94,10 +94,10 @@ namespace rtps
         scene=NULL;
         scene_list=0;
         loadScene(scenefile);
-        string meshesfile = "demo_meshes_scene.obj";
-        loadMeshScene(meshsfile);
+        string meshesfile = "demo_mesh_scene.obj";
+        loadMeshScene(meshesfile);
         build_shapes(scene, scene->mRootNode);
-        build_dynamic_shapes(scene, scene->mRootNode);
+        build_dynamic_shapes(dynamicMeshScene, dynamicMeshScene->mRootNode);
     }
 
     void TestApplication::setWindowHeight(GLuint windowHeight) {
@@ -249,6 +249,7 @@ namespace rtps
 
             case 'r': //drop a ball
             {
+                ParticleShape* shape=pShapes["dynamicShape"];
                 float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
                 trans +=7.0f;
                 float16 modelview;
@@ -264,10 +265,8 @@ namespace rtps
                 glPopMatrix();
                 modelview.print("modelview");
                 modelview.transpose();
-                mat = mat*modelview;
-                shape=shapes[""]
 
-                systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),mass);
+                systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),modelview,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),mass);
 
                 /*    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
                     float size = 1.0f;
@@ -421,6 +420,8 @@ namespace rtps
 
 
             RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
+            ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
+            meshRenderer->renderInstanced(dynamicMeshs["dynamicShape"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
             display();
                         /*glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
             glVertexPointer(3, GL_FLOAT, 0, 0);
@@ -440,7 +441,7 @@ namespace rtps
                 {
                     effects[renderType]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
                 }
-                effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
+                //effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
                 //FIXME:This is a horrible way of doing this!!
                 /*if(i->first=="rb1")
                 {
@@ -448,6 +449,9 @@ namespace rtps
                     effects["default"]->render(prb->getStaticVBO(),prb->getColVBO(),prb->getStaticNum());
                 }*/
             }
+            //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
+            effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
+
             /*if(render_movie)
             {
                 //write_movie_frame("image");
@@ -636,14 +640,18 @@ namespace rtps
             #else
                 sysSettings[i]->SetSetting("rtps_path","./bin");
             #endif
+            dout<<"i = "<<i<<endl;
             //Fixme::This is hacky. I need to determine an efficient way to do simulation scaling
             //for rigid bodies to work well with sph.
             if(sysSettings[i]->GetSettingAs<string>("system")=="rigidbody")
             {
+		dout<<"systems['water'] "<<systems["water"]<<endl;
+		dout<<"water vbo "<<systems["water"]->getPosVBO()<<endl;
                 sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
                 sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
             }
             systems[names[i]]=RTPS::generateSystemInstance(sysSettings[i],cli);
+            dout<<"names[i] \'"<<names[i]<<"\'"<<endl;
 
         }
         gridMin = systems["water"]->getSettings()->GetSettingAs<float4>("domain_min");
@@ -744,6 +752,8 @@ namespace rtps
         int two_sided;
         int wireframe;
         unsigned int max;
+	if(!mtl)
+		cerr<<"No Material Found"<<endl;
 
         max = 1;
         aiGetMaterialFloatArray(mtl,AI_MATKEY_OPACITY,&opacity,&max);
@@ -817,12 +827,17 @@ namespace rtps
         unsigned int n = 0, t;
 
         float16 mat;
+            aiMatrix4x4 m(1.0f,0.0f,0.0f,0.0f,
+                          0.0f,1.0f,0.0f,0.0f,
+                          0.0f,0.0f,1.0f,0.0f,
+                          0.0f,0.0f,0.0f,1.0f);
 
         for (; n < nd->mNumMeshes; ++n) {
-            const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+            const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
             float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
             float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
             Mesh* me=new Mesh();
+            dout<<"material index = "<<mesh->mMaterialIndex<<endl;
             apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
             unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
             float* vbo = new float[mesh->mNumVertices*3];
@@ -875,6 +890,7 @@ namespace rtps
                         max.z=z;
                 }
             }
+
             me->modelMat=m;
             me->vbo=createVBO(vbo,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
             me->vboSize=mesh->mNumVertices;
@@ -892,8 +908,9 @@ namespace rtps
             }
 
             stringstream s;
-            s<<"test"<<mesh->mNumFaces;
-            meshs[s.str()]=me;
+	    //I need too have a better way to handle more than 1 shape.
+	    s<<"dynamicShape";
+            dynamicMeshs[s.str()]=me;
             dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
             dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
             //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
@@ -909,7 +926,6 @@ namespace rtps
             dout<<"mesh name = "<<s.str()<<endl;
             dout<<"max dim = "<<shape->getMaxDim()<<endl;
             dout<<"min dim = "<<shape->getMinDim()<<endl;
-            dout<<"Trans = "<<trans<<endl;
             dout<<"min ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
             dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
             dout<<"spacing = "<<space<<endl;
@@ -939,7 +955,7 @@ namespace rtps
 
         // draw all children
         for (n = 0; n < nd->mNumChildren; ++n) {
-            build_mesh_shapes(sc, nd->mChildren[n],m);
+            build_dynamic_shapes(sc, nd->mChildren[n]);
         }
 
     }
@@ -960,12 +976,13 @@ namespace rtps
         memcpy(&mat,&m,sizeof(float16));
 
         for (; n < nd->mNumMeshes; ++n) {
-            const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+            const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
 
             dout<<"num faces "<<mesh->mNumFaces<<endl;
             float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
             float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
             Mesh* me=new Mesh();
+            dout<<"material index = "<<mesh->mMaterialIndex<<endl;
             apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
             unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
             float* vbo = new float[mesh->mNumVertices*3];
@@ -1111,7 +1128,7 @@ namespace rtps
 
         // draw all meshes assigned to this node
         for (; n < nd->mNumMeshes; ++n) {
-            const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+            const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
 
             //apply_material(sc->mMaterials[mesh->mMaterialIndex]);
 
@@ -1163,7 +1180,6 @@ namespace rtps
     }
     void TestApplication::display(void)
     {
-        dout<<"translation x "<<translation.x<<" y "<<translation.y<<" z "<<translation.z<<endl;
         float tmp;
         glEnable(GL_NORMALIZE);
         glEnable(GL_CULL_FACE);
@@ -1183,6 +1199,8 @@ namespace rtps
     void TestApplication::loadMeshScene(string& filename)
     {
         dynamicMeshScene = aiImportFile(filename.c_str(),aiProcessPreset_TargetRealtime_MaxQuality);
+	if(!dynamicMeshScene)
+            cerr<<"Scene file couldn't be imported from: "<<filename<<endl;
     }
     void TestApplication::loadScene(string& filename)
     {

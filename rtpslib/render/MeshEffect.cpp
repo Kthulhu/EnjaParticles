@@ -34,7 +34,6 @@ namespace rtps
     MeshEffect::~MeshEffect(){}
     void MeshEffect::render(Mesh* mesh,Light& light)
     {
-        dout<<"light x "<<light.pos.x<<" y "<<light.pos.y<<" z "<<light.pos.z<<endl;
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
         glMultMatrixf((float*)&mesh->modelMat);
@@ -49,15 +48,9 @@ namespace rtps
             glEnableVertexAttribArray(2);
             glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
             glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,0,0);
-            glEnable(GL_LIGHTING);
-        }
-        else
-        {
-            glDisable(GL_LIGHTING);
         }
         if(mesh->hasTexture)
         {
-            dout<<"Here"<<endl;
             glEnableVertexAttribArray(3);
             glBindBuffer(GL_ARRAY_BUFFER, mesh->texCoordsbo);
             glVertexAttribPointer(3,2,GL_FLOAT,GL_FALSE,0,0);
@@ -103,7 +96,6 @@ namespace rtps
         if(mesh->hasNormals)
         {
             glDisableVertexAttribArray(2);
-            glDisable(GL_LIGHTING);
         }
         if(mesh->hasTexture)
         {
@@ -117,16 +109,16 @@ namespace rtps
     {
         glEnableVertexAttribArray(0);
         glVertexAttribDivisorARB(0,0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribDivisorARB(1,0);
+        //glEnableVertexAttribArray(1);
+        //glVertexAttribDivisorARB(1,0);
         glEnableVertexAttribArray(2);
         glVertexAttribDivisorARB(2,1);
         glEnableVertexAttribArray(3);
         glVertexAttribDivisorARB(3,1);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
         glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
-        glBindBuffer(GL_ARRAY_BUFFER, mesh->colbo);
-        glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
+        //glBindBuffer(GL_ARRAY_BUFFER, mesh->colbo);
+        //glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
         glBindBuffer(GL_ARRAY_BUFFER, pos);
         glVertexAttribPointer(2,4,GL_FLOAT,GL_FALSE,0,0);
         glBindBuffer(GL_ARRAY_BUFFER, quat);
@@ -137,11 +129,6 @@ namespace rtps
             glVertexAttribDivisorARB(4,0);
             glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
             glVertexAttribPointer(4,3,GL_FLOAT,GL_FALSE,0,0);
-            glEnable(GL_LIGHTING);
-        }
-        else
-        {
-            glDisable(GL_LIGHTING);
         }
         if(mesh->hasTexture)
         {
@@ -153,29 +140,47 @@ namespace rtps
             glBindTexture(GL_TEXTURE_2D,mesh->tex);
         }
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
-        glUseProgram(m_shaderLibrary.shaders["renderInstancedShader"].getProgram());
         //TODO: Create My own matrix class to handle this. Or use boost. That way
         //I can be opengl 3+ compliant.
         float16 modelview;
         glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+        //modelview.transpose();
+
         float16 project;
         glGetFloatv(GL_PROJECTION_MATRIX,project.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"modelview"),1,true,modelview.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"project"),1,true,project.m);
+        //project.transpose();
+
+        glUseProgram(m_shaderLibrary.shaders["renderInstancedShader"].getProgram());
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"modelview"),1,false,modelview.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"project"),1,false,project.m);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"light.diffuse"),1,&light.diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"light.specular"),1,&light.specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"light.ambient"),1,&light.ambient.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"light.pos"),1,&light.pos.x);
         glDrawElementsInstancedEXT(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0,size);
         glUseProgram(0);
         glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
+        glVertexAttribDivisorARB(0,0);
+        //glDisableVertexAttribArray(1);
+        //glVertexAttribDivisorARB(1,0);
         glDisableVertexAttribArray(2);
+        glVertexAttribDivisorARB(2,0);
         glDisableVertexAttribArray(3);
+        glVertexAttribDivisorARB(3,0);
         if(mesh->hasNormals)
         {
             glDisableVertexAttribArray(4);
-            glDisable(GL_LIGHTING);
+            glVertexAttribDivisorARB(4,0);
         }
         if(mesh->hasTexture)
         {
             glDisableVertexAttribArray(5);
+            glVertexAttribDivisorARB(5,0);
             glDisable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D,0);
         }
