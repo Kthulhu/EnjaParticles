@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -214,7 +214,7 @@ int main(int argc, char** argv)
 		//|GLUT_STEREO //if you want stereo you must uncomment this.
 		);
     glutInitWindowSize(window_width, window_height);
-    glutInitWindowPosition (glutGet(GLUT_SCREEN_WIDTH)/2 - window_width/2, 
+    glutInitWindowPosition (glutGet(GLUT_SCREEN_WIDTH)/2 - window_width/2,
                             glutGet(GLUT_SCREEN_HEIGHT)/2 - window_height/2);
 
 
@@ -233,13 +233,13 @@ int main(int argc, char** argv)
 
     // initialize necessary OpenGL extensions
     glewInit();
-    GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object"); 
+    GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
     printf("GLEW supported?: %d\n", bGLEW);
 
 
     printf("before we call enjas functions\n");
 
- 
+
     cli = new CL();
     //default constructor
     //rtps::RTPSettings settings;
@@ -247,7 +247,7 @@ int main(int argc, char** argv)
     grid = new Domain(float4(0,0,0,0), float4(10, 10, 10, 0));
     //rtps::Domain grid = Domain(float4(0,0,0,0), float4(2, 2, 2, 0));
     rtps::RTPSettings *settings = new rtps::RTPSettings(rtps::RTPSettings::SPH, NUM_PARTICLES, DT, grid);
-    
+
 
     //should be argv[0]
 #ifdef WIN32
@@ -286,7 +286,7 @@ int main(int argc, char** argv)
 
     grid2 = new Domain(float4(0,0,0,0), float4(10, 10, 10, 0));
     rtps::RTPSettings* rb_settings = new rtps::RTPSettings(rtps::RTPSettings::PARTICLE_RIGIDBODY, NUM_PARTICLES, DT , grid2);
-    
+
 
     //should be argv[0]
 #ifdef WIN32
@@ -344,10 +344,10 @@ int main(int argc, char** argv)
         gIndices[(i*3)+2]=gIndicesBunny[i][2];
     }
 
-    
+
     bunnyVBO = createVBO(gVerticesBunny, 3*BUNNY_NUM_VERTICES*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
     bunnyIBO = createVBO(gIndices, 3*BUNNY_NUM_TRIANGLES*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
-    
+
     RenderSettings rs;
     //rs.blending=false;
     rs.blending=false;
@@ -369,7 +369,7 @@ int main(int argc, char** argv)
     vector<unsigned int> indices(100);
     for(int i = 0;i<100;i++)
     {
-        indices[i]=tmp*i;      
+        indices[i]=tmp*i;
     }
     streamline=new StreamlineEffect(rs, *lib,100,100,indices,cli);
     float4 point(2.5f,2.5f,2.5f,1.0f);
@@ -413,7 +413,7 @@ void appRender()
                 max.z=z;
         }
         cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
-        cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl; 
+        cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
         bunnyShape = new ParticleShape(min,max,rb->system->getSpacing(),3.0f);
         bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
         //write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
@@ -438,15 +438,15 @@ void appRender()
         glRotatef(rotate_x, 1.0, 0.0, 0.0);
         glRotatef(rotate_y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
         glTranslatef(translate_x, translate_z, translate_y);
-        
-        
+
+
         glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
         glVertexPointer(3, GL_FLOAT, 0, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
         glEnableClientState( GL_VERTEX_ARRAY );
-        glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0); 
+        glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0);
         glDisableClientState( GL_VERTEX_ARRAY );
-        
+
         RenderUtils::renderBox(grid->getBndMin(),grid->getBndMax(),float4(0.0f,1.0,0.0f,1.0f));
         if(renderVelocity)
         {
@@ -516,7 +516,7 @@ void appKeyboard(unsigned char key, int x, int y)
             rb->system->printTimers();
             return;
         case '\033': // escape quits
-        case '\015': // Enter quits    
+        case '\015': // Enter quits
         case 'Q':    // Q quits
         case 'q':    // q (or escape) quits
             // Cleanup up and quit
@@ -976,14 +976,15 @@ void setFrustum(void)
 
 int write_movie_frame(const char* name)
 {
-        sprintf(filename,"%s%s_%08d.png",render_dir,name,frame_counter);
-        glReadPixels(0, 0, window_width, window_height, GL_RGBA, GL_UNSIGNED_BYTE, image);
-        if (!stbi_write_png(filename,window_width,window_height,4,(void*)image,0))
-        {
-            printf("failed to write image %s\n",filename);
-            return -1;
-        }
-        return 0;
+    GLubyte* image = new GLubyte[windowWidth*windowHeight*3];
+    sprintf(filename,"%s%s_%08d.png",render_dir,name,frame_counter);
+    glReadPixels(0, 0, windowWidth, windowHeight, GL_RGB, GL_UNSIGNED_BYTE, image);
+    if (!stbi_write_png(filename, windowWidth, windowHeight,3,(void*)image,0))
+    {
+        printf("failed to write image %s\n",filename);
+        return -1;
+    }
+    return 0;
 }
 void rotate_img(GLubyte* img, int size)
 {

@@ -72,7 +72,7 @@ namespace rtps
         effects["default"]=new ParticleEffect(rs,*lib);
         //effects["sprite"]=new ParticleEffect();
         rs.blending=true;
-        rs.particleRadius =systems["water"]->getSpacing()*.5f;
+        rs.particleRadius =systems["water"]->getSpacing()*.75f;
         effects["ssfr"]=new SSEffect(rs, *lib);
         meshRenderer=new MeshEffect(rs, *lib);
         translation.x = -5.00f;
@@ -84,7 +84,7 @@ namespace rtps
         //light.ambient.x=0.3;light.ambient.y=0.3;light.ambient.z=0.3;
         light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
         light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
-        light.pos.x=5.0f; light.pos.y=5.0f; light.pos.z=5.0f;
+        light.pos.x=0.0f; light.pos.y=5.0f; light.pos.z=8.0f;
         mass=1.0f;
         sizeScale=1.0f;
         string scenefile = "demo_scene.obj";
@@ -94,6 +94,8 @@ namespace rtps
         scene=NULL;
         scene_list=0;
         loadScene(scenefile);
+        renderMovie=false;
+        frameCounter=0;
         string meshesfile = "demo_mesh_scene.obj";
         loadMeshScene(meshesfile);
         build_shapes(scene, scene->mRootNode);
@@ -197,7 +199,7 @@ namespace rtps
                 return;
             }
             case 'n':
-                //render_movie=!render_movie;
+                renderMovie=!renderMovie;
                 break;
             case '`':
                 //stereo_enabled = !stereo_enabled;
@@ -419,10 +421,10 @@ namespace rtps
             glLineWidth (1.0);
 
 
-            RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
+            //RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
             ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
             meshRenderer->renderInstanced(dynamicMeshs["dynamicShape"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
-            display();
+            display(false);
                         /*glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
             glVertexPointer(3, GL_FLOAT, 0, 0);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
@@ -431,7 +433,7 @@ namespace rtps
             glDisableClientState( GL_VERTEX_ARRAY );
              */
 
-            glDisable(GL_DEPTH_TEST);
+            //glDisable(GL_DEPTH_TEST);
             //RenderUtils::renderBox(gridMin,gridMax,float4(0.0f,1.0,0.0f,1.0f));
             //FIXME: Have a method to give renderType to each System. That way we can have different
             //Systems with the different effects.
@@ -451,14 +453,16 @@ namespace rtps
             }
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
             effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
+            display(true);
 
-            /*if(render_movie)
+            if(renderMovie)
             {
-                //write_movie_frame("image");
-            }*/
+                writeMovieFrame("image","./frames/");
+                frameCounter++;
+            }
 
         //}
-        glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_DEPTH_TEST);
 
 
         /*if(render_movie)
@@ -485,9 +489,29 @@ namespace rtps
         glDisableClientState( GL_VERTEX_ARRAY );
         ///DEBUG!!---***
         glEnable(GL_LIGHTING);*/
-        glDisable(GL_BLEND);
+        //glDisable(GL_BLEND);
         glutSwapBuffers();
 
+    }
+    int TestApplication::writeMovieFrame(const char* filename, const char* dir)
+    {
+        GLubyte* image = new GLubyte[windowWidth*windowHeight*3];
+        stringstream s;
+        s<<dir<<filename;
+        s.fill('0');
+        s.width(8);
+        s<<right<<frameCounter;
+        s<<".png";
+        //sprintf(filename,"%s%s_%08d.png",render_dir,filename,frameCounter);
+        glReadPixels(0, 0, windowWidth, windowHeight, GL_RGB, GL_UNSIGNED_BYTE, image);
+        if (!stbi_write_png(s.str().c_str() , windowWidth, windowHeight,3,(void*)image,0))
+        {
+            delete[] image;
+            cerr<<"failed to write image "<<filename<<endl;
+            return -1;
+        }
+        delete[] image;
+        return 0;
     }
     void TestApplication::DestroyCallback()
     {
@@ -1066,10 +1090,10 @@ namespace rtps
             ParticleShape* shape = new ParticleShape(min,max,space);
 
             shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
+            //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
             //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
             s<<"surface";
-            RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
+            //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
             dout<<"mesh name = "<<s.str()<<endl;
             dout<<"max dim = "<<shape->getMaxDim()<<endl;
@@ -1178,21 +1202,26 @@ namespace rtps
 
         glPopMatrix();
     }
-    void TestApplication::display(void)
+    void TestApplication::display(bool blend)
     {
         float tmp;
         glEnable(GL_NORMALIZE);
         glEnable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        glDisable(GL_DEPTH_TEST);
+        if(blend)
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+        }
         for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
         {
-            meshRenderer->render(i->second,light);
+            if((!blend&&i->second->material.opacity==1.0f) || (blend &&i->second->material.opacity<1.0f))
+                meshRenderer->render(i->second,light);
         }
-        glEnable(GL_DEPTH_TEST);
-        glDisable(GL_BLEND);
+        if(blend)
+        {
+            glDisable(GL_BLEND);
+        }
         glDisable(GL_NORMALIZE);
         glDisable(GL_CULL_FACE);
     }

@@ -1,7 +1,7 @@
 # Blender v2.62 (sub 0) OBJ File: 'demo_scene.blend'
 # www.blender.org
 mtllib demo_scene.mtl
-o land_land_mesh
+o water_land_water_land_mesh
 v 2.530093 2.431108 0.769391
 v 2.549088 9.288093 0.754953
 v 9.292104 9.288093 0.756868

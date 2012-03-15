@@ -12,6 +12,7 @@
 #include <assimp/aiPostProcess.h>
 #include <assimp/aiScene.h>
 
+#include "../rtpslib/render/util/stb_image_write.h"
 #define aisgl_min(x,y) (x<y?x:y)
 #define aisgl_max(x,y) (y>x?y:x)
 namespace rtps
@@ -40,12 +41,13 @@ namespace rtps
             void loadMeshScene(std::string& filename);
             //FIXME: These following methods are used for assimp to import modules. They should
             //probably be better. Currently they are almost verbatim from a loading example.
-            void display();
+            void display(bool blend);
             void build_dynamic_shapes (const struct aiScene *sc, const struct aiNode* nd);
             void build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform=aiMatrix4x4(1.0f,0.0f,0.0f,0.0f,
                                                                                                                             0.0f,1.0f,0.0f,0.0f,
                                                                                                                             0.0f,0.0f,1.0f,0.0f,
                                                                                                                             0.0f,0.0f,0.0f,1.0f) );
+            int writeMovieFrame(const char* filename, const char* dir);
             void recursive_render (const struct aiScene *sc, const struct aiNode* nd);
             void apply_material(const struct aiMaterial *mtl, Mesh* mesh);
             void set_float4(float f[4], float a, float b, float c, float d);
@@ -77,6 +79,8 @@ namespace rtps
             const struct aiScene* dynamicMeshScene;
             GLuint scene_list;
             struct aiVector3D scene_min, scene_max, scene_center;
+            int frameCounter;
+            bool renderMovie;
 
 
             float4 gridMax,gridMin;

@@ -32,7 +32,7 @@ void main()
 	{
 		discard;
 		//return;
-	}	
+	}
 
 	vec3 posEye = uvToEye(gl_TexCoord[0].xy,depth);
 	vec2 texCoord1 = vec2(gl_TexCoord[0].x+del_x,gl_TexCoord[0].y);
@@ -57,7 +57,7 @@ void main()
 
 	vec3 n = cross(ddx,ddy);
 	n = normalize(n);
-	const vec3 lightDir = vec3(-0.5, 1.5, 5.);
+	const vec3 lightDir = vec3(0., 5., 8.0);
 	//const vec3 lightDir = vec3(-0.5, 1.5, 5.);
 	//const vec3 lightDir = vec3(-0.5, -0.5, 2.);
 	//const vec3 lightDir = vec3(-1.0,.0,-2.0);
@@ -67,7 +67,7 @@ void main()
 	vec3 v = normalize(-posEye);
     vec3 h = normalize(lightDir + v);
     float specular = pow(max(0.0, dot(n, h)), shininess);
-	
+
     //gl_FragData[0] = vec4(1.,0.0,0.0,1.0)*diffuse+specular;
     //gl_FragData[0] = vec4(1.,0.0,0.0,0.5)*diffuse+specular;
 	gl_FragData[0] = texture2D(colorTex,gl_TexCoord[0].xy)*diffuse+specular;
