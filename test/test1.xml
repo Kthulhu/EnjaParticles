@@ -42,13 +42,13 @@
             <param name="gravity_sources">2.5 2.5 2.5 1.0 7.5 7.5 7.5 1.0</param>
             <param name="gravity" >0.0 0.0 -9.8 0.0</param>
             <param name="velocity_limit" >600.0</param>
-            <param name="friction_dynamic" >0.2</param>
-            <param name="friction_static" >1.00</param>
+            <param name="friction_dynamic" >0.0</param>
+            <param name="friction_static" >0.00</param>
             <param name="friction_static_threshold" >0.0001</param>
-            <param name="penetration_factor" >.01</param>
-            <param name="restitution" >0.01</param>
-            <param name="integrator" >euler</param>
-            <!--<param name="integrator" >leapfrog</param>-->
+            <param name="penetration_factor" >.02</param>
+            <param name="restitution" >.15</param>
+            <!--<param name="integrator" >euler</param>-->
+            <param name="integrator" >leapfrog</param>
             <param name="time_step" >0.003</param>
         </parameters>
         <parameters type="render">

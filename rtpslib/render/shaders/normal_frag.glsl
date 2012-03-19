@@ -57,8 +57,8 @@ void main()
 
 	vec3 n = cross(ddx,ddy);
 	n = normalize(n);
-	const vec3 lightDir = vec3(0., 5., 8.0);
-	//const vec3 lightDir = vec3(-0.5, 1.5, 5.);
+	//const vec3 lightDir = vec3(2., 5., 2.0);
+	const vec3 lightDir = vec3(-0.5, 1.5, 5.);
 	//const vec3 lightDir = vec3(-0.5, -0.5, 2.);
 	//const vec3 lightDir = vec3(-1.0,.0,-2.0);
 	const float shininess = 500.0;

@@ -72,7 +72,7 @@ namespace rtps
         effects["default"]=new ParticleEffect(rs,*lib);
         //effects["sprite"]=new ParticleEffect();
         rs.blending=true;
-        rs.particleRadius =systems["water"]->getSpacing()*.75f;
+        rs.particleRadius =systems["water"]->getSpacing()*.6f;
         effects["ssfr"]=new SSEffect(rs, *lib);
         meshRenderer=new MeshEffect(rs, *lib);
         translation.x = -5.00f;
@@ -84,8 +84,8 @@ namespace rtps
         //light.ambient.x=0.3;light.ambient.y=0.3;light.ambient.z=0.3;
         light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
         light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
-        light.pos.x=0.0f; light.pos.y=5.0f; light.pos.z=8.0f;
-        mass=1.0f;
+        light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
+        mass=0.01f;
         sizeScale=1.0f;
         string scenefile = "demo_scene.obj";
 
@@ -190,9 +190,9 @@ namespace rtps
             {
                 //spray hose
                 cout<<"about to make hose"<<endl;
-                float4 col1 = float4(0.05, 0.15, 8., 0.1);
+                float4 col1 = float4(0.05, 0.1, 2., 0.1);
                 float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-0.5f,1.0f);
-                float4 velocity(-1.f, -1.f, -4.f, 0);
+                float4 velocity(-1.5f, -1.5f, -4.f, 0);
                 float radius= 3.0f;
                 //sph sets spacing and multiplies by radius value
                 systems["water"]->addHose(50000, center, velocity,radius, col1);
@@ -453,6 +453,7 @@ namespace rtps
             }
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
             effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
+            //effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             display(true);
 
             if(renderMovie)
