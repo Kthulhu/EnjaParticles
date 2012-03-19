@@ -22,9 +22,8 @@
 ****************************************************************************************/
 
 
-#ifndef RTPS_DENSITY_H_INCLUDED
-#define RTPS_DENSITY_H_INCLUDED
-
+#ifndef RTPS_COLORFIELD_H_INCLUDED
+#define RTPS_COLORFIELD_H_INCLUDED
 
 #include "../../opencl/CLL.h"
 #include "../../opencl/Buffer.h"
@@ -32,17 +31,16 @@
 
 namespace rtps
 {
-    class Density
+    class ColorField
     {
         public:
-            Density() { cli = NULL; timer = NULL; };
-            Density(std::string path, CL* cli, EB::Timer* timer);
+            ColorField() { cli = NULL; timer = NULL; };
+            ColorField(std::string path, CL* cli, EB::Timer* timer);
             void execute(int num,
-                    //input
-                    //Buffer<float4>& svars,
                     Buffer<float4>& pos_s,
                     Buffer<float>& dens_s,
-                    //output
+                    Buffer<float4>& cfieldTex,
+                    int res,
                     Buffer<unsigned int>& ci_start,
                     Buffer<unsigned int>& ci_end,
                     //params
@@ -54,7 +52,7 @@ namespace rtps
 
         private:
             CL* cli;
-            Kernel k_density;
+            Kernel k_colorfield;
             EB::Timer* timer;
     };
 }

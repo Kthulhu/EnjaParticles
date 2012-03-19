@@ -27,6 +27,7 @@
 #include "../rtpslib/render/SSEffect.h"
 #include "../rtpslib/render/MeshEffect.h"
 #include <../rtpslib/system/ParticleRigidBody.h>
+#include <../rtpslib/system/SPH.h>
 
 #include <sstream>
 #include <float.h>
@@ -452,7 +453,13 @@ namespace rtps
                 }*/
             }
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
-            effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
+            //effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
+            SPH* sph = (SPH*)systems["water"];
+            glEnable(GL_TEXTURE_3D_EXT);
+            glBindTexture(GL_TEXTURE_3D_EXT,sph->getColorField());
+            glutSolidCube(10.0);
+            glBindTexture(GL_TEXTURE_3D_EXT,0);
+            glDisable(GL_TEXTURE_3D_EXT);
             //effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             display(true);
 

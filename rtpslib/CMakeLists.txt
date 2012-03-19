@@ -120,6 +120,7 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/sph/Lifetime
     ${rtpslib_SOURCE_DIR}/system/sph/Density
     ${rtpslib_SOURCE_DIR}/system/sph/Force
+    ${rtpslib_SOURCE_DIR}/system/sph/ColorField
     ${rtpslib_SOURCE_DIR}/system/sph/RigidBodyForce
     ${rtpslib_SOURCE_DIR}/system/sph/Collision_wall
     ${rtpslib_SOURCE_DIR}/system/sph/Collision_triangle

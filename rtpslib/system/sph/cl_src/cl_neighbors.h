@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -62,7 +62,7 @@ void IterateParticlesInCell(
 {
     // get hash (of position) of current cell
     uint cellHash = calcGridHash(cellPos, gp->grid_res, false);
-    
+
     //need to check cellHash to make sure its not out of bounds
     if(cellHash >= gp->nb_cells)
     {
@@ -93,15 +93,15 @@ void IterateParticlesInCell(
 }
 
 /*--------------------------------------------------------------*/
-/* Iterate over particles found in the nearby cells (including cell of position_i) 
+/* Iterate over particles found in the nearby cells (including cell of position_i)
  */
 void IterateParticlesInNearbyCells(
                                   //__global float4* vars_sorted,
                                   ARGS,
                                   PointData* pt,
                                   uint num,
-                                  int     index_i, 
-                                  float4   position_i, 
+                                  int     index_i,
+                                  float4   position_i,
                                   __global int*       cell_indices_start,
                                   __global int*       cell_indices_end,
                                   __constant struct GridParams* gp,
@@ -117,7 +117,7 @@ void IterateParticlesInNearbyCells(
     int4 cell = calcGridCell(position_i, gp->grid_min, gp->grid_delta);
 
     // iterate through the 3^3 cells in and around the given position
-    // can't unroll these loops, they are not innermost 
+    // can't unroll these loops, they are not innermost
     //TODO bug in that we don't take into account cells on edge of grid!
     for (int z=cell.z-1; z<=cell.z+1; ++z)
     {

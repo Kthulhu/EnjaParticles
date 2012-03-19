@@ -26,9 +26,8 @@
 #define RTPS_RIGIDBODY_FORCE_H_INCLUDED
 
 
-#include <CLL.h>
-#include <Buffer.h>
-
+#include "../../opencl/CLL.h"
+#include "../../opencl/Buffer.h"
 
 namespace rtps
 {

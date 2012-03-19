@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -33,22 +33,23 @@
 #include <string>
 
 
-#include <System.h>
-#include <SPHSettings.h>
+#include "System.h"
+#include "SPHSettings.h"
 
-#include <util.h>
+#include "util.h"
 
 
-#include <sph/Density.h>
-#include <sph/Force.h>
-#include <sph/Collision_wall.h>
-#include <sph/Collision_triangle.h>
-#include <sph/RigidBodyForce.h>
-#include <sph/LeapFrog.h>
-#include <sph/Lifetime.h>
-#include <sph/Euler.h>
+#include "sph/Density.h"
+#include "sph/Force.h"
+#include "sph/ColorField.h"
+#include "sph/Collision_wall.h"
+#include "sph/Collision_triangle.h"
+#include "sph/RigidBodyForce.h"
+#include "sph/LeapFrog.h"
+#include "sph/Lifetime.h"
+#include "sph/Euler.h"
 //#include "../util.h"
-#include <Hose.h>
+#include "../rtpslib/system/common/Hose.h"
 
 
 #ifdef WIN32
@@ -56,7 +57,7 @@
         #define RTPS_EXPORT __declspec(dllexport)
     #else
         #define RTPS_EXPORT __declspec(dllimport)
-	#endif 
+	#endif
 #else
     #define RTPS_EXPORT
 #endif
@@ -74,7 +75,8 @@ namespace rtps
         void update();
         void interact();
         void integrate();
-        //wrapper around Hose.h 
+        void postprocess();
+        //wrapper around Hose.h
         int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f), float mass = 0.0f);
         void updateHose(int index, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
         void refillHose(int index, int refill);
@@ -91,6 +93,9 @@ namespace rtps
 
         std::vector<float4> getDeletedPos();
         std::vector<float4> getDeletedVel();
+        void acquireGLBuffers();
+        void releaseGLBuffers();
+        GLuint getColorField(){return colFieldTex;}
 
         void prepareSorted();
 
@@ -108,10 +113,15 @@ namespace rtps
 
         Buffer<float>       cl_density_s;
         Buffer<float4>      cl_xsph_s;
+        Buffer<float4>      cl_colField;
 
         //Parameter structs
         Buffer<SPHParams>   cl_sphp;
-        
+
+        GLuint colFieldTex;
+
+        bool useColorField;
+
         //CPU functions
         /*void cpuDensity();
         void cpuPressure();
@@ -139,6 +149,7 @@ namespace rtps
         CollisionWall collision_wall;
         CollisionTriangle collision_tri;
         RigidBodyForce forceRB;
+        ColorField colorfield;
         LeapFrog leapfrog;
         Euler euler;
 
@@ -151,9 +162,10 @@ namespace rtps
 
         //OpenCL helper functions, should probably be part of the OpenCL classes
         //void loadScopy();
-        //void scopy(int n, cl_mem xsrc, cl_mem ydst); 
+        //void scopy(int n, cl_mem xsrc, cl_mem ydst);
 
         //void sset_int(int n, int val, cl_mem xdst);
+
 
 		Utils u;
 

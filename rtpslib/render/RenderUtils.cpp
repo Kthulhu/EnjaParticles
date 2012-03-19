@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -29,15 +29,15 @@
 
 #include "RenderUtils.h"
 #include "util.h"
-#include "stb_image.h" 
+#include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h" 
+#include "stb_image_write.h"
 
 using namespace std;
 
 namespace rtps
 {
-    
+
     void RenderUtils::orthoProjection()
     {
         glMatrixMode(GL_PROJECTION);                    // Select Projection
@@ -75,7 +75,7 @@ namespace rtps
         glEnd();
         perspectiveProjection();
     }
-    void RenderUtils::writeTextures(const map<string,GLuint>& texs) 
+    void RenderUtils::writeTextures(const map<string,GLuint>& texs)
     {
         for (map<string,GLuint>::const_iterator i = texs.begin();i!=texs.end();i++)
         {
@@ -116,7 +116,7 @@ namespace rtps
         return 0;
     }
 
-    
+
     void RenderUtils::write3DTextureToDisc(GLuint tex,int voxelResolution, const char* filename)
     {
         printf("writing %s texture to disc.\n",filename);
@@ -143,7 +143,7 @@ namespace rtps
         delete[] image;
     }
 
-    void RenderUtils::convertDepthToRGB(const GLfloat* depth, GLuint size, GLubyte* rgba) 
+    void RenderUtils::convertDepthToRGB(const GLfloat* depth, GLuint size, GLubyte* rgba)
     {
         GLfloat minimum = 1.0f;
         for (GLuint i = 0;i<size;i++)
@@ -253,7 +253,7 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        
+
         //better way to do this?
         if(channels == 3)
         {

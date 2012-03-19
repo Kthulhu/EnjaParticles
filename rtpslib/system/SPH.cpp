@@ -32,6 +32,7 @@
 #include "System.h"
 #include "SPH.h"
 #include "ParticleRigidBody.h"
+#include "../rtpslib/opencl/CLL.h"
 //#include "../domain/UniformGrid.h"
 #include "Domain.h"
 #include "IV.h"
@@ -76,6 +77,7 @@ namespace rtps
         forceRB = RigidBodyForce(sph_source_dir, cli, timers["force_rigidbody_gpu"]);
         density = Density(sph_source_dir, cli, timers["density_gpu"]);
         force = Force(sph_source_dir, cli, timers["force_gpu"]);
+        colorfield = ColorField(sph_source_dir, cli, timers["colorfield_gpu"]);
         collision_wall = CollisionWall(sph_source_dir, cli, timers["cw_gpu"]);
         collision_tri = CollisionTriangle(sph_source_dir, cli, timers["ct_gpu"], 2048); //TODO expose max_triangles as a parameter
 
@@ -90,7 +92,7 @@ namespace rtps
         {
             euler = Euler(sph_source_dir, cli, timers["euler_gpu"]);
         }
-        dout<<"Here"<<endl;
+
 #endif
     }
 
@@ -333,6 +335,30 @@ namespace rtps
                 cli_debug);
         timers["collision_tri"]->stop();
     }
+    //-------------
+    void SPH::postprocess()
+    {
+        if(settings->GetSettingAs<bool>("use_color_field","0"))
+        {
+        //if(num >0) printf("force\n");
+            timers["colorfield"]->start();
+            colorfield.execute(   num,
+                //cl_vars_sorted,
+                cl_position_s,
+                cl_density_s,
+                cl_colField,
+                settings->GetSettingAs<unsigned int>("color_field_res","32"),
+                cl_cell_indices_start,
+                cl_cell_indices_end,
+                cl_sphp,
+                //cl_GridParams,
+                cl_GridParamsScaled,
+                clf_debug,
+                cli_debug);
+
+            timers["colorfield"]->stop();
+        }
+    }
 	//----------------------------------------------------------------------
 
     void SPH::integrate()
@@ -420,6 +446,8 @@ namespace rtps
         timers["integrate"] = new EB::Timer("Integration function", time_offset);
         timers["leapfrog_gpu"] = new EB::Timer("LeapFrog Integration GPU kernel execution", time_offset);
         timers["euler_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset);
+        timers["colorfield"] = new EB::Timer("Colorfield function", time_offset);
+        timers["colorfield_gpu"] = new EB::Timer("Colorfield GPU kernel execution", time_offset);
 		return 0;
     }
 
@@ -452,6 +480,26 @@ namespace rtps
         sgparams.push_back(grid_params_scaled);
         cl_GridParamsScaled = Buffer<GridParams>(cli, sgparams);
         dout<<"Here"<<endl;
+
+        if(settings->GetSettingAs<bool>("use_color_field","false"))
+        {
+            unsigned int res = settings->GetSettingAs<unsigned int>("color_field_res","32");
+            dout<<"Here"<<endl;
+            glEnable(GL_TEXTURE_3D_EXT);
+            glGenTextures(1, &colFieldTex);
+            glBindTexture(GL_TEXTURE_3D_EXT,colFieldTex);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            GLint mode = GL_CLAMP_TO_BORDER;
+            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S, mode);
+            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T, mode);
+            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R, mode);
+            glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0, GL_RGBA, res, res, res, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+            cl_colField=Buffer<float4>(cli,colFieldTex);
+            glBindTexture(GL_TEXTURE_3D_EXT, 0);
+            glDisable(GL_TEXTURE_3D_EXT);
+        }
         // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
         // That is a problem since the number of
         // occupied cells could be much less than the number of grid elements.
@@ -605,5 +653,15 @@ namespace rtps
                     cli_debug);
                 timers["force_rigidbody"]->stop();
             }
+    }
+    void SPH::acquireGLBuffers()
+    {
+        cl_colField.acquire();
+        System::acquireGLBuffers();
+    }
+    void SPH::releaseGLBuffers()
+    {
+        cl_colField.release();
+        System::releaseGLBuffers();
     }
 }; //end namespace
