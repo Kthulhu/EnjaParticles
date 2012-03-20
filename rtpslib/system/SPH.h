@@ -38,6 +38,7 @@
 
 #include "util.h"
 
+#include <CL/cl.hpp>
 
 #include "sph/Density.h"
 #include "sph/Force.h"
@@ -75,7 +76,7 @@ namespace rtps
         void update();
         void interact();
         void integrate();
-        void postprocess();
+        void postProcess();
         //wrapper around Hose.h
         int addHose(int total_n, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f), float mass = 0.0f);
         void updateHose(int index, float4 center, float4 velocity, float radius, float4 color=float4(1.0, 0.0, 0.0, 1.0f));
@@ -114,6 +115,7 @@ namespace rtps
         Buffer<float>       cl_density_s;
         Buffer<float4>      cl_xsph_s;
         Buffer<float4>      cl_colField;
+        cl::Image3DGL     cl_colFieldTex;
 
         //Parameter structs
         Buffer<SPHParams>   cl_sphp;

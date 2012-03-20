@@ -64,11 +64,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, sphp->EPSILON);
 
-        float dWijdr = Wspiky(rlen, sphp->smoothing_distance, sphp);
-        float dj = density[index_j];
-        float idj = 1.0/dj;
-
-        float kern = dWijdr* idj;
+        float kern = Wspiky(rlen, sphp->smoothing_distance, sphp)* (1.0/density[index_j]);
 
         pt->force.x += kern;
         //debugging
@@ -96,7 +92,12 @@ __kernel void colorfield_update(
     uint s = get_global_id(0);
     uint t = get_global_id(1);
     uint r = get_global_id(2);
-    float4 texPos = (float4)(s/(float)res,t/(float)res,r/(float)res,1.0);
+    //float4 texPos = (float4)(s/((float)res),t/((float)res),r/((float)res),1.0f);
+    float tmp = 1.0f/(res-1);
+    //float4 texPos=(float4)(s*tmp,1.0,0.5,1.0f);
+    float4 texPos=(float4)(s*tmp,t*tmp,r*tmp,1.0f);
+    //img[s+t*res+r*res*res]=texPos;
+    //img[t+s*res+r*res*res]=(float4)(1.0f,0.0f,0.0f,1.0f);
     texPos = (texPos*(gp->grid_max-gp->grid_min)+gp->grid_min)*sphp->simulation_scale;
     texPos.w=1.0f;
     // Do calculations on particles in neighboring cells
@@ -106,7 +107,10 @@ __kernel void colorfield_update(
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, 0, 0, texPos, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     pt.force.x*=sphp->mass;
-    img[s+t*res+r*res*res]=pt.force;//write_imagef(posTex,(int4)(s,t,r,0),pt.force);
+    //pt.force.x=1.0f;
+    //pt.force.w=1.0f;
+    pt.force.w=1.0f;//*=sphp->mass;
+    img[t+s*res+r*res*res]=pt.force;//write_imagef(posTex,(int4)(s,t,r,0),pt.force);
 }
 
 /*-------------------------------------------------------------- */

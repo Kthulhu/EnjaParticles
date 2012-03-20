@@ -36,8 +36,7 @@ namespace rtps
         public:
             ColorField() { cli = NULL; timer = NULL; };
             ColorField(std::string path, CL* cli, EB::Timer* timer);
-            void execute(int num,
-                    Buffer<float4>& pos_s,
+            void execute(Buffer<float4>& pos_s,
                     Buffer<float>& dens_s,
                     Buffer<float4>& cfieldTex,
                     int res,

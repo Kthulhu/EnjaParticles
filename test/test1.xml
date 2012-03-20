@@ -22,6 +22,8 @@
             <param name="boundary_dampening" >256.0</param>
             <param name="integrator" >leapfrog</param>
             <param name="time_step" >0.003</param>
+            <param name="use_color_field">1</param>
+            <param name="color_field_res">32</param>
         </parameters>
         <parameters type="render">
             <param name="render_type" >default</param>

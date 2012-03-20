@@ -32,7 +32,9 @@ Buffer<T>::Buffer(CL *cli, int num ,T data)
     std::fill(vec.begin(), vec.end(), data);
     std::cout<<"vec size = "<<vec.size()<<std::endl;
 
-    cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err));
+    cl_buf=cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err);
+    //cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err));
+    cl_buffer.push_back(cl_buf);
     copyToDevice(vec);
 }
 
@@ -41,8 +43,9 @@ Buffer<T>::Buffer(CL *cli, const std::vector<T> &data)
 {
     this->cli = cli;
     //this->data = data;
-
-    cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, data.size()*sizeof(T), NULL, &cli->err));
+    cl_buf=cl::Buffer(cli->context, CL_MEM_READ_WRITE, data.size()*sizeof(T), NULL, &cli->err);
+    cl_buffer.push_back(cl_buf);
+    //cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, data.size()*sizeof(T), NULL, &cli->err));
     copyToDevice(data);
 
 
@@ -53,8 +56,9 @@ Buffer<T>::Buffer(CL *cli, const std::vector<T> &data, unsigned int memtype)
 {
     this->cli = cli;
     //this->data = data;
-
-    cl_buffer.push_back(cl::Buffer(cli->context, memtype, data.size()*sizeof(T), NULL, &cli->err));
+    cl_buf = cl::Buffer(cli->context, memtype, data.size()*sizeof(T), NULL, &cli->err);
+    //cl_buffer.push_back(cl::Buffer(cli->context, memtype, data.size()*sizeof(T), NULL, &cli->err));
+    cl_buffer.push_back(cl_buf);
     copyToDevice(data);
 
 
@@ -65,7 +69,8 @@ template <class T>
 Buffer<T>::Buffer(CL *cli, GLuint bo_id)
 {
     this->cli = cli;
-    cl_buffer.push_back(cl::BufferGL(cli->context, CL_MEM_READ_WRITE, bo_id, &cli->err));
+    cl_buf=cl::BufferGL(cli->context, CL_MEM_READ_WRITE, bo_id, &cli->err);
+    cl_buffer.push_back(cl_buf);//cl::BufferGL(cli->context, CL_MEM_READ_WRITE, bo_id, &cli->err));
 }
 
 template <class T>
@@ -75,7 +80,8 @@ Buffer<T>::Buffer(CL *cli, GLuint bo_id, int type)
     if (type == 0)
     {
         //printf("here 1\n");
-        cl_buffer.push_back(cl::BufferGL(cli->context, CL_MEM_READ_WRITE, bo_id, &cli->err));
+        cl_buf=cl::BufferGL(cli->context, CL_MEM_READ_WRITE, bo_id, &cli->err);
+        cl_buffer.push_back(cl_buf);//cl::BufferGL(cli->context, CL_MEM_READ_WRITE, bo_id, &cli->err));
     }
     else if (type == 1)
     {

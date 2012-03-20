@@ -56,6 +56,7 @@ namespace rtps
         ~Buffer();
 
         cl_mem getDevicePtr() { return cl_buffer[0](); }
+        cl::Buffer& getBuffer() {return cl_buf;};
         cl::Memory& getBuffer(int index) {return cl_buffer[index];};
 
         //need to acquire and release arrays from OpenGL context if we have a VBO
@@ -89,7 +90,7 @@ namespace rtps
          //we will want to access buffers by name when going across systems
         //std::string name;
         //the actual buffer handled by the Khronos OpenCL c++ header
-        //cl::Memory cl_buffer;
+        cl::Buffer cl_buf;
         std::vector<cl::Memory> cl_buffer;
 		int nb_el; // measured in units of <T>
 		int nb_bytes;

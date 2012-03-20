@@ -336,18 +336,20 @@ namespace rtps
         timers["collision_tri"]->stop();
     }
     //-------------
-    void SPH::postprocess()
+    void SPH::postProcess()
     {
+        dout<<"Here"<<endl;
         if(settings->GetSettingAs<bool>("use_color_field","0"))
         {
         //if(num >0) printf("force\n");
+            unsigned int res = settings->GetSettingAs<unsigned int>("color_field_res","32");
+            dout<<"Here"<<endl;
             timers["colorfield"]->start();
-            colorfield.execute(   num,
-                //cl_vars_sorted,
+            colorfield.execute(
                 cl_position_s,
                 cl_density_s,
                 cl_colField,
-                settings->GetSettingAs<unsigned int>("color_field_res","32"),
+                res,
                 cl_cell_indices_start,
                 cl_cell_indices_end,
                 cl_sphp,
@@ -355,8 +357,20 @@ namespace rtps
                 cl_GridParamsScaled,
                 clf_debug,
                 cli_debug);
-
             timers["colorfield"]->stop();
+            //Copy buffer to image. Seems to be the only portable option for Writing to 3D textures from opencl.
+            cl::size_t<3> origin;//={0,0,0};
+            cl::size_t<3> region;//={res,res,res};
+            origin[0] = 0; origin[1] = 0; origin[2]=0;
+            region[0] = res; region[1] = res; region[2]=res;
+            timers["colorfield_copy"]->start();
+            cli->queue.enqueueCopyBufferToImage(cl_colField.getBuffer(),
+                                                 cl_colFieldTex,
+                                                 0,
+                                                 origin,
+                                                 region);
+            cli->queue.finish();
+            timers["colorfield_copy"]->stop();
         }
     }
 	//----------------------------------------------------------------------
@@ -448,6 +462,7 @@ namespace rtps
         timers["euler_gpu"] = new EB::Timer("Euler Integration GPU kernel execution", time_offset);
         timers["colorfield"] = new EB::Timer("Colorfield function", time_offset);
         timers["colorfield_gpu"] = new EB::Timer("Colorfield GPU kernel execution", time_offset);
+        timers["colorfield_copy"] = new EB::Timer("Colorfield buffer to image copy", time_offset);
 		return 0;
     }
 
@@ -481,10 +496,15 @@ namespace rtps
         cl_GridParamsScaled = Buffer<GridParams>(cli, sgparams);
         dout<<"Here"<<endl;
 
-        if(settings->GetSettingAs<bool>("use_color_field","false"))
+        if(settings->GetSettingAs<bool>("use_color_field","0"))
         {
             unsigned int res = settings->GetSettingAs<unsigned int>("color_field_res","32");
+            vector<float4> f4img(res*res*res);
+            fill(f4img.begin(), f4img.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+
             dout<<"Here"<<endl;
+            glPixelStoref(GL_UNPACK_ALIGNMENT,1);
+            glPixelStoref(GL_PACK_ALIGNMENT,1);
             glEnable(GL_TEXTURE_3D_EXT);
             glGenTextures(1, &colFieldTex);
             glBindTexture(GL_TEXTURE_3D_EXT,colFieldTex);
@@ -495,10 +515,14 @@ namespace rtps
             glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S, mode);
             glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T, mode);
             glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R, mode);
-            glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0, GL_RGBA, res, res, res, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-            cl_colField=Buffer<float4>(cli,colFieldTex);
+            glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0, GL_RGBA32F, res, res, res, 0, GL_RGBA, GL_FLOAT, &f4img[0]);
+            cl_colField=Buffer<float4>(cli,f4img);
+            cl_colFieldTex=cl::Image3DGL(cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,colFieldTex);
             glBindTexture(GL_TEXTURE_3D_EXT, 0);
             glDisable(GL_TEXTURE_3D_EXT);
+            glPixelStoref(GL_UNPACK_ALIGNMENT,4);
+            glPixelStoref(GL_PACK_ALIGNMENT,4);
+
         }
         // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
         // That is a problem since the number of
@@ -656,12 +680,24 @@ namespace rtps
     }
     void SPH::acquireGLBuffers()
     {
-        cl_colField.acquire();
+        if(settings->GetSettingAs<bool>("use_color_field","0"))
+        {
+            std::vector<cl::Memory> objs;
+            objs.push_back(cl_colFieldTex);
+            cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
+            cli->queue.finish();
+        }
         System::acquireGLBuffers();
     }
     void SPH::releaseGLBuffers()
     {
-        cl_colField.release();
+        if(settings->GetSettingAs<bool>("use_color_field","0"))
+        {
+            std::vector<cl::Memory> objs;
+            objs.push_back(cl_colFieldTex);
+            cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
+            cli->queue.finish();
+        }
         System::releaseGLBuffers();
     }
 }; //end namespace

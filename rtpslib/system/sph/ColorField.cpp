@@ -38,7 +38,7 @@ namespace rtps
         try
         {
             path = path + "/colorfield.cl";
-            k_colorfield = Kernel(cli, path, "force_update");
+            k_colorfield = Kernel(cli, path, "colorfield_update");
         }
         catch (cl::Error er)
         {
@@ -49,8 +49,7 @@ namespace rtps
     }
     //----------------------------------------------------------------------
 
-    void ColorField::execute(int num,
-                    Buffer<float4>& pos_s,
+    void ColorField::execute(Buffer<float4>& pos_s,
                     Buffer<float>& dens_s,
                     Buffer<float4>& cfieldTex,
                     int res,
@@ -64,6 +63,8 @@ namespace rtps
                     Buffer<int4>& cli_debug)
     {
         int iarg = 0;
+
+        k_colorfield.setArg(iarg++, res);
         k_colorfield.setArg(iarg++, pos_s.getDevicePtr());
         k_colorfield.setArg(iarg++, dens_s.getDevicePtr());
         k_colorfield.setArg(iarg++, cfieldTex.getDevicePtr());

@@ -453,13 +453,22 @@ namespace rtps
                 }*/
             }
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
-            //effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
+            effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             SPH* sph = (SPH*)systems["water"];
-            glEnable(GL_TEXTURE_3D_EXT);
-            glBindTexture(GL_TEXTURE_3D_EXT,sph->getColorField());
-            glutSolidCube(10.0);
-            glBindTexture(GL_TEXTURE_3D_EXT,0);
-            glDisable(GL_TEXTURE_3D_EXT);
+            //glPixelStoref(GL_UNPACK_ALIGNMENT,1);
+            //glPixelStoref(GL_PACK_ALIGNMENT,1);
+            //glEnable(GL_BLEND);
+            //glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
+            //glBlendFunc(GL_SRC_ALPHA,GL_DST_ALPHA);
+            //glEnable(GL_TEXTURE_3D_EXT);
+            //glBindTexture(GL_TEXTURE_3D_EXT,sph->getColorField());
+            //glutSolidCube(10.0);
+            //glBindTexture(GL_TEXTURE_3D_EXT,0);
+            //glDisable(GL_TEXTURE_3D_EXT);
+            //glDisable(GL_BLEND);
+            //glPixelStoref(GL_UNPACK_ALIGNMENT,4);
+            //glPixelStoref(GL_PACK_ALIGNMENT,4);
+            RenderUtils::write3DTextureToDisc(sph->getColorField(),sph->getSettings()->GetSettingAs<unsigned int>("color_field_res","32"),"colorfield");
             //effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             display(true);
 
