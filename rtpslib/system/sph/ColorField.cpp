@@ -94,11 +94,11 @@ namespace rtps
 #if 0 //printouts
         //DEBUGING
 
+        int num = res*res;
         if(num > 0)// && choice == 0)
         {
             printf("============================================\n");
-            printf("which == %d *** \n", choice);
-            printf("***** PRINT neighbors diagnostics ******\n");
+            printf("***** PRINT colorfield diagnostics ******\n");
             printf("num %d\n", num);
 
             std::vector<int4> cli(num);
