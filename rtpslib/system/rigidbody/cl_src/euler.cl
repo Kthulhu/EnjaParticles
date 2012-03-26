@@ -58,14 +58,15 @@ __kernel void euler(
     //f.z += -9.8f;
     lf+=rbMass[i]*gravity;
 
-    /*float speed = magnitude(f);
+    float a = (lf/rbMass[i])
+    float speed = magnitude(a);
     if (speed > 600.0f) //velocity limit, need to pass in as struct
     {
-        f *= 600.0f/speed;
+        a *= 600.0f/speed;
     }
-     */
+     
 
-    v += dt*(lf/rbMass[i]);
+    v += dt*(a);
     p += dt*v;
     p.xyz/=prbp->simulation_scale;
     p.w = 1.0f; //just in case

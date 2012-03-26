@@ -43,14 +43,19 @@ namespace rtps
         //float mass = (0.0256/(int)log2(settings->GetSettingAs<unsigned int>("max_num_particles")));         //Particle Mass [ kg ]
         //doubling the mass to hopefully reduce compressability.
         float mass = (0.0256/(int)log2(settings->GetSettingAs<unsigned int>("max_num_particles")));         //Particle Mass [ kg ]
-        float VP = mass/rho0;
+        //float Vol = 100.f;//mass/rho0;
+        //float VP = Vol/settings->GetSettingAs<unsigned int>("max_num_particles");//mass/rho0;
+        float VP=mass/rho0;
+        //float mass = (rho0*VP);
         //float mass = (rho0*VP/max_num);
         //constant .87 is magic
         //float rest_distance = 0.005;
         float rest_distance = .87 * pow(mass/rho0, 1.f/3.f);   //rest distance between particles [ m ]
+        //int num_particles_in_support=27;
+        //float smoothing_distance = 0.6203504 *pow((VP*num_particles_in_support),1.f/3.f);
+        //float rest_distance = smoothing_distance/2.0f;
         //float rest_distance = pow(VP, 1.f/3.f);     //rest distance between particles [ m ]
         float smoothing_distance = 2.0f * rest_distance;//interaction radius
-        //float smoothing_distance = rest_distance/2.0f;//interaction radius
 
 
         float4 dmin = grid.getBndMin();
@@ -67,6 +72,7 @@ namespace rtps
         //ratio between particle radius in simulation coords and world coords
         //float simulation_scale = pow(1./ domain_vol,1.f/3.f);
         float simulation_scale = pow(.5f * VP * max_num/ domain_vol, 1.f/3.f);
+        //float simulation_scale = pow(.5f*Vol/ domain_vol, 1.f/3.f);
         //float simulation_scale = pow(VP * 16000/ domain_vol, 1.f/3.f);
 
 		//int max_cloud_num = cloud->getMaxCloudNum();
@@ -88,6 +94,13 @@ namespace rtps
         float spacing = smoothing_distance / simulation_scale;
         settings->SetSetting("spacing", spacing);
 
+        dout<<"rho0 = "<<rho0<<endl;
+        //dout<<"Volume = "<<Vol<<endl;
+        dout<<"Volume of particles = "<<VP<<endl;
+        dout<<"mass of particle = "<<mass<<endl;
+        dout<<"smoothing distance = "<<smoothing_distance<<endl;
+        dout<<"rest distance = "<<rest_distance<<endl;
+        dout<<"spacing = "<<spacing<<endl;
         float pi = M_PI;
         float h9 = pow(smoothing_distance, 9.f);
         float h6 = pow(smoothing_distance, 6.f);

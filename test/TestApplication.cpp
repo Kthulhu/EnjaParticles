@@ -28,6 +28,7 @@
 #include "../rtpslib/render/MeshEffect.h"
 #include <../rtpslib/system/ParticleRigidBody.h>
 #include <../rtpslib/system/SPH.h>
+#include <../rtpslib/system/FLOCK.h>
 
 #include <sstream>
 #include <float.h>
@@ -62,9 +63,9 @@ namespace rtps
         glGetFloatv(GL_DEPTH_RANGE,nf);
         rs.near = nf[0];
         rs.far = nf[1];
-        dout<<"near = "<<rs.near<<endl;
-        dout<<"far = "<<rs.far<<endl;
-        dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
+        //dout<<"near = "<<rs.near<<endl;
+        //dout<<"far = "<<rs.far<<endl;
+        //dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
         rs.particleRadius = systems["water"]->getSpacing()*20.f;
         rs.windowWidth=windowWidth;
         rs.windowHeight=windowHeight;
@@ -86,6 +87,7 @@ namespace rtps
         light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
         light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
         light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
+        //mass=10000.0f;
         mass=0.01f;
         sizeScale=1.0f;
         string scenefile = "demo_scene.obj";
@@ -140,6 +142,13 @@ namespace rtps
             case ' ':
                 paused=!paused;
                 return;
+            case 'f': //flocks
+            {
+                nn = systems["flock1"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/2;
+                systems["flock1"]->addBox(nn, gridMin+float4(0.5f,0.5f,gridMax.z-3.0f,1.0f), gridMin+float4(3.0f,3.0f,gridMax.z-0.5f,1.0f), false);
+                return;
+            }
+
             case 'e': //dam break
             {
                 nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/2;
@@ -197,6 +206,9 @@ namespace rtps
                 float radius= 3.0f;
                 //sph sets spacing and multiplies by radius value
                 systems["water"]->addHose(50000, center, velocity,radius, col1);
+                //center = float4(gridMin.x+2.0f, gridMin.y+2.0f,gridMin.z+0.5f,1.0f);
+                //velocity=float4(1.5f, 1.5f, -1.f, 0);
+                //systems["flock1"]->addHose(50000, center, velocity,radius);
                 return;
             }
             case 'n':
@@ -425,6 +437,13 @@ namespace rtps
             //RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
             ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
             meshRenderer->renderInstanced(dynamicMeshs["dynamicShape"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
+            if(systems.find("flock1")!=systems.end())
+            {
+                //dout<<"flock------------------"<<endl;
+                FLOCK* flock = (FLOCK*)systems["flock1"];
+                effects[renderType]->render(flock->getPosVBO(),flock->getColVBO(),flock->getNum());
+                //meshRenderer->renderInstanced(dynamicMeshs["dynamicShape"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
+            }
             display(false);
                         /*glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
             glVertexPointer(3, GL_FLOAT, 0, 0);
@@ -457,18 +476,18 @@ namespace rtps
             SPH* sph = (SPH*)systems["water"];
             //glPixelStoref(GL_UNPACK_ALIGNMENT,1);
             //glPixelStoref(GL_PACK_ALIGNMENT,1);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
-            glBlendFunc(GL_SRC_ALPHA,GL_DST_ALPHA);
-            glEnable(GL_TEXTURE_3D_EXT);
-            glBindTexture(GL_TEXTURE_3D_EXT,sph->getColorField());
-            glutSolidCube(10.0);
-            glBindTexture(GL_TEXTURE_3D_EXT,0);
-            glDisable(GL_TEXTURE_3D_EXT);
-            glDisable(GL_BLEND);
-            glPixelStoref(GL_UNPACK_ALIGNMENT,4);
-            glPixelStoref(GL_PACK_ALIGNMENT,4);
-            RenderUtils::write3DTextureToDisc(sph->getColorField(),sph->getSettings()->GetSettingAs<unsigned int>("color_field_res","32"),"colorfield");
+            //glEnable(GL_BLEND);
+            //glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
+            //glBlendFunc(GL_SRC_ALPHA,GL_DST_ALPHA);
+            //glEnable(GL_TEXTURE_3D_EXT);
+            //glBindTexture(GL_TEXTURE_3D_EXT,sph->getColorField());
+            //glutSolidCube(10.0);
+            //glBindTexture(GL_TEXTURE_3D_EXT,0);
+            //glDisable(GL_TEXTURE_3D_EXT);
+            //glDisable(GL_BLEND);
+            //glPixelStoref(GL_UNPACK_ALIGNMENT,4);
+            //glPixelStoref(GL_PACK_ALIGNMENT,4);
+            //RenderUtils::write3DTextureToDisc(sph->getColorField(),sph->getSettings()->GetSettingAs<unsigned int>("color_field_res","32"),"colorfield");
             //effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             display(true);
 
@@ -681,13 +700,10 @@ namespace rtps
             #else
                 sysSettings[i]->SetSetting("rtps_path","./bin");
             #endif
-            dout<<"i = "<<i<<endl;
             //Fixme::This is hacky. I need to determine an efficient way to do simulation scaling
             //for rigid bodies to work well with sph.
-            if(sysSettings[i]->GetSettingAs<string>("system")=="rigidbody")
+            if(sysSettings[i]->GetSettingAs<string>("system")!="sph")
             {
-		dout<<"systems['water'] "<<systems["water"]<<endl;
-		dout<<"water vbo "<<systems["water"]->getPosVBO()<<endl;
                 sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
                 sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
             }
@@ -702,6 +718,11 @@ namespace rtps
             for(map<string,System*>::iterator j = systems.begin(); j!=systems.end(); j++)
             {
                 if(i==j)
+                    continue;
+                //FIXME: More hacking. Don't add flocks to interaction systems yet!
+                //The framework isn't defined for systems interacting with flocks yet.
+                if(i->second->getSettings()->GetSettingAs<string>("system")=="flock"||
+                        j->second->getSettings()->GetSettingAs<string>("system")=="flock")
                     continue;
                 i->second->addInteractionSystem(j->second);
             }
@@ -799,7 +820,7 @@ namespace rtps
         max = 1;
         aiGetMaterialFloatArray(mtl,AI_MATKEY_OPACITY,&opacity,&max);
         mesh->material.opacity = opacity;
-        dout<<"Opacity: "<< opacity<<" Max "<<max<<std::endl;
+        //dout<<"Opacity: "<< opacity<<" Max "<<max<<std::endl;
         set_float4(c, 0.8f, 0.8f, 0.8f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
             color4_to_float4(&diffuse, c);
@@ -807,7 +828,7 @@ namespace rtps
         memcpy(&mesh->material.diffuse.x,c,sizeof(float3));
         //glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, c);
 
-        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
+        //dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_SPECULAR, &specular))
             color4_to_float4(&specular, c);
@@ -815,7 +836,7 @@ namespace rtps
         memcpy(&mesh->material.specular.x,c,sizeof(float3));
         //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
 
-        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
+        //dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         set_float4(c, 0.2f, 0.2f, 0.2f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_AMBIENT, &ambient))
             color4_to_float4(&ambient, c);
@@ -823,14 +844,14 @@ namespace rtps
         memcpy(&mesh->material.ambient.x,c,sizeof(float3));
         //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, c);
 
-        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
+        //dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_EMISSIVE, &emission))
             color4_to_float4(&emission, c);
         c[3]=opacity;
         //glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, c);
 
-        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
+        //dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         max = 1;
         ret1 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS, &shininess, &max);
         if(ret1 == AI_SUCCESS) {
@@ -878,7 +899,7 @@ namespace rtps
             float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
             float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
             Mesh* me=new Mesh();
-            dout<<"material index = "<<mesh->mMaterialIndex<<endl;
+            //dout<<"material index = "<<mesh->mMaterialIndex<<endl;
             apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
             unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
             float* vbo = new float[mesh->mNumVertices*3];
@@ -952,8 +973,8 @@ namespace rtps
 	    //I need too have a better way to handle more than 1 shape.
 	    s<<"dynamicShape";
             dynamicMeshs[s.str()]=me;
-            dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
-            dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
+            //dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
+            //dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
             //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
             float space = systems["rb1"]->getSpacing();
             ParticleShape* shape = new ParticleShape(min,max,space);
@@ -964,12 +985,12 @@ namespace rtps
             pShapes[s.str()]=shape;
 
             //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
-            dout<<"mesh name = "<<s.str()<<endl;
+            /*dout<<"mesh name = "<<s.str()<<endl;
             dout<<"max dim = "<<shape->getMaxDim()<<endl;
             dout<<"min dim = "<<shape->getMinDim()<<endl;
             dout<<"min ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
             dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
-            dout<<"spacing = "<<space<<endl;
+            dout<<"spacing = "<<space<<endl;*/
             /*float3 dim = max-min;
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
 
@@ -1019,11 +1040,11 @@ namespace rtps
         for (; n < nd->mNumMeshes; ++n) {
             const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
 
-            dout<<"num faces "<<mesh->mNumFaces<<endl;
+            //dout<<"num faces "<<mesh->mNumFaces<<endl;
             float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
             float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
             Mesh* me=new Mesh();
-            dout<<"material index = "<<mesh->mMaterialIndex<<endl;
+            //dout<<"material index = "<<mesh->mMaterialIndex<<endl;
             apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
             unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
             float* vbo = new float[mesh->mNumVertices*3];
@@ -1095,8 +1116,8 @@ namespace rtps
             stringstream s;
             s<<"test"<<mesh->mNumFaces;
             meshs[s.str()]=me;
-            dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
-            dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
+            //dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
+            //dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
             //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
             /*float space = systems["rb1"]->getSpacing()/2.f;
             float3 adjmin=float3(min.x-space,min.y-space,min.z-space);
@@ -1112,13 +1133,13 @@ namespace rtps
             s<<"surface";
             //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
-            dout<<"mesh name = "<<s.str()<<endl;
+            /*dout<<"mesh name = "<<s.str()<<endl;
             dout<<"max dim = "<<shape->getMaxDim()<<endl;
             dout<<"min dim = "<<shape->getMinDim()<<endl;
             dout<<"Trans = "<<trans<<endl;
             dout<<"min ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
             dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
-            dout<<"spacing = "<<space<<endl;
+            dout<<"spacing = "<<space<<endl;*/
             float3 dim = max-min;
 
 

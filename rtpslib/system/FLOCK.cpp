@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -53,11 +53,12 @@ FLOCK::FLOCK(RTPSSettings* set, CL* c):System(set,c)
     updateParams();
 
     spacing = settings->GetSettingAs<float>("spacing");
+    dout<<"spacing ="<<spacing<<endl;
 
     //set up the grid
     setupDomain(flock_params.smoothing_distance/flock_params.simulation_scale,flock_params.simulation_scale);
-    
-    //set up the timers 
+
+    //set up the timers
     setupTimers();
 
     //setup the sorted and unsorted arrays
@@ -73,7 +74,7 @@ FLOCK::FLOCK(RTPSSettings* set, CL* c):System(set,c)
     string flock_source_dir = settings->GetSettingAs<string>("rtps_path") + "/" + std::string(FLOCK_CL_SOURCE_DIR);
 
     cli->addIncludeDir(flock_source_dir);
-    
+
     rules = Rules(flock_source_dir, cli, timers["rules_gpu"]);
     euler_integration = EulerIntegration(flock_source_dir, cli, timers["euler_gpu"]);
 #endif
@@ -85,7 +86,7 @@ FLOCK::~FLOCK()
 {
     printf("FLOCK destructor\n");
     Hose* hose;
-    int hs = hoses.size();  
+    int hs = hoses.size();
     for(int i = 0; i < hs; i++)
     {
         hose = hoses[i];
@@ -110,7 +111,7 @@ void FLOCK::update()
 {
     if(settings->has_changed())
         updateParams();
-    
+
     cpuRules();
     cpuEulerIntegration();
 
@@ -124,16 +125,16 @@ void FLOCK::update()
 
     glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
     glBufferData(GL_ARRAY_BUFFER, num * sizeof(float4), &positions[0], GL_DYNAMIC_DRAW);
-    
+
 }*/
 
 //----------------------------------------------------------------------
 void FLOCK::updateGPU()
 {
     //mymese debbug
-    dout<<"smoth_dist: "<< flock_params.smoothing_distance<<endl;
-    dout<<"radius: "<< flock_params.search_radius<<endl;
-    dout<<"min dist: "<< flock_params.min_dist<<endl;
+    //dout<<"smoth_dist: "<< flock_params.smoothing_distance<<endl;
+    //dout<<"radius: "<< flock_params.search_radius<<endl;
+    //dout<<"min dist: "<< flock_params.min_dist<<endl;
 
     timers["update"]->start();
 
@@ -142,13 +143,13 @@ void FLOCK::updateGPU()
 
     //sub-intervals
     int sub_intervals = settings->GetSettingAs<float>("sub_intervals");  //should be a setting
-    
+
     for (int i=0; i < sub_intervals; i++)
     {
         sprayHoses();
     }
 
-    
+
     for(int i=0; i < sub_intervals; i++)
     {
         hash_and_sort();
@@ -164,7 +165,7 @@ void FLOCK::updateGPU()
             clf_debug,
             cli_debug);
         timers["cellindices"]->stop();
-       
+
         timers["permute"]->start();
         permute.execute(   num,
             cl_position_u,
@@ -192,19 +193,19 @@ void FLOCK::updateGPU()
 
             deleted_pos.resize(num-nc);
             deleted_vel.resize(num-nc);
-            
-            cl_position_s.copyToHost(deleted_pos, nc); 
+
+            cl_position_s.copyToHost(deleted_pos, nc);
             cl_velocity_s.copyToHost(deleted_vel, nc);
- 
+
             num = nc;
             settings->SetSetting("num_particles", num);
-            
+
             updateParams();
             //renderer->setNum(flock_params.num);
-            
+
             //need to copy sorted arrays into unsorted arrays
             call_prep(2);
-            
+
             hash_and_sort();
         }
 
@@ -228,9 +229,9 @@ void FLOCK::updateGPU()
                 clf_debug,
                 cli_debug);
         }
-        
+
         timers["rules"]->stop();
-        
+
 
     }
 
@@ -244,7 +245,6 @@ void FLOCK::integrate()
     timers["integrate"]->start();
     euler_integration.execute(num,
         settings->GetSettingAs<float>("time_step"),
-        settings->GetSettingAs<bool>("two_dimensional"),
         cl_position_u,
         cl_position_s,
         cl_velocity_u,
@@ -255,6 +255,7 @@ void FLOCK::integrate()
         cl_goal_s,
         cl_avoid_s,
         cl_leaderfollowing_s,
+        cl_rotation_u,
         cl_sort_indices,
         cl_FLOCKParameters,
         cl_GridParamsScaled,
@@ -263,7 +264,7 @@ void FLOCK::integrate()
         cli_debug);
 
     // mymese debugging
-#if 0  
+#if 0
     if(num > 0)
     {
         vector<int4> cli(num);
@@ -311,18 +312,23 @@ int FLOCK::setupTimers()
 //----------------------------------------------------------------------
 void FLOCK::prepareSorted()
 {
- 
+
     vector<int4> i4Vec(max_num);
     vector<float4> f4Vec(max_num);
     fill(i4Vec.begin(), i4Vec.end(), int4(0,0,0,0));
+    fill(f4Vec.begin(), f4Vec.end(), float4(0.0f, 0.0f, 0.0f, 1.0f));
+    rotationVBO = createVBO(&f4Vec[0], f4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+    cl_rotation_u = Buffer<float4>(cli,rotationVBO);
     fill(f4Vec.begin(), f4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
-    cl_flockmates_s= Buffer<int4>(cli, flockmates);
-    cl_separation_s = Buffer<float4>(cli, separation);
-    cl_alignment_s = Buffer<float4>(cli, alignment);
-    cl_cohesion_s = Buffer<float4>(cli, cohesion);
-    cl_goal_s = Buffer<float4>(cli, goal);
-    cl_avoid_s = Buffer<float4>(cli, avoid);
-    cl_leaderfollowing_s = Buffer<float4>(cli, leaderfollowing);
+    cl_flockmates_s= Buffer<int4>(cli, i4Vec);
+    cl_separation_s = Buffer<float4>(cli, f4Vec);
+    cl_alignment_s = Buffer<float4>(cli, f4Vec);
+    cl_cohesion_s = Buffer<float4>(cli, f4Vec);
+    cl_goal_s = Buffer<float4>(cli, f4Vec);
+    cl_avoid_s = Buffer<float4>(cli, f4Vec);
+    cl_leaderfollowing_s = Buffer<float4>(cli, f4Vec);
+    cl_veleval_u = Buffer<float4>(cli,f4Vec);
+    cl_veleval_s = Buffer<float4>(cli,f4Vec);
             //TODO make a helper constructor for buffer to make a cl_mem from a struct
         //Setup Grid Parameter structs
         vector<GridParams> gparams(0);
@@ -347,7 +353,7 @@ void FLOCK::prepareSorted()
 }
 
 //----------------------------------------------------------------------
-int FLOCK::addHose(int total_n, float4 center, float4 velocity, float radius, float4 color)
+int FLOCK::addHose(int total_n, float4 center, float4 velocity, float radius, float4 color, float mass)
 {
     radius *= spacing;
     Hose* hose = new Hose(settings->GetSettingAs<float>("time_step"), total_n, center, velocity, radius, spacing, color);
@@ -357,7 +363,7 @@ int FLOCK::addHose(int total_n, float4 center, float4 velocity, float radius, fl
 }
 
 //----------------------------------------------------------------------
-void FLOCK::updateHose(int index, float4 center, float4 velocity, float radius, float4 color)
+void FLOCK::updateHose(int index, float4 center, float4 velocity, float radius, float4 color,float mass)
 {
     //we need to expose the vector of hoses somehow doesn't seem right to make user manage an index
     radius *= spacing;
@@ -371,20 +377,20 @@ void FLOCK::sprayHoses()
     for (int i = 0; i < hoses.size(); i++)
     {
         parts = hoses[i]->spray();
-        
+
         if (parts.size() > 0)
             System::pushParticles(parts, hoses[i]->getVelocity(), hoses[i]->getColor());
     }
 }
 
 //----------------------------------------------------------------------
-void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
+void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color,float mass)
 {
     int nn = pos.size();
-    
+
     // if we have reach max num of particles, then return
     if (num + nn > max_num) {return;}
-    
+
     vector<float4> cols(nn);
     fill(cols.begin(), cols.end(),color); //BLENDER
 
@@ -394,10 +400,13 @@ void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
 
 #ifdef GPU
     glFinish();
-    cl_position_u.acquire();
-    cl_color_u.acquire();
-    cl_velocity_u.acquire();
- 
+    if(!acquiredGL)
+    {
+        cl_position_u.acquire();
+        cl_color_u.acquire();
+        cl_velocity_u.acquire();
+    }
+
     cl_position_u.copyToDevice(pos, num);
     cl_color_u.copyToDevice(cols, num);
     cl_velocity_u.copyToDevice(vels, num);
@@ -405,13 +414,25 @@ void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
     settings->SetSetting("num_particles", num+nn);
     updateParams();
 
-    cl_velocity_u.release();
-    cl_color_u.release();
-    cl_position_u.release();
+    if(!acquiredGL){
+        cl_velocity_u.release();
+        cl_color_u.release();
+        cl_position_u.release();
+    }
 
-#endif
     num += nn;  //keep track of number of particles we use
+#endif
 }
+    void FLOCK::acquireGLBuffers()
+    {
+        cl_rotation_u.acquire();
+        System::acquireGLBuffers();
+    }
+    void FLOCK::releaseGLBuffers()
+    {
+        cl_rotation_u.release();
+        System::releaseGLBuffers();
+    }
 
 //----------------------------------------------------------------------
 /*void FLOCK::render()
@@ -421,6 +442,6 @@ void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color)
 }*/
 /*void FLOCK::interact()
 {
-    
+
 }*/
 }

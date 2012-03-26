@@ -71,11 +71,11 @@ namespace rtps
         dout<<"RUNNING ON THE GPU"<<endl;
         prepareSorted();
 
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         //should be more cross platform
         string common_source_dir = settings->GetSettingAs<string>("rtps_path") + "/" + std::string(COMMON_CL_SOURCE_DIR);
         cli->addIncludeDir(common_source_dir);
-        dout<<common_source_dir.c_str()<<endl;
+        //dout<<common_source_dir.c_str()<<endl;
 
         hash = Hash(common_source_dir, cli, timers["hash_gpu"]);
         gravity = Gravity(common_source_dir, cli);
@@ -91,7 +91,7 @@ namespace rtps
 	//----------------------------------------------------------------------
     System::~System()
     {
-        dout<<"System destructor"<<endl;
+        //dout<<"System destructor"<<endl;
         if (pos_vbo)//&& managed)
         {
             glBindBuffer(1, pos_vbo);
@@ -217,20 +217,20 @@ namespace rtps
 
         vector<unsigned int> uivec(max_num);
         std::fill(uivec.begin(), uivec.end(), 0);
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         // VBO creation, TODO: should be abstracted to another class
         pos_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        dout<<"Here"<<endl;
-        dout<<"pos vbo: "<< pos_vbo<<endl;
+        //dout<<"Here"<<endl;
+        //dout<<"pos vbo: "<< pos_vbo<<endl;
         col_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        dout<<"color vbo: "<< col_vbo<<endl;
+        //dout<<"color vbo: "<< col_vbo<<endl;
         velocity_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        dout<<"velocity vbo: "<< velocity_vbo<<endl;
+        //dout<<"velocity vbo: "<< velocity_vbo<<endl;
         force_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        dout<<"force vbo: "<< force_vbo<<endl;
+        //dout<<"force vbo: "<< force_vbo<<endl;
         active_cells_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-        dout<<"active cells vbo: "<< active_cells_vbo<<endl;
-        dout<<"address of cli = "<<cli<<endl;
+        //dout<<"active cells vbo: "<< active_cells_vbo<<endl;
+        //dout<<"address of cli = "<<cli<<endl;
         // end VBO creation
 
         try
@@ -249,7 +249,7 @@ namespace rtps
         cl_mass_s = Buffer<float>(cli, fvec);
         cl_objectIndex_u = Buffer<unsigned int>(cli, uivec);
         cl_objectIndex_s = Buffer<unsigned int>(cli, uivec);
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
 
         //setup debug arrays
         std::vector<int4> cliv(max_num);
@@ -257,9 +257,9 @@ namespace rtps
         clf_debug = Buffer<float4>(cli, f4vec);
         cli_debug = Buffer<int4>(cli, cliv);
 
-        dout<<"grav_sources = "<<settings->GetSettingAs<string >("gravity_sources")<<endl;
-        dout<<"grav_mass = "<<settings->GetSettingAs<string >("gravity_mass")<<endl;
-        dout<<"grav_alphas = "<<settings->GetSettingAs<string >("gravity_alphas")<<endl;
+        //dout<<"grav_sources = "<<settings->GetSettingAs<string >("gravity_sources")<<endl;
+        //dout<<"grav_mass = "<<settings->GetSettingAs<string >("gravity_mass")<<endl;
+        //dout<<"grav_alphas = "<<settings->GetSettingAs<string >("gravity_alphas")<<endl;
 
         //Gravity
         vector<float4> grav_sources = settings->GetSettingAs<vector<float4> >("gravity_sources");

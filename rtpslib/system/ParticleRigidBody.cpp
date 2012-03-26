@@ -287,6 +287,10 @@ namespace rtps
         }
         else if (settings->GetSettingAs<string>("integrator")=="leapfrog")
         {
+            for(int i = 0;i<rbParticleIndex.size(); i++)
+            {
+                dout<<i<<" of "<<rbParticleIndex.size()<<": start = "<<rbParticleIndex[i].x<<" end = "<<rbParticleIndex[i].y<<endl;
+            }
             //leapfrog();
             leapfrog.execute(num,
                 settings->GetSettingAs<float>("time_step"),
@@ -493,11 +497,11 @@ namespace rtps
             float4 comAngVelEval=float4(0.0f,0.0f,0.0f,0.0f);;
             comAngVelEval=invInertialTensor*angMomentum;
 
-            //dout<<"position: "<<com<<endl;
-            //dout<<"velocity: "<<comVelEval<<endl;
-            //dout<<"ang momentum: "<<angMomentum<<endl;
-            //dout<<"mass: "<<mass<<endl;
-            //dout<<"Inertial Tensor: "<<endl;
+            dout<<"position: "<<com<<endl;
+            dout<<"velocity: "<<comVelEval<<endl;
+            dout<<"ang momentum: "<<angMomentum<<endl;
+            dout<<"mass: "<<mass<<endl;
+            dout<<"Inertial Tensor: "<<endl;
             for(int i =0;i<16;i++)
                 cout<<i<<": "<<invInertialTensor.m[i]<<" ,";
             cout<<endl;
@@ -521,7 +525,9 @@ namespace rtps
             cl_velocity_u.copyToDevice(vels, num);
             cl_position_l.copyToDevice(pos_l,num);
             cl_mass_u.copyToDevice(mass_p, num);
+            cl_comVel.copyToDevice(comVelEval, rbParticleIndex.size()-1);
             cl_comVelEval.copyToDevice(comVelEval, rbParticleIndex.size()-1);
+            cl_comAngVel.copyToDevice(comAngVelEval, rbParticleIndex.size()-1);
             cl_comAngVelEval.copyToDevice(comAngVelEval, rbParticleIndex.size()-1);
             cl_objectIndex_u.copyToDevice(index, num);
             /*cl_spring_coef_u.copyToDevice(spring_co, num);

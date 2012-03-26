@@ -49,31 +49,31 @@ namespace rtps
 	//----------------------------------------------------------------------
     SPH::SPH(RTPSSettings* set, CL* c):System(set,c)
     {
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         setupTimers();
 
         std::vector<SPHParams> vparams(0);
         vparams.push_back(sphp);
         cl_sphp = Buffer<SPHParams>(cli, vparams);
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         calculate();
         updateParams();
         setupDomain(sphp.smoothing_distance/sphp.simulation_scale,sphp.simulation_scale);
 
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         spacing = settings->GetSettingAs<float>("spacing");
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
 #ifdef GPU
         dout<<"RUNNING ON THE GPU"<<endl;
         prepareSorted();
 
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         //should be more cross platform
         string sph_source_dir = settings->GetSettingAs<string>("rtps_path") + "/" + string(SPH_CL_SOURCE_DIR);
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         cli->addIncludeDir(sph_source_dir);
 
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         forceRB = RigidBodyForce(sph_source_dir, cli, timers["force_rigidbody_gpu"]);
         density = Density(sph_source_dir, cli, timers["density_gpu"]);
         force = Force(sph_source_dir, cli, timers["force_gpu"]);
@@ -82,7 +82,7 @@ namespace rtps
         collision_tri = CollisionTriangle(sph_source_dir, cli, timers["ct_gpu"], 2048); //TODO expose max_triangles as a parameter
 
 
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         //could generalize this to other integration methods later (leap frog, RK4)
         if (settings->GetSettingAs<string>("integrator")=="leapfrog")
         {
@@ -338,12 +338,12 @@ namespace rtps
     //-------------
     void SPH::postProcess()
     {
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         if(settings->GetSettingAs<bool>("use_color_field","0"))
         {
         //if(num >0) printf("force\n");
             unsigned int res = settings->GetSettingAs<unsigned int>("color_field_res","32");
-            dout<<"Here"<<endl;
+            //dout<<"Here"<<endl;
             timers["colorfield"]->start();
             colorfield.execute(
                 cl_position_s,
@@ -469,32 +469,32 @@ namespace rtps
 	//----------------------------------------------------------------------
     void SPH::prepareSorted()
     {
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         vector<float4> f4vec(max_num);
         vector<float> fvec(max_num);
         fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         fill(fvec.begin(), fvec.end(), 0.0f);
 
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         //pure opencl buffers: these are deprecated
         cl_veleval_u = Buffer<float4>(cli, f4vec);
         cl_veleval_s = Buffer<float4>(cli, f4vec);
         cl_density_s = Buffer<float>(cli, fvec);
         cl_xsph_s = Buffer<float4>(cli, f4vec);
 
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         //TODO make a helper constructor for buffer to make a cl_mem from a struct
         //Setup Grid Parameter structs
         vector<GridParams> gparams(0);
         gparams.push_back(grid_params);
         cl_GridParams = Buffer<GridParams>(cli, gparams);
 
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         //scaled Grid Parameters
         vector<GridParams> sgparams(0);
         sgparams.push_back(grid_params_scaled);
         cl_GridParamsScaled = Buffer<GridParams>(cli, sgparams);
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
 
         if(settings->GetSettingAs<bool>("use_color_field","0"))
         {
@@ -502,7 +502,7 @@ namespace rtps
             vector<float4> f4img(res*res*res);
             fill(f4img.begin(), f4img.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
-            dout<<"Here"<<endl;
+            //dout<<"Here"<<endl;
             glPixelStoref(GL_UNPACK_ALIGNMENT,1);
             glPixelStoref(GL_PACK_ALIGNMENT,1);
             glEnable(GL_TEXTURE_3D_EXT);

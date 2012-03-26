@@ -28,7 +28,7 @@
 float4 position_t = target * flockp->simulation_scale;
 position_t.w = 0.f;
 
-float4 dist = (position_t - position_i)/length(position_t - position_i);
+float4 dist = fast_normalize(position_t - position_i);
 float4 desiredVel = dist * flockp->max_speed;
 
 pt.goal = (desiredVel - velocity_i);

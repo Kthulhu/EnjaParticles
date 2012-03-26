@@ -69,7 +69,7 @@ inline void ForNeighbor(
 	
 		     if(d <= flockp->min_dist){ 
                 s.w = 0.0f;
-                s = normalize(s);
+                s = fast_normalize(s);
                 s /= d;
 	            pt->leaderfollowing+= s;        // accumulate the leaderfollowing vector
 	        }

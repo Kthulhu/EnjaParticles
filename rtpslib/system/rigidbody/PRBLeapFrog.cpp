@@ -76,47 +76,34 @@ namespace rtps
             timer->set(gputime);
 
 
-    }
 
 
-#if 0
-#define DENS 0
-#define POS 1
-#define VEL 2
+#if 1
+        //DEBUGING
 
-        printf("************ LeapFrog **************\n");
-            int nbc = num+5;
-            std::vector<float4> poss(nbc);
-            std::vector<float4> uposs(nbc);
-            std::vector<float4> dens(nbc);
+        if(numRBs > 0)// && choice == 0)
+        {
+            printf("============================================\n");
+            printf("***** PRINT leapfrog output ******\n");
+            printf("num %d\n", numRBs);
 
-            //cl_vars_sorted.copyToHost(dens, DENS*sphp.max_num);
-            cl_vars_sorted.copyToHost(poss, POS*sphp.max_num);
-            cl_vars_unsorted.copyToHost(uposs, POS*sphp.max_num);
+            std::vector<int4> cli(numRBs);
+            std::vector<float4> clf(numRBs);
 
-            for (int i=0; i < nbc; i++)
+            cli_debug.copyToHost(cli);
+            clf_debug.copyToHost(clf);
+
+            for (int i=0; i < numRBs; i++)
             //for (int i=0; i < 10; i++)
             {
-                poss[i] = poss[i] / sphp.simulation_scale;
                 //printf("-----\n");
-                //printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
-                printf("pos sorted: %f, %f, %f, %f\n", poss[i].x, poss[i].y, poss[i].z, poss[i].w);
-                printf("pos unsorted: %f, %f, %f, %f\n", uposs[i].x, uposs[i].y, uposs[i].z, uposs[i].w);
-                //printf("dens sorted: %f, %f, %f, %f\n", dens[i].x, dens[i].y, dens[i].z, dens[i].w);
+                printf("clf_debug: %08f, %08f, %08f, %08f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
+                //if(clf[i].w == 0.0) exit(0);
+                //printf("cli_debug: %d, %d, %d, %d\n", cli[i].x, cli[i].y, cli[i].z, cli[i].w);
+                //		printf("pos : %f, %f, %f, %f\n", pos[i].x, pos[i].y, pos[i].z, pos[i].w);
             }
-
+        }
 #endif
 
-        /*
-         * enables us to cut off after a couple iterations
-         * by setting cut = 1 from some other function
-        if(cut >= 1)
-        {
-            if (cut == 2) {exit(0);}
-            cut++;
-        }
-        */
-
-
-
+    }
 } //namespace rtps

@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -32,11 +32,11 @@
 #include <stdio.h>
 #include <sstream>
 
-#include <structs.h>
-#include <Buffer.h>
-#include <Domain.h>
+#include "../structs.h"
+#include "../opencl/Buffer.h"
+#include "../domain/Domain.h"
 
-namespace rtps 
+namespace rtps
 {
 
 #ifdef WIN32
@@ -45,15 +45,15 @@ namespace rtps
 //Struct which gets passed to OpenCL routines
 typedef struct FLOCKParameters
 {
-    // simulation settings 
+    // simulation settings
     float simulation_scale;
     float rest_distance;
     float smoothing_distance;
-    
+
     // Boids parameters
     float min_dist;  // desired separation between boids
     float search_radius;
-    float max_speed; 
+    float max_speed;
     float ang_vel;
 
     // Boid rules' weights
@@ -78,7 +78,7 @@ typedef struct FLOCKParameters
     ;
 #pragma pack(pop,16)
 #endif
-    
+
 }
 
 #endif

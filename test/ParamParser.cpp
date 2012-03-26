@@ -16,14 +16,14 @@ namespace rtps
         read_xml(is, pt);
 
         // traverse pt
-        BOOST_FOREACH( ptree::value_type const& v, pt.get_child("main") ) 
+        BOOST_FOREACH( ptree::value_type const& v, pt.get_child("main") )
         {
             //cout<<v.first<<endl;
             if(v.first=="system")
             {
                 RTPSSettings* settings=new RTPSSettings();
                 systems.push_back(settings);
-                BOOST_FOREACH( ptree::value_type const& v2, v.second) 
+                BOOST_FOREACH( ptree::value_type const& v2, v.second)
                 {
                     //cout<<v2.first<<endl;
                     if(v2.first=="<xmlattr>")
@@ -35,7 +35,7 @@ namespace rtps
                     }
                     else if(v2.first=="parameters")
                     {
-                        BOOST_FOREACH( ptree::value_type const& v3, v2.second) 
+                        BOOST_FOREACH( ptree::value_type const& v3, v2.second)
                         {
                              if(v3.first=="<xmlattr>")
                              {

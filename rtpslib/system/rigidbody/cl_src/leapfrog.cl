@@ -83,4 +83,7 @@ __kernel void leapfrog(
     comAngVel[i] = wnext;
     comAngVelEval[i] = weval;
     comRot[i] = q;
+    //clf[i]=a;
+    //clf[i]=vnext;
+    clf[i]=v;
 }

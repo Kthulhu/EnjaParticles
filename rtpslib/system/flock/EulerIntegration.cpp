@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -24,32 +24,32 @@
 
 #include "../FLOCK.h"
 
-namespace rtps 
+namespace rtps
 {
 
     EulerIntegration::EulerIntegration(std::string path, CL* cli_, EB::Timer* timer_)
     {
         cli = cli_;
         timer = timer_;
- 
+
         printf("create euler_integration kernel\n");
         path += "/euler_integration.cl";
         k_euler_integration = Kernel(cli, path, "euler_integration");
-    } 
-    
+    }
+
     void EulerIntegration::execute(int num,
                     float dt,
-                    bool two_dimensional,
                     Buffer<float4>& pos_u,
                     Buffer<float4>& pos_s,
                     Buffer<float4>& vel_u,
                     Buffer<float4>& vel_s,
                     Buffer<float4>& separation_s,
-                    Buffer<float4>& alignment_s, 
-                    Buffer<float4>& cohesion_s, 
-                    Buffer<float4>& goal_s, 
-                    Buffer<float4>& avoid_s, 
-                    Buffer<float4>& leaderfollowing_s, 
+                    Buffer<float4>& alignment_s,
+                    Buffer<float4>& cohesion_s,
+                    Buffer<float4>& goal_s,
+                    Buffer<float4>& avoid_s,
+                    Buffer<float4>& leaderfollowing_s,
+                    Buffer<float4>& rotation_u,
                     Buffer<unsigned int>& indices,
                     //params
                     Buffer<FLOCKParameters>& flockp,
@@ -61,7 +61,6 @@ namespace rtps
 
         int iargs = 0;
         k_euler_integration.setArg(iargs++, dt); //time step
-        k_euler_integration.setArg(iargs++, two_dimensional); //2D or 3D?
         k_euler_integration.setArg(iargs++, pos_u.getDevicePtr());
         k_euler_integration.setArg(iargs++, pos_s.getDevicePtr());
         k_euler_integration.setArg(iargs++, vel_u.getDevicePtr());
@@ -72,10 +71,11 @@ namespace rtps
         k_euler_integration.setArg(iargs++, goal_s.getDevicePtr());
         k_euler_integration.setArg(iargs++, avoid_s.getDevicePtr());
         k_euler_integration.setArg(iargs++, leaderfollowing_s.getDevicePtr());
+        k_euler_integration.setArg(iargs++, rotation_u.getDevicePtr());
         k_euler_integration.setArg(iargs++, indices.getDevicePtr());
         k_euler_integration.setArg(iargs++, flockp.getDevicePtr());
         k_euler_integration.setArg(iargs++, gridp.getDevicePtr());
-        
+
         // ONLY IF DEBUGGING
         k_euler_integration.setArg(iargs++, clf_debug.getDevicePtr());
         k_euler_integration.setArg(iargs++, cli_debug.getDevicePtr());
@@ -88,18 +88,18 @@ namespace rtps
 
   /*  void FLOCK::cpuEulerIntegration()
     {
-        float w_sep = flock_params.w_sep;   
+        float w_sep = flock_params.w_sep;
         float w_aln = flock_params.w_align;
-        float w_coh = flock_params.w_coh;  
+        float w_coh = flock_params.w_coh;
         float w_goal = flock_params.w_goal;
         float w_avoid = flock_params.w_avoid;
         float w_wander = flock_params.w_wander;
 
         float4 bndMax = grid_params.bnd_max;
         float4 bndMin = grid_params.bnd_min;
-        
+
         for(int i = 0; i < num; i++)
-        { 
+        {
             float4 pi = positions[i]; //* flock_params.simulation_scale;
 
            // Step 4. Weight the steering behaviors
@@ -112,12 +112,12 @@ namespace rtps
 
             // Step 5. Set the final velocity
 	        velocities[i] += (separation[i] + alignment[i] + cohesion[i] + goal[i] + avoid[i] + wander[i]);
-        
+
             // Step 6. Constrain velocity
             float  vel_mag  = velocities[i].length();
 	        float4 vel_norm = normalize3(velocities[i]);
             if(vel_mag > flock_params.max_speed){
-                // set magnitude to max speed 
+                // set magnitude to max speed
                  velocities[i] = vel_norm * flock_params.max_speed;
             }
 
@@ -126,20 +126,20 @@ namespace rtps
             v *= flock_params.ang_vel;
             velocities[i] += v;
 
-            // Step 7. Integration 
+            // Step 7. Integration
             pi += ps->settings->dt*velocities[i];
             pi.w = 1.0f; //just in case
 
     	    // Step 8. Check boundary conditions
             if(pi.x >= bndMax.x){
                 pi.x -= bndMax.x;
-            }   
+            }
             else if(pi.x <= bndMin.x){
                 pi.x += bndMax.x;
             }
             else if(pi.y >= bndMax.y){
                 pi.y -= bndMax.y;
-            }   
+            }
             else if(pi.y <= bndMin.y){
                 pi.y += bndMax.y;
             }
@@ -156,7 +156,7 @@ namespace rtps
 
             // Copy positions to official vector
             positions[i] = pi; // flock_params.simulation_scale;
-            positions[i].w = 1.0f;	
+            positions[i].w = 1.0f;
         }
     }*/
 
