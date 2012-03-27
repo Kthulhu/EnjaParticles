@@ -26,20 +26,10 @@
 
 namespace rtps
 {
-
-    //mappings from 3d to 2d
-    int rectSize[20] = {
-        4,2, //2x2x2
-        8,8, //4x4x4
-        32,16, //8x8x8
-        64,64, //16x16x16
-        256,128, //32x32x32
-        512,512, //64x64x64
-        2048,1024, //128x128x128
-        4096,4096, //256x256x256
-        16384,8192, //512x512x512
-        32768,32768 //1024x1024x1024
-    };
+    size_t<3> origin;
+    origin[0]=0;origin[1]=0;origin[2]=0;
+    size_t<3> region;
+    region[0]=2;region[1]=2;region[2]=1;
     //----------------------------------------------------------------------
     MarchingCubes::MarchingCubes(std::string path, CL* cli_, EB::Timer* timer_,unsigned int res)
     {
@@ -50,13 +40,24 @@ namespace rtps
         else
             this->res = res;
         levels= ceil(log(res)/log(2));
+        slices = ceil(sqrt(res));
+        texRes2D = res*ceil(sqrt(res));
 
         try
         {
             path = path + "/marchingcubes.cl";
             k_classify = Kernel(cli, path, "classifyCubes2D");
             k_construct = Kernel(cli, path, "constructHPLevel2D");
-            k_traverse = Kernel(cli, path, "traverseHP2D");
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D1"));
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D2"));
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D3"));
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D4"));
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D5"));
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D6"));
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D7"));
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D8"));
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D9"));
+            k_traverse.push_back(Kernel(cli, path, "traverseHP2D10"));
         }
         catch (cl::Error er)
         {
@@ -75,10 +76,10 @@ namespace rtps
         mesh.ibo = 0;
         mesh.iboSize=0;
         cl_histopyramid.resize(levels);
-        cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,ImageFormat(CL_RGBA, CL_UNSIGNED_INT8),rectSize[(levels-i)*2],rectSize[(levels-i)*2+1].y)
+        cl_histopyramid[0]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,ImageFormat(CL_RGBA, CL_UNSIGNED_INT8),texRes,texRes);
         for(unsigned int i = 1; i<levels; i++)
         {
-            cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,ImageFormat(CL_R, CL_UNSIGNED_INT32),rectSize[(levels-i)*2].x,rectSize[(levels-i)*2+1].y)
+            cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,ImageFormat(CL_R, CL_UNSIGNED_INT32),texRes,texRes);
         }
     }
 
@@ -94,12 +95,15 @@ namespace rtps
         {
             this->res = res;
             levels = ceil(log(res)/log(2));
+            slices = ceil(sqrt(res));
+            texRes2D = res*slices;
             initalizeData();
         }
 
         k_classify.setArg(iarg++,cl_histopyramid[0]);
         k_classify.setArg(iarg++,colorfield);
-        k_classify.setArg(iarg++,levels-1);
+        k_classify.setArg(iarg++,slices);
+        k_classify.setArg(iarg++,res);
         k_classify.setArg(iarg++,0);
 
         int local = 64;
@@ -108,7 +112,6 @@ namespace rtps
             float gputime = k_classify.execute(cl::NDRange(res,res,res));
             if(gputime > 0)
                 timer->set(gputime);
-
         }
         catch (cl::Error er)
         {
@@ -121,7 +124,8 @@ namespace rtps
         {
             k_construct.setArg(iarg++,cl_histopyramid[i]);
             k_construct.setArg(iarg++,cl_histopyramid[i+1]);
-            k_construct.setArg(iarg++,)
+            k_construct.setArg(iarg++,slices);
+            k_construct.setArg(iarg++,res);
             int local = 64;
             try
             {
@@ -134,10 +138,56 @@ namespace rtps
             {
                 printf("ERROR(force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
             }
-
-
         }
 
+        //TODO read total back to cpu
+        unsigned int totals[4];
+        cli->queue.enqueueReadImage(cl_histopyramid[levels-1], CL_FALSE, origin, region, 0, 0, totals);
+        unsigned int total=totals[0]+totals[1]+totals[2]+totals[3];
+        if(total>mesh.vboSize)
+        {
+            if(mesh.vbo)
+            {
+                glDeleteBuffers(1, (GLuint*)&mesh.vbo);
+                glDeleteBuffers(1, (GLuint*)&mesh.normalbo);
+            }
+            glGenBuffers(1,&mesh.vbo);
+            glBindBuffer(GL_ARRAY_BUFFER,mesh.vbo);
+            glBufferData(GL_ARRAY_BUFFER,total*9*sizeof(float),NULL, GL_DYNAMIC_DRAW);
+            glGenBuffers(1,&mesh.normalbo);
+            glBindBuffer(GL_ARRAY_BUFFER,mesh.normalbo);
+            glBufferData(GL_ARRAY_BUFFER,total*9*sizeof(float),NULL, GL_DYNAMIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER,0);
+            mesh.vboSize=total;
+            cl_triangles=Buffer<float>(cli,mesh.vbo);
+            cl_normals=Buffer<float>(cli,mesh.normalbo);
+            glFinish();
+        }
+        iarg=0;
+        cl_triangles.acquire();
+        cl_normals.acquire();
+        for(int i = 0; i<levels; i++)
+            k_traverse[levels].setArg(iarg++,cl_histopyramid[i]);
+        k_traverse[levels].setArg(iarg++,cl_triangles);
+        k_traverse[levels].setArg(iarg++,cl_normals);
+        k_traverse[levels].setArg(iarg++,slices);
+        k_traverse[levels].setArg(iarg++,res);
+        k_traverse[levels].setArg(iarg++,0);
+        k_traverse[levels].setArg(iarg++,total);
+        int local = 64;
+        try
+        {
+            float gputime = k_classify.execute(cl::NDRange(res,res,res));
+            if(gputime > 0)
+                timer->set(gputime);
+        }
+        catch (cl::Error er)
+        {
+            printf("ERROR(force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
+        }
+
+        cl_triangles.release();
+        cl_normals.release();
 
 #if 0 //printouts
         //DEBUGING
@@ -169,6 +219,7 @@ namespace rtps
             }
         }
 #endif
+        return mesh;
     }
 
 

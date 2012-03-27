@@ -58,48 +58,47 @@ __constant int2 squareOffsets[4] = {
 		{0,1},
 		{1,1}
 		}
-__inline int2 map3Dto2D(int4 coord, int resIndex)
+__inline int2 map3Dto2D(int4 coord, unsigned int res, unsigned int slices)
 {
-	int4 tmp = rectSize[resIndex];
-	int yoffset = coord.z/tmp.z;
-	int xoffset = coord.z%tmp.z;
+	int yoffset = coord.z/slices;
+	int xoffset = coord.z%slices;
 	
-	int2 pos = {xoffset*tmp.w,yoffset*tmp.w};
+	int2 pos = {xoffset*res,yoffset*res};
 	pos+={coord.x,coord.y};
 	return pos;
 }
 
-__inline int4 map2Dto3D(int2 coord, int resIndex)
+__inline int4 map2Dto3D(int2 coord, unsigned int res,unsigned int slices)
 {
-	int4 tmp = rectSize[resIndex];
-	int z = (coord.y/tmp.w)+(coord.x/tmp.w);
+	int z = (coord.y/res)+(coord.x/res);
 	
-	int4 pos = {coord.x%tmp.w,coord.y%tmp.w,z,0}
+	int4 pos = {coord.x%res,coord.y%res,z,0}
 	return pos;
 }
 
 __kernel void constructHPLevel2D(
 		__read_only image2d_t readHistoPyramid, 
 		__write_only image2d_t writeHistoPyramid
-		__private int resIndex
+		__private unsigned int res,
+        __private unsigned int slices
 	) {	
 
-	int4 coord = {get_global_id(0), get_global_id(1),get_global_id(2),0};
+	int2 coord = {get_global_id(0), get_global_id(1)};
 	
-	int2 writePos = map3Dto2D(coord,resIndex);
+	//int2 writePos = map3Dto2D(coord,res,slices);
 	int2 readPos = writePos*2;
 	int writeValue = read_imagei(readHistoPyramid, sampler, readPos).x + // 0
 		read_imagei(readHistoPyramid, sampler, readPos+squareOffsets[1]).x + // 1
 		read_imagei(readHistoPyramid, sampler, readPos+squareOffsets[2]).x + // 4
 		read_imagei(readHistoPyramid, sampler, readPos+squareOffsets[3]).x; // 5
-	coord.z+=1;
-	readPos = map3Dto2D(coord,resIndex)*2;
+	/*coord.z+=1;
+	readPos = map3Dto2D(coord,res,slices)*2;
 	writeValue+=
 		read_imagei(readHistoPyramid, sampler, readPos).x + // 2
 		read_imagei(readHistoPyramid, sampler, readPos+squareOffsets[1]).x + // 3
 		read_imagei(readHistoPyramid, sampler, readPos+squareOffsets[2]).x + // 6
 		read_imagei(readHistoPyramid, sampler, readPos+squareOffsets[3]).x; // 7
-
+*/
 	write_imagei(writeHistoPyramid, writePos, writeValue);
 }
 __kernel void constructHPLevel3D(
@@ -122,21 +121,17 @@ __kernel void constructHPLevel3D(
 }
 
 int4 scanHPLevel2D(int target, __read_only image2d_t hp, int4 current,__constant int res, __constant int xslices) {
-	int2 c1 = map3Dto2D(current,res,xslices);
-	int2 c2 = map3Dto2D(current+(int4)(0,0,1,0),res,xslices);
-	int8 neighbors = {
-		read_imagei(hp, sampler, c1).x,
-		read_imagei(hp, sampler, c1 + squareOffsets[1]).x,
-		read_imagei(hp, sampler, c1 + squareOffsets[2]).x,
-		read_imagei(hp, sampler, c1 + squareOffsets[3]).x,
-		read_imagei(hp, sampler, c2).x,
-		read_imagei(hp, sampler, c2 + squareOffsets[1]).x,
-		read_imagei(hp, sampler, c2 + sqaureOffsets[2]).x,
-		read_imagei(hp, sampler, c2 + squareOffsets[3]).x
+	//int2 c1 = map3Dto2D(current,res,xslices);
+	//int2 c2 = map3Dto2D(current+(int4)(0,0,1,0),res,xslices);
+	int4 neighbors = {
+		read_imagei(hp, sampler, current.xy).x,
+		read_imagei(hp, sampler, current.xy + squareOffsets[1]).x,
+		read_imagei(hp, sampler, current.xy + squareOffsets[2]).x,
+		read_imagei(hp, sampler, current.xy + squareOffsets[3]).x,
 	};
 
 	int acc = current.s3 + neighbors.s0;
-	int8 cmp;
+	int4 cmp;
 	cmp.s0 = acc <= target;
 	acc += neighbors.s1;
 	cmp.s1 = acc <= target;
@@ -144,25 +139,25 @@ int4 scanHPLevel2D(int target, __read_only image2d_t hp, int4 current,__constant
 	cmp.s2 = acc <= target;
 	acc += neighbors.s3;
 	cmp.s3 = acc <= target;
-	acc += neighbors.s4;
-	cmp.s4 = acc <= target;
-	acc += neighbors.s5;
-	cmp.s5 = acc <= target;
-	acc += neighbors.s6;
-	cmp.s6 = acc <= target;
-	cmp.s7 = 0;
+	//acc += neighbors.s4;
+	//cmp.s4 = acc <= target;
+	//acc += neighbors.s5;
+	//cmp.s5 = acc <= target;
+	//acc += neighbors.s6;
+	//cmp.s6 = acc <= target;
+	//cmp.s7 = 0;
 current.s0 = current.s0*2;
 	current.s1 = current.s1*2;
-	current.s2 = current.s2*2;
+    current.s2 = 0;
 	current.s3 = current.s3 +
 		cmp.s0*neighbors.s0 + 
 		cmp.s1*neighbors.s1 + 
 		cmp.s2*neighbors.s2 + 
-		cmp.s3*neighbors.s3 + 
-		cmp.s4*neighbors.s4 + 
+		cmp.s3*neighbors.s3; 
+	/*	cmp.s4*neighbors.s4 + 
 		cmp.s5*neighbors.s5 + 
 		cmp.s6*neighbors.s6 + 
-		cmp.s7*neighbors.s7;
+		cmp.s7*neighbors.s7;*/
 	return current;
 
 }
@@ -525,60 +520,11 @@ __constant char triTable[4096] =
 0, 9, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-#define SIZE **HP_SIZE**
-__kernel void traverseHP2D(
-        __read_only image2d_t hp0, // Largest HP
-		__read_only image2d_t hp1,
-		__read_only image2d_t hp2,
-		__read_only image2d_t hp3,
-		__read_only image2d_t hp4,
-		__read_only image2d_t hp5,
-        #if SIZE > 64
-		__read_only image2d_t hp6,
-        #endif
-        #if SIZE > 128
-		__read_only image2d_t hp7,
-        #endif
-        #if SIZE > 256
-		__read_only image2d_t hp8, 
-        #endif
-        #if SIZE > 512
-		__read_only image2d_t hp9, 
-        #endif
-        	__global float* triVBO,
-        	__global float* normalVBO,
-		__private int resIndex,
-		__private int isolevel,
-		__private int sum
-        ) {
-	
-	int target = get_global_id(0);
-	if(target >= sum)
-		target = 0;
-
-	int2 cubePosition = {0,0,0,0}; // x,y,z,sum
-    #if SIZE > 512
-    cubePosition = scanHPLevel2D(target, hp9, cubePosition,resIndex);
-    #endif
-    #if SIZE > 256
-    cubePosition = scanHPLevel2D(target, hp8, cubePosition,resIndex);
-    #endif
-    #if SIZE > 128
-    cubePosition = scanHPLevel2D(target, hp7, cubePosition,resIndex);
-    #endif
-    #if SIZE > 64
-    cubePosition = scanHPLevel2D(target, hp6, cubePosition,resIndex);
-    #endif
-    cubePosition = scanHPLevel2D(target, hp5, cubePosition,resIndex);
-    cubePosition = scanHPLevel2D(target, hp4, cubePosition,resIndex);
-    cubePosition = scanHPLevel2D(target, hp3, cubePosition,resIndex);
-    cubePosition = scanHPLevel2D(target, hp2, cubePosition,resIndex);
-    cubePosition = scanHPLevel2D(target, hp1, cubePosition,resIndex);
-    cubePosition = scanHPLevel2D(target, hp0, cubePosition,resIndex);
-    cubePosition/=2;
+void fillVBOs(__read_only image_2d_t hp0, __global float* triVBO, __global float* normalVBO, __private res, __private slice)
+{
 
     char vertexNr = 0;
-    int2 squarePosition=map3Dto2D(cubePosition,resIndex);
+    int2 squarePosition=map3Dto2D(cubePosition,res,slices);
 	const int4 cubeData = read_imagei(hp0, sampler, squarePosition);
 
 	// max 5 triangles
@@ -586,29 +532,29 @@ __kernel void traverseHP2D(
 		const uchar edge = triTable[cubeData.y*16 + i];
 		const int4 point0 = (int4)(cubePosition.x + offsets3[edge*6], cubePosition.y + offsets3[edge*6+1], cubePosition.z + offsets3[edge*6+2],0);
 		const int4 point1 = (int4)(cubePosition.x + offsets3[edge*6+3], cubePosition.y + offsets3[edge*6+4], cubePosition.z + offsets3[edge*6+5],);
-	int2 p01=map3Dto2D(point0+(int4)(1,0,0,0),resIndex);
-	int2 p02=map3Dto2D(point0+(int4)(-1,0,0,0),resIndex);
+	int2 p01=map3Dto2D(point0+(int4)(1,0,0,0),res,slices);
+	int2 p02=map3Dto2D(point0+(int4)(-1,0,0,0),res,slices);
         // Store vertex in VBO
 		
         float4 forwardDifference0;
 	forwardDifference0.x=(float)(-read_imagei(hp0, sampler, p01).z+read_imagei(hp0, sampler, p02).z;
-	p01=map3Dto2D(point0+(int4)(0,1,0,0),resIndex);
-	p02=map3Dto2D(point0+(int4)(0,-1,0,0),resIndex);
+	p01=map3Dto2D(point0+(int4)(0,1,0,0),res,slices);
+	p02=map3Dto2D(point0+(int4)(0,-1,0,0),res,slices);
 	forwardDifference0.y=(float)(-read_imagei(hp0, sampler, p01).z+read_imagei(hp0, sampler, p02).z;
-	p01=map3Dto2D(point0+(int4)(0,0,1,0),resIndex);
-	p02=map3Dto2D(point0+(int4)(0,0,-1,0),resIndex);
+	p01=map3Dto2D(point0+(int4)(0,0,1,0),res,slices);
+	p02=map3Dto2D(point0+(int4)(0,0,-1,0),res,slices);
 	forwardDifference0.z=(float)(-read_imagei(hp0, sampler, p01).z+read_imagei(hp0, sampler, p02).z;
 	forwardDifferenc0.w=0.0f;
         
-	int2 p11=map3Dto2D(point1+(int4)(1,0,0,0),resIndex);
-	int2 p12=map3Dto2D(point1+(int4)(-1,0,0,0),resIndex);
+	int2 p11=map3Dto2D(point1+(int4)(1,0,0,0),res,slices);
+	int2 p12=map3Dto2D(point1+(int4)(-1,0,0,0),res,slices);
 	float4 forwardDifference1;
 	forwardDifference1.x=(float)(-read_imagei(hp0, sampler, p11).z+read_imagei(hp0, sampler, p12).z;
-	p01=map3Dto2D(point1+(int4)(0,1,0,0),resIndex);
-	p02=map3Dto2D(point1+(int4)(0,-1,0,0),resIndex);
+	p01=map3Dto2D(point1+(int4)(0,1,0,0),res,slices);
+	p02=map3Dto2D(point1+(int4)(0,-1,0,0),res,slices);
 	forwardDifference1.y=(float)(-read_imagei(hp0, sampler, p11).z+read_imagei(hp0, sampler, p12).z;
-	p01=map3Dto2D(point1+(int4)(0,0,1,0),resIndex);
-	p02=map3Dto2D(point1+(int4)(0,0,-1,0),resIndex);
+	p01=map3Dto2D(point1+(int4)(0,0,1,0),res,slices);
+	p02=map3Dto2D(point1+(int4)(0,0,-1,0),res,slices);
 	forwardDifference1.z=(float)(-read_imagei(hp0, sampler, p11).z+read_imagei(hp0, sampler, p12).z;
 	forwardDifferenc1.w=0.0f;
 
@@ -630,7 +576,316 @@ __kernel void traverseHP2D(
 
         ++vertexNr;
     }
+
 }
+__kernel void traverseHP2D10(
+        __read_only image2d_t hp0, // Largest HP
+		__read_only image2d_t hp1,
+		__read_only image2d_t hp2,
+		__read_only image2d_t hp3,
+		__read_only image2d_t hp4,
+		__read_only image2d_t hp5,
+		__read_only image2d_t hp6,
+		__read_only image2d_t hp7,
+		__read_only image2d_t hp8, 
+		__read_only image2d_t hp9, 
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+	target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp9, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp8, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp7, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp6, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp5, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp4, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp3, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp2, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp1, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition.xy=cubePosition.xy/2;
+    cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices);
+
+    fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+__kernel void traverseHP2D9(
+        __read_only image2d_t hp0, // Largest HP
+		__read_only image2d_t hp1,
+		__read_only image2d_t hp2,
+		__read_only image2d_t hp3,
+		__read_only image2d_t hp4,
+		__read_only image2d_t hp5,
+		__read_only image2d_t hp6,
+		__read_only image2d_t hp7,
+		__read_only image2d_t hp8, 
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+	target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp8, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp7, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp6, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp5, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp4, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp3, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp2, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp1, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition.xy=cubePosition.xy/2;
+    cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices);
+
+     fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+__kernel void traverseHP2D8(
+        __read_only image2d_t hp0, // Largest HP
+		__read_only image2d_t hp1,
+		__read_only image2d_t hp2,
+		__read_only image2d_t hp3,
+		__read_only image2d_t hp4,
+		__read_only image2d_t hp5,
+		__read_only image2d_t hp6,
+		__read_only image2d_t hp7,
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+	target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp7, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp6, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp5, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp4, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp3, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp2, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp1, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition.xy=cubePosition.xy/2;
+    cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices);
+
+     fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+
+__kernel void traverseHP2D7(
+        __read_only image2d_t hp0, // Largest HP
+		__read_only image2d_t hp1,
+		__read_only image2d_t hp2,
+		__read_only image2d_t hp3,
+		__read_only image2d_t hp4,
+		__read_only image2d_t hp5,
+		__read_only image2d_t hp6,
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+	target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp6, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp5, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp4, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp3, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp2, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp1, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition.xy=cubePosition.xy/2;
+    cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices);
+
+     fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+
+__kernel void traverseHP2D6(
+        __read_only image2d_t hp0, // Largest HP
+		__read_only image2d_t hp1,
+		__read_only image2d_t hp2,
+		__read_only image2d_t hp3,
+		__read_only image2d_t hp4,
+		__read_only image2d_t hp5,
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+	target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp5, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp4, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp3, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp2, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp1, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition.xy=cubePosition.xy/2;
+    cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices);
+
+     fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+
+__kernel void traverseHP2D5(
+        __read_only image2d_t hp0, // Largest HP
+		__read_only image2d_t hp1,
+		__read_only image2d_t hp2,
+		__read_only image2d_t hp3,
+		__read_only image2d_t hp4,
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+	target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp4, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp3, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp2, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp1, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition.xy=cubePosition.xy/2;
+    cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices);
+
+     fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+__kernel void traverseHP2D4(
+        __read_only image2d_t hp0, // Largest HP
+		__read_only image2d_t hp1,
+		__read_only image2d_t hp2,
+		__read_only image2d_t hp3,
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+	target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp3, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp2, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp1, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition.xy=cubePosition.xy/2;
+    cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices);
+
+     fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+
+__kernel void traverseHP2D3(
+        __read_only image2d_t hp0, // Largest HP
+		__read_only image2d_t hp1,
+		__read_only image2d_t hp2,
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+	target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp2, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp1, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition.xy=cubePosition.xy/2;
+    map2Dto3D(cubePosition,res,slices);
+
+     fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+
+__kernel void traverseHP2D2(
+        __read_only image2d_t hp0, // Largest HP
+		__read_only image2d_t hp1,
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+	target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp1, cubePosition,res,slices);
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition.xy=cubePosition.xy/2;
+    cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices);
+
+     fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+
+__kernel void traverseHP2D1(
+        __read_only image2d_t hp0, // Largest HP
+        __global float* triVBO,
+        __global float* normalVBO,
+		__private unsigned int res,
+		__private unsigned int slices,
+		__private int isolevel,
+		__private int sum
+        ) {
+	
+	int target = get_global_id(0);
+	if(target >= sum)
+        target = 0;
+
+    int2 cubePosition = {0,0,0,0}; // x,y,z,sum
+    cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
+    cubePosition/=2;
+    cubePosition.xy=cubePosition.xy/2;
+    cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices);
+
+    fillVBOs(hp0, triVBO, normalVBO, res, slices)
+}
+
 
 __kernel void traverseHP3D(
         __read_only image3d_t hp0, // Largest HP
@@ -751,11 +1006,12 @@ __kernel void classifyCubes3D(
 __kernel void classifyCubes2D(
 		__write_only image2d_t histoPyramid, 
 		__read_only image2d_t rawData,
-		__private int resIndex,
+		__private int res,
+		__private int slices,
 		__private int isolevel
 		) {
     int4 p4 = {get_global_id(0), get_global_id(1), get_global_id(2), 0}
-    int2 pos = map3Dto2D(p4,resIndex);
+    int2 pos = map3Dto2D(p4,res,slices);
 
 
     // Find cube class nr
@@ -765,7 +1021,7 @@ __kernel void classifyCubes2D(
     ((read_imagei(rawData, sampler, pos + squareOffsets[1]).x > isolevel) << 1) |
     ((read_imagei(rawData, sampler, pos + squareOffsets[3]).x > isolevel) << 2) |
     ((read_imagei(rawData, sampler, pos + squareOffsets[2]).x > isolevel) << 3);
-	pos = map3Dto2D(p4+(int4)(0,0,1,0),resIndex);
+	pos = map3Dto2D(p4+(int4)(0,0,1,0),res,slices);
 	cubeindex|=((read_imagei(rawData, sampler, pos).x > isolevel) << 4) |
     ((read_imagei(rawData, sampler, pos + squareOffsets[1]).x > isolevel) << 5) |
     ((read_imagei(rawData, sampler, pos + squareOffsets[2]).x > isolevel) << 6) |

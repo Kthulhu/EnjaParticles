@@ -51,7 +51,7 @@ namespace rtps
             CL* cli;
             Kernel k_classify;
             Kernel k_construct;
-            Kernel k_traverse;
+            std::vector<Kernel> k_traverse;
             EB::Timer* timer;
             Buffer<float> cl_triangles;
             Buffer<float> cl_normals;
@@ -59,6 +59,8 @@ namespace rtps
             std::vector<cl::Image2D> cl_histopyramid;
             unsigned int res;
             unsigned int levels;
+            unsigned int texRes2D;
+            unsigned int slices;
 
     };
 }

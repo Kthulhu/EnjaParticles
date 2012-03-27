@@ -28,7 +28,7 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float* density, global float4* img
+#define ARGS __global float4* pos, __global float* density, write_only image_2d_t img
 #define ARGV pos, density, img
 
 /*----------------------------------------------------------------------*/
@@ -37,7 +37,15 @@
 #include "cl_structs.h"
 //Contains all of the Smoothing Kernels for SPH
 #include "cl_kernels.h"
-
+__inline int2 map3Dto2D(int4 coord, unsigned int res, unsigned int slices)
+{
+	int yoffset = coord.z/slices;
+	int xoffset = coord.z%slices;
+	
+	int2 pos = {xoffset*res,yoffset*res};
+	pos+={coord.x,coord.y};
+	return pos;
+}
 
 //----------------------------------------------------------------------
 inline void ForNeighbor(//__global float4*  vars_sorted,
@@ -79,7 +87,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 // compute forces on particles
 //#pragma OPENCL EXTENSION cl_khr_3d_image_writes : enable
 __kernel void colorfield_update(
-                        int res,
+                       unsigned int res,
+                       unsigned int slices,
                        //__global float4* vars_sorted,
                        ARGS,
                        __global int*    cell_indexes_start,
@@ -92,7 +101,7 @@ __kernel void colorfield_update(
     uint s = get_global_id(0);
     uint t = get_global_id(1);
     uint r = get_global_id(2);
-    uint index = t+s*res+r*res*res;
+    uint index = s+t*res+r*res*res;
     //float4 texPos = (float4)(s/((float)res),t/((float)res),r/((float)res),1.0f);
     float tmp = 1.0f/(res-1);
     //float4 texPos=(float4)(s*tmp,1.0,0.5,1.0f);
@@ -109,13 +118,15 @@ __kernel void colorfield_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, 0, 0, texPos, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    pt.force.x=ceil(pt.force.x*sphp->mass);
+    pt.force.x=pt.force.x*sphp->mass;
     //pt.force.x=1.0f;
     pt.force.w=1.0f;
     //pt.force.w*=sphp->mass;
     //clf[index]=texPos;
     //clf[index]=gp->bnd_max;
-    img[index]=pt.force;//write_imagef(posTex,(int4)(s,t,r,0),pt.force);
+    //img[index]=pt.force;
+    
+    write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),pt.force);
 }
 
 /*-------------------------------------------------------------- */
