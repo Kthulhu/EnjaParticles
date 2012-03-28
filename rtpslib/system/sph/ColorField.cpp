@@ -95,7 +95,7 @@ namespace rtps
         }
         int iarg = 0;
 
-        dout<<"Here"<<endl;
+        dout<<"res = "<<res<<endl;
         k_colorfield.setArg(iarg++, res);
         k_colorfield.setArg(iarg++, slices);
         k_colorfield.setArg(iarg++, pos_s.getDevicePtr());

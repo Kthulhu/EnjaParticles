@@ -114,9 +114,9 @@ __kernel void colorfield_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, 0, 0, texPos, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    float tmpiso = ceil(pt.force.x*sphp->mass);
-    //write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),(float4)(tmpiso,tmpiso,tmpiso,tmpiso));
-    write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),(float4)(1.0f,1.0f,1.0f,1.0f));
+    float tmpiso = (float)(index);//(pt.force.x>0.0f);//ceil(pt.force.x*sphp->mass);
+    write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),(float4)(tmpiso,tmpiso,tmpiso,tmpiso));
+    //write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),(float4)(1.0f,1.0f,1.0f,1.0f));
     int2 mytempdebug=map3Dto2D((int4)(s,t,r,0),res,slices);
     clf[index]=(float4)(tmpiso,mytempdebug.x,mytempdebug.y,0.0f);//(float4)(s,t,r,index);
     //clf[index]=texPos;
