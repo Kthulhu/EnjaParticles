@@ -39,15 +39,20 @@ namespace rtps
     {
         public:
             MarchingCubes() { cli = NULL; timer = NULL; };
+            MarchingCubes(const MarchingCubes& mc);
+            const MarchingCubes& operator=(const MarchingCubes& mc);
             MarchingCubes(std::string path, CL* cli, EB::Timer* timer,unsigned int res);
             void initializeData();
-            struct Mesh& execute(cl::Image2D& colorfield,
+            struct Mesh* execute(cl::Image2D& colorfield,
                     unsigned int res,
                     //debug params
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);
 
         private:
+            void clone(const MarchingCubes& mc);
+            cl::size_t<3> origin;
+            cl::size_t<3> region;
             CL* cli;
             Kernel k_classify;
             Kernel k_construct;

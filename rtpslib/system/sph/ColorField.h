@@ -35,10 +35,12 @@ namespace rtps
     {
         public:
             ColorField() { cli = NULL; timer = NULL; };
-            ColorField(std::string path, CL* cli, EB::Timer* timer);
-            void execute(Buffer<float4>& pos_s,
+            //ColorField(const ColorField& cf);
+            //operator=(const ColorField& cf);
+            ColorField(std::string path, CL* cli, EB::Timer* timer,unsigned int res = 32);
+            void initializeData();
+            cl::Image2D execute(Buffer<float4>& pos_s,
                     Buffer<float>& dens_s,
-                    Buffer<float4>& cfieldTex,
                     int res,
                     Buffer<unsigned int>& ci_start,
                     Buffer<unsigned int>& ci_end,
@@ -53,6 +55,12 @@ namespace rtps
             CL* cli;
             Kernel k_colorfield;
             EB::Timer* timer;
+            cl::Image2D cl_colField;
+            unsigned int res;
+            unsigned int texRes2D;
+            unsigned int slices;
+
+
     };
 }
 

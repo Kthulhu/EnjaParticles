@@ -77,7 +77,7 @@ namespace rtps
         forceRB = RigidBodyForce(sph_source_dir, cli, timers["force_rigidbody_gpu"]);
         density = Density(sph_source_dir, cli, timers["density_gpu"]);
         force = Force(sph_source_dir, cli, timers["force_gpu"]);
-        colorfield = ColorField(sph_source_dir, cli, timers["colorfield_gpu"]);
+        colorfield = ColorField(sph_source_dir, cli, timers["colorfield_gpu"],settings->GetSettingAs<unsigned int>("color_field_res","2"));
         collision_wall = CollisionWall(sph_source_dir, cli, timers["cw_gpu"]);
         collision_tri = CollisionTriangle(sph_source_dir, cli, timers["ct_gpu"], 2048); //TODO expose max_triangles as a parameter
 
@@ -339,16 +339,14 @@ namespace rtps
     void SPH::postProcess()
     {
         //dout<<"Here"<<endl;
-        if(settings->GetSettingAs<bool>("use_color_field","0"))
+        if(settings->GetSettingAs<bool>("use_color_field","0")&&num>0)
         {
-        //if(num >0) printf("force\n");
-            unsigned int res = settings->GetSettingAs<unsigned int>("color_field_res","32");
+            unsigned int res = settings->GetSettingAs<unsigned int>("color_field_res","2");
             //dout<<"Here"<<endl;
             timers["colorfield"]->start();
-            colorfield.execute(
+            cl::Image2D colfield=colorfield.execute(
                 cl_position_s,
                 cl_density_s,
-                cl_colField,
                 res,
                 cl_cell_indices_start,
                 cl_cell_indices_end,
@@ -358,8 +356,17 @@ namespace rtps
                 clf_debug,
                 cli_debug);
             timers["colorfield"]->stop();
+
+            timers["marchingcubes"]->start();
+            mcMesh=marchingcubes.execute(
+                colfield,
+                res,
+                clf_debug,
+                cli_debug);
+            timers["marchingcubes"]->stop();
+
             //Copy buffer to image. Seems to be the only portable option for Writing to 3D textures from opencl.
-            cl::size_t<3> origin;//={0,0,0};
+            /*cl::size_t<3> origin;//={0,0,0};
             cl::size_t<3> region;//={res,res,res};
             origin[0] = 0; origin[1] = 0; origin[2]=0;
             region[0] = res; region[1] = res; region[2]=res;
@@ -370,7 +377,11 @@ namespace rtps
                                                  origin,
                                                  region);
             cli->queue.finish();
-            timers["colorfield_copy"]->stop();
+            timers["colorfield_copy"]->stop();*/
+        }
+        else
+        {
+            mcMesh=NULL;
         }
     }
 	//----------------------------------------------------------------------
@@ -482,48 +493,17 @@ namespace rtps
         cl_density_s = Buffer<float>(cli, fvec);
         cl_xsph_s = Buffer<float4>(cli, f4vec);
 
-        //dout<<"Here"<<endl;
         //TODO make a helper constructor for buffer to make a cl_mem from a struct
         //Setup Grid Parameter structs
         vector<GridParams> gparams(0);
         gparams.push_back(grid_params);
         cl_GridParams = Buffer<GridParams>(cli, gparams);
 
-        //dout<<"Here"<<endl;
         //scaled Grid Parameters
         vector<GridParams> sgparams(0);
         sgparams.push_back(grid_params_scaled);
         cl_GridParamsScaled = Buffer<GridParams>(cli, sgparams);
-        //dout<<"Here"<<endl;
 
-        if(settings->GetSettingAs<bool>("use_color_field","0"))
-        {
-            unsigned int res = settings->GetSettingAs<unsigned int>("color_field_res","32");
-            vector<float4> f4img(res*res*res);
-            fill(f4img.begin(), f4img.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
-
-            //dout<<"Here"<<endl;
-            glPixelStoref(GL_UNPACK_ALIGNMENT,1);
-            glPixelStoref(GL_PACK_ALIGNMENT,1);
-            glEnable(GL_TEXTURE_3D_EXT);
-            glGenTextures(1, &colFieldTex);
-            glBindTexture(GL_TEXTURE_3D_EXT,colFieldTex);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            GLint mode = GL_CLAMP_TO_BORDER;
-            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S, mode);
-            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T, mode);
-            glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R, mode);
-            glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0, GL_RGBA32F, res, res, res, 0, GL_RGBA, GL_FLOAT, &f4img[0]);
-            cl_colField=Buffer<float4>(cli,f4img);
-            cl_colFieldTex=cl::Image3DGL(cli->context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,colFieldTex);
-            glBindTexture(GL_TEXTURE_3D_EXT, 0);
-            glDisable(GL_TEXTURE_3D_EXT);
-            glPixelStoref(GL_UNPACK_ALIGNMENT,4);
-            glPixelStoref(GL_PACK_ALIGNMENT,4);
-
-        }
         // Size is the grid size + 1, the last index is used to signify how many particles are within bounds
         // That is a problem since the number of
         // occupied cells could be much less than the number of grid elements.
@@ -680,24 +660,24 @@ namespace rtps
     }
     void SPH::acquireGLBuffers()
     {
-        if(settings->GetSettingAs<bool>("use_color_field","0"))
+        /*if(settings->GetSettingAs<bool>("use_color_field","0"))
         {
             std::vector<cl::Memory> objs;
             objs.push_back(cl_colFieldTex);
             cli->queue.enqueueAcquireGLObjects(&objs,NULL,NULL);
             cli->queue.finish();
-        }
+        }*/
         System::acquireGLBuffers();
     }
     void SPH::releaseGLBuffers()
     {
-        if(settings->GetSettingAs<bool>("use_color_field","0"))
+        /*if(settings->GetSettingAs<bool>("use_color_field","0"))
         {
             std::vector<cl::Memory> objs;
             objs.push_back(cl_colFieldTex);
             cli->queue.enqueueReleaseGLObjects(&objs,NULL,NULL);
             cli->queue.finish();
-        }
+        }*/
         System::releaseGLBuffers();
     }
 }; //end namespace

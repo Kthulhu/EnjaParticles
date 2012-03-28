@@ -81,9 +81,9 @@ set (rtpslib_SOURCES
     #${rtpslib_SOURCE_DIR}/render/SSFRender
     #${rtpslib_SOURCE_DIR}/render/Sphere3DRender
     ${rtpslib_SOURCE_DIR}/render/Shader
+    ${rtpslib_SOURCE_DIR}/render/MeshEffect
     ${rtpslib_SOURCE_DIR}/render/ParticleEffect
     ${rtpslib_SOURCE_DIR}/render/SSEffect
-    ${rtpslib_SOURCE_DIR}/render/MeshEffect
     ${rtpslib_SOURCE_DIR}/render/StreamlineEffect
     ${rtpslib_SOURCE_DIR}/render/ShaderLibrary
     ${rtpslib_SOURCE_DIR}/render/RenderUtils
@@ -102,6 +102,7 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/common/Permute
     ${rtpslib_SOURCE_DIR}/system/common/Sample
     ${rtpslib_SOURCE_DIR}/system/common/Gravity
+    ${rtpslib_SOURCE_DIR}/system/common/MarchingCubes
 	
     ${rtpslib_SOURCE_DIR}/system/System
     
@@ -120,10 +121,10 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/system/sph/Lifetime
     ${rtpslib_SOURCE_DIR}/system/sph/Density
     ${rtpslib_SOURCE_DIR}/system/sph/Force
-    ${rtpslib_SOURCE_DIR}/system/sph/ColorField
     ${rtpslib_SOURCE_DIR}/system/sph/RigidBodyForce
     ${rtpslib_SOURCE_DIR}/system/sph/Collision_wall
     ${rtpslib_SOURCE_DIR}/system/sph/Collision_triangle
+    ${rtpslib_SOURCE_DIR}/system/sph/ColorField
 
     
     #### these are CPU only

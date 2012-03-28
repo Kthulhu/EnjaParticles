@@ -28,7 +28,7 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float* density, write_only image_2d_t img
+#define ARGS __global float4* pos, __global float* density, __write_only image2d_t img
 #define ARGV pos, density, img
 
 /*----------------------------------------------------------------------*/
@@ -37,13 +37,13 @@
 #include "cl_structs.h"
 //Contains all of the Smoothing Kernels for SPH
 #include "cl_kernels.h"
-__inline int2 map3Dto2D(int4 coord, unsigned int res, unsigned int slices)
+inline int2 map3Dto2D(int4 coord, unsigned int res, unsigned int slices)
 {
 	int yoffset = coord.z/slices;
 	int xoffset = coord.z%slices;
 	
 	int2 pos = {xoffset*res,yoffset*res};
-	pos+={coord.x,coord.y};
+	pos+=(int2)(coord.x,coord.y);
 	return pos;
 }
 
@@ -76,7 +76,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 
         pt->force.x += kern;
         //debugging
-        pt->force.w += kern;
+        //pt->force.w += kern;
     }
 }
 
@@ -106,27 +106,20 @@ __kernel void colorfield_update(
     float tmp = 1.0f/(res-1);
     //float4 texPos=(float4)(s*tmp,1.0,0.5,1.0f);
     float4 texPos=(float4)(s*tmp,t*tmp,r*tmp,1.0f);
-    //img[s+t*res+r*res*res]=texPos;
-    //img[t+s*res+r*res*res]=(float4)(1.0f,0.0f,0.0f,1.0f);
-    //texPos = (texPos*(gp->grid_max-gp->grid_min)+gp->grid_min);
     texPos = (texPos*(gp->bnd_max-gp->bnd_min)+gp->bnd_min);
     texPos.w=1.0f;
-    //texPos*=sphp->simulation_scale;
     // Do calculations on particles in neighboring cells
     PointData pt;
     zeroPoint(&pt);
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, 0, 0, texPos, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    pt.force.x=pt.force.x*sphp->mass;
-    //pt.force.x=1.0f;
-    pt.force.w=1.0f;
-    //pt.force.w*=sphp->mass;
+    float tmpiso = ceil(pt.force.x*sphp->mass);
+    //write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),(float4)(tmpiso,tmpiso,tmpiso,tmpiso));
+    write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),(float4)(1.0f,1.0f,1.0f,1.0f));
+    int2 mytempdebug=map3Dto2D((int4)(s,t,r,0),res,slices);
+    clf[index]=(float4)(tmpiso,mytempdebug.x,mytempdebug.y,0.0f);//(float4)(s,t,r,index);
     //clf[index]=texPos;
-    //clf[index]=gp->bnd_max;
-    //img[index]=pt.force;
-    
-    write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),pt.force);
 }
 
 /*-------------------------------------------------------------- */

@@ -42,6 +42,8 @@
 #include "common/CellIndices.h"
 #include "common/Permute.h"
 #include "common/Gravity.h"
+#include "../render/MeshEffect.h"
+#include "common/MarchingCubes.h"
 
 #include "common/MeshToParticles.h"
 #include "../timer_eb.h"
@@ -178,6 +180,10 @@ namespace rtps
         Buffer<float>& getMassBufferUnsorted() {return cl_mass_u;}
         Buffer<unsigned int>& getCellStartBuffer() {return cl_cell_indices_start;}
         Buffer<unsigned int>& getCellEndBuffer() {return cl_cell_indices_end;}
+        Mesh* getMCMesh()
+        {
+            return mcMesh;
+        }
         float getSpacing(){return spacing;}
         RTPSSettings* getSettings();
         virtual void acquireGLBuffers();
@@ -219,6 +225,8 @@ namespace rtps
         Buffer<GridParams>  cl_GridParams;
         Buffer<GridParams>  cl_GridParamsScaled;
 
+        cl::Image2D      cl_colField;
+        Mesh*           mcMesh;
         Buffer<float4>      clf_debug;  //just for debugging cl files
         Buffer<int4>        cli_debug;  //just for debugging cl files
         Bitonic<unsigned int> bitonic;
@@ -253,6 +261,7 @@ namespace rtps
         Permute permute;
         Gravity gravity;
         MeshToParticles m2p;
+        MarchingCubes marchingcubes;
         vector<System*> interactionSystem;
 
         void hash_and_sort();

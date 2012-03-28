@@ -27,13 +27,26 @@
 namespace rtps
 {
 
+   /* ColorField::ColorField(const ColorField& cf)
+    {
+        cli = cf.cli;
+        timer = cf.timer;
+        cl_colField=cf.cl_colField;
+        res = cf.res;
+        texRes2D=cf.texRes2D;
+        slices=cf.slices;
+    }*/
     //----------------------------------------------------------------------
-    ColorField::ColorField(std::string path, CL* cli_, EB::Timer* timer_)
+    ColorField::ColorField(std::string path, CL* cli_, EB::Timer* timer_,unsigned int res)
     {
         cli = cli_;
         timer = timer_;
+        if(res<2)
+            this->res=2;
+        else
+            this->res=res;
 
-        printf("load force\n");
+        printf("load colorfield\n");
 
         try
         {
@@ -45,13 +58,23 @@ namespace rtps
             printf("ERROR(ColorField): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
+        initializeData();
 
     }
     //----------------------------------------------------------------------
 
-    void ColorField::execute(Buffer<float4>& pos_s,
+    void ColorField::initializeData()
+    {
+        slices = 1u<<static_cast<unsigned int>(ceil(log(ceil(sqrt(res))/log(2))));
+        texRes2D = res*slices;
+        float* zeroImg = new float[texRes2D*texRes2D*4];
+        memset(zeroImg,0,texRes2D*texRes2D*4*sizeof(float));
+        dout<<"-----------------texRes2D "<<texRes2D<<endl;
+        cl_colField=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),texRes2D,texRes2D,0,zeroImg);
+        delete[] zeroImg;
+    }
+    cl::Image2D ColorField::execute(Buffer<float4>& pos_s,
                     Buffer<float>& dens_s,
-                    Buffer<float4>& cfieldTex,
                     int res,
                     Buffer<unsigned int>& ci_start,
                     Buffer<unsigned int>& ci_end,
@@ -62,12 +85,22 @@ namespace rtps
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug)
     {
+        if(this->res!=res)
+        {
+            if(res<2)
+                this->res=2;
+            else
+                this->res=res;
+            initializeData();
+        }
         int iarg = 0;
 
+        dout<<"Here"<<endl;
         k_colorfield.setArg(iarg++, res);
+        k_colorfield.setArg(iarg++, slices);
         k_colorfield.setArg(iarg++, pos_s.getDevicePtr());
         k_colorfield.setArg(iarg++, dens_s.getDevicePtr());
-        k_colorfield.setArg(iarg++, cfieldTex.getDevicePtr());
+        k_colorfield.setArg(iarg++, cl_colField);
         k_colorfield.setArg(iarg++, ci_start.getDevicePtr());
         k_colorfield.setArg(iarg++, ci_end.getDevicePtr());
         k_colorfield.setArg(iarg++, gp.getDevicePtr());
@@ -91,10 +124,12 @@ namespace rtps
             printf("ERROR(force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-#if 0 //printouts
+        dout<<"Here"<<endl;
+
+#if 1 //printouts
         //DEBUGING
 
-        int num = res*res;
+        int num =res*res*res;
         if(num > 0)// && choice == 0)
         {
             printf("============================================\n");
@@ -109,18 +144,63 @@ namespace rtps
 
             std::vector<float4> poss(num);
             std::vector<float4> dens(num);
+            float t3=0.0f;
+            for(int j = 0;j<num;j++)
+            {
+                t3+=clf[j].x;
+            }
+            dout<<"Total active points = "<<t3<<endl;
+
 
             for (int i=0; i < num; i++)
-            //for (int i=0; i < 10; i++)
             {
-                //printf("-----\n");
-                printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
-                //if(clf[i].w == 0.0) exit(0);
-                //printf("cli_debug: %d, %d, %d, %d\n", cli[i].x, cli[i].y, cli[i].z, cli[i].w);
-                //		printf("pos : %f, %f, %f, %f\n", pos[i].x, pos[i].y, pos[i].z, pos[i].w);
+                if(clf[i].x)
+                {
+                    //printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
+                }
             }
+            dout<<"texRes2D = "<<texRes2D<<endl;
         }
+        //DEBUGGING!!
+        try
+        {
+            float* tmpImg = new float[texRes2D*texRes2D*4];
+            memset(tmpImg,0,texRes2D*texRes2D*4*sizeof(float));
+            cl::size_t<3> origin;
+            origin[0]=0;origin[1]=0;origin[2]=0;
+            cl::size_t<3> tmpregion;
+            tmpregion[0]=texRes2D;
+            tmpregion[1]=texRes2D;
+            tmpregion[2]=1;
+            float t2=0.0f;
+            for(int j = 0;j<texRes2D*texRes2D*4;j+=4)
+            {
+                if(tmpImg[j]<0.0f || tmpImg[j]>5.0f)
+                    dout<<"WTF!!"<<endl;
+                t2+=tmpImg[j];
+            }
+            dout<<"Total active points = "<<t2<<endl;
+
+            cli->queue.enqueueReadImage(cl_colField, CL_TRUE, origin, tmpregion, 0, 0, tmpImg);
+            dout<<"Here"<<endl;
+            cli->queue.finish();
+            float t=0.0f;
+            for(int j = 0;j<texRes2D*texRes2D*4;j+=4)
+            {
+                //if(tmpImg[j]<0.0f || tmpImg[j]>5.0f)
+                //    dout<<"WTF!!"<<endl;
+                t+=tmpImg[j];
+            }
+            delete[] tmpImg;
+            dout<<"Total active points = "<<t<<endl;
+        }
+        catch (cl::Error er)
+        {
+            printf("ERROR(marchingcubes ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
+        }
+
 #endif
+        return cl_colField;
     }
 
 

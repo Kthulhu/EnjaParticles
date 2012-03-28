@@ -194,6 +194,7 @@ namespace rtps
                 /*printf("deleting willy nilly\n");
                 systems["water"]->testDelete();
                 systems["rb1"]->testDelete();*/
+
                 return;
             }
             case 'h':
@@ -472,8 +473,16 @@ namespace rtps
                 }*/
             }
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
-            effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             SPH* sph = (SPH*)systems["water"];
+            Mesh* mcMesh = sph->getMCMesh();
+            if(sph->getSettings()->GetSettingAs<bool>("use_color_field","false")&&mcMesh)
+            {
+                meshRenderer->render(mcMesh,light);
+            }
+            else
+            {
+                effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
+            }
             //glPixelStoref(GL_UNPACK_ALIGNMENT,1);
             //glPixelStoref(GL_PACK_ALIGNMENT,1);
             //glEnable(GL_BLEND);

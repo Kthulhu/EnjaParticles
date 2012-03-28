@@ -96,7 +96,6 @@ namespace rtps
         std::vector<float4> getDeletedVel();
         void acquireGLBuffers();
         void releaseGLBuffers();
-        GLuint getColorField(){return colFieldTex;}
 
         void prepareSorted();
 
@@ -114,15 +113,9 @@ namespace rtps
 
         Buffer<float>       cl_density_s;
         Buffer<float4>      cl_xsph_s;
-        Buffer<float4>      cl_colField;
-        cl::Image3DGL     cl_colFieldTex;
 
         //Parameter structs
         Buffer<SPHParams>   cl_sphp;
-
-        GLuint colFieldTex;
-
-        bool useColorField;
 
         //CPU functions
         /*void cpuDensity();

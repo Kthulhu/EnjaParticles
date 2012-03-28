@@ -84,6 +84,7 @@ namespace rtps
         cellindices = CellIndices(common_source_dir, cli, timers["ci_gpu"] );
         permute = Permute( common_source_dir, cli, timers["perm_gpu"] );
         m2p = MeshToParticles(common_source_dir, cli, timers["meshtoparticles_gpu"]);
+        marchingcubes = MarchingCubes(common_source_dir, cli, timers["marchingcubes_gpu"],settings->GetSettingAs<unsigned int>("color_field_res","2"));
 #endif
 
     }
@@ -191,6 +192,8 @@ namespace rtps
         timers["bitonic"] = new EB::Timer("Bitonic Sort function", time_offset);
         timers["radix"] = new EB::Timer("Radix Sort function", time_offset);
         timers["meshtoparticles_gpu"] = new EB::Timer("Mesh to particles GPU kernel", time_offset);
+        timers["marchingcubes"] = new EB::Timer("MarchingCubes function", time_offset);
+        timers["marchingcubes_gpu"] = new EB::Timer("MarchingCubes GPU kernel execution", time_offset);
 		return 0;
     }
 

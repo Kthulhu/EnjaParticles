@@ -4,10 +4,10 @@
 #include <string>
 #include <iostream>
 
+#include "../rtpslib/render/MeshEffect.h"
 #include "../rtpslib/system/System.h"
 #include "../rtpslib/system/ParticleShape.h"
 #include "../rtpslib/render/ParticleEffect.h"
-#include "../rtpslib/render/MeshEffect.h"
 #include <assimp/assimp.h>
 #include <assimp/aiPostProcess.h>
 #include <assimp/aiScene.h>

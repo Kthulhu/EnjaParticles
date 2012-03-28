@@ -69,6 +69,13 @@ namespace rtps
         unsigned int iboSize;
         Material material;
         GLenum drawMode;
+	Mesh()
+	{
+		vbo=0;colbo=0;normalbo=0;ibo=0;
+		texCoordsbo=0;tex=0;hasNormals=false;
+		hasTexture=false; vboSize=0;
+		iboSize=0;drawMode=GL_TRIANGLES;
+	}
     };
     class MeshEffect : public ParticleEffect
     {
