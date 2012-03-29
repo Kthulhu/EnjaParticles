@@ -95,7 +95,7 @@ namespace rtps
             printf("ERROR(PRBSegmentedScan): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-#if 1 //printouts
+#if 0 //printouts
         //DEBUGING
 
         if(numRBs > 0)// && choice == 0)

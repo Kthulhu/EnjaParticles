@@ -96,7 +96,7 @@ namespace rtps
             printf("ERROR(force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-#if 1 //printouts
+#if 0 //printouts
         //DEBUGING
 
         num=10;

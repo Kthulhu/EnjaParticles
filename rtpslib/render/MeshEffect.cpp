@@ -57,7 +57,8 @@ namespace rtps
             glEnable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D,mesh->tex);
         }
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
+        if(mesh->ibo)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
         //TODO: Create My own matrix class to handle this. Or use boost. That way
         //I can be opengl 3+ compliant.
         float16 modelview;
@@ -89,7 +90,25 @@ namespace rtps
 //        dout<<"vbosize "<<mesh->vboSize<<endl;
 //        dout<<"normals "<<mesh->normalbo<<endl;
 //        dout<<"texcoords "<<mesh->texCoordsbo<<endl;
-        glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
+        if(mesh->iboSize)
+            glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
+        else
+        {
+            glUseProgram(0);
+            glColor4f(0.1f,0.2f,0.6f,0.1f);
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(3, GL_FLOAT, 0,0);
+
+            //glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
+            //glEnableClientState(GL_NORMAL_ARRAY);
+            //glNormalPointer(GL_FLOAT, 0,0 );
+
+            glDrawArrays(GL_TRIANGLES,0,mesh->vboSize);
+            glBindBuffer(GL_ARRAY_BUFFER,0);
+            glDisableClientState(GL_VERTEX_ARRAY);
+            //glDisableClientState(GL_NORMAL_ARRAY);
+        }
         glUseProgram(0);
         glDisableVertexAttribArray(0);
         //glDisableVertexAttribArray(1);

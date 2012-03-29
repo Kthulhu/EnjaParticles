@@ -42,7 +42,7 @@ namespace rtps
         origin[0]=mc.origin[0];origin[1]=mc.origin[2];origin[2]=mc.origin[2];
         region[0]=mc.region[0];region[1]=mc.region[1];region[2]=mc.region[2];
         k_classify=mc.k_classify;
-        k_construct=mc.k_classify;
+        k_construct=mc.k_construct;
         //k_traverse.resize(mc.k_traverse.size());
         //copy(mc.k_traverse.begin(),mc.k_traverse.end(),k_traverse.begin());
         k_traverse=mc.k_traverse;
@@ -112,6 +112,11 @@ namespace rtps
         mesh.normalbo=0;
         mesh.ibo = 0;
         mesh.iboSize=0;
+        mesh.material.ambient=float3(0.0f,0.2f,0.6f);
+        mesh.material.ambient=float3(0.0f,0.2f,0.6f);
+        mesh.material.ambient=float3(1.0f,1.f,1.0f);
+        mesh.material.opacity=0.1;
+        mesh.material.shininess=100;
         cl_histopyramid.resize(levels);
         unsigned int levelRes = texRes2D;
         //dout<<"level = "<<0<<" levelRes = "<<levelRes<<endl;
@@ -169,7 +174,7 @@ namespace rtps
             printf("ERROR(marchingcubes ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-#if 1
+#if 0
         //DEBUGGING!!
         try
         {
@@ -203,13 +208,13 @@ namespace rtps
         for(unsigned int i = 1; i<levels; i++)
         {
             levelRes/=2;
+            //dout<<"i "<<i<<" texRes2D "<<texRes2D<<" levelRes = "<<levelRes<<endl;
             iarg=0;
             k_construct.setArg(iarg++,cl_histopyramid[i]);
             k_construct.setArg(iarg++,cl_histopyramid[i-1]);
             //k_construct.setArg(iarg++,clf_debug.getDevicePtr());
             try
             {
-dout<<"levelres = "<<levelRes<<endl;
                 float gputime = k_construct.execute(cl::NDRange(levelRes,levelRes));
                 if(gputime > 0)
                     timer->set(gputime);
@@ -232,14 +237,13 @@ dout<<"levelres = "<<levelRes<<endl;
             std::vector<float4> clf(num);
 
             clf_debug.copyToHost(clf);
-
-            for (int i=0; i < num; i++)
+            float t3=0.0f;
+            for(int j = 0;j<num;j++)
             {
-                if(clf[i].x)
-                {
-                    printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
-                }
+                t3+=clf[j].x;
             }
+            dout<<"Total tris = "<<t3<<endl;
+
         }
 
         //DEBUGGING!!
@@ -275,7 +279,7 @@ dout<<"levelres = "<<levelRes<<endl;
         try
         {
             cli->queue.enqueueReadImage(cl_histopyramid[levels-1], CL_FALSE, origin, region, 0, 0, totals);
-            dout<<"Here"<<endl;
+            //dout<<"Here"<<endl;
             cli->queue.finish();
             total=(unsigned int)(totals[0]+totals[4]+totals[8]+totals[12]);
             dout<<"Total triangles = "<<total<<endl;
@@ -284,7 +288,7 @@ dout<<"levelres = "<<levelRes<<endl;
         {
             printf("ERROR(marchingcubes ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
-        if(total>mesh.vboSize)
+        if(total*3>mesh.vboSize)
         {
             if(mesh.vbo)
             {
@@ -300,18 +304,23 @@ dout<<"levelres = "<<levelRes<<endl;
             glBindBuffer(GL_ARRAY_BUFFER,0);
             cl_triangles=Buffer<float>(cli,mesh.vbo);
             cl_normals=Buffer<float>(cli,mesh.normalbo);
+            mesh.hasNormals=true;
+            dout<<"mesh vbo = "<<mesh.vbo<<endl;
+            dout<<"normal vbo = "<<mesh.normalbo<<endl;
             glFinish();
         }
-        mesh.vboSize=total;
+        mesh.vboSize=total*3;
         if(total!=0)
         {
             iarg=0;
             cl_triangles.acquire();
             cl_normals.acquire();
-            for(int i = 0; i<levels; i++)
-                k_traverse[levels-1].setArg(iarg++,cl_histopyramid[i]);
-            k_traverse[levels-1].setArg(iarg++,cl_triangles);
-            k_traverse[levels-1].setArg(iarg++,cl_normals);
+            for(int j = 0; j<levels; j++)
+            {
+                k_traverse[levels-1].setArg(iarg++,cl_histopyramid[j]);
+            }
+            k_traverse[levels-1].setArg(iarg++,cl_triangles.getDevicePtr());
+            k_traverse[levels-1].setArg(iarg++,cl_normals.getDevicePtr());
             k_traverse[levels-1].setArg(iarg++,res);
             k_traverse[levels-1].setArg(iarg++,slices);
             k_traverse[levels-1].setArg(iarg++,0.0f);

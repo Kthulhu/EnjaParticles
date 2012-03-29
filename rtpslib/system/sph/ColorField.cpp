@@ -69,7 +69,7 @@ namespace rtps
         texRes2D = res*slices;
         float* zeroImg = new float[texRes2D*texRes2D*4];
         memset(zeroImg,0,texRes2D*texRes2D*4*sizeof(float));
-        dout<<"-----------------texRes2D "<<texRes2D<<endl;
+        //dout<<"-----------------texRes2D "<<texRes2D<<endl;
         cl_colField=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),texRes2D,texRes2D,0,zeroImg);
         delete[] zeroImg;
     }
@@ -95,7 +95,7 @@ namespace rtps
         }
         int iarg = 0;
 
-        dout<<"res = "<<res<<endl;
+        //dout<<"res = "<<res<<endl;
         k_colorfield.setArg(iarg++, res);
         k_colorfield.setArg(iarg++, slices);
         k_colorfield.setArg(iarg++, pos_s.getDevicePtr());
@@ -124,9 +124,8 @@ namespace rtps
             printf("ERROR(force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
         }
 
-        dout<<"Here"<<endl;
 
-#if 1 //printouts
+#if 0 //printouts
         //DEBUGING
 
         int num =res*res*res;

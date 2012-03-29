@@ -78,7 +78,7 @@ namespace rtps
 
 
 
-#if 1
+#if 0
         //DEBUGING
 
         if(numRBs > 0)// && choice == 0)

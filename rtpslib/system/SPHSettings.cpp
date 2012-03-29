@@ -190,9 +190,6 @@ namespace rtps
         //update the OpenCL buffer
         //std::vector<SPHParams> vparams();
         //vparams.push_back(sphp);
-        dout<<"here"<<endl;
-        dout<<"gas constant "<<sphp.K<<endl;
-        dout<<" sizeof sphp = "<<sizeof(sphp)<<endl;
         cl_sphp.copyToDevice(sphp,0);
         settings->updated();
         dout<<"here"<<endl;
