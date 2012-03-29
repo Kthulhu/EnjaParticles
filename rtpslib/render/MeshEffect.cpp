@@ -94,19 +94,18 @@ namespace rtps
             glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
         else
         {
-            glUseProgram(0);
-            glColor4f(0.1f,0.2f,0.6f,0.1f);
-            glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+//            glUseProgram(0);
+            /*glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
             glEnableClientState(GL_VERTEX_ARRAY);
             glVertexPointer(3, GL_FLOAT, 0,0);
 
-            //glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
-            //glEnableClientState(GL_NORMAL_ARRAY);
-            //glNormalPointer(GL_FLOAT, 0,0 );
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
+            glEnableClientState(GL_NORMAL_ARRAY);
+            glNormalPointer(GL_FLOAT, 0,0 );*/
 
             glDrawArrays(GL_TRIANGLES,0,mesh->vboSize);
-            glBindBuffer(GL_ARRAY_BUFFER,0);
-            glDisableClientState(GL_VERTEX_ARRAY);
+            //glBindBuffer(GL_ARRAY_BUFFER,0);
+            //glDisableClientState(GL_VERTEX_ARRAY);
             //glDisableClientState(GL_NORMAL_ARRAY);
         }
         glUseProgram(0);

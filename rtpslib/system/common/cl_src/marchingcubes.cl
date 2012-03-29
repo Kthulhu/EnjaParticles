@@ -68,6 +68,27 @@ inline int2 map3Dto2D(int4 coord, unsigned int res, unsigned int slices)
     return pos;
 }
 
+inline int2 map3Dto2DClamp(int4 coordinate, int4 offset, unsigned int res, unsigned int slices)
+{
+    int4 coord=coordinate+offset;
+    if(coord.z<0||coord.z>res-1)
+	coord.z-=offset.z;
+    int yoffset = coord.z/slices;
+    int xoffset = coord.z%slices;
+    
+    int2 pos = {xoffset*res,yoffset*res};
+    pos+=(int2)(coord.x,coord.y);
+    //We need to clamp the address to the edge. Typically this is done
+    //for you but because we had to flatten the 3d texture we can't rely
+    //hardware clamping.
+    int z = (coord.y/res)+(coord.x/res);
+    //if the new z value is different then moving in y or x caused us to jump
+    //in z due to flatting of the image.
+    if(z!=coord.z)
+	return map3Dto2D(coordinate,res,slices);
+    return pos;
+}
+
 inline int4 map2Dto3D(int2 coord, unsigned int res,unsigned int slices)
 {
     int z = (coord.y/res)+(coord.x/res);
@@ -474,29 +495,29 @@ void fillVBOs(int4 cubePosition, int target, __private float isolevel,  __read_o
         const uchar edge = triTable[cubeData.y*16 + i];
         const int4 point0 = (int4)(cubePosition.x + offsets3[edge*6], cubePosition.y + offsets3[edge*6+1], cubePosition.z + offsets3[edge*6+2],0);
         const int4 point1 = (int4)(cubePosition.x + offsets3[edge*6+3], cubePosition.y + offsets3[edge*6+4], cubePosition.z + offsets3[edge*6+5],0);
-    int2 p01=map3Dto2D(point0+(int4)(1,0,0,0),res,slices);
-    int2 p02=map3Dto2D(point0+(int4)(-1,0,0,0),res,slices);
+    int2 p01=map3Dto2DClamp(point0,(int4)(1,0,0,0),res,slices);
+    int2 p02=map3Dto2DClamp(point0,(int4)(-1,0,0,0),res,slices);
         // Store vertex in VBO
         
         float4 forwardDifference0;
     forwardDifference0.x=(float)(-read_imagei(hp0, sampler, p01).z+read_imagei(hp0, sampler, p02).z);
-    p01=map3Dto2D(point0+(int4)(0,1,0,0),res,slices);
-    p02=map3Dto2D(point0+(int4)(0,-1,0,0),res,slices);
+    p01=map3Dto2DClamp(point0,(int4)(0,1,0,0),res,slices);
+    p02=map3Dto2DClamp(point0,(int4)(0,-1,0,0),res,slices);
     forwardDifference0.y=(float)(-read_imagei(hp0, sampler, p01).z+read_imagei(hp0, sampler, p02).z);
-    p01=map3Dto2D(point0+(int4)(0,0,1,0),res,slices);
-    p02=map3Dto2D(point0+(int4)(0,0,-1,0),res,slices);
+    p01=map3Dto2DClamp(point0,(int4)(0,0,1,0),res,slices);
+    p02=map3Dto2DClamp(point0,(int4)(0,0,-1,0),res,slices);
     forwardDifference0.z=(float)(-read_imagei(hp0, sampler, p01).z+read_imagei(hp0, sampler, p02).z);
     forwardDifference0.w=0.0f;
         
-    int2 p11=map3Dto2D(point1+(int4)(1,0,0,0),res,slices);
-    int2 p12=map3Dto2D(point1+(int4)(-1,0,0,0),res,slices);
+    int2 p11=map3Dto2DClamp(point1,(int4)(1,0,0,0),res,slices);
+    int2 p12=map3Dto2DClamp(point1,(int4)(-1,0,0,0),res,slices);
     float4 forwardDifference1;
     forwardDifference1.x=(float)(-read_imagei(hp0, sampler, p11).z+read_imagei(hp0, sampler, p12).z);
-    p01=map3Dto2D(point1+(int4)(0,1,0,0),res,slices);
-    p02=map3Dto2D(point1+(int4)(0,-1,0,0),res,slices);
+    p01=map3Dto2DClamp(point1,(int4)(0,1,0,0),res,slices);
+    p02=map3Dto2DClamp(point1,(int4)(0,-1,0,0),res,slices);
     forwardDifference1.y=(float)(-read_imagei(hp0, sampler, p11).z+read_imagei(hp0, sampler, p12).z);
-    p01=map3Dto2D(point1+(int4)(0,0,1,0),res,slices);
-    p02=map3Dto2D(point1+(int4)(0,0,-1,0),res,slices);
+    p01=map3Dto2DClamp(point1,(int4)(0,0,1,0),res,slices);
+    p02=map3Dto2DClamp(point1,(int4)(0,0,-1,0),res,slices);
     forwardDifference1.z=(float)(-read_imagei(hp0, sampler, p11).z+read_imagei(hp0, sampler, p12).z);
     forwardDifference1.w=0.0f;
 
@@ -510,10 +531,8 @@ void fillVBOs(int4 cubePosition, int target, __private float isolevel,  __read_o
         const float3 vertex = (mix((float3)(point0.x, point0.y, point0.z), (float3)(point1.x, point1.y, point1.z), diff)/res)*10.0;
         const float3 normal = fast_normalize(mix(forwardDifference0.xyz, forwardDifference1.xyz, diff));
 
-
         vstore3(vertex, target*3 + vertexNr, triVBO);
         vstore3(normal, target*3 + vertexNr, normalVBO);
-
 
         ++vertexNr;
     }
@@ -953,22 +972,32 @@ __kernel void classifyCubes2D(
         ) {
     int4 p4 = {get_global_id(0), get_global_id(1), get_global_id(2), 0};
     int2 pos = map3Dto2D(p4,res,slices);
-    int2 pos2 = map3Dto2D(p4+(int4)(0,0,1,0),res,slices);
+    //int2 pos2 = map3Dto2D(p4+(int4)(0,0,1,0),res,slices);
 
 
     // Find cube class nr
     const float first = read_imagef(rawData, sampler, pos).x;
     const uchar cubeindex = 
     ((first > isolevel)) |
-    ((read_imagef(rawData, sampler, pos + squareOffsets[1]).x > isolevel) << 1) |
+    ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[1],res,slices)).x > isolevel) << 1) |
+    ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[3],res,slices)).x > isolevel) << 2) |
+    ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[2],res,slices)).x > isolevel) << 3) |
+    ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[4],res,slices)).x > isolevel) << 4) |
+    ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[5],res,slices)).x > isolevel) << 5) |
+    ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[7],res,slices)).x > isolevel) << 6) |
+    ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[6],res,slices)).x > isolevel) << 7); 
+
+
+    /*((read_imagef(rawData, sampler, pos + squareOffsets[1]).x > isolevel) << 1) |
     ((read_imagef(rawData, sampler, pos + squareOffsets[3]).x > isolevel) << 2) |
     ((read_imagef(rawData, sampler, pos + squareOffsets[2]).x > isolevel) << 3) |
     ((read_imagef(rawData, sampler, pos2).x > isolevel) << 4) |
     ((read_imagef(rawData, sampler, pos2 + squareOffsets[1]).x > isolevel) << 5) |
     ((read_imagef(rawData, sampler, pos2 + squareOffsets[2]).x > isolevel) << 6) |
     ((read_imagef(rawData, sampler, pos2 + squareOffsets[3]).x > isolevel) << 7);
-
+*/
+    int2 poswrite = map3Dto2D(p4,res-1,slices);
     // Store number of triangles
-    write_imagef(histoPyramid, pos, (float4)(nrOfTriangles[cubeindex], cubeindex, first, 0));
+    write_imagef(histoPyramid, poswrite, (float4)(nrOfTriangles[cubeindex], cubeindex, first, 0));
 }
 //#endif

@@ -113,10 +113,10 @@ namespace rtps
         mesh.ibo = 0;
         mesh.iboSize=0;
         mesh.material.ambient=float3(0.0f,0.2f,0.6f);
-        mesh.material.ambient=float3(0.0f,0.2f,0.6f);
-        mesh.material.ambient=float3(1.0f,1.f,1.0f);
-        mesh.material.opacity=0.1;
-        mesh.material.shininess=100;
+        mesh.material.diffuse=float3(0.0f,0.2f,0.6f);
+        mesh.material.specular=float3(1.0f,1.f,1.0f);
+        mesh.material.opacity=0.2;
+        mesh.material.shininess=50;
         cl_histopyramid.resize(levels);
         unsigned int levelRes = texRes2D;
         //dout<<"level = "<<0<<" levelRes = "<<levelRes<<endl;
@@ -165,7 +165,7 @@ namespace rtps
 
         try
         {
-            float gputime = k_classify.execute(cl::NDRange(res,res,res));
+            float gputime = k_classify.execute(cl::NDRange(res-1,res-1,res-1));
             if(gputime > 0)
                 timer->set(gputime);
         }
@@ -321,7 +321,7 @@ namespace rtps
             }
             k_traverse[levels-1].setArg(iarg++,cl_triangles.getDevicePtr());
             k_traverse[levels-1].setArg(iarg++,cl_normals.getDevicePtr());
-            k_traverse[levels-1].setArg(iarg++,res);
+            k_traverse[levels-1].setArg(iarg++,res-1);
             k_traverse[levels-1].setArg(iarg++,slices);
             k_traverse[levels-1].setArg(iarg++,0.0f);
             k_traverse[levels-1].setArg(iarg++,total);
