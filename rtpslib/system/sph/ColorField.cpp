@@ -126,7 +126,7 @@ namespace rtps
         }
 
 
-#if 1 //printouts
+#if 0 //printouts
         //DEBUGING
 
         int num =res*res*res;

@@ -94,6 +94,7 @@ namespace rtps
             glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
         else
         {
+        //glUseProgram(0);
 //            glUseProgram(0);
             /*glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
             glEnableClientState(GL_VERTEX_ARRAY);

@@ -474,6 +474,10 @@ namespace rtps
             }
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
             SPH* sph = (SPH*)systems["water"];
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunc(GL_ONE,GL_ONE);
             Mesh* mcMesh = sph->getMCMesh();
             if(sph->getSettings()->GetSettingAs<bool>("use_color_field","false")&&mcMesh)
             {

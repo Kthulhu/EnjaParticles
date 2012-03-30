@@ -115,7 +115,7 @@ namespace rtps
         mesh.material.ambient=float3(0.0f,0.2f,0.6f);
         mesh.material.diffuse=float3(0.0f,0.2f,0.6f);
         mesh.material.specular=float3(1.0f,1.f,1.0f);
-        mesh.material.opacity=0.2;
+        mesh.material.opacity=0.4;
         mesh.material.shininess=50;
         cl_histopyramid.resize(levels);
         unsigned int levelRes = texRes2D;
@@ -297,10 +297,10 @@ namespace rtps
             }
             glGenBuffers(1,&mesh.vbo);
             glBindBuffer(GL_ARRAY_BUFFER,mesh.vbo);
-            glBufferData(GL_ARRAY_BUFFER,total*9*sizeof(float),NULL, GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER,total*3*3*sizeof(float),NULL, GL_DYNAMIC_DRAW);
             glGenBuffers(1,&mesh.normalbo);
             glBindBuffer(GL_ARRAY_BUFFER,mesh.normalbo);
-            glBufferData(GL_ARRAY_BUFFER,total*9*sizeof(float),NULL, GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER,total*3*3*sizeof(float),NULL, GL_DYNAMIC_DRAW);
             glBindBuffer(GL_ARRAY_BUFFER,0);
             cl_triangles=Buffer<float>(cli,mesh.vbo);
             cl_normals=Buffer<float>(cli,mesh.normalbo);
