@@ -29,19 +29,6 @@
 
 __constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
-//3D to 2D mapping
-/*__constant int4 rectSize[10] = {
-        {4,2,2,2}, //2x2x2
-        {8,8,2,4}, //4x4x4
-        {32,16,4,8}, //8x8x8
-        {64,64,4,16}, //16x16x16
-        {256,128,8,32}, //32x32x32
-        {512,512,8,64}, //64x64x64
-        {2048,1024,16,128}, //128x128x128
-        {4096,4096,16,256}, //256x256x256
-        {16384,8192,32,512}, //512x512x512
-        {32768,32768,32,1024} //1024x1024x1024
-        }*/
 __constant int4 cubeOffsets[8] = {
         {0, 0, 0, 0},
         {1, 0, 0, 0},
@@ -81,17 +68,17 @@ inline int2 map3Dto2DClamp(int4 coordinate, int4 offset, unsigned int res, unsig
     //We need to clamp the address to the edge. Typically this is done
     //for you but because we had to flatten the 3d texture we can't rely
     //hardware clamping.
-    int z = (coord.y/res)+(coord.x/res);
+    int z = (coord.y/res)*slices+(coord.x/res);
     //if the new z value is different then moving in y or x caused us to jump
     //in z due to flatting of the image.
     if(z!=coord.z)
-	return map3Dto2D(coordinate,res,slices);
+        return map3Dto2D(coordinate,res,slices);
     return pos;
 }
 
 inline int4 map2Dto3D(int2 coord, unsigned int res,unsigned int slices)
 {
-    int z = (coord.y/res)+(coord.x/res);
+    int z = (coord.y/res)*slices+(coord.x/res);
     
     int4 pos = {coord.x%res,coord.y%res,z,0};
     return pos;
@@ -109,7 +96,7 @@ __kernel void constructHPLevel2D(
         read_imagef(readHistoPyramid, sampler, readPos+squareOffsets[1]).x + // 1
         read_imagef(readHistoPyramid, sampler, readPos+squareOffsets[2]).x + // 2
         read_imagef(readHistoPyramid, sampler, readPos+squareOffsets[3]).x; // 3
-    write_imagef(writeHistoPyramid, coord, (float4)(writeValue,writeValue,writeValue,writeValue));
+    write_imagef(writeHistoPyramid, coord, (float4)(writeValue,0.0f,0.0f,0.0f));
     //clf[coord.x+coord.y*get_global_size(0)]=(float4)(writeValue,0.0f,0.0f,0.0f);
 }
 int4 scanHPLevel2D(int target, __read_only image2d_t hp, int4 current,__private unsigned int res, __private unsigned int xslices) {
@@ -839,7 +826,6 @@ __kernel void traverseHP2D1(
 
     int4 cubePosition = {0,0,0,0}; // x,y,z,sum
     cubePosition = scanHPLevel2D(target, hp0, cubePosition,res,slices);
-    cubePosition/=2;
     cubePosition.xy=cubePosition.xy/2;
     cubePosition.xyz=map2Dto3D(cubePosition.xy,res,slices).xyz;
 
@@ -988,14 +974,6 @@ __kernel void classifyCubes2D(
     ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[6],res,slices)).x > isolevel) << 7); 
 
 
-    /*((read_imagef(rawData, sampler, pos + squareOffsets[1]).x > isolevel) << 1) |
-    ((read_imagef(rawData, sampler, pos + squareOffsets[3]).x > isolevel) << 2) |
-    ((read_imagef(rawData, sampler, pos + squareOffsets[2]).x > isolevel) << 3) |
-    ((read_imagef(rawData, sampler, pos2).x > isolevel) << 4) |
-    ((read_imagef(rawData, sampler, pos2 + squareOffsets[1]).x > isolevel) << 5) |
-    ((read_imagef(rawData, sampler, pos2 + squareOffsets[2]).x > isolevel) << 6) |
-    ((read_imagef(rawData, sampler, pos2 + squareOffsets[3]).x > isolevel) << 7);
-*/
     int2 poswrite = map3Dto2D(p4,res-1,slices);
     // Store number of triangles
     write_imagef(histoPyramid, poswrite, (float4)(nrOfTriangles[cubeindex], cubeindex, first, 0));

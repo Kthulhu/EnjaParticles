@@ -24,6 +24,7 @@
 
 #include <SPH.h>
 
+#include "../../render/util/stb_image_write.h"
 namespace rtps
 {
 
@@ -184,13 +185,22 @@ namespace rtps
             dout<<"Here"<<endl;
             cli->queue.finish();
             float t=0.0f;
-            for(int j = 0;j<texRes2D*texRes2D*4;j+=4)
+            unsigned char* image = new unsigned char[texRes2D*texRes2D*4];
+            for(int j = 0;j<texRes2D*texRes2D*4;j+=1)
             {
                 //if(tmpImg[j]<0.0f || tmpImg[j]>5.0f)
                 //    dout<<"WTF!!"<<endl;
-                t+=tmpImg[j];
+                if(j%4==0)
+                    t+=tmpImg[j];
+                image[j]=(unsigned char)tmpImg[j];
             }
             delete[] tmpImg;
+            if (!stbi_write_png("/home/andrew/Desktop/colorfield.png",texRes2D,texRes2D,4,(void*)image,0))
+            {
+                cout<<"failed to write image "<<endl;
+            }
+            delete[]image;
+
             dout<<"Total active points = "<<t<<endl;
         }
         catch (cl::Error er)
