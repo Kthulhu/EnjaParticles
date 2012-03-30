@@ -74,7 +74,7 @@ namespace rtps{
         float simulation_scale = settings->GetSettingAs<float>("simulation_scale");
         float rest_distance =smoothing_distance/2.0f;
         settings->SetSetting("rest_distance", rest_distance);
-        settings->SetSetting("searching_radius",smoothing_distance);
+        //settings->SetSetting("searching_radius",smoothing_distance);
         spacing =rest_distance/ simulation_scale;
         settings->SetSetting("spacing", spacing);
         settings->SetSetting("num_particles", 0);

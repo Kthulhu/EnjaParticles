@@ -1,9 +1,19 @@
 # Blender MTL File: 'demo_mesh_scene.blend'
-# Material Count: 1
+# Material Count: 2
 newmtl MonkeyMat
 Ns 227.450980
 Ka 0.000000 0.000000 0.000000
 Kd 0.189427 0.640000 0.359864
+Ks 1.000000 0.938684 0.175271
+Ni 1.000000
+d 1.000000
+illum 2
+
+
+newmtl MonkeyMat.001
+Ns 227.450980
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.312043 0.229956
 Ks 1.000000 0.938684 0.175271
 Ni 1.000000
 d 1.000000

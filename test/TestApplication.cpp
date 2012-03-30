@@ -207,9 +207,19 @@ namespace rtps
                 float radius= 3.0f;
                 //sph sets spacing and multiplies by radius value
                 systems["water"]->addHose(50000, center, velocity,radius, col1);
-                //center = float4(gridMin.x+2.0f, gridMin.y+2.0f,gridMin.z+0.5f,1.0f);
-                //velocity=float4(1.5f, 1.5f, -1.f, 0);
-                //systems["flock1"]->addHose(50000, center, velocity,radius);
+                return;
+            }
+            case 'H':
+            {
+                //spray hose
+                cout<<"about to make hose"<<endl;
+                float4 col1 = float4(0.05, 0.1, 2., 0.1);
+                float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-0.5f,1.0f);
+                float4 velocity(-1.5f, -1.5f, -4.f, 0);
+                float radius= 3.0f;
+                center = float4(gridMin.x+2.0f, gridMin.y+2.0f,gridMax.z-0.5f,1.0f);
+                velocity=float4(1.5f, 0.5f, -.05f, 0);
+                systems["flock1"]->addHose(50000, center, velocity,radius);
                 return;
             }
             case 'n':
@@ -265,7 +275,7 @@ namespace rtps
 
             case 'r': //drop a ball
             {
-                ParticleShape* shape=pShapes["dynamicShape"];
+                ParticleShape* shape=pShapes["dynamicShape1"];
                 float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
                 trans +=7.0f;
                 float16 modelview;
@@ -437,13 +447,13 @@ namespace rtps
 
             //RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
             ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
-            meshRenderer->renderInstanced(dynamicMeshs["dynamicShape"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
+            meshRenderer->renderInstanced(dynamicMeshs["dynamicShape1"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
             if(systems.find("flock1")!=systems.end())
             {
                 //dout<<"flock------------------"<<endl;
                 FLOCK* flock = (FLOCK*)systems["flock1"];
-                effects[renderType]->render(flock->getPosVBO(),flock->getColVBO(),flock->getNum());
-                //meshRenderer->renderInstanced(dynamicMeshs["dynamicShape"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
+                //effects[renderType]->render(flock->getPosVBO(),flock->getColVBO(),flock->getNum());
+                meshRenderer->renderInstanced(dynamicMeshs["dynamicShape0"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
             }
             display(false);
                         /*glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
@@ -898,6 +908,7 @@ namespace rtps
     }
     void TestApplication::build_dynamic_shapes (const struct aiScene *sc, const struct aiNode* nd)
     {
+        static unsigned int numshapes=0;
         int i;
         unsigned int n = 0, t;
 
@@ -984,7 +995,7 @@ namespace rtps
 
             stringstream s;
 	    //I need too have a better way to handle more than 1 shape.
-	    s<<"dynamicShape";
+	    s<<"dynamicShape"<<numshapes++;
             dynamicMeshs[s.str()]=me;
             //dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
             //dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;

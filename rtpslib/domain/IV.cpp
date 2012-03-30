@@ -54,7 +54,7 @@ namespace rtps
         float zmin = zlevel / scale;
         float zmax = zlevel / scale;
 
-		printf("scale= %f\n", scale);
+		//printf("scale= %f\n", scale);
 
         std::vector<float4> rvec(num);
 		normals.resize(0);
@@ -179,7 +179,7 @@ namespace rtps
         float zmin = min.z / scale;
         float zmax = max.z / scale;
 
-		printf("scale= %f\n", scale);
+		//printf("scale= %f\n", scale);
 
         std::vector<float4> rvec(num);
         int i=0;
@@ -214,7 +214,7 @@ namespace rtps
         float zmin = min.z / scale;
         float zmax = max.z / scale;
 
-		printf("GE inside addCube: scale= %f\n", scale);
+		//printf("GE inside addCube: scale= %f\n", scale);
 
         rvec.resize(num);
 
@@ -274,16 +274,16 @@ namespace rtps
     std::vector<float4> addDisc(int num, float4 center, float4 u, float4 v, float radius, float spacing)
     {
 
-        printf("num: %d\n", num);
+        //printf("num: %d\n", num);
         //spacing *= 1.999f; //should probably just figure out whats up with my spacing
-        printf("spacing: %f\n", spacing);
+        //printf("spacing: %f\n", spacing);
 
         float4 umin = -radius*u;
         float4 vmin = -radius*v;
-        printf("u %f %f %f %f\n", u.x, u.y, u.z, u.w);
-        printf("v %f %f %f %f\n", v.x, v.y, v.z, v.w);
-        printf("umin %f %f %f %f\n", umin.x, umin.y, umin.z, umin.w);
-        printf("vmin %f %f %f %f\n", vmin.x, vmin.y, vmin.z, vmin.w);
+        //printf("u %f %f %f %f\n", u.x, u.y, u.z, u.w);
+        //printf("v %f %f %f %f\n", v.x, v.y, v.z, v.w);
+        //printf("umin %f %f %f %f\n", umin.x, umin.y, umin.z, umin.w);
+        //printf("vmin %f %f %f %f\n", vmin.x, vmin.y, vmin.z, vmin.w);
 
         std::vector<float4> rvec;
         int i = 0;
@@ -296,9 +296,9 @@ namespace rtps
                 if (i >= num) break;
                 float4 part = center + umin + u*du + vmin + v*dv;
                 part.w = 1.0f;
-                printf("part %f %f %f %f\n", part.x, part.y, part.z, part.w);
+                //printf("part %f %f %f %f\n", part.x, part.y, part.z, part.w);
                 d2 = dist_squared(part-center);
-                printf("d2: %f, r2: %f\n", d2, r2);
+                //printf("d2: %f, r2: %f\n", d2, r2);
                 if (d2 < r2)
                 {
                     rvec.push_back(part);
@@ -321,9 +321,9 @@ namespace rtps
         //seed random
         //srand ( time(NULL) );
 
-        printf("num: %d\n", num);
+        //printf("num: %d\n", num);
         //spacing *= 1.1f; //should probably just figure out whats up with my spacing
-        printf("spacing: %f\n", spacing);
+        //printf("spacing: %f\n", spacing);
         float pert = .05f*spacing;   //amount of perterbation
         float vpert = 10.f;
 
@@ -377,10 +377,10 @@ namespace rtps
 
         srand(time(NULL));
 
-        printf("random num: %f\n", rand()/(float) RAND_MAX);
+        //printf("random num: %f\n", rand()/(float) RAND_MAX);
         //spacing *= 1.1f;
-    min.print("Box min: ");
-    max.print("Box max: ");
+    //min.print("Box min: ");
+    //max.print("Box max: ");
         float xmin = min.x  / scale;
         float xmax = max.x  / scale;
         float ymin = min.y  / scale;
@@ -463,7 +463,7 @@ namespace rtps
 //----------------------------------------------------------------------
 	std::vector<float4> addHollowSphere(int num, float4 center, float radius_in, float radius_out, float spacing, float scale, std::vector<float4>& normals)
 	{
-		printf("GE inside addHollowSphere: scale= %f\n", scale);
+		//printf("GE inside addHollowSphere: scale= %f\n", scale);
 
         //spacing *= 1.9f;
         float xmin = (center.x - radius_out) / scale;
@@ -478,9 +478,9 @@ namespace rtps
 
 		center = center /scale;
 		center.print("center");
-		printf("xmin,xmax= %f, %f\n", xmin, xmax);
-		printf("ymin,ymax= %f, %f\n", ymin, ymax);
-		printf("zmin,zmax= %f, %f\n", zmin, zmax);
+		//printf("xmin,xmax= %f, %f\n", xmin, xmax);
+		//printf("ymin,ymax= %f, %f\n", ymin, ymax);
+		//printf("zmin,zmax= %f, %f\n", zmin, zmax);
 
         std::vector<float4> rvec; // num
 		normals.resize(0);
