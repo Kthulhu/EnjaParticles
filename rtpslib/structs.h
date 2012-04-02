@@ -56,11 +56,21 @@ namespace rtps
             this->y = y;
             this->z = z;
         }
+        friend float3 operator+(float3& a, float3& b)
+        {
+            float3 c = float3(a.x+b.x, a.y+b.y, a.z+b.z);
+            return c;
+        }
         friend float3 operator-(float3& a, float3& b)
         {
             float3 c = float3(a.x-b.x, a.y-b.y, a.z-b.z);
             return c;
         }
+        void print(const char* msg=0)
+        {
+            printf("%s: %f, %f, %f\n", msg, x, y, z);
+        }
+
         float3& operator*(float b)
         {
             x*=b;

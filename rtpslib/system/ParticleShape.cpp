@@ -297,7 +297,7 @@ namespace rtps
         glBindTexture(GL_TEXTURE_3D_EXT, 0);
         glShadeModel(GL_SMOOTH);
         glDisable(GL_TEXTURE_3D_EXT);
-        /*voxelizeSurface(vbo,ibo,length);
+        voxelizeSurface(vbo,ibo,length);
         glEnable(GL_COLOR_LOGIC_OP);
         glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
         glLogicOp(GL_OR);
@@ -314,6 +314,6 @@ namespace rtps
         }
         glLogicOp(GL_COPY);
         glDisable(GL_BLEND);
-        glDisable(GL_COLOR_LOGIC_OP);*/
+        glDisable(GL_COLOR_LOGIC_OP);
     }
 }; //end namespace

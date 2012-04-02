@@ -487,7 +487,7 @@ namespace rtps
     }
     void System::addParticleShape(GLuint tex3d,float min,float max,float16 world,int voxelResolution,float4 velo, float4 color,float mass)
     {
-        glFinish();
+//        glFinish();
         vector<float4> vec;
         glBindTexture(GL_TEXTURE_3D_EXT,tex3d);
         GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];

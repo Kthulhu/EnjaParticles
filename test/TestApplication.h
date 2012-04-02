@@ -43,6 +43,7 @@ namespace rtps
             //probably be better. Currently they are almost verbatim from a loading example.
             void display(bool blend);
             void build_dynamic_shapes (const struct aiScene *sc, const struct aiNode* nd);
+            void displayShape(ParticleShape* shape,float3 translation,float spacing);
             void build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform=aiMatrix4x4(1.0f,0.0f,0.0f,0.0f,
                                                                                                                             0.0f,1.0f,0.0f,0.0f,
                                                                                                                             0.0f,0.0f,1.0f,0.0f,

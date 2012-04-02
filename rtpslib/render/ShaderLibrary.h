@@ -74,6 +74,9 @@ namespace rtps
             readFile(shaderSrc+"/sphere_vert.glsl",vert);
             readFile(shaderSrc+"/sphere_frag.glsl",frag);
             addShader("sphereShader",vert,frag,geom,tessCont,tessEval);
+            frag="";
+            readFile(shaderSrc+"/sphere_light.glsl",frag);
+            addShader("sphereLightShader",vert,frag,geom,tessCont,tessEval);
             vert = frag = "";
             readFile(shaderSrc+"/depth_vert.glsl",vert);
             readFile(shaderSrc+"/depth_frag.glsl",frag);

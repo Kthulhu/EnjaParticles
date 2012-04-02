@@ -373,37 +373,8 @@ namespace rtps
     {
 
         glClearColor(.9, .9, .9, 1.0);
-        //ps->system->sprayHoses();;
-        /*if(!voxelized)
-        {
-           float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
-            float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-            for(int i = 0; i<BUNNY_NUM_VERTICES; i++)
-            {
-                float x = gVerticesBunny[(i*3)];
-                float y = gVerticesBunny[(i*3)+1];
-                float z = gVerticesBunny[(i*3)+2];
-                if(x<min.x)
-                    min.x=x;
-                if(x>max.x)
-                    max.x=x;
-                if(y<min.y)
-                    min.y=y;
-                if(y>max.y)
-                    max.y=y;
-                if(z<min.z)
-                    min.z=z;
-                if(z>max.z)
-                    max.z=z;
-            }
-            cout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
-            cout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
-            bunnyShape = new ParticleShape(min,max,systems["rb1"]->getSpacing(),3.0f);
-            bunnyShape->voxelizeMesh(bunnyVBO,bunnyIBO,3*BUNNY_NUM_TRIANGLES);
-            //write3DTextureToDisc(bunnyShape->getVoxelTexture(),bunnyShape->getVoxelResolution(),"bunnytex");
-            voxelized=true;
-        }*/
         glEnable(GL_DEPTH_TEST);
+#if 0
         /*if (stereo_enabled)
         {
             render_stereo();
@@ -456,13 +427,6 @@ namespace rtps
                 meshRenderer->renderInstanced(dynamicMeshs["dynamicShape0"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
             }
             display(false);
-                        /*glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
-            glVertexPointer(3, GL_FLOAT, 0, 0);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
-            glEnableClientState( GL_VERTEX_ARRAY );
-            glDrawElements(GL_TRIANGLES,3*BUNNY_NUM_TRIANGLES,GL_UNSIGNED_INT,0);
-            glDisableClientState( GL_VERTEX_ARRAY );
-             */
 
             //glDisable(GL_DEPTH_TEST);
             //RenderUtils::renderBox(gridMin,gridMax,float4(0.0f,1.0,0.0f,1.0f));
@@ -476,11 +440,11 @@ namespace rtps
                 }
                 //effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
                 //FIXME:This is a horrible way of doing this!!
-                /*if(i->first=="rb1")
-                {
-                    ParticleRigidBody* prb=((ParticleRigidBody*)i->second);
-                    effects["default"]->render(prb->getStaticVBO(),prb->getColVBO(),prb->getStaticNum());
-                }*/
+                //if(i->first=="rb1")
+                //{
+                //    ParticleRigidBody* prb=((ParticleRigidBody*)i->second);
+                //    effects["default"]->render(prb->getStaticVBO(),prb->getColVBO(),prb->getStaticNum());
+                //}
             }
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
             SPH* sph = (SPH*)systems["water"];
@@ -497,58 +461,42 @@ namespace rtps
             {
                 effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             }
-            //glPixelStoref(GL_UNPACK_ALIGNMENT,1);
-            //glPixelStoref(GL_PACK_ALIGNMENT,1);
-            //glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR);
-            //glBlendFunc(GL_SRC_ALPHA,GL_DST_ALPHA);
-            //glEnable(GL_TEXTURE_3D_EXT);
-            //glBindTexture(GL_TEXTURE_3D_EXT,sph->getColorField());
-            //glutSolidCube(10.0);
-            //glBindTexture(GL_TEXTURE_3D_EXT,0);
-            //glDisable(GL_TEXTURE_3D_EXT);
-            //glDisable(GL_BLEND);
-            //glPixelStoref(GL_UNPACK_ALIGNMENT,4);
-            //glPixelStoref(GL_PACK_ALIGNMENT,4);
-            //RenderUtils::write3DTextureToDisc(sph->getColorField(),sph->getSettings()->GetSettingAs<unsigned int>("color_field_res","32"),"colorfield");
-            //effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             display(true);
 
-            if(renderMovie)
-            {
-                writeMovieFrame("image","./frames/");
-                frameCounter++;
-            }
+#else
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        gluPerspective(65.0, windowWidth/(double)windowHeight, 0.3, 100.0);
 
+        // set view matrix
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glRotatef(-90, 1.0, 0.0, 0.0);
+
+        glRotatef(rotation.x, 1.0, 0.0, 0.0);
+        glRotatef(rotation.y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
+        glTranslatef(translation.x, translation.z, translation.y);
+
+        meshRenderer->render(dynamicMeshs["dynamicShape1"],light);
+        glColor4f(0.7f,0.3f,0.4f,1.0f);
+        displayShape(pShapes["dynamicShape1"],float3(2.0f,0.0f,0.0f),systems["water"]->getSpacing());
+        displayShape(pShapes["dynamicShape11"],float3(4.0f,0.0f,0.0f),systems["water"]->getSpacing()/2.0f);
+        displayShape(pShapes["dynamicShape112"],float3(6.0f,0.0f,0.0f),systems["water"]->getSpacing()/4.0f);
+        displayShape(pShapes["dynamicShape1123"],float3(8.0f,0.0f,0.0f),systems["water"]->getSpacing()/8.0f);
+        displayShape(pShapes["dynamicShape11234"],float3(10.0f,0.0f,0.0f),systems["water"]->getSpacing()/16.0f);
         //}
         //glDisable(GL_DEPTH_TEST);
 
+#endif
 
-        /*if(render_movie)
+        if(renderMovie)
         {
-            //frame_counter++;
-        }*/
+            writeMovieFrame("image","./frames/");
+            frameCounter++;
+        }
         //showMass();
 
-        ///DEBUG!!---***
-        /*glColor4f(1.0f,0.0f,0.0f,1.0f);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_LIGHTING);
-        Mesh* m = meshs["test28"];
-        glBindBuffer(GL_ARRAY_BUFFER, m->vbo);
-        glVertexPointer(3, GL_FLOAT, 0, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->ibo);
-        glEnableClientState( GL_VERTEX_ARRAY );
-        //glTranslatef(-4.0f,-4.0f,-4.0f);
-        glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-        glDrawElements(GL_TRIANGLES,m->iboSize,GL_UNSIGNED_INT,0);
-        glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-        //dout<<"vbo = "<<m->vbo<<" ibo = "<<m->ibo<<" iboSize = "<<m->iboSize<<endl;
-        glDisableClientState( GL_VERTEX_ARRAY );
-        ///DEBUG!!---***
-        glEnable(GL_LIGHTING);*/
-        //glDisable(GL_BLEND);
         glutSwapBuffers();
 
     }
@@ -1002,19 +950,29 @@ namespace rtps
             //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
             float space = systems["rb1"]->getSpacing();
             ParticleShape* shape = new ParticleShape(min,max,space);
+            //NOTE: For Illustration use only.
+            ParticleShape* shape1 = new ParticleShape(min,max,space/2.0f);
+            ParticleShape* shape2 = new ParticleShape(min,max,space/4.0f);
+            ParticleShape* shape3 = new ParticleShape(min,max,space/8.0f);
+            ParticleShape* shape4 = new ParticleShape(min,max,space/16.0f);
 
             shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            shape1->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            shape2->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            shape3->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            shape4->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
             //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
             //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
-            pShapes[s.str()]=shape;
 
-            //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
-            /*dout<<"mesh name = "<<s.str()<<endl;
-            dout<<"max dim = "<<shape->getMaxDim()<<endl;
-            dout<<"min dim = "<<shape->getMinDim()<<endl;
-            dout<<"min ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
-            dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
-            dout<<"spacing = "<<space<<endl;*/
+            pShapes[s.str()]=shape;
+            s<<1;
+            pShapes[s.str()]=shape1;
+            s<<2;
+            pShapes[s.str()]=shape2;
+            s<<3;
+            pShapes[s.str()]=shape3;
+            s<<4;
+            pShapes[s.str()]=shape4;
             /*float3 dim = max-min;
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
 
@@ -1035,6 +993,12 @@ namespace rtps
             mat = mat*modelview;
             mat.print("mat after");
 
+            pShapes[s.str()]=shape;
+            s<<1;
+            pShapes[s.str()]=shape1;
+            s<<2;
+            pShapes[s.str()]=shape2;
+
             systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);*/
                 //systems["rb1"]->addParticleShape(shape->getSurfaceTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
         }
@@ -1046,6 +1010,88 @@ namespace rtps
 
     }
 
+    void TestApplication::displayShape(ParticleShape* shape,float3 translation,float spacing)
+    {
+        GLuint tex3d=shape->getVoxelTexture();
+        unsigned int min=shape->getMinDim();
+        unsigned int max=shape->getMaxDim();
+        unsigned int voxelResolution=shape->getVoxelResolution();
+        vector<float> vec;
+        glBindTexture(GL_TEXTURE_3D_EXT,tex3d);
+        GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
+        glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
+        float scale = (max-min);
+        float16 modelview;
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+        //glRotatef(rotation.x, 1.0, 0.0, 0.0);
+        glTranslatef(translation.x, translation.y, translation.z);
+        glRotatef(-180, 1.0, 0.0, 0.0);
+        glRotatef(-90, 0.0, 0.0, 1.0);
+        glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+        glPopMatrix();
+        modelview.print("modelview");
+        modelview.transpose();
+
+
+        for(int k = 0; k<voxelResolution; k++)
+        {
+            for(int j=0; j<voxelResolution; j++)
+            {
+                for(int i=0;i<voxelResolution;i++)
+                {
+                    //Check the red channel. If it is non zero then we need a particle here.
+                    if(image[(i*4)+(j*voxelResolution*4)+(k*voxelResolution*voxelResolution*4)]>0)
+                    {
+                        float4 pos;
+                        pos.x = ((j/(float)(voxelResolution-1))-0.5f)*scale;
+                        pos.y = ((i/(float)(voxelResolution-1))-0.5f)*scale;
+                        pos.z = ((k/(float)(voxelResolution-1))-0.5f)*scale;
+                        pos.w = 1.0f;
+                        pos = modelview*pos;
+                        vec.push_back(pos.x);
+                        vec.push_back(pos.y);
+                        vec.push_back(pos.z);
+                    }
+                }
+            }
+        }
+        glBindTexture(GL_TEXTURE_3D_EXT,0);
+        delete[] image;
+        glEnable(GL_POINT_SMOOTH);
+        glPointSize(spacing/2);
+
+
+        glEnable(GL_POINT_SPRITE);
+        glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        GLuint program = lib->shaders["sphereLightShader"].getProgram();
+
+        glUseProgram(program);
+        glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)windowWidth) / tanf(65. * (0.5f * 3.1415926535f/180.0f)));
+
+        float nf[2];
+        glGetFloatv(GL_DEPTH_RANGE,nf);
+        glUniform1f( glGetUniformLocation(program, "pointRadius"),spacing);
+        glUniform1f( glGetUniformLocation(program, "near"),nf[0]);
+        glUniform1f( glGetUniformLocation(program, "far"), nf[1]);
+
+
+        GLuint shapeVBO = createVBO(&vec[0], vec.size()*sizeof(float), GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER,shapeVBO);
+        glEnableClientState( GL_VERTEX_ARRAY );
+        glVertexPointer(3, GL_FLOAT, 0, 0);
+        glDrawArrays(GL_POINTS,0,vec.size()/3);
+
+        glDisableClientState( GL_VERTEX_ARRAY );
+        glUseProgram(0);
+        glDeleteBuffers(1,&shapeVBO);
+        glBindBuffer(GL_ARRAY_BUFFER,0);
+
+        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        glDisable(GL_POINT_SPRITE);
+    }
 
     void TestApplication::build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
     {
@@ -1151,6 +1197,7 @@ namespace rtps
             float space = systems["rb1"]->getSpacing();
             ParticleShape* shape = new ParticleShape(min,max,space);
 
+
             shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
             //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
             //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
@@ -1185,7 +1232,7 @@ namespace rtps
             mat = mat*modelview;
             mat.print("mat after");
             pShapes[s.str()]=shape;
-            //Debug!!****
+           //Debug!!****
             //if(mesh->mNumFaces<50)
 
 
