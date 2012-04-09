@@ -36,10 +36,7 @@
 #include "System.h"
 #include "SPHSettings.h"
 
-#include "util.h"
-
-#include <CL/cl.hpp>
-
+#include "../util.h"
 #include "sph/Density.h"
 #include "sph/Force.h"
 #include "sph/ColorField.h"
@@ -49,19 +46,8 @@
 #include "sph/LeapFrog.h"
 #include "sph/Lifetime.h"
 #include "sph/Euler.h"
-//#include "../util.h"
 #include "../rtpslib/system/common/Hose.h"
-
-
-#ifdef WIN32
-    #if defined(rtps_EXPORTS)
-        #define RTPS_EXPORT __declspec(dllexport)
-    #else
-        #define RTPS_EXPORT __declspec(dllimport)
-	#endif
-#else
-    #define RTPS_EXPORT
-#endif
+#include "../rtps_common.h"
 
 namespace rtps
 {

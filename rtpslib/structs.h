@@ -24,21 +24,13 @@
 
 #ifndef RTPS_STRUCTS_H_INCLUDED
 #define RTPS_STRUCTS_H_INCLUDED
-
+#include "rtps_common.h"
 #include <stdio.h>
 #include <iostream>
 #include <math.h>
 #include <boost/tokenizer.hpp>
 #include "debug.h"
-#ifdef WIN32
-    #if defined(rtps_EXPORTS)
-        #define RTPS_EXPORT __declspec(dllexport)
-    #else
-        #define RTPS_EXPORT __declspec(dllimport)
-	#endif
-#else
-    #define RTPS_EXPORT
-#endif
+
 
 namespace rtps
 {
@@ -437,8 +429,8 @@ namespace rtps
     RTPS_EXPORT float dot(float4 a, float4 b);
     RTPS_EXPORT float4 cross(float4 a, float4 b);
     RTPS_EXPORT float4 normalize(float4 vect);
-float4 normalize3(float4 vect); // only use first 3 components of vect
-float magnitude3(float4 vec); // only use first 3 components of vec
+	RTPS_EXPORT float4 normalize3(float4 vect); // only use first 3 components of vect
+	RTPS_EXPORT float magnitude3(float4 vec); // only use first 3 components of vec
 
 }
 

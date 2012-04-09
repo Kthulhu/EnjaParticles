@@ -216,7 +216,7 @@ namespace rtps
         std::fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
         vector<float> fvec(max_num);
-        std::fill(fvec.begin(), fvec.end(), 0.0);
+        std::fill(fvec.begin(), fvec.end(), 0.0f);
 
         vector<unsigned int> uivec(max_num);
         std::fill(uivec.begin(), uivec.end(), 0);

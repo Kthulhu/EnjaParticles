@@ -28,7 +28,7 @@
 
 #include "../../opencl/CLL.h"
 #include "../../opencl/Buffer.h"
-
+#include "../../rtps_common.h"
 
 
 namespace rtps
@@ -36,7 +36,7 @@ namespace rtps
 namespace sph
 {
 
-    class LeapFrog
+    class RTPS_EXPORT LeapFrog
     {
         public:
             LeapFrog() { cli = NULL; timer = NULL; };

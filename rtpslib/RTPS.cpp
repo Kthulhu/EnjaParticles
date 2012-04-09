@@ -63,7 +63,7 @@ namespace rtps
         {
             cerr<<"ERROR! No system of type: "<<settings->GetSettingAs<string>("system")<<". Please choose a valid system."<<endl;
         }
-	return system;
+		return system;
     }
 };
 

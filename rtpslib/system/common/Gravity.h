@@ -34,10 +34,11 @@
 #include "../../opencl/Kernel.h"
 #include "../../domain/Domain.h"
 #include "../../timer_eb.h"
+#include "../../rtps_common.h"
 
 namespace rtps
 {
-    class Gravity
+    class RTPS_EXPORT Gravity
     {
         public:
             Gravity() { cli = NULL; };

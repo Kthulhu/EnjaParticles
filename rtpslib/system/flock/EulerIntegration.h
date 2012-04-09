@@ -28,11 +28,12 @@
 
 #include "../../opencl/CLL.h"
 #include "../../opencl/Buffer.h"
+#include "../../rtps_common.h"
 
 
 namespace rtps
 {
-    class EulerIntegration
+    class RTPS_EXPORT EulerIntegration
     {
         public:
             EulerIntegration() { cli = NULL; timer = NULL; };

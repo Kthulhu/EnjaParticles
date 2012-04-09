@@ -29,7 +29,7 @@
 #include "../../opencl/CLL.h"
 #include "../../opencl/Kernel.h"
 #include "../../opencl/Buffer.h"
-#include <timer_eb.h>
+#include "../../timer_eb.h"
 #include "../ParticleRigidBodyParams.h"
 
 

@@ -25,7 +25,7 @@
 #ifndef RTPS_PARTICLERIGIDBODYPARAMS_H_INCLUDED
 #define RTPS_PARTICLERIGIDBODYPARAMS_H_INCLUDED
 
-#include <structs.h>
+#include "../structs.h"
 #include "../opencl/Buffer.h"
 #include "../domain/Domain.h"
 

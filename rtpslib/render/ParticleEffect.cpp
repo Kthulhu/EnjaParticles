@@ -143,8 +143,8 @@ namespace rtps
         glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)m_settings.windowWidth) / tanf(65. * (0.5f * 3.1415926535f/180.0f)));
 
         glUniform1f( glGetUniformLocation(program, "pointRadius"), m_settings.particleRadius);
-        glUniform1f( glGetUniformLocation(program, "near"), m_settings.near );
-        glUniform1f( glGetUniformLocation(program, "far"), m_settings.far);
+        glUniform1f( glGetUniformLocation(program, "near"), m_settings.m_near );
+        glUniform1f( glGetUniformLocation(program, "far"), m_settings.m_far);
 
         //glColor3f(1., 1., 1.);
 

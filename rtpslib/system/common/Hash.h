@@ -36,11 +36,12 @@
 #include "../../opencl/Kernel.h"
 #include "../../domain/Domain.h"
 #include "../../timer_eb.h"
+#include "../../rtps_common.h"
 
 
 namespace rtps
 {
-    class Hash
+    class RTPS_EXPORT Hash
     {
         public:
             Hash() { cli = NULL; timer = NULL; };

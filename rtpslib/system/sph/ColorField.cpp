@@ -25,6 +25,7 @@
 #include <SPH.h>
 
 #include "../../render/util/stb_image_write.h"
+
 namespace rtps
 {
 
@@ -66,7 +67,7 @@ namespace rtps
 
     void ColorField::initializeData()
     {
-        slices = 1u<<static_cast<unsigned int>(ceil(log(ceil(sqrt(res))/log(2))));
+        slices = 1u<<static_cast<unsigned int>(ceil(log(ceil(sqrt((float)res))/log(2.0f))));
         texRes2D = res*slices;
         float* zeroImg = new float[texRes2D*texRes2D*4];
         memset(zeroImg,0,texRes2D*texRes2D*4*sizeof(float));

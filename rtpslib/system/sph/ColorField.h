@@ -27,11 +27,12 @@
 
 #include "../../opencl/CLL.h"
 #include "../../opencl/Buffer.h"
+#include "../../rtps_common.h"
 
 
 namespace rtps
 {
-    class ColorField
+    class RTPS_EXPORT ColorField
     {
         public:
             ColorField() { cli = NULL; timer = NULL; };

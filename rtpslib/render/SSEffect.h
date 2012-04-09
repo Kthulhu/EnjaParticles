@@ -26,6 +26,7 @@
 #define SS_EFFECT_H
 
 #include "ParticleEffect.h"
+#include "../rtps_common.h"
 
 namespace rtps
 {
@@ -37,7 +38,7 @@ namespace rtps
         BILATERAL_GAUSSIAN_BLUR,
         CURVATURE_FLOW
     };
-    class SSEffect : public ParticleEffect
+    class RTPS_EXPORT SSEffect : public ParticleEffect
     {
     public:
         SSEffect(RenderSettings rs, ShaderLibrary& lib);

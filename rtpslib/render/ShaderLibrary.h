@@ -33,6 +33,7 @@
 #ifdef WIN32
 //must include windows.h before gl.h on windows platform
 #include <windows.h>
+#include <GL/glew.h>
 #endif
 
 #if defined __APPLE__ || defined(MACOSX)
@@ -49,6 +50,7 @@
 #include "../timer_eb.h"
 #include "../util.h"
 #include "Shader.h"
+#include "../rtps_common.h"
 
 namespace rtps
 {
@@ -58,7 +60,7 @@ namespace rtps
         SHADER_DEPTH=0,SHADER_CURVATURE_FLOW,SHADER_FRESNEL
     };*/
 
-    class ShaderLibrary
+    class RTPS_EXPORT ShaderLibrary
     {
     public:
         ShaderLibrary()
@@ -68,11 +70,15 @@ namespace rtps
         void initializeShaders(std::string shaderSrc)
         {
             std::string vert,frag,geom,tessCont,tessEval;
+			vert = "";
+			frag = "";
             geom = "";
             tessCont="";
             tessEval="";
             readFile(shaderSrc+"/sphere_vert.glsl",vert);
             readFile(shaderSrc+"/sphere_frag.glsl",frag);
+			dout<<"vertex: \n"<<vert<<std::endl;
+			dout<<"frag: \n"<<frag<<std::endl;
             addShader("sphereShader",vert,frag,geom,tessCont,tessEval);
             frag="";
             readFile(shaderSrc+"/sphere_light.glsl",frag);
@@ -123,12 +129,14 @@ namespace rtps
         {
             shaders[name].setShader(GL_VERTEX_SHADER,vert);
             shaders[name].setShader(GL_FRAGMENT_SHADER,frag);
+			#ifdef GL_GEOMETERY_SHADER
             shaders[name].setShader(GL_GEOMETRY_SHADER,geom);
+			#endif
 #ifdef GL_TESS_CONTROL_SHADER
             shaders[name].setShader(GL_TESS_CONTROL_SHADER,tessCont);
             shaders[name].setShader(GL_TESS_EVALUATION_SHADER,tessEval);
 #endif
-            std::cout<<"Program = "<<shaders[name].compileProgram()<<std::endl;
+            dout<<"Program = "<<shaders[name].compileProgram()<<std::endl;
         }
     };
 }

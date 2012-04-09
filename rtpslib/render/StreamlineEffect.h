@@ -51,9 +51,11 @@
 #include "../opencl/Buffer.h"
 #include "../opencl/CLL.h"
 
+#include "./rtps_common.h"
+
 namespace rtps
 {
-    class StreamlineEffect : public ParticleEffect
+    class RTPS_EXPORT StreamlineEffect : public ParticleEffect
     {
     public:
         StreamlineEffect(RenderSettings rs, ShaderLibrary& lib, unsigned int maxLength, unsigned int num,std::vector<unsigned int>& indices, CL* cli);

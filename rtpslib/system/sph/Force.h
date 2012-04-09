@@ -27,10 +27,11 @@
 
 #include "../../opencl/CLL.h"
 #include "../../opencl/Buffer.h"
+#include "../../rtps_common.h"
 
 namespace rtps
 {
-    class Force
+    class RTPS_EXPORT Force
     {
         public:
             Force() { cli = NULL; timer = NULL; };

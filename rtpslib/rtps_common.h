@@ -22,17 +22,22 @@
 ****************************************************************************************/
 
 
-#ifdef RTPS_COMMON_H
-#define RTPS_COMMON_H
+//#ifdef RTPS_COMMON_H
+//#define RTPS_COMMON_H
 
+#if !(defined RTPS_EXPORT)
 #ifdef WIN32
-    #if defined(rtps_EXPORTS)
+    #if (defined rtps_EXPORTS)
         #define RTPS_EXPORT __declspec(dllexport)
-    #else
+		#pragma warning (disable : 4251)
+    #elif (defined rtps_DLL)
         #define RTPS_EXPORT __declspec(dllimport)
-	#endif 
+	#else
+		#define RTPS_EXPORT
+	#endif
 #else
     #define RTPS_EXPORT
 #endif
-
 #endif
+
+//#endif

@@ -30,8 +30,8 @@
 #define ARGS __global float4* pos, __global float4* vel, __global float4* leaderfollowing, __global int4* flockmates 
 #define ARGV pos, vel, leaderfollowing, flockmates 
 
-#include "cl_macros.h"
-#include "cl_structs.h"
+#include "cl_Flock_macros.h"
+#include "cl_Flock_structs.h"
 
 //----------------------------------------------------------------------
 inline void ForNeighbor(
@@ -79,7 +79,7 @@ inline void ForNeighbor(
 
 
 //Contains Iterate...Cells methods and ZeroPoint
-#include "cl_neighbors.h"
+#include "cl_Flock_neighbors.h"
 
 
 //--------------------------------------------------------------

@@ -34,6 +34,7 @@
 #include "../../opencl/Kernel.h"
 #include "../../domain/IV.h"
 #include "../../timer_eb.h"
+#include "../../rtps_common.h"
 
 #include <vector>
 
@@ -43,7 +44,7 @@ namespace rtps
 {
 
 
-class Hose
+class RTPS_EXPORT Hose
 {
 public:
     Hose(float dt, int total_n, float4 center, float4 velocity, float radius, float spacing, float4 color);

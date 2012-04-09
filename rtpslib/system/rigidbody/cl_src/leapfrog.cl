@@ -23,8 +23,8 @@
 
 
 
-#include "cl_macros.h"
-#include "cl_structs.h"
+#include "cl_PRB_macros.h"
+#include "cl_PRB_structs.h"
 #include "Quaternion.h"
 
 __kernel void leapfrog(

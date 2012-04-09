@@ -43,10 +43,11 @@
     #include <GL/glu.h>
     #include <GL/gl.h>
 #endif
+#include "../rtps_common.h"
 
 namespace rtps
 {
-    class Shader 
+    class RTPS_EXPORT Shader 
     {
     public:
         Shader()
@@ -57,7 +58,9 @@ namespace rtps
                 shaderSrc[GL_TESS_CONTROL_SHADER]="";
                 shaderSrc[GL_TESS_EVALUATION_SHADER]="";
             #endif
+			#ifdef GL_GEOMETRY_SHADER
             shaderSrc[GL_GEOMETRY_SHADER]="";
+			#endif
             shaderSrc[GL_FRAGMENT_SHADER]="";
         }
         ~Shader();

@@ -22,9 +22,9 @@
 ****************************************************************************************/
 
 
-#include "cl_macros.h"
-#include "cl_structs.h"
-#include "cl_collision.h"
+#include "cl_sph_macros.h"
+#include "cl_sph_structs.h"
+#include "cl_sph_collision.h"
 
 
 // Aug. 4, 2010: Erlebacher version with shared memory

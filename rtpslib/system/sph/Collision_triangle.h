@@ -28,11 +28,12 @@
 
 #include "../../opencl/CLL.h"
 #include "../../opencl/Buffer.h"
+#include "../../rtps_common.h"
 
 
 namespace rtps
 {
-    class CollisionTriangle
+    class RTPS_EXPORT CollisionTriangle
     {
         public:
             CollisionTriangle() { cli = NULL; timer = NULL; };

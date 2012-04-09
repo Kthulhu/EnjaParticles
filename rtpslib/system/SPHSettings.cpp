@@ -42,7 +42,7 @@ namespace rtps
         //float VP = .0262144 / 16000;                  //Particle Volume [ m^3 ]
         //float mass = (0.0256/(int)log2(settings->GetSettingAs<unsigned int>("max_num_particles")));         //Particle Mass [ kg ]
         //doubling the mass to hopefully reduce compressability.
-        float mass = (0.0256/(int)log2(settings->GetSettingAs<unsigned int>("max_num_particles")));         //Particle Mass [ kg ]
+        float mass = (0.0256/(int)(log((float)settings->GetSettingAs<unsigned int>("max_num_particles"))/log(2.0f)));         //Particle Mass [ kg ]
         //float Vol = 100.f;//mass/rho0;
         //float VP = Vol/settings->GetSettingAs<unsigned int>("max_num_particles");//mass/rho0;
         float VP=mass/rho0;

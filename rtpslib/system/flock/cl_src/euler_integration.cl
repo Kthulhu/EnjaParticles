@@ -25,8 +25,8 @@
 #ifndef _EULER_INTEGRATION_CL_
 #define _EULER_INTEGRATION_CL_
 
-#include "cl_macros.h"
-#include "cl_structs.h"
+#include "cl_Flock_macros.h"
+#include "cl_Flock_structs.h"
  
         
 __kernel void euler_integration(

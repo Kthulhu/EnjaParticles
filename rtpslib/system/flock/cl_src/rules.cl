@@ -29,8 +29,8 @@
 #define ARGS float4 target, __global float4* pos,  __global float4* vel, __global int4* flockmates,  __global float4* separation, __global float4* alignment, __global float4* cohesion, __global float4* goal, __global float4* avoid 
 #define ARGV target, pos, vel, flockmates, separation, alignment, cohesion, goal, avoid
 
-#include "cl_macros.h"
-#include "cl_structs.h"
+#include "cl_Flock_macros.h"
+#include "cl_Flock_structs.h"
 
 //----------------------------------------------------------------------
 inline void ForNeighbor(ARGS,
@@ -79,7 +79,7 @@ inline void ForNeighbor(ARGS,
 
 
 //Contains Iterate...Cells methods and ZeroPoint
-#include "cl_neighbors.h"
+#include "cl_Flock_neighbors.h"
 
 
 //--------------------------------------------------------------

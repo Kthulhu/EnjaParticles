@@ -23,8 +23,8 @@
 
 
 
-#include "cl_macros.h"
-#include "cl_structs.h"
+#include "cl_sph_macros.h"
+#include "cl_sph_structs.h"
 
 
 __kernel void leapfrog(

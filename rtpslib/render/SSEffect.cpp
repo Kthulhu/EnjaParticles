@@ -108,8 +108,8 @@ namespace rtps
         int glheight = xywh[3];
         float nf[2];
         glGetFloatv(GL_DEPTH_RANGE,nf);
-        m_settings.near = nf[0];
-        m_settings.far = nf[1];
+        m_settings.m_near = nf[0];
+        m_settings.m_far = nf[1];
         glViewport(0, 0, m_settings.windowWidth, m_settings.windowHeight);
         glScissor(0, 0, m_settings.windowWidth, m_settings.windowHeight);
 

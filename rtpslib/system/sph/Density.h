@@ -28,11 +28,11 @@
 
 #include "../../opencl/CLL.h"
 #include "../../opencl/Buffer.h"
-
+#include "../../rtps_common.h"
 
 namespace rtps
 {
-    class Density
+    class RTPS_EXPORT Density
     {
         public:
             Density() { cli = NULL; timer = NULL; };

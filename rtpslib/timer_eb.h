@@ -33,19 +33,9 @@
 #include <Windows.h>
 #include "gtod_windows.h"
 #include <time.h>
-//#include <Winsock2.h>
+#include <WinSock.h>
 #else
 #include <sys/time.h>
-#endif
-
-#ifdef WIN32
-    #if defined(rtps_EXPORTS)
-        #define RTPS_EXPORT __declspec(dllexport)
-    #else
-        #define RTPS_EXPORT __declspec(dllimport)
-	#endif 
-#else
-    #define RTPS_EXPORT
 #endif
 
 #include <string>
@@ -53,6 +43,7 @@
 #include <stdio.h>
 #include <map> 
 #include <string> 
+#include "rtps_common.h"
 
 namespace EB {
 

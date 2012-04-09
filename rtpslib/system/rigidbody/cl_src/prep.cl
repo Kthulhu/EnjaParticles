@@ -27,8 +27,8 @@
 
 
 
-#include "cl_structs.h"
-#include "cl_macros.h"
+#include "cl_PRB_structs.h"
+#include "cl_PRB_macros.h"
 
 __kernel void prep(
                   int stage,
