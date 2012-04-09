@@ -58,7 +58,7 @@ __kernel void euler(
     //f.z += -9.8f;
     lf+=rbMass[i]*gravity;
 
-    float a = (lf/rbMass[i])
+    float4 a = (lf/rbMass[i]);
     float speed = magnitude(a);
     if (speed > 600.0f) //velocity limit, need to pass in as struct
     {

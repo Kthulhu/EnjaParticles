@@ -1,6 +1,6 @@
-/* 
+/*
  * File:   Quaternion.h
- * Taken from Bullet experiments. Copyright belongs to 2011 Takahiro Harada. 
+ * Taken from Bullet experiments. Copyright belongs to 2011 Takahiro Harada.
  *
  * Created on November 14, 2011, 11:54 AM
  */
@@ -27,6 +27,7 @@ __inline
 Quaternion qtSet(const float4 axis, float angle)
 {
 	float4 nAxis = normalize3( axis );
+    //float4 nAxis = fast_normalize(axis);
 
 	Quaternion q;
 	q.x = nAxis.x*sin(angle/2);

@@ -68,10 +68,11 @@ namespace rtps
     {
         slices = 1u<<static_cast<unsigned int>(ceil(log(ceil(sqrt(res))/log(2))));
         texRes2D = res*slices;
-        float* zeroImg = new float[texRes2D*texRes2D*4];
-        memset(zeroImg,0,texRes2D*texRes2D*4*sizeof(float));
+        float* zeroImg = new float[texRes2D*texRes2D];
+        memset(zeroImg,0,texRes2D*texRes2D*sizeof(float));
         //dout<<"-----------------texRes2D "<<texRes2D<<endl;
-        cl_colField=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),texRes2D,texRes2D,0,zeroImg);
+        cl_colField=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_R, CL_FLOAT),texRes2D,texRes2D,0,zeroImg);
+        cli->queue.finish();
         delete[] zeroImg;
     }
     cl::Image2D ColorField::execute(Buffer<float4>& pos_s,
@@ -175,9 +176,10 @@ namespace rtps
             float t2=0.0f;
             for(int j = 0;j<texRes2D*texRes2D*4;j+=4)
             {
-                if(tmpImg[j]<0.0f || tmpImg[j]>5.0f)
-                    dout<<"WTF!!"<<endl;
-                t2+=tmpImg[j];
+     //           if(tmpImg[j]<0.0f || tmpImg[j]>5.0f)
+     //               dout<<"WTF!!"<<endl;
+     //           t2+=tmpImg[j];
+                dout<<tmpImg[j]<<","<<tmpImg[j+1]<<","<<tmpImg[j+2]<<","<<tmpImg[j+3]<<endl;
             }
             dout<<"Total active points = "<<t2<<endl;
 

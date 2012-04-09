@@ -22,8 +22,10 @@
 ****************************************************************************************/
 
 #include <math.h>
+#include <sstream>
 #include <GL/glew.h>
 #include "MarchingCubes.h"
+
 using namespace std;
 
 namespace rtps
@@ -78,16 +80,14 @@ namespace rtps
             //Really lame that opencl doesn't allow variable number of arguments.
             //Opencl 1.2 allows for 2D image arrays. But for current compatability
             //I use diff kernels for each of the different levels.
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D1"));
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D2"));
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D3"));
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D4"));
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D5"));
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D6"));
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D7"));
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D8"));
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D9"));
-            k_traverse.push_back(Kernel(cli, path, "traverseHP2D10"));
+            for(unsigned int i = 0; i<15;i++)
+            {
+                stringstream s;
+                s<<"traverseHP2D"<<i+1;
+                k_traverse.push_back(Kernel(cli,path,s.str()));
+                //k_traverse.push_back(Kernel(cli,path,"traverseHP2D"));
+                dout<<"Num_args = "<<k_traverse[i].kernel.getInfo<CL_KERNEL_NUM_ARGS>()<<endl;
+            }
         }
         catch (cl::Error er)
         {
@@ -120,18 +120,28 @@ namespace rtps
         cl_histopyramid.resize(levels);
         unsigned int levelRes = texRes2D;
         //dout<<"level = "<<0<<" levelRes = "<<levelRes<<endl;
-        /*float* zeroImg = new float[texRes2D*texRes2D*4];
+        float* zeroImg = new float[texRes2D*texRes2D*4];
         memset(zeroImg,0,texRes2D*texRes2D*4*sizeof(float));
         cl_histopyramid[0]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),texRes2D,texRes2D,0,zeroImg);
-        delete[] zeroImg;*/
-        for(float i = 0; i<levels; i++)
+        cli->queue.finish();
+        delete[] zeroImg;
+        for(float i = 1; i<levels; i++)
         {
+#if 0
             float* zeroImg2 = new float[levelRes*levelRes*4];
             memset(zeroImg2,0,levelRes*levelRes*4*sizeof(float));
             //dout<<"level = "<<i<<" levelRes = "<<levelRes<<endl;
             cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),levelRes,levelRes,0,zeroImg2);
             delete[] zeroImg2;
+#endif
             levelRes /=2;
+            float* zeroImg2 = new float[levelRes*levelRes];
+            memset(zeroImg2,0,levelRes*levelRes*sizeof(float));
+            //dout<<"level = "<<i<<" levelRes = "<<levelRes<<endl;
+            cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_R, CL_FLOAT),levelRes,levelRes,0,zeroImg2);
+            cli->queue.finish();
+            delete[] zeroImg2;
+
         }
     }
 
@@ -161,7 +171,7 @@ namespace rtps
         k_classify.setArg(iarg++,colorfield);
         k_classify.setArg(iarg++,res);
         k_classify.setArg(iarg++,slices);
-        k_classify.setArg(iarg++,0.0f);
+        k_classify.setArg(iarg++,0.000001f);
 
         try
         {
@@ -185,14 +195,17 @@ namespace rtps
             tmpregion[1]=texRes2D;
             tmpregion[2]=1;
             cli->queue.enqueueReadImage(cl_histopyramid[0], CL_TRUE, origin, tmpregion, 0, 0, tmpImg);
-            dout<<"Here"<<endl;
             cli->queue.finish();
+            dout<<"Marching cubes -----------------"<<endl;
             float t=0;
             for(int j = 0;j<texRes2D*texRes2D*4;j+=4)
             {
-                if(tmpImg[j]>5)
-                    dout<<"WTF Shouldn't be greater than 5."<<endl;
-                t+=tmpImg[j];
+                //if(tmpImg[j]>5)
+                //    dout<<"WTF Shouldn't be greater than 5."<<endl;
+                //t+=tmpImg[j];
+                //if(tmpImg[j+1]<0.0f || tmpImg[j+1]>256.0f)
+                //    dout<<"index out of range!!!"<<endl;
+                dout<<tmpImg[j]<<","<<tmpImg[j+1]<<","<<tmpImg[j+2]<<","<<tmpImg[j+3]<<endl;
             }
             delete[] tmpImg;
             dout<<"Total triangles = "<<t<<endl;
@@ -274,14 +287,16 @@ namespace rtps
 
         }
 
-        float totals[16]={0.0f};
+        //float totals[16]={0.0f};
+        float totals[4]={0.0f};
         unsigned int total=0;
         try
         {
             cli->queue.enqueueReadImage(cl_histopyramid[levels-1], CL_FALSE, origin, region, 0, 0, totals);
             //dout<<"Here"<<endl;
             cli->queue.finish();
-            total=(unsigned int)(totals[0]+totals[4]+totals[8]+totals[12]);
+            //total=(unsigned int)(totals[0]+totals[4]+totals[8]+totals[12]);
+            total=(unsigned int)(totals[0]+totals[1]+totals[2]+totals[3]);
             dout<<"Total triangles = "<<total<<endl;
         }
         catch (cl::Error er)
@@ -304,6 +319,9 @@ namespace rtps
             glBindBuffer(GL_ARRAY_BUFFER,0);
             cl_triangles=Buffer<float>(cli,mesh.vbo);
             cl_normals=Buffer<float>(cli,mesh.normalbo);
+            //debug;
+            mesh.colbo=mesh.normalbo;
+            //mesh.hasNormals=false;
             mesh.hasNormals=true;
             dout<<"mesh vbo = "<<mesh.vbo<<endl;
             dout<<"normal vbo = "<<mesh.normalbo<<endl;
@@ -315,15 +333,17 @@ namespace rtps
             iarg=0;
             cl_triangles.acquire();
             cl_normals.acquire();
+            //dout<<"Num_args = "<<k_traverse[levels-1].kernel.getInfo<CL_KERNEL_NUM_ARGS>()<<endl;
             for(int j = 0; j<levels; j++)
             {
+                dout<<"level = "<<j;
                 k_traverse[levels-1].setArg(iarg++,cl_histopyramid[j]);
             }
             k_traverse[levels-1].setArg(iarg++,cl_triangles.getDevicePtr());
             k_traverse[levels-1].setArg(iarg++,cl_normals.getDevicePtr());
             k_traverse[levels-1].setArg(iarg++,res-1);
             k_traverse[levels-1].setArg(iarg++,slices);
-            k_traverse[levels-1].setArg(iarg++,0.0f);
+            k_traverse[levels-1].setArg(iarg++,0.000001f);
             k_traverse[levels-1].setArg(iarg++,total);
             try
             {
@@ -337,6 +357,24 @@ namespace rtps
             }
 
             dout<<"Here"<<endl;
+#if 1
+            vector<float> norms=cl_normals.copyToHost(total*3);
+            float avg[3]={0.0f,0.0f,0.0f};
+            for(unsigned int j=0;j<total; j++)
+            {
+                if(norms[(j*3)]>0.0f && norms[(j*3)]<1.0f)
+                {
+                    dout<<"Found one"<<endl;
+                    avg[0]+=norms[(j*3)];
+                    avg[1]+=norms[(j*3)+1];
+                    avg[2]+=norms[(j*3)+2];
+                }
+            }
+            avg[0]/=total;
+            avg[1]/=total;
+            avg[2]/=total;
+            dout<<"The average normal is ("<<avg[0]<<","<<avg[1]<<","<<avg[2]<<")"<<endl;
+#endif
             cl_triangles.release();
             cl_normals.release();
         }

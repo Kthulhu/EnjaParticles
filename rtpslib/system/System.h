@@ -209,6 +209,8 @@ namespace rtps
         Buffer<float4>      cl_velocity_s;
         Buffer<float4>      cl_force_s;
         Buffer<float4>      cl_active_cells;
+        Buffer<float4>      cl_active_lines;
+        Buffer<float4>      cl_active_col;
         Buffer<float>      cl_mass_u;
         Buffer<float>      cl_mass_s;
         Buffer<unsigned int>      cl_objectIndex_u;
@@ -253,6 +255,8 @@ namespace rtps
         GLuint velocity_vbo;
         GLuint force_vbo;
         GLuint active_cells_vbo;
+        GLuint active_lines_vbo;
+        GLuint active_col_vbo;
 
         Domain grid;
 

@@ -82,6 +82,7 @@ int main(int argc, char** argv)
     //initialize glut
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
+            | GLUT_MULTISAMPLE
 		//|GLUT_STEREO //if you want stereo you must uncomment this.
 		);
     glutInitWindowSize(640, 480);

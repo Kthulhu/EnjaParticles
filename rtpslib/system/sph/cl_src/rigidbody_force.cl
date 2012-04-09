@@ -139,7 +139,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         float stiff=(rbParams.s0*massnorm);
         //FIXME: I am arbitraily scaling the rigid body mass by .1 to reduce the stiffness
         //between fluid and rigidbody.
-        float4 springForce = -0.2*stiff*(2.*sphp->smoothing_distance-rlen)*(norm);
+        float4 springForce = -stiff*(2.*sphp->smoothing_distance-rlen)*(norm);
 
         float4 relvel =  vel_j[index_j]-vel[index_i];
 

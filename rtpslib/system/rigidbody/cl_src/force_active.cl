@@ -28,9 +28,8 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j
-//, __global float4* torque_force
-#define ARGV pos, vel, linear_force, mass, pos_j, vel_j, mass_j
+#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global float* mass, __global uint* objectIndex, __global float4* active_cells, __global float4* active_lines, __global float4* active_col
+#define ARGV pos, vel, linear_force, mass , objectIndex
 
 /*----------------------------------------------------------------------*/
 
@@ -52,42 +51,40 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
                         DEBUG_ARGS
                        )
 {
-    //int num = prbp->num;
 
     // get the particle info (in the current grid) to test against
-    float4 position_j = pos_j[index_j] * prbp->simulation_scale; 
+    float4 position_j = pos[index_j] * prbp->simulation_scale; 
     float4 r = (position_j - position_i); 
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
     // is this particle within cutoff?
-    if (rlen <= 2.*prbp->smoothing_distance)
+    if((rlen <= 2.*prbp->smoothing_distance)&&objectIndex[index_i]!=objectIndex[index_j])
     {
+        // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, prbp->EPSILON);
         float4 norm = r/rlen;
-        float massnorm=((mass[index_i]*mass_j[index_j])/(mass[index_i]+mass_j[index_j]));
+        float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
         float stiff = (prbp->spring*massnorm);
         float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(norm);
 
         float4 relvel = vel[index_j]-vel[index_i];
 
         float4 dampeningForce = prbp->dampening*sqrt(stiff*massnorm)*(relvel);
-        float4 normalForce=(springForce+dampeningForce); 
-
-        /*relvel.w=0.0;
+        float4 normalForce=(springForce+dot(dampeningForce,norm)*norm); 
+        
+        relvel.w=0.0;
         normalForce.w=0.0;
-        float normalDot=dot(normalForce,normalForce);
         //Use Gram Schmidt process to find tangential velocity to the particle
-        float4 tangVel=relvel-((dot(relvel,normalForce)/normalDot)*normalForce);
+        float4 tangVel=relvel-dot(relvel,norm)*norm;
         float4 frictionalForce=0.0f;
         if(length(tangVel)>prbp->friction_static_threshold)
-            frictionalForce = -prbp->friction_dynamic*sqrt(normalDot)*(normalize(tangVel));
+            //frictionalForce = -prbp->friction_dynamic*length(normalForce)*(normalize(tangVel));
+            frictionalForce = -prbp->friction_dynamic*tangVel;
         else
             frictionalForce = -prbp->friction_static*tangVel;
-        */
-        pt->linear_force +=normalForce; //(normalForce+frictionalForce);
-
-        //pt->linear_force += r;//debug
+        
+        pt->linear_force += (springForce+dampeningForce+frictionalForce);
     }
 }
 
@@ -125,8 +122,8 @@ __kernel void force_update(
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ prbp DEBUG_ARGV);
     
-    linear_force[sort_indices[index]] += pt.linear_force; 
-    clf[sort_indices[index]].xyz = pt.linear_force.xyz;
+    linear_force[sort_indices[index]] = pt.linear_force; 
+    //clf[sort_indices[index]] = pt.torque_force;
 }
 
 /*-------------------------------------------------------------- */

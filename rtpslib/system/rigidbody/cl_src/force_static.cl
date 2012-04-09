@@ -80,8 +80,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         float4 tangVel=relvel-dot(relvel,norm)*norm;
         float4 frictionalForce=0.0f;
         if(length(tangVel)>prbp->friction_static_threshold)
-            //frictionalForce = -prbp->friction_dynamic*length(normalForce)*(normalize(tangVel));
-            frictionalForce = -prbp->friction_dynamic*tangVel;
+            frictionalForce = -prbp->friction_dynamic*length(normalForce)*(fast_normalize(tangVel));
+            //frictionalForce = -prbp->friction_dynamic*tangVel;
         else
             frictionalForce = -prbp->friction_static*tangVel;
         

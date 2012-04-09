@@ -287,10 +287,6 @@ namespace rtps
         }
         else if (settings->GetSettingAs<string>("integrator")=="leapfrog")
         {
-            for(int i = 0;i<rbParticleIndex.size(); i++)
-            {
-                dout<<i<<" of "<<rbParticleIndex.size()<<": start = "<<rbParticleIndex[i].x<<" end = "<<rbParticleIndex[i].y<<endl;
-            }
             //leapfrog();
             leapfrog.execute(num,
                 settings->GetSettingAs<float>("time_step"),
@@ -709,33 +705,43 @@ namespace rtps
         float a31=0.0f;
         float a32=0.0f;
         float a33=0.0f;
+        float partMass = (mass/pos.size());
         for(int j = 0; j<pos.size(); j++)
         {
-           a11 += (mass/pos.size()) * (sq(pos[j].y)+sq(pos[j].z));
+           a11 +=  (sq(pos[j].y)+sq(pos[j].z));
         }
+        a11*=partMass;
         for(int j = 0; j<pos.size(); j++)
         {
-           a12 -= (mass/pos.size()) * (pos[j].x*pos[j].y);
+           a12 += (pos[j].x*pos[j].y);
         }
-        a21 = a12;
+        a12*=partMass;
         for(int j = 0; j<pos.size(); j++)
         {
-           a13 -= (mass/pos.size()) * (pos[j].x*pos[j].z);
+           a13 +=  (pos[j].x*pos[j].z);
         }
-        a31 = a13;
+        a13*=partMass;
         for(int j = 0; j<pos.size(); j++)
         {
-           a22 += (mass/pos.size()) * (sq(pos[j].x)+sq(pos[j].z));
+           a22 +=  (sq(pos[j].x)+sq(pos[j].z));
         }
+        a22*=partMass;
         for(int j = 0; j<pos.size(); j++)
         {
-           a23 -= (mass/pos.size()) * (pos[j].y*pos[j].z);
+           a23 +=  (pos[j].y*pos[j].z);
         }
-        a32 = a23;
+        a23*=partMass;
         for(int j = 0; j<pos.size(); j++)
         {
-           a33 += (mass/pos.size()) * (sq(pos[j].x)+sq(pos[j].y));
+           a33 +=  (sq(pos[j].x)+sq(pos[j].y));
         }
+        a33*=partMass;
+        a23=-a23;
+        a13=-a13;
+        a12=-a12;
+        a32=a23;
+        a31=a13;
+        a21=a12;
 
         float det = 1.0f/(a11*(a33*a22-a32*a23)-a21*(a33*a12-a32*a13)+a31*(a23*a12-a22*a13));
         float16 invit;

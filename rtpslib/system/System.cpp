@@ -215,6 +215,10 @@ namespace rtps
         vector<float4> f4vec(max_num);
         std::fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
+        //size should reflect the maximum number of neighbors.
+        //vector<float4> f4activevec(100*2);
+        //std::fill(f4activevec.begin(), f4activevec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+
         vector<float> fvec(max_num);
         std::fill(fvec.begin(), fvec.end(), 0.0);
 
@@ -231,7 +235,9 @@ namespace rtps
         //dout<<"velocity vbo: "<< velocity_vbo<<endl;
         force_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         //dout<<"force vbo: "<< force_vbo<<endl;
-        active_cells_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        //active_cells_vbo = createVBO(&f4activevec[0], f4activevec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        //active_lines_vbo = createVBO(&f4activevec[0], f4activevec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        //active_col_vbo = createVBO(&f4activevec[0], f4activevec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         //dout<<"active cells vbo: "<< active_cells_vbo<<endl;
         //dout<<"address of cli = "<<cli<<endl;
         // end VBO creation
@@ -247,7 +253,9 @@ namespace rtps
         cl_velocity_s = Buffer<float4>(cli, f4vec);
         cl_force_s = Buffer<float4>(cli, force_vbo);
         //cl_force_s = Buffer<float4>(cli, f4vec);
-        cl_active_cells = Buffer<float4>(cli, active_cells_vbo);
+        //cl_active_cells = Buffer<float4>(cli, active_cells_vbo);
+        //cl_active_lines = Buffer<float4>(cli, active_lines_vbo);
+        //cl_active_col = Buffer<float4>(cli, active_col_vbo);
         cl_mass_u = Buffer<float>(cli, fvec);
         cl_mass_s = Buffer<float>(cli, fvec);
         cl_objectIndex_u = Buffer<unsigned int>(cli, uivec);
@@ -529,7 +537,7 @@ namespace rtps
         cl_color_u.acquire();
         cl_velocity_u.acquire();
         cl_force_s.acquire();
-        cl_active_cells.acquire();
+        //cl_active_cells.acquire();
         acquiredGL=true;
     }
     void System::releaseGLBuffers()
@@ -538,7 +546,7 @@ namespace rtps
         cl_color_u.release();
         cl_velocity_u.release();
         cl_force_s.release();
-        cl_active_cells.release();
+        //cl_active_cells.release();
         acquiredGL=false;
     }
     RTPSSettings* System::getSettings() {return settings;}

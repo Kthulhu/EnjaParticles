@@ -41,8 +41,11 @@ namespace rtps
         //glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
         glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
-        //glBindBuffer(GL_ARRAY_BUFFER, mesh->colbo);
-        //glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
+        if(mesh->colbo)
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->colbo);
+            glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
+        }
         if(mesh->hasNormals)
         {
             glEnableVertexAttribArray(2);
@@ -111,7 +114,10 @@ namespace rtps
         }
         glUseProgram(0);
         glDisableVertexAttribArray(0);
-        //glDisableVertexAttribArray(1);
+        if(mesh->colbo)
+        {
+            glDisableVertexAttribArray(1);
+        }
         if(mesh->hasNormals)
         {
             glDisableVertexAttribArray(2);

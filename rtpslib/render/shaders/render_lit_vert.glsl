@@ -20,7 +20,7 @@ uniform mat4 project;
 uniform Material material;
 uniform Light light;
 layout (location = 0) in vec3 pos;
-//layout (location = 1) in vec4 col;
+layout (location = 1) in vec4 col;
 layout (location = 2) in vec3 normal;
 //layout (location = 3) in vec2 texcoords;
 
@@ -36,6 +36,7 @@ void main()
     viewPos = modelview*vec4(pos,1.0);
     eyePos = viewPos.xyz/viewPos.w;
     
+    color=col;
     lightDir = normalize(light.pos-eyePos);
     //lightDir = normalize(light.pos);
     halfLightDir=normalize(light.pos+eyePos);

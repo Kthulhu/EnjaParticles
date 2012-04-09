@@ -87,8 +87,8 @@ namespace rtps
         light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
         light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
         light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
-        //mass=10000.0f;
-        mass=0.01f;
+        //mass=100.0f;
+        mass=1.0f;
         sizeScale=1.0f;
         string scenefile = "demo_scene.obj";
 
@@ -160,9 +160,10 @@ namespace rtps
             case 'g':
             {
                 //nn = 16384;
-                nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/8;
-                float4 min = float4(2.5f, 2.5f, 2.5f, 1.0f);
-                float4 max = float4(7.5f, 7.5f, 7.5f, 1.0f);
+                nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles");
+                float4 min = float4(1.0f, 1.0f, 5.0f, 1.0f);
+                //float4 max = float4(7.5f, 7.5f, 7.5f, 1.0f);
+                float4 max = float4(9.5f, 9.5f,9.5, 1.0f);
                 float4 col1 = float4(0.05, 0.15, 8., 0.1);
                 systems["water"]->addBox(nn, min, max, false,col1);
                 //ps2->system->addBox(nn, min, max, false);
@@ -206,7 +207,7 @@ namespace rtps
                 float4 velocity(-1.5f, -1.5f, -4.f, 0);
                 float radius= 3.0f;
                 //sph sets spacing and multiplies by radius value
-                systems["water"]->addHose(50000, center, velocity,radius, col1);
+                systems["water"]->addHose(5000, center, velocity,radius, col1);
                 return;
             }
             case 'H':
@@ -275,7 +276,7 @@ namespace rtps
 
             case 'r': //drop a ball
             {
-                ParticleShape* shape=pShapes["dynamicShape1"];
+                ParticleShape* shape=pShapes["dynamicShape0"];
                 float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
                 trans +=7.0f;
                 float16 modelview;
@@ -352,17 +353,27 @@ namespace rtps
                 translation.y -= 0.1;
                 break;
             case '+':
-                mass+=0.1f;
+                mass+=100.0f;//0.1f;
                 break;
             case '-':
-                mass-=0.1f;
+                mass-=100.0f;//0.1f;
                 break;
             case '[':
-                sizeScale+=0.5f;
+                //sizeScale+=0.5f;
+                {
+                unsigned int res=systems["water"]->getSettings()->GetSettingAs<unsigned int>("color_field_res","32");
+                res=res<<1;
+                systems["water"]->getSettings()->SetSetting("color_field_res",res);
                 break;
+                }
             case ']':
-                sizeScale-=0.5f;
+                {
+                //sizeScale-=0.5f;
+                unsigned int res=systems["water"]->getSettings()->GetSettingAs<unsigned int>("color_field_res","32");
+                res=res>>1;
+                systems["water"]->getSettings()->SetSetting("color_field_res",res);
                 break;
+                }
             default:
                 return;
         }
@@ -374,7 +385,8 @@ namespace rtps
 
         glClearColor(.9, .9, .9, 1.0);
         glEnable(GL_DEPTH_TEST);
-#if 0
+        glEnable(GL_MULTISAMPLE_ARB);
+#if 1
         /*if (stereo_enabled)
         {
             render_stereo();
@@ -418,15 +430,15 @@ namespace rtps
 
             //RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
             ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
-            meshRenderer->renderInstanced(dynamicMeshs["dynamicShape1"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
+            meshRenderer->renderInstanced(dynamicMeshs["dynamicShape0"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
             if(systems.find("flock1")!=systems.end())
             {
                 //dout<<"flock------------------"<<endl;
                 FLOCK* flock = (FLOCK*)systems["flock1"];
                 //effects[renderType]->render(flock->getPosVBO(),flock->getColVBO(),flock->getNum());
-                meshRenderer->renderInstanced(dynamicMeshs["dynamicShape0"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
+                meshRenderer->renderInstanced(dynamicMeshs["dynamicShape1"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
             }
-            display(false);
+            //display(false);
 
             //glDisable(GL_DEPTH_TEST);
             //RenderUtils::renderBox(gridMin,gridMax,float4(0.0f,1.0,0.0f,1.0f));
@@ -449,11 +461,11 @@ namespace rtps
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
             SPH* sph = (SPH*)systems["water"];
             glEnable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            //glEnable(GL_BLEND);
+            //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
             //glBlendFunc(GL_ONE,GL_ONE);
             Mesh* mcMesh = sph->getMCMesh();
-            if(sph->getSettings()->GetSettingAs<bool>("use_color_field","false")&&mcMesh)
+            if(sph->getSettings()->GetSettingAs<bool>("use_color_field","0")&&mcMesh)
             {
                 meshRenderer->render(mcMesh,light);
             }
@@ -461,7 +473,7 @@ namespace rtps
             {
                 effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             }
-            display(true);
+            //display(true);
 
 #else
         glMatrixMode(GL_PROJECTION);
@@ -479,17 +491,18 @@ namespace rtps
         glTranslatef(translation.x, translation.z, translation.y);
 
         meshRenderer->render(dynamicMeshs["dynamicShape1"],light);
-        glColor4f(0.7f,0.3f,0.4f,1.0f);
-        displayShape(pShapes["dynamicShape1"],float3(2.0f,0.0f,0.0f),systems["water"]->getSpacing());
-        displayShape(pShapes["dynamicShape11"],float3(4.0f,0.0f,0.0f),systems["water"]->getSpacing()/2.0f);
-        displayShape(pShapes["dynamicShape112"],float3(6.0f,0.0f,0.0f),systems["water"]->getSpacing()/4.0f);
-        displayShape(pShapes["dynamicShape1123"],float3(8.0f,0.0f,0.0f),systems["water"]->getSpacing()/8.0f);
-        displayShape(pShapes["dynamicShape11234"],float3(10.0f,0.0f,0.0f),systems["water"]->getSpacing()/16.0f);
+        glColor4f(0.1f,0.2f,0.4f,1.0f);
+        displayShape(pShapes["dynamicShape1"],float3(5.0f,3.f,1.0f),systems["water"]->getSpacing());
+        displayShape(pShapes["dynamicShape11"],float3(8.0f,3.f,1.0f),systems["water"]->getSpacing()/2.0f);
+        displayShape(pShapes["dynamicShape112"],float3(11.0f,3.f,1.0f),systems["water"]->getSpacing()/4.0f);
+        displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
+        //displayShape(pShapes["dynamicShape11234"],float3(10.0f,0.0f,0.0f),systems["water"]->getSpacing()/16.0f);
         //}
         //glDisable(GL_DEPTH_TEST);
 
 #endif
 
+        glDisable(GL_MULTISAMPLE_ARB);
         if(renderMovie)
         {
             writeMovieFrame("image","./frames/");
@@ -954,14 +967,14 @@ namespace rtps
             ParticleShape* shape1 = new ParticleShape(min,max,space/2.0f);
             ParticleShape* shape2 = new ParticleShape(min,max,space/4.0f);
             ParticleShape* shape3 = new ParticleShape(min,max,space/8.0f);
-            ParticleShape* shape4 = new ParticleShape(min,max,space/16.0f);
+            //ParticleShape* shape4 = new ParticleShape(min,max,space/16.0f);
 
             shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
             shape1->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
             shape2->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
             shape3->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            shape4->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
+            //shape4->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            RenderUtils::write3DTextureToDisc(shape2->getVoxelTexture(),shape2->getVoxelResolution(),s.str().c_str());
             //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
 
             pShapes[s.str()]=shape;
@@ -971,8 +984,8 @@ namespace rtps
             pShapes[s.str()]=shape2;
             s<<3;
             pShapes[s.str()]=shape3;
-            s<<4;
-            pShapes[s.str()]=shape4;
+            //s<<4;
+            //pShapes[s.str()]=shape4;
             /*float3 dim = max-min;
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
 
@@ -1020,13 +1033,13 @@ namespace rtps
         glBindTexture(GL_TEXTURE_3D_EXT,tex3d);
         GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
         glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
-        float scale = (max-min);
+        float scale = (max-min)*1.5;
         float16 modelview;
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
         glLoadIdentity();
         //glRotatef(rotation.x, 1.0, 0.0, 0.0);
-        glTranslatef(translation.x, translation.y, translation.z);
+        //glTranslatef(translation.x, translation.y, translation.z);
         glRotatef(-180, 1.0, 0.0, 0.0);
         glRotatef(-90, 0.0, 0.0, 1.0);
         glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
@@ -1078,11 +1091,14 @@ namespace rtps
         glUniform1f( glGetUniformLocation(program, "far"), nf[1]);
 
 
+        glPushMatrix();
+        glTranslatef(translation.x, translation.y, translation.z);
         GLuint shapeVBO = createVBO(&vec[0], vec.size()*sizeof(float), GL_ARRAY_BUFFER, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER,shapeVBO);
         glEnableClientState( GL_VERTEX_ARRAY );
         glVertexPointer(3, GL_FLOAT, 0, 0);
         glDrawArrays(GL_POINTS,0,vec.size()/3);
+        glPopMatrix();
 
         glDisableClientState( GL_VERTEX_ARRAY );
         glUseProgram(0);

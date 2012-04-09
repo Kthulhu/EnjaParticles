@@ -123,9 +123,10 @@ __kernel void euler_integration(
     // add circular velocity field
     float4 v = (float4)(-3*pi.y, pi.x, 0.f, 0.f);
     v *= flockp->ang_vel;    
-
+    vel += v;
+    float4 veldiff = fast_normalize(cross(vi,vel));
     // add veleleration to velocity
-    vi = v + vel;
+    vi = vel;
     vi.w =0.f;
 
 	// INTEGRATION
@@ -158,9 +159,9 @@ __kernel void euler_integration(
     uint originalIndex = sort_indices[i];
     vel_u[originalIndex] = vi;
     //float4 tmp = (float4)(0.0f,0.0f,0.0f,1.0f);
-    float4 tmp = cross((float4)(0.0f,0.0f,1.0f,0.0f),vi);
-    //rotation_u[originalIndex].xyz = tmp.xyz;
-    //rotation_u[originalIndex].w = 1.0f+fast_normalize(vi).z;
+    //float4 tmp = cross((float4)(0.0f,1.0f,0.0f,0.0f),vi);
+    rotation_u[originalIndex].xyz = veldiff.xyz;
+    rotation_u[originalIndex].w = 1.0f+fast_normalize(vi).z;
     pos_u[originalIndex] = (float4)(pi.xyz/flockp->simulation_scale, 1.f);    // changed the last component to 1 for my boids, im not using density
 }
 

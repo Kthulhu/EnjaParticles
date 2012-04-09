@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -31,7 +31,7 @@
  * For now we build one program per kernel. In the future
  * we will make it possible to make several kernels per program
  *
- * we pass in an OpenCL instance  to the constructor 
+ * we pass in an OpenCL instance  to the constructor
  * which manages the underlying context and queues
  */
 
@@ -44,7 +44,7 @@
         #define RTPS_EXPORT __declspec(dllexport)
     #else
         #define RTPS_EXPORT __declspec(dllimport)
-	#endif 
+	#endif
 #else
     #define RTPS_EXPORT
 #endif
@@ -60,7 +60,7 @@ namespace rtps
         {
             cli = NULL;
         };
-        Kernel(CL *cli, std::string source, std::string name);
+        Kernel(CL *cli, std::string source, std::string name, std::string options="", std::string find="", std::string replace="");
         Kernel(CL *cli, cl::Program program, std::string name);
 
         //we will want to access buffers by name when going accross systems

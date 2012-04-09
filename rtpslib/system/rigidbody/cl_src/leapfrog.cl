@@ -75,7 +75,7 @@ __kernel void leapfrog(
     wnext.z+= dot(inertialTensor[i].s89ab,L);
     wnext.w = 0.0f;
     float4 weval=0.5f*(w+wnext);
-    Quaternion dq = qtSet(w,sqrt(dot(dt*wnext,dt*wnext)));
+    Quaternion dq = qtSet(wnext,sqrt(dot(dt*wnext,dt*wnext)));
     q = qtMul(dq,q);
     comVel[i] = vnext;
     comVelEval[i] = veval;

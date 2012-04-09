@@ -32,6 +32,7 @@ void main(void) {
     float spec = max(0.0,dot(normalize(norm),ref));
     vec3 specularColor=material.specular*pow(spec,material.shininess);
     vec3 diffuseColor=material.diffuse*light.diffuse*max(dot(normalize(norm),normalize(lightDir)), 0.0);
-    gl_FragColor = vec4(ambientColor+specularColor+diffuseColor,material.opacity);
+    //gl_FragColor = vec4(ambientColor+specularColor+diffuseColor,material.opacity);
+    gl_FragColor = color;
     //gl_FragColor = vec4(material.ambient+material.diffuse,material.opacity);
 }

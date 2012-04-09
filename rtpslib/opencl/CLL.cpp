@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -55,7 +55,7 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    cl::Program CL::loadProgram(std::string path, std::string options)
+    cl::Program CL::loadProgram(std::string path, std::string options, std::string find, std::string replace)
     {
         // Program Setup
 
@@ -63,6 +63,18 @@ namespace rtps
         char* src = file_contents(path.c_str(), &length);
         std::string kernel_source(src);
         free(src);
+        if(find.size())
+        {
+            size_t pos = kernel_source.find(find);
+            if(pos>0&&pos<kernel_source.size())
+            {
+                kernel_source = kernel_source.replace(pos,find.size(),replace);
+            }
+            else
+            {
+                cerr<<"couldn't find "<<find<<" in kernel_source"<<endl;
+            }
+        }
 
 
         //printf("kernel size: %d\n", pl);
@@ -98,7 +110,7 @@ namespace rtps
 
             options += this->inc_dir;
             printf("OPTIONS: %s\n", options.c_str());
-            
+
 
             err = program.build(devices, options.c_str());
 #endif
@@ -117,13 +129,13 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    cl::Kernel CL::loadKernel(std::string path, std::string kernel_name)
+    cl::Kernel CL::loadKernel(std::string path, std::string kernel_name, std::string options, std::string find, std::string replace)
     {
         cl::Program program;
         cl::Kernel kernel;
         try
         {
-            program = loadProgram(path);
+            program = loadProgram(path,options,find,replace);
             kernel = cl::Kernel(program, kernel_name.c_str(), &err);
         }
         catch (cl::Error er)
@@ -159,11 +171,11 @@ namespace rtps
         deviceUsed = 0;
         int platformNum = 0;
         try{
-                err = platforms[platformNum].getDevices(CL_DEVICE_TYPE_GPU, &devices);    
+                err = platforms[platformNum].getDevices(CL_DEVICE_TYPE_GPU, &devices);
         }catch(cl::Error er)
         {
             cerr<<"ERROR: "<< er.what()<<"("<< oclErrorString(er.err())<<")"<<endl;
-            
+
             try{
                 if(platforms.size()==2)
                         err = platforms[++platformNum].getDevices(CL_DEVICE_TYPE_GPU, &devices);
@@ -172,9 +184,9 @@ namespace rtps
             {
                 cerr<<"ERROR: "<< er2.what()<<"("<< oclErrorString(er2.err())<<")"<<endl;
             }
-        
+
         }
-        
+
         dout<<"getDevices: "<< oclErrorString(err)<<endl;
         dout<<"devices.size(): "<< devices.size()<<endl;
         //const char* s = devices[0].getInfo<CL_DEVICE_EXTENSIONS>().c_str();
@@ -212,10 +224,10 @@ namespace rtps
         }
 #else
 #if defined WIN32 // Win32
-        cl_context_properties props[] = 
+        cl_context_properties props[] =
         {
-            CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(), 
-            CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(), 
+            CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(),
+            CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
             CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[1])(),
             0
         };
@@ -229,10 +241,10 @@ namespace rtps
             cerr<<"ERROR: "<<er.what()<<"("<< oclErrorString(er.err())<<")"<<endl;
         }
 #else
-        cl_context_properties props[] = 
+        cl_context_properties props[] =
         {
-            CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(), 
-            CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(), 
+            CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
+            CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
             CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[platformNum])(),
             0
         };
@@ -372,7 +384,7 @@ namespace rtps
     //////////////////////////////////////////////////////////////////////////////
     //! Gets the platform ID for NVIDIA if available, otherwise default to platform 0
     //!
-    //! @return the id 
+    //! @return the id
     //! @param clSelectedPlatformID         OpenCL platform ID
     //////////////////////////////////////////////////////////////////////////////
     cl_int CL::oclGetPlatformID(cl_platform_id* clSelectedPlatformID)

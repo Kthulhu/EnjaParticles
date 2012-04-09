@@ -74,7 +74,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         //need to have a better way of handling stiffness..
         float massnorm=((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
         float stiff = rbParams.s0*massnorm;
-        float4 springForce = -0.20*stiff*(2.*sphp->smoothing_distance-rlen)*(norm);
+        float4 springForce = -stiff*(2.*sphp->smoothing_distance-rlen)*(norm);
 
         float4 relvel = vel[index_i];
 
