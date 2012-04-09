@@ -25,7 +25,7 @@
 #ifndef __NEIGHBORS_CL_K_
 #define __NEIGHBORS_CL_K_
 
-#include "cl_hash.h"
+#include "../cl_common/cl_hash.h"
 
 //----------------------------------------------------------------------
 void zeroPoint(PointData* pt)

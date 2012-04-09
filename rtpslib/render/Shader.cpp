@@ -54,7 +54,7 @@ namespace rtps
 
         compileShader(GL_VERTEX_SHADER, "Vertex Shader",  program);
         compileShader(GL_FRAGMENT_SHADER, "Fragment Shader",  program);
-
+		#ifdef GL_GEOMETRY_SHADER
         if (shaderSrc[GL_GEOMETRY_SHADER].length())
         {
             compileShader(GL_GEOMETRY_SHADER, "Geometry Shader",program);
@@ -63,6 +63,7 @@ namespace rtps
                 glProgramParameteriEXT(program,i->first,i->second);
             }
         }
+		#endif
 
         #ifdef GL_TESS_CONTROL_SHADER
         if (shaderSrc[GL_TESS_CONTROL_SHADER].length())
@@ -98,7 +99,7 @@ namespace rtps
     {
         GLuint shader = glCreateShader(shaderType);
         GLint success;
-        GLint len;
+        GLint len=0;
         const char* src = shaderSrc[shaderType].c_str();
         glShaderSource(shader, 1, (const GLchar**)&src, 0);
         glCompileShader(shader);
@@ -106,9 +107,10 @@ namespace rtps
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
         if (len>0 && !success)
         {
-            char log[len+1];
+            char* log = new char[len+1];
             glGetShaderInfoLog(shader, len+1, 0, log);
             cout<<shaderName<<"\n"<<log<<endl;
+			delete[] log;
         }
         glAttachShader(program, shader);
         glDeleteShader(shader);

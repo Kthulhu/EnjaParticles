@@ -34,11 +34,12 @@
 #include "../../opencl/Kernel.h"
 #include "../../domain/Domain.h"
 #include "../../timer_eb.h"
+#include "../../rtps_common.h"
 
 
 namespace rtps
 {
-    class CellIndices
+    class RTPS_EXPORT CellIndices
     {
         public:
             CellIndices() { cli = NULL; timer = NULL; };

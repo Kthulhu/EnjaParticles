@@ -29,9 +29,9 @@
 #include "../../opencl/CLL.h"
 #include "../../opencl/Buffer.h"
 #include "../../opencl/Kernel.h"
-#include <timer_eb.h>
+#include "../../timer_eb.h"
 #include "../ParticleRigidBodyParams.h"
-#include <structs.h>
+#include "../../structs.h"
 
 
 namespace rtps

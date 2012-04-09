@@ -34,10 +34,10 @@
 
 /*----------------------------------------------------------------------*/
 
-#include "cl_macros.h"
-#include "cl_structs.h"
+#include "cl_sph_macros.h"
+#include "cl_sph_structs.h"
 //Contains all of the Smoothing Kernels for SPH
-#include "cl_kernels.h"
+#include "cl_sph_kernels.h"
 
 
 //----------------------------------------------------------------------
@@ -78,7 +78,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 }
 
 //Contains Iterate...Cells methods and ZeroPoint
-#include "cl_neighbors.h"
+#include "cl_sph_neighbors.h"
 
 //--------------------------------------------------------------
 // compute forces on particles

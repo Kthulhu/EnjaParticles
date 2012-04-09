@@ -46,7 +46,7 @@ namespace rtps
     {
         GLuint windowHeight,windowWidth;
         GLfloat particleRadius;
-        GLfloat near,far;
+        GLfloat m_near,m_far;
         bool blending;
     };  
 }

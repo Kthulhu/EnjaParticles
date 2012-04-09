@@ -26,23 +26,14 @@
 #define RTPS_RTPS_H_INCLUDED
 
 //System API
-#include <system/System.h>
+#include "system/System.h"
 
 //settings class to configure the framework
-#include <RTPSSettings.h>
+#include "RTPSSettings.h"
 
 //OpenCL API
-#include <opencl/CLL.h>
-
-#ifdef WIN32
-    #if defined(rtps_EXPORTS)
-        #define RTPS_EXPORT __declspec(dllexport)
-    #else
-        #define RTPS_EXPORT __declspec(dllimport)
-	#endif 
-#else
-    #define RTPS_EXPORT
-#endif
+#include "opencl/CLL.h"
+#include "./rtps_common.h"
 
 namespace rtps
 {
@@ -51,7 +42,7 @@ namespace rtps
     class RTPS
     {
     public:
-        static System* generateSystemInstance(RTPSSettings*, CL* cli);
+        RTPS_EXPORT static System* generateSystemInstance(RTPSSettings*, CL* cli);
     };
 }
 

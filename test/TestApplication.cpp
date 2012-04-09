@@ -23,7 +23,7 @@
 #include <GL/glew.h>
 #include "TestApplication.h"
 #include "ParamParser.h"
-#include <RTPS.h>
+#include "../rtpslib/RTPS.h"
 #include "../rtpslib/render/SSEffect.h"
 #include "../rtpslib/render/MeshEffect.h"
 #include <../rtpslib/system/ParticleRigidBody.h>
@@ -44,7 +44,7 @@ using namespace std;
 
 namespace rtps
 {
-    TestApplication::TestApplication(istream& is)
+    TestApplication::TestApplication(istream& is, string path)
     {
         glewInit();
         GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
@@ -53,7 +53,7 @@ namespace rtps
         cli = new CL();
 
         renderType="default";
-        readParamFile(is);
+        readParamFile(is,path);
         initGL();
         //Fixme: This is a bad way to make sure the directory is correct.
         RenderSettings rs;
@@ -61,8 +61,8 @@ namespace rtps
         rs.blending=false;
         float nf[2];
         glGetFloatv(GL_DEPTH_RANGE,nf);
-        rs.near = nf[0];
-        rs.far = nf[1];
+        rs.m_near = nf[0];
+        rs.m_far = nf[1];
         //dout<<"near = "<<rs.near<<endl;
         //dout<<"far = "<<rs.far<<endl;
         //dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
@@ -70,7 +70,8 @@ namespace rtps
         rs.windowWidth=windowWidth;
         rs.windowHeight=windowHeight;
         lib = new ShaderLibrary();
-        lib->initializeShaders(GLSL_BIN_DIR);
+		string shaderpath=path+"/shaders";
+        lib->initializeShaders(shaderpath);
         effects["default"]=new ParticleEffect(rs,*lib);
         //effects["sprite"]=new ParticleEffect();
         rs.blending=true;
@@ -90,7 +91,7 @@ namespace rtps
         //mass=100.0f;
         mass=1.0f;
         sizeScale=1.0f;
-        string scenefile = "demo_scene.obj";
+        string scenefile = path+"/demo_scene.obj";
 
         renderVelocity=false;
         paused=false;
@@ -99,7 +100,7 @@ namespace rtps
         loadScene(scenefile);
         renderMovie=false;
         frameCounter=0;
-        string meshesfile = "demo_mesh_scene.obj";
+        string meshesfile = path+"/demo_mesh_scene.obj";
         loadMeshScene(meshesfile);
         build_shapes(scene, scene->mRootNode);
         build_dynamic_shapes(dynamicMeshScene, dynamicMeshScene->mRootNode);
@@ -152,7 +153,7 @@ namespace rtps
             case 'e': //dam break
             {
                 nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/2;
-                float4 col1 = float4(0.05, 0.15, 8., 0.1);
+                float4 col1 = float4(0.05f, 0.15f, .8f, 0.1f);
                 systems["water"]->addBox(nn, gridMin+float4(0.5f,0.5f,0.5f,1.0f), gridMax-float4(0.5f,0.5f,0.5f,1.0f), false,col1);
                 //ps2->system->addBox(nn, min, max, false);
                 return;
@@ -161,11 +162,11 @@ namespace rtps
             {
                 //nn = 16384;
                 nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles");
-                float4 min = float4(1.0f, 1.0f, 5.0f, 1.0f);
+                float4 minCoord = float4(1.0f, 1.0f, 5.0f, 1.0f);
                 //float4 max = float4(7.5f, 7.5f, 7.5f, 1.0f);
-                float4 max = float4(9.5f, 9.5f,9.5, 1.0f);
-                float4 col1 = float4(0.05, 0.15, 8., 0.1);
-                systems["water"]->addBox(nn, min, max, false,col1);
+                float4 maxCoord = float4(9.5f, 9.5f,9.5, 1.0f);
+                float4 col1 = float4(0.05f, 0.15f, .8f, 0.1f);
+                systems["water"]->addBox(nn, minCoord, maxCoord, false,col1);
                 //ps2->system->addBox(nn, min, max, false);
                 return;
             }
@@ -202,7 +203,7 @@ namespace rtps
             {
                 //spray hose
                 cout<<"about to make hose"<<endl;
-                float4 col1 = float4(0.05, 0.1, 2., 0.1);
+                float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
                 float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-0.5f,1.0f);
                 float4 velocity(-1.5f, -1.5f, -4.f, 0);
                 float radius= 3.0f;
@@ -214,12 +215,12 @@ namespace rtps
             {
                 //spray hose
                 cout<<"about to make hose"<<endl;
-                float4 col1 = float4(0.05, 0.1, 2., 0.1);
+                float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
                 float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-0.5f,1.0f);
-                float4 velocity(-1.5f, -1.5f, -4.f, 0);
+                float4 velocity(-1.5f, -1.5f, -4.f, 0.f);
                 float radius= 3.0f;
                 center = float4(gridMin.x+2.0f, gridMin.y+2.0f,gridMax.z-0.5f,1.0f);
-                velocity=float4(1.5f, 0.5f, -.05f, 0);
+                velocity=float4(1.5f, 0.5f, -.05f, 0.f);
                 systems["flock1"]->addHose(50000, center, velocity,radius);
                 return;
             }
@@ -242,8 +243,8 @@ namespace rtps
                 //add static floor
             case 'u':
             {
-                float4 col1 = float4(0.0, 0.8, 0.2, 1.);
-                float4 size = float4(1.,1.,1.,0.f);
+                float4 col1 = float4(0.0f, 0.8f, 0.2f, 1.f);
+                float4 size = float4(1.f,1.f,1.f,0.f);
                 float4 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+.1f,1.0f);
                 systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMin.z+.5f,1.0f), false, col1,0.0f);
                 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
@@ -259,9 +260,9 @@ namespace rtps
             case 'R': //drop a rectangle
                 {
 
-                    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
+                    float4 col1 = float4(0.5f, 0.9f, 0.0f, 1.f);
 
-                    float4 size = float4(1.,1.,1.,0.f);
+                    float4 size = float4(1.f,1.f,1.f,0.f);
                     size=size*sizeScale;
                     float4 mid = (gridMax-gridMin);
                     mid = mid/2.0f;
@@ -285,8 +286,8 @@ namespace rtps
                 glLoadIdentity();
                 //glRotatef(rotation.x, 1.0, 0.0, 0.0);
                 glTranslatef(trans, trans, trans);
-                glRotatef(-180, 1.0, 0.0, 0.0);
-                glRotatef(-90, 0.0, 0.0, 1.0);
+                glRotatef(-180, 1.0f, 0.0f, 0.0f);
+                glRotatef(-90, 0.0f, 0.0f, 1.0f);
                 //glTranslatef(translation.x, translation.z, translation.y);
                 glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
                 glPopMatrix();
@@ -317,40 +318,40 @@ namespace rtps
             case 'C':
                 return;
             case '2':
-                light.pos.z -= 0.1;
+                light.pos.z -= 0.1f;
                 break;
             case '6':
-                light.pos.x += 0.1;
+                light.pos.x += 0.1f;
                 break;
             case '8':
-                light.pos.z += 0.1;
+                light.pos.z += 0.1f;
                 break;
             case '4':
-                light.pos.x -= 0.1;
+                light.pos.x -= 0.1f;
                 break;
             case '3':
-                light.pos.y += 0.1;
+                light.pos.y += 0.1f;
                 break;
             case '1':
-                light.pos.y -= 0.1;
+                light.pos.y -= 0.1f;
                 break;
             case 'w':
-                translation.z -= 0.1;
+                translation.z -= 0.1f;
                 break;
             case 'a':
-                translation.x += 0.1;
+                translation.x += 0.1f;
                 break;
             case 's':
-                translation.z += 0.1;
+                translation.z += 0.1f;
                 break;
             case 'd':
-                translation.x -= 0.1;
+                translation.x -= 0.1f;
                 break;
             case 'z':
-                translation.y += 0.1;
+                translation.y += 0.1f;
                 break;
             case 'x':
-                translation.y -= 0.1;
+                translation.y -= 0.1f;
                 break;
             case '+':
                 mass+=100.0f;//0.1f;
@@ -383,7 +384,7 @@ namespace rtps
     void TestApplication::RenderCallback()
     {
 
-        glClearColor(.9, .9, .9, 1.0);
+        glClearColor(.9f, .9f, .9f, 1.0f);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
 #if 1
@@ -438,7 +439,7 @@ namespace rtps
                 //effects[renderType]->render(flock->getPosVBO(),flock->getColVBO(),flock->getNum());
                 meshRenderer->renderInstanced(dynamicMeshs["dynamicShape1"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
             }
-            //display(false);
+            display(false);
 
             //glDisable(GL_DEPTH_TEST);
             //RenderUtils::renderBox(gridMin,gridMax,float4(0.0f,1.0,0.0f,1.0f));
@@ -461,8 +462,8 @@ namespace rtps
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
             SPH* sph = (SPH*)systems["water"];
             glEnable(GL_DEPTH_TEST);
-            //glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
             //glBlendFunc(GL_ONE,GL_ONE);
             Mesh* mcMesh = sph->getMCMesh();
             if(sph->getSettings()->GetSettingAs<bool>("use_color_field","0")&&mcMesh)
@@ -473,8 +474,7 @@ namespace rtps
             {
                 effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             }
-            //display(true);
-
+            display(true);
 #else
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -559,12 +559,12 @@ namespace rtps
 
         if (mouseButtons & 1)
         {
-            rotation.x += dy * 0.2;
-            rotation.y += dx * 0.2;
+            rotation.x += dy * 0.2f;
+            rotation.y += dx * 0.2f;
         }
         else if (mouseButtons & 4)
         {
-            translation.z -= dy * 0.1;
+            translation.z -= dy * 0.1f;
         }
 
         mousePos.x = x;
@@ -665,13 +665,13 @@ namespace rtps
         //gluPerspective(90.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 10000.0); //for lorentz
 
         // set view matrix
-        glClearColor(.9, .9, .9, 1.0);
+        glClearColor(.9f, .9f, .9f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
     }
 
-    void TestApplication::readParamFile(std::istream& is)
+    void TestApplication::readParamFile(istream& is, string path)
     {
         ParamParser p;
         vector<RTPSSettings*> sysSettings;
@@ -679,11 +679,12 @@ namespace rtps
         p.readParameterFile(is,sysSettings ,names );
         for(unsigned int i = 0; i<sysSettings.size(); i++)
         {
-            #ifdef WIN32
-                sysSettings[i]->SetSetting("rtps_path",".");
-            #else
-                sysSettings[i]->SetSetting("rtps_path","./bin");
-            #endif
+            //#ifdef WIN32
+            //    sysSettings[i]->SetSetting("rtps_path",".");
+            //#else
+            //    sysSettings[i]->SetSetting("rtps_path","./bin");
+            //#endif
+			sysSettings[i]->SetSetting("rtps_path",path);
             //Fixme::This is hacky. I need to determine an efficient way to do simulation scaling
             //for rigid bodies to work well with sph.
             if(sysSettings[i]->GetSettingAs<string>("system")!="sph")
@@ -721,8 +722,8 @@ namespace rtps
         return windowWidth;
     }
     void TestApplication::get_bounding_box_for_node (const struct aiNode* nd,
-        struct aiVector3D* min,
-        struct aiVector3D* max,
+        struct aiVector3D* minBB,
+        struct aiVector3D* maxBB,
         struct aiMatrix4x4* trafo
     ){
         struct aiMatrix4x4 prev;
@@ -738,31 +739,31 @@ namespace rtps
                 struct aiVector3D tmp = mesh->mVertices[t];
                 aiTransformVecByMatrix4(&tmp,trafo);
 
-                min->x = aisgl_min(min->x,tmp.x);
-                min->y = aisgl_min(min->y,tmp.y);
-                min->z = aisgl_min(min->z,tmp.z);
+                minBB->x = aisgl_min(minBB->x,tmp.x);
+                minBB->y = aisgl_min(minBB->y,tmp.y);
+                minBB->z = aisgl_min(minBB->z,tmp.z);
 
-                max->x = aisgl_max(max->x,tmp.x);
-                max->y = aisgl_max(max->y,tmp.y);
-                max->z = aisgl_max(max->z,tmp.z);
+                maxBB->x = aisgl_max(maxBB->x,tmp.x);
+                maxBB->y = aisgl_max(maxBB->y,tmp.y);
+                maxBB->z = aisgl_max(maxBB->z,tmp.z);
             }
         }
 
         for (n = 0; n < nd->mNumChildren; ++n) {
-            get_bounding_box_for_node(nd->mChildren[n],min,max,trafo);
+            get_bounding_box_for_node(nd->mChildren[n],minBB,maxBB,trafo);
         }
         *trafo = prev;
     }
 
     // ----------------------------------------------------------------------------
-    void TestApplication::get_bounding_box (struct aiVector3D* min, struct aiVector3D* max)
+    void TestApplication::get_bounding_box (struct aiVector3D* minBB, struct aiVector3D* maxBB)
     {
         struct aiMatrix4x4 trafo;
         aiIdentityMatrix4(&trafo);
 
-        min->x = min->y = min->z =  1e10f;
-        max->x = max->y = max->z = -1e10f;
-        get_bounding_box_for_node(scene->mRootNode,min,max,&trafo);
+        minBB->x = minBB->y = minBB->z =  1e10f;
+        maxBB->x = maxBB->y = maxBB->z = -1e10f;
+        get_bounding_box_for_node(scene->mRootNode,minBB,maxBB,&trafo);
     }
 
     // ----------------------------------------------------------------------------
@@ -797,14 +798,14 @@ namespace rtps
         float shininess, strength, opacity;
         int two_sided;
         int wireframe;
-        unsigned int max;
+        unsigned int maxVal;
 	if(!mtl)
 		cerr<<"No Material Found"<<endl;
 
-        max = 1;
-        aiGetMaterialFloatArray(mtl,AI_MATKEY_OPACITY,&opacity,&max);
+        maxVal = 1;
+        aiGetMaterialFloatArray(mtl,AI_MATKEY_OPACITY,&opacity,&maxVal);
         mesh->material.opacity = opacity;
-        //dout<<"Opacity: "<< opacity<<" Max "<<max<<std::endl;
+        //dout<<"Opacity: "<< opacity<<" Max "<<maxVal<<std::endl;
         set_float4(c, 0.8f, 0.8f, 0.8f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
             color4_to_float4(&diffuse, c);
@@ -836,11 +837,11 @@ namespace rtps
         //glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, c);
 
         //dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
-        max = 1;
-        ret1 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS, &shininess, &max);
+        maxVal = 1;
+        ret1 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS, &shininess, &maxVal);
         if(ret1 == AI_SUCCESS) {
-            max = 1;
-            ret2 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS_STRENGTH, &strength, &max);
+            maxVal = 1;
+            ret2 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS_STRENGTH, &strength, &maxVal);
             if(ret2 == AI_SUCCESS)
             {
                 //glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess * strength);
@@ -860,8 +861,8 @@ namespace rtps
             //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
         }
 
-        max = 1;
-        if(AI_SUCCESS == aiGetMaterialIntegerArray(mtl, AI_MATKEY_ENABLE_WIREFRAME, &wireframe, &max))
+        maxVal = 1;
+        if(AI_SUCCESS == aiGetMaterialIntegerArray(mtl, AI_MATKEY_ENABLE_WIREFRAME, &wireframe, &maxVal))
             fill_mode = wireframe ? GL_LINE : GL_FILL;
         else
             fill_mode = GL_FILL;
@@ -870,8 +871,7 @@ namespace rtps
     void TestApplication::build_dynamic_shapes (const struct aiScene *sc, const struct aiNode* nd)
     {
         static unsigned int numshapes=0;
-        int i;
-        unsigned int n = 0, t;
+        unsigned int n = 0, t, i;
 
         float16 mat;
             aiMatrix4x4 m(1.0f,0.0f,0.0f,0.0f,
@@ -881,8 +881,8 @@ namespace rtps
 
         for (; n < nd->mNumMeshes; ++n) {
             const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
-            float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
-            float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+            float3 minCoord(FLT_MAX,FLT_MAX,FLT_MAX);
+            float3 maxCoord(-FLT_MAX,-FLT_MAX,-FLT_MAX);
             Mesh* me=new Mesh();
             //dout<<"material index = "<<mesh->mMaterialIndex<<endl;
             apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
@@ -923,18 +923,18 @@ namespace rtps
                         texcoords[index*2+1]=mesh->mTextureCoords[0][index].y;
                     }
             //        dout<<"index = "<<index<<"x = "<<x<<" "<<"y = "<<y<<" "<<"z = "<<z<<endl;
-                    if(x<min.x)
-                        min.x=x;
-                    if(x>max.x)
-                        max.x=x;
-                    if(y<min.y)
-                        min.y=y;
-                    if(y>max.y)
-                        max.y=y;
-                    if(z<min.z)
-                        min.z=z;
-                    if(z>max.z)
-                        max.z=z;
+                    if(x<minCoord.x)
+                        minCoord.x=x;
+                    if(x>maxCoord.x)
+                        maxCoord.x=x;
+                    if(y<minCoord.y)
+                        minCoord.y=y;
+                    if(y>maxCoord.y)
+                        maxCoord.y=y;
+                    if(z<minCoord.z)
+                        minCoord.z=z;
+                    if(z>maxCoord.z)
+                        maxCoord.z=z;
                 }
             }
 
@@ -958,35 +958,36 @@ namespace rtps
 	    //I need too have a better way to handle more than 1 shape.
 	    s<<"dynamicShape"<<numshapes++;
             dynamicMeshs[s.str()]=me;
-            //dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
-            //dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
+            //dout<<"minCoord ("<<minCoord.x<<","<<minCoord.y<<","<<minCoord.z<<")"<<endl;
+            //dout<<"maxCoord ("<<maxCoord.x<<","<<maxCoord.y<<","<<maxCoord.z<<")"<<endl;
             //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
             float space = systems["rb1"]->getSpacing();
-            ParticleShape* shape = new ParticleShape(min,max,space);
+            ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
             //NOTE: For Illustration use only.
-            ParticleShape* shape1 = new ParticleShape(min,max,space/2.0f);
-            ParticleShape* shape2 = new ParticleShape(min,max,space/4.0f);
-            ParticleShape* shape3 = new ParticleShape(min,max,space/8.0f);
-            //ParticleShape* shape4 = new ParticleShape(min,max,space/16.0f);
-
+            /*ParticleShape* shape1 = new ParticleShape(minCoord,maxCoord,space/2.0f);
+            ParticleShape* shape2 = new ParticleShape(minCoord,maxCoord,space/4.0f);
+            ParticleShape* shape3 = new ParticleShape(minCoord,maxCoord,space/8.0f);
+            //ParticleShape* shape4 = new ParticleShape(minCoord,maxCoord,space/16.0f);
+*/
             shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            shape1->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            /*shape1->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
             shape2->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
             shape3->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
             //shape4->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            RenderUtils::write3DTextureToDisc(shape2->getVoxelTexture(),shape2->getVoxelResolution(),s.str().c_str());
+            */
+            //RenderUtils::write3DTextureToDisc(shape2->getVoxelTexture(),shape2->getVoxelResolution(),s.str().c_str());
             //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
 
             pShapes[s.str()]=shape;
-            s<<1;
+            /*s<<1;
             pShapes[s.str()]=shape1;
             s<<2;
             pShapes[s.str()]=shape2;
             s<<3;
             pShapes[s.str()]=shape3;
             //s<<4;
-            //pShapes[s.str()]=shape4;
-            /*float3 dim = max-min;
+            //pShapes[s.str()]=shape4;*/
+            /*float3 dim = maxCoord-minCoord;
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
 
             float16 modelview;
@@ -1026,14 +1027,14 @@ namespace rtps
     void TestApplication::displayShape(ParticleShape* shape,float3 translation,float spacing)
     {
         GLuint tex3d=shape->getVoxelTexture();
-        unsigned int min=shape->getMinDim();
-        unsigned int max=shape->getMaxDim();
+        float minDim=shape->getMinDim();
+        float maxDim=shape->getMaxDim();
         unsigned int voxelResolution=shape->getVoxelResolution();
         vector<float> vec;
         glBindTexture(GL_TEXTURE_3D_EXT,tex3d);
         GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
         glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
-        float scale = (max-min)*1.5;
+        float scale = (maxDim-minDim)*1.5;
         float16 modelview;
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -1048,11 +1049,11 @@ namespace rtps
         modelview.transpose();
 
 
-        for(int k = 0; k<voxelResolution; k++)
+        for(unsigned int k = 0; k<voxelResolution; k++)
         {
-            for(int j=0; j<voxelResolution; j++)
+            for(unsigned int j=0; j<voxelResolution; j++)
             {
-                for(int i=0;i<voxelResolution;i++)
+                for(unsigned int i=0;i<voxelResolution;i++)
                 {
                     //Check the red channel. If it is non zero then we need a particle here.
                     if(image[(i*4)+(j*voxelResolution*4)+(k*voxelResolution*voxelResolution*4)]>0)
@@ -1082,7 +1083,7 @@ namespace rtps
         GLuint program = lib->shaders["sphereLightShader"].getProgram();
 
         glUseProgram(program);
-        glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)windowWidth) / tanf(65. * (0.5f * 3.1415926535f/180.0f)));
+        glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)windowWidth) / tanf(65.f * (0.5f * 3.1415926535f/180.0f)));
 
         float nf[2];
         glGetFloatv(GL_DEPTH_RANGE,nf);
@@ -1111,8 +1112,7 @@ namespace rtps
 
     void TestApplication::build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
     {
-        int i;
-        unsigned int n = 0, t;
+        unsigned int n = 0, t,i;
 
         struct aiMatrix4x4 m = nd->mTransformation;
         aiMultiplyMatrix4(&m,&parentTransform);
@@ -1127,8 +1127,8 @@ namespace rtps
             const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
 
             //dout<<"num faces "<<mesh->mNumFaces<<endl;
-            float3 min(FLT_MAX,FLT_MAX,FLT_MAX);
-            float3 max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+            float3 minCoord(FLT_MAX,FLT_MAX,FLT_MAX);
+            float3 maxCoord(-FLT_MAX,-FLT_MAX,-FLT_MAX);
             Mesh* me=new Mesh();
             //dout<<"material index = "<<mesh->mMaterialIndex<<endl;
             apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
@@ -1169,18 +1169,18 @@ namespace rtps
                         texcoords[index*2+1]=mesh->mTextureCoords[0][index].y;
                     }
             //        dout<<"index = "<<index<<"x = "<<x<<" "<<"y = "<<y<<" "<<"z = "<<z<<endl;
-                    if(x<min.x)
-                        min.x=x;
-                    if(x>max.x)
-                        max.x=x;
-                    if(y<min.y)
-                        min.y=y;
-                    if(y>max.y)
-                        max.y=y;
-                    if(z<min.z)
-                        min.z=z;
-                    if(z>max.z)
-                        max.z=z;
+                    if(x<minCoord.x)
+                        minCoord.x=x;
+                    if(x>maxCoord.x)
+                        maxCoord.x=x;
+                    if(y<minCoord.y)
+                        minCoord.y=y;
+                    if(y>maxCoord.y)
+                        maxCoord.y=y;
+                    if(z<minCoord.z)
+                        minCoord.z=z;
+                    if(z>maxCoord.z)
+                        maxCoord.z=z;
                 }
             }
             me->modelMat=m;
@@ -1202,16 +1202,16 @@ namespace rtps
             stringstream s;
             s<<"test"<<mesh->mNumFaces;
             meshs[s.str()]=me;
-            //dout<<"min ("<<min.x<<","<<min.y<<","<<min.z<<")"<<endl;
-            //dout<<"max ("<<max.x<<","<<max.y<<","<<max.z<<")"<<endl;
+            //dout<<"minCoord ("<<minCoord.x<<","<<minCoord.y<<","<<minCoord.z<<")"<<endl;
+            //dout<<"maxCoord ("<<maxCoord.x<<","<<maxCoord.y<<","<<maxCoord.z<<")"<<endl;
             //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
             /*float space = systems["rb1"]->getSpacing()/2.f;
-            float3 adjmin=float3(min.x-space,min.y-space,min.z-space);
-            float3 adjmax=float3(max.x+space,max.y+space,max.z+space);
+            float3 adjminCoord=float3(minCoord.x-space,minCoord.y-space,minCoord.z-space);
+            float3 adjmaxCoord=float3(maxCoord.x+space,maxCoord.y+space,maxCoord.z+space);
             space = systems["rb1"]->getSpacing();
-            ParticleShape* shape = new ParticleShape(adjmin,adjmax,space);*/
+            ParticleShape* shape = new ParticleShape(adjminCoord,adjmaxCoord,space);*/
             float space = systems["rb1"]->getSpacing();
-            ParticleShape* shape = new ParticleShape(min,max,space);
+            ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
 
 
             shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
@@ -1221,13 +1221,13 @@ namespace rtps
             //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
             /*dout<<"mesh name = "<<s.str()<<endl;
-            dout<<"max dim = "<<shape->getMaxDim()<<endl;
-            dout<<"min dim = "<<shape->getMinDim()<<endl;
+            dout<<"maxCoord dim = "<<shape->getMaxDim()<<endl;
+            dout<<"minCoord dim = "<<shape->getMinDim()<<endl;
             dout<<"Trans = "<<trans<<endl;
-            dout<<"min ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
+            dout<<"minCoord ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
             dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
             dout<<"spacing = "<<space<<endl;*/
-            float3 dim = max-min;
+            float3 dim = maxCoord-minCoord;
 
 
 
@@ -1265,9 +1265,8 @@ namespace rtps
 
     // ----------------------------------------------------------------------------
     void TestApplication::recursive_render (const struct aiScene *sc, const struct aiNode* nd)
-    {
-        int i;
-        unsigned int n = 0, t;
+	{
+        unsigned int n = 0, t,i=0;
         struct aiMatrix4x4 m = nd->mTransformation;
 
         // update transform

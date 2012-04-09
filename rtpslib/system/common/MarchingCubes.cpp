@@ -99,9 +99,9 @@ namespace rtps
 
     void MarchingCubes::initializeData()
     {
-        slices = 1u<<static_cast<unsigned int>(ceil(log(ceil(sqrt(res))/log(2))));
+        slices = 1u<<static_cast<unsigned int>(ceil(log(ceil(sqrt((float)res))/log(2.0f))));
         texRes2D = res*slices;
-        levels= ceil(log(texRes2D)/log(2));
+        levels= ceil(log((float)texRes2D)/log(2.0f));
         if(mesh.vbo)
         {
             glDeleteBuffers(1, (GLuint*)&mesh.vbo);

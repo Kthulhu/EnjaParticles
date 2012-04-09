@@ -20,7 +20,7 @@ namespace rtps
    class TestApplication
     {
         public:
-            TestApplication(std::istream& is);
+            TestApplication(std::istream& is, std::string path);
             ~TestApplication();
             void KeyboardCallback(unsigned char key, int x, int y);
             void RenderCallback();
@@ -32,7 +32,7 @@ namespace rtps
             void ResetSimulations();
             void drawString(const char *str, int x, int y, float color[4], void *font);
             void initGL();
-            void readParamFile(std::istream& is);
+            void readParamFile(std::istream& is, std::string path);
             GLuint getWindowHeight() const;
             GLuint getWindowWidth() const;
             void setWindowHeight(GLuint windowHeight);

@@ -25,7 +25,7 @@
 #ifndef RTPS_SPHSETTINGS_H_INCLUDED
 #define RTPS_SPHSETTINGS_H_INCLUDED
 
-#include <structs.h>
+#include "../structs.h"
 
 namespace rtps
 {

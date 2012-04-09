@@ -28,16 +28,7 @@
 #define __CL_ENABLE_EXCEPTIONS
 
 #include "../../opencl10/CL/cl.hpp"
-
-#ifdef WIN32
-    #if defined(rtps_EXPORTS)
-        #define RTPS_EXPORT __declspec(dllexport)
-    #else
-        #define RTPS_EXPORT __declspec(dllimport)
-	#endif
-#else
-    #define RTPS_EXPORT
-#endif
+#include "../rtps_common.h"
 
 namespace rtps
 {

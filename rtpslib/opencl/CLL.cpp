@@ -228,7 +228,7 @@ namespace rtps
         {
             CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(),
             CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
-            CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[1])(),
+            CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[platformNum])(),
             0
         };
         //cl_context cxGPUContext = clCreateContext(props, 1, &cdDevices[uiDeviceUsed], NULL, NULL, &err);

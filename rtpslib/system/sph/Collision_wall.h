@@ -27,11 +27,12 @@
 
 #include "../../opencl/CLL.h"
 #include "../../opencl/Buffer.h"
+#include "../../rtps_common.h"
 
 
 namespace rtps
 {
-    class CollisionWall
+    class RTPS_EXPORT CollisionWall
     {
         public:
             CollisionWall() { cli = NULL; timer = NULL; };

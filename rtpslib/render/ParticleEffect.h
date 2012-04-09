@@ -50,6 +50,8 @@
 #include "RenderSettings.h"
 #include "RenderUtils.h"
 
+#include "../rtps_common.h"
+
 namespace rtps
 {
     struct Light
@@ -76,7 +78,7 @@ namespace rtps
         SHADER_DEPTH=0,SHADER_CURVATURE_FLOW,SHADER_FRESNEL
     };*/
 
-    class ParticleEffect
+    class RTPS_EXPORT ParticleEffect
     {
     public:
         ParticleEffect(RenderSettings rs, ShaderLibrary& lib);

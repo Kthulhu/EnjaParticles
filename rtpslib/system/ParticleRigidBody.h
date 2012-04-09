@@ -37,7 +37,7 @@
 
 #include "ParticleRigidBodyParams.h"
 
-#include <util.h>
+#include "../util.h"
 
 #include "rigidbody/PRBLeapFrog.h"
 #include "rigidbody/PRBEuler.h"
@@ -46,22 +46,14 @@
 #include "rigidbody/PRBForceStatic.h"
 #include "rigidbody/PRBSegmentedScan.h"
 #include "rigidbody/PRBUpdateParticles.h"
-#include <structs.h>
+#include "../structs.h"
 #include "../opencl/Kernel.h"
 #include "../opencl/Buffer.h"
 #include "../domain/Domain.h"
 
-#include <timer_eb.h>
+#include "../timer_eb.h"
+#include "../rtps_common.h"
 
-#ifdef WIN32
-    #if defined(rtps_EXPORTS)
-        #define RTPS_EXPORT __declspec(dllexport)
-    #else
-        #define RTPS_EXPORT __declspec(dllimport)
-	#endif
-#else
-    #define RTPS_EXPORT
-#endif
 namespace rtps
 {
     class RTPS_EXPORT ParticleRigidBody : public System

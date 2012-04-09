@@ -51,10 +51,12 @@
 #include "../timer_eb.h"
 #include "ShaderLibrary.h"
 
+#include "../rtps_common.h"
+
 namespace rtps
 {
 
-    struct Mesh
+    struct RTPS_EXPORT Mesh
     {
         aiMatrix4x4 modelMat;
         GLuint vbo;

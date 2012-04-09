@@ -25,12 +25,13 @@
 #ifndef RTPS_PARTICLE_SHAPE_H_INCLUDED
 #define RTPS_PARTICLE_SHAPE_H_INCLUDED
 
-#include "structs.h"
-#include <timer_eb.h>
+#include "../structs.h"
+#include "../timer_eb.h"
+#include "../rtps_common.h"
 
 namespace rtps
 {
-    class ParticleShape
+    class RTPS_EXPORT ParticleShape
     {
     public:
        ParticleShape(float3 min, float3 max, float diameter, float scale=1.0f);

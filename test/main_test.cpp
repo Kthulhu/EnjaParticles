@@ -78,7 +78,7 @@ void timerCB(int ms)
 //----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-    string paramFile="./bin/test1.xml";
+    string paramFile="test_all4.xml";
     //initialize glut
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
@@ -101,9 +101,21 @@ int main(int argc, char** argv)
     if(argc>1)
         paramFile = argv[1];
     dout<<paramFile<<endl;
-
-    ifstream is(paramFile.c_str(),ifstream::in);
-    app=new TestApplication(is);
+	string filepath=argv[0];
+	unsigned int pos=0;
+#ifdef WIN32
+	pos=filepath.rfind("\\");
+#else
+	pos=filepath.rfind("/");
+#endif
+	filepath=filepath.substr(0,pos+1);
+	paramFile=string(filepath).append(paramFile);
+	filepath=filepath.substr(0,filepath.size()-1);
+    dout<<filepath<<endl;
+    dout<<paramFile<<endl;
+    //ifstream is(paramFile.c_str(),ifstream::in);
+	ifstream is(paramFile.c_str(),ifstream::in);
+    app=new TestApplication(is,filepath);
     atexit(cleanUp);
     glutMainLoop();
     return 0;
