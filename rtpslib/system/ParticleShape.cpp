@@ -284,19 +284,6 @@ namespace rtps
         }
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
-        glDisableClientState( GL_VERTEX_ARRAY );
-        glViewport(v[0],v[1],v[2],v[3]);
-        //glEnable(GL_DEPTH_TEST);
-        //glEnable(GL_ALPHA_TEST);
-        glLogicOp(GL_COPY);
-        glDisable(GL_COLOR_LOGIC_OP);
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
-        glDrawBuffer(GL_BACK);
-        glClearColor(col[0],col[1],col[2],col[3]);
-        glMatrixMode(GL_MODELVIEW);
-        glBindTexture(GL_TEXTURE_3D_EXT, 0);
-        glShadeModel(GL_SMOOTH);
-        glDisable(GL_TEXTURE_3D_EXT);
         voxelizeSurface(vbo,ibo,length);
         glEnable(GL_COLOR_LOGIC_OP);
         glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
@@ -306,7 +293,7 @@ namespace rtps
         for(int i = 0;i<voxelResolution; i++)
         {
             glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, volumeTexture, 0, i );
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+            //glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
             glFramebufferTextureLayer(GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, surfaceTexture, 0, i);
             glBlitFramebuffer(0,0,voxelResolution,voxelResolution,
                                 0,0,voxelResolution,voxelResolution,
@@ -315,5 +302,14 @@ namespace rtps
         glLogicOp(GL_COPY);
         glDisable(GL_BLEND);
         glDisable(GL_COLOR_LOGIC_OP);
+		glDisableClientState( GL_VERTEX_ARRAY );
+        glViewport(v[0],v[1],v[2],v[3]);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
+        glDrawBuffer(GL_BACK);
+        glClearColor(col[0],col[1],col[2],col[3]);
+        glMatrixMode(GL_MODELVIEW);
+        glBindTexture(GL_TEXTURE_3D_EXT, 0);
+        glShadeModel(GL_SMOOTH);
+        glDisable(GL_TEXTURE_3D_EXT);
     }
 }; //end namespace

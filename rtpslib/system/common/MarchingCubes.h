@@ -38,9 +38,9 @@ namespace rtps
     class MarchingCubes
     {
         public:
-            MarchingCubes() { cli = NULL; timer = NULL; };
+            MarchingCubes() { res = 0; levels = 0; texRes2D = 0; slices = 0; cli = NULL; timer = NULL; };
             MarchingCubes(const MarchingCubes& mc);
-            const MarchingCubes& operator=(const MarchingCubes& mc);
+            MarchingCubes& operator=(const MarchingCubes& mc);
             MarchingCubes(std::string path, CL* cli, EB::Timer* timer,unsigned int res);
             void initializeData();
             struct Mesh* execute(cl::Image2D& colorfield,

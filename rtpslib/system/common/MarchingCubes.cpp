@@ -34,7 +34,7 @@ namespace rtps
     {
         clone(mc);
     }
-    const MarchingCubes& MarchingCubes::operator=(const MarchingCubes& mc)
+    MarchingCubes& MarchingCubes::operator=(const MarchingCubes& mc)
     {
         clone(mc);
         return *this;
@@ -317,10 +317,16 @@ namespace rtps
             glBindBuffer(GL_ARRAY_BUFFER,mesh.normalbo);
             glBufferData(GL_ARRAY_BUFFER,total*3*3*sizeof(float),NULL, GL_DYNAMIC_DRAW);
             glBindBuffer(GL_ARRAY_BUFFER,0);
+#if 1
             cl_triangles=Buffer<float>(cli,mesh.vbo);
             cl_normals=Buffer<float>(cli,mesh.normalbo);
-            //debug;
-            mesh.colbo=mesh.normalbo;
+#else
+			//fordebugging
+			vector<float> tmp(total*3*3);
+			fill(tmp.begin(),tmp.end(),0.0f);
+			cl_triangles=Buffer<float>(cli,tmp);
+			cl_normals=Buffer<float>(cli,tmp);
+#endif
             //mesh.hasNormals=false;
             mesh.hasNormals=true;
             dout<<"mesh vbo = "<<mesh.vbo<<endl;
@@ -331,8 +337,10 @@ namespace rtps
         if(total!=0)
         {
             iarg=0;
+#if 1
             cl_triangles.acquire();
             cl_normals.acquire();
+#endif
             //dout<<"Num_args = "<<k_traverse[levels-1].kernel.getInfo<CL_KERNEL_NUM_ARGS>()<<endl;
             for(int j = 0; j<levels; j++)
             {
@@ -341,7 +349,7 @@ namespace rtps
             }
             k_traverse[levels-1].setArg(iarg++,cl_triangles.getDevicePtr());
             k_traverse[levels-1].setArg(iarg++,cl_normals.getDevicePtr());
-            k_traverse[levels-1].setArg(iarg++,res-1);
+            k_traverse[levels-1].setArg(iarg++,res);
             k_traverse[levels-1].setArg(iarg++,slices);
             k_traverse[levels-1].setArg(iarg++,0.000001f);
             k_traverse[levels-1].setArg(iarg++,total);
@@ -375,8 +383,10 @@ namespace rtps
             avg[2]/=total;
             dout<<"The average normal is ("<<avg[0]<<","<<avg[1]<<","<<avg[2]<<")"<<endl;
 #endif
+#if 1
             cl_triangles.release();
             cl_normals.release();
+#endif
         }
 #if 0 //printouts
         //DEBUGING

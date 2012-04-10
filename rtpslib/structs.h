@@ -41,12 +41,14 @@ namespace rtps
         float x, y, z, w;
         float3()
         {
+		x=0.0f; y=0.0f; z=0.0f; w=0.0f;
         }
         float3(float x, float y, float z)
         {
             this->x = x;
             this->y = y;
             this->z = z;
+	    this->w = 0.0f;
         }
         friend float3 operator+(float3& a, float3& b)
         {
@@ -97,18 +99,21 @@ namespace rtps
         int x, y, z, w;
         int3()
         {
+            x=0;y=0;z=0;w=0;
         }
-		int3(int x, int y, int z)
+	int3(int x, int y, int z)
         {
             this->x = x;
             this->y = y;
             this->z = z;
+            this->w = 0;
         }
         int3(float x, float y, float z)
         {
             this->x = (int)x;
             this->y = (int)y;
             this->z = (int)z;
+            this->w = 0;
         }
     } int3;
 
@@ -116,10 +121,10 @@ namespace rtps
     // Coded as int4 since OpenCL does not have int3
     typedef struct int4
     {
-        int x, y, z;
-        int w;
+        int x, y, z, w;
         int4()
         {
+            x=0;y=0;z=0;w=0;
         }
         int4(float x, float y, float z, float w=1.)
         {

@@ -48,7 +48,7 @@ namespace rtps
     {
         glewInit();
         GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
-        windowWidth=640;
+        windowHeight=640;
         windowWidth=480;
         cli = new CL();
 
@@ -805,7 +805,7 @@ namespace rtps
         maxVal = 1;
         aiGetMaterialFloatArray(mtl,AI_MATKEY_OPACITY,&opacity,&maxVal);
         mesh->material.opacity = opacity;
-        //dout<<"Opacity: "<< opacity<<" Max "<<maxVal<<std::endl;
+        dout<<"Opacity: "<< opacity<<" Max "<<maxVal<<std::endl;
         set_float4(c, 0.8f, 0.8f, 0.8f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
             color4_to_float4(&diffuse, c);
@@ -813,7 +813,7 @@ namespace rtps
         memcpy(&mesh->material.diffuse.x,c,sizeof(float3));
         //glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, c);
 
-        //dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
+        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_SPECULAR, &specular))
             color4_to_float4(&specular, c);
@@ -821,7 +821,7 @@ namespace rtps
         memcpy(&mesh->material.specular.x,c,sizeof(float3));
         //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
 
-        //dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
+        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         set_float4(c, 0.2f, 0.2f, 0.2f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_AMBIENT, &ambient))
             color4_to_float4(&ambient, c);
@@ -829,14 +829,14 @@ namespace rtps
         memcpy(&mesh->material.ambient.x,c,sizeof(float3));
         //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, c);
 
-        //dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
+        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
         if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_EMISSIVE, &emission))
             color4_to_float4(&emission, c);
         c[3]=opacity;
         //glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, c);
 
-        //dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
+        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
         maxVal = 1;
         ret1 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS, &shininess, &maxVal);
         if(ret1 == AI_SUCCESS) {

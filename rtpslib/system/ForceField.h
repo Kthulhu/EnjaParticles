@@ -46,15 +46,21 @@ typedef struct ForceField
     //unsigned int type;
     //unsigned int padd;
 
-    ForceField(){};
+    ForceField(){
+        this->center = float4(0.0f,0.0f,0.0f,0.0f);
+        this->radius = 0.0f;
+        this->max_force = 0.0f;
+        this->f = 0.0f;
+        this->ff = 0.0f;
+    };
     //ForceField(float4 center, float radius, float max_force, unsigned int type, unsigned int padd)
     ForceField(float4 center, float radius, float max_force)
     {
         this->center = center;
         this->radius = radius;
         this->max_force = max_force;
-        this->f = 0;
-        this->ff = 0;
+        this->f = 0.0f;
+        this->ff = 0.0f;
         //this->type = type;
         //this->padd = padd;
     }

@@ -28,12 +28,13 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 // Define a structure to receive the current Windows filetime
   FILETIME ft;
  
-// Initialize the present time to 0 and the timezone to UTC
-  unsigned __int64 tmpres = 0;
+
   static int tzflag = 0;
  
   if (NULL != tv)
   {
+    // Initialize the present time to 0 and the timezone to UTC
+    unsigned __int64 tmpres = 0;
     GetSystemTimeAsFileTime(&ft);
  
 // The GetSystemTimeAsFileTime returns the number of 100 nanosecond 

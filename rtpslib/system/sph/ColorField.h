@@ -35,9 +35,7 @@ namespace rtps
     class RTPS_EXPORT ColorField
     {
         public:
-            ColorField() { cli = NULL; timer = NULL; };
-            //ColorField(const ColorField& cf);
-            //operator=(const ColorField& cf);
+            ColorField() { res = 0; texRes2D = 0; slices = 0;  cli = NULL; timer = NULL; };
             ColorField(std::string path, CL* cli, EB::Timer* timer,unsigned int res = 32);
             void initializeData();
             cl::Image2D execute(Buffer<float4>& pos_s,

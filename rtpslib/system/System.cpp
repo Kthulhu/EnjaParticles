@@ -95,31 +95,31 @@ namespace rtps
         //dout<<"System destructor"<<endl;
         if (pos_vbo)//&& managed)
         {
-            glBindBuffer(1, pos_vbo);
+            //glBindBuffer(1, pos_vbo);
             glDeleteBuffers(1, (GLuint*)&pos_vbo);
             pos_vbo = 0;
         }
         if (col_vbo)// && managed)
         {
-            glBindBuffer(1, col_vbo);
+            //glBindBuffer(1, col_vbo);
             glDeleteBuffers(1, (GLuint*)&col_vbo);
             col_vbo = 0;
         }
         if (velocity_vbo)// && managed)
         {
-            glBindBuffer(1, velocity_vbo);
+            //glBindBuffer(1, velocity_vbo);
             glDeleteBuffers(1, (GLuint*)&velocity_vbo);
             velocity_vbo = 0;
         }
         if (force_vbo)// && managed)
         {
-            glBindBuffer(1, force_vbo);
+            //glBindBuffer(1, force_vbo);
             glDeleteBuffers(1, (GLuint*)&force_vbo);
             force_vbo = 0;
         }
         if (active_cells_vbo)// && managed)
         {
-            glBindBuffer(1, active_cells_vbo);
+            //glBindBuffer(1, active_cells_vbo);
             glDeleteBuffers(1, (GLuint*)&active_cells_vbo);
             active_cells_vbo = 0;
         }
@@ -216,8 +216,8 @@ namespace rtps
         std::fill(f4vec.begin(), f4vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
         //size should reflect the maximum number of neighbors.
-        //vector<float4> f4activevec(100*2);
-        //std::fill(f4activevec.begin(), f4activevec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
+        vector<float4> f4activevec(100*2);
+        std::fill(f4activevec.begin(), f4activevec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
 
         vector<float> fvec(max_num);
         std::fill(fvec.begin(), fvec.end(), 0.0f);
@@ -235,7 +235,7 @@ namespace rtps
         //dout<<"velocity vbo: "<< velocity_vbo<<endl;
         force_vbo = createVBO(&f4vec[0], f4vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         //dout<<"force vbo: "<< force_vbo<<endl;
-        //active_cells_vbo = createVBO(&f4activevec[0], f4activevec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        active_cells_vbo = createVBO(&f4activevec[0], f4activevec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         //active_lines_vbo = createVBO(&f4activevec[0], f4activevec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         //active_col_vbo = createVBO(&f4activevec[0], f4activevec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         //dout<<"active cells vbo: "<< active_cells_vbo<<endl;
@@ -253,7 +253,7 @@ namespace rtps
         cl_velocity_s = Buffer<float4>(cli, f4vec);
         cl_force_s = Buffer<float4>(cli, force_vbo);
         //cl_force_s = Buffer<float4>(cli, f4vec);
-        //cl_active_cells = Buffer<float4>(cli, active_cells_vbo);
+        cl_active_cells = Buffer<float4>(cli, active_cells_vbo);
         //cl_active_lines = Buffer<float4>(cli, active_lines_vbo);
         //cl_active_col = Buffer<float4>(cli, active_col_vbo);
         cl_mass_u = Buffer<float>(cli, fvec);

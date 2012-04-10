@@ -36,7 +36,7 @@ namespace rtps
     class RTPS_EXPORT CollisionTriangle
     {
         public:
-            CollisionTriangle() { cli = NULL; timer = NULL; };
+            CollisionTriangle() { triangles_loaded = false; cli = NULL; timer = NULL; };
             CollisionTriangle(std::string path, CL* cli, EB::Timer* timer, int max_triangles);
             void execute(int num,
                         float dt,

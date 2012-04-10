@@ -77,6 +77,10 @@ namespace rtps
 		texCoordsbo=0;tex=0;hasNormals=false;
 		hasTexture=false; vboSize=0;
 		iboSize=0;drawMode=GL_TRIANGLES;
+                modelMat=aiMatrix4x4(1.0f,0.0f,0.0f,0.0f,
+                                     0.0f,1.0f,0.0f,0.0f,
+                                     0.0f,0.0f,1.0f,0.0f,
+                                     0.0f,0.0f,0.0f,1.0f);
 	}
     };
     class MeshEffect : public ParticleEffect
