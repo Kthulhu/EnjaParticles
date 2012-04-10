@@ -349,7 +349,7 @@ namespace rtps
             }
             k_traverse[levels-1].setArg(iarg++,cl_triangles.getDevicePtr());
             k_traverse[levels-1].setArg(iarg++,cl_normals.getDevicePtr());
-            k_traverse[levels-1].setArg(iarg++,res);
+            k_traverse[levels-1].setArg(iarg++,res-1);
             k_traverse[levels-1].setArg(iarg++,slices);
             k_traverse[levels-1].setArg(iarg++,0.000001f);
             k_traverse[levels-1].setArg(iarg++,total);

@@ -187,6 +187,7 @@ namespace rtps
         sphp.num = settings->GetSettingAs<int>("num_particles");
         sphp.max_num = settings->GetSettingAs<int>("max_num_particles");
 
+		dout<<"gravity------------------------------- "<<sphp.gravity<<endl;
         //update the OpenCL buffer
         //std::vector<SPHParams> vparams();
         //vparams.push_back(sphp);

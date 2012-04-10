@@ -42,7 +42,6 @@ namespace rtps
         glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
         if(mesh->colbo)
         {
-			dout<<"Color buffer is not null = "<<mesh->colbo<<endl;
 			glEnableVertexAttribArray(1);
             glBindBuffer(GL_ARRAY_BUFFER, mesh->colbo);
             glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
