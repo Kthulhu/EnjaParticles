@@ -365,7 +365,7 @@ namespace rtps
             }
 
             dout<<"Here"<<endl;
-#if 1
+#if 0
             vector<float> norms=cl_normals.copyToHost(total*3);
             float avg[3]={0.0f,0.0f,0.0f};
             for(unsigned int j=0;j<total; j++)
