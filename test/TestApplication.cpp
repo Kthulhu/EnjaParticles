@@ -205,10 +205,10 @@ namespace rtps
                 cout<<"about to make hose"<<endl;
                 float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
                 float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-0.5f,1.0f);
-                float4 velocity(-1.5f, -1.5f, -4.f, 0);
-                float radius= 3.0f;
+                float4 velocity(-1.f, -1.f, -5.f, 0);
+                float radius= 1.5f;
                 //sph sets spacing and multiplies by radius value
-                systems["water"]->addHose(5000, center, velocity,radius, col1);
+                systems["water"]->addHose(1000, center, velocity,radius, col1);
                 return;
             }
             case 'H':
@@ -462,18 +462,21 @@ namespace rtps
             //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
             SPH* sph = (SPH*)systems["water"];
             glEnable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
+            //glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
             //glBlendFunc(GL_ONE,GL_ONE);
             Mesh* mcMesh = sph->getMCMesh();
             if(sph->getSettings()->GetSettingAs<bool>("use_color_field","0")&&mcMesh)
             {
+		glEnable(GL_CULL_FACE);
                 meshRenderer->render(mcMesh,light);
+		glDisable(GL_CULL_FACE);
             }
             else
             {
                 effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             }
+            glEnable(GL_BLEND);
             display(true);
 #else
         glMatrixMode(GL_PROJECTION);

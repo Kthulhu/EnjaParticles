@@ -58,7 +58,7 @@ inline int2 map3Dto2D(int4 coord, unsigned int res, unsigned int slices)
 inline int2 map3Dto2DClamp(int4 coordinate, int4 offset, unsigned int res, unsigned int slices)
 {
     int4 coord=coordinate+offset;
-    if(coord.z<0||coord.z>res-2)
+    if(coord.z<0||coord.z>res-1)
 	coord.z-=offset.z;
     int yoffset = coord.z/slices;
     int xoffset = coord.z%slices;
@@ -74,6 +74,7 @@ inline int2 map3Dto2DClamp(int4 coordinate, int4 offset, unsigned int res, unsig
     if(z!=coord.z)
         return map3Dto2D(coordinate,res,slices);
     return pos;
+    return map3Dto2D(coord,res,slices);
 }
 
 inline int4 map2Dto3D(int2 coord, unsigned int res,unsigned int slices)
@@ -1305,7 +1306,7 @@ __kernel void classifyCubes2D(
     ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[7],res,slices)).x > isolevel) << 6) |
     ((read_imagef(rawData, sampler, map3Dto2D(p4+cubeOffsets[6],res,slices)).x > isolevel) << 7); 
 
-    int2 poswrite = map3Dto2D(p4,res-1,slices);
+    //int2 poswrite = map3Dto2D(p4,res-1,slices);
     // Store number of triangles
     write_imagef(histoPyramid, pos, (float4)((float)nrOfTriangles[cubeindex], (float)cubeindex, first, 1.0f));
 }

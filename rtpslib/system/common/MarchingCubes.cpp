@@ -165,13 +165,14 @@ namespace rtps
             initializeData();
             //dout<<"levels = "<<levels<<" res = "<<res<<" slices = "<<slices<<endl;
         }
+	float isolevel = 0.0001f;
 
         //dout<<"levels = "<<levels<<" res = "<<res<<" slices = "<<slices<<endl;
         k_classify.setArg(iarg++,cl_histopyramid[0]);
         k_classify.setArg(iarg++,colorfield);
         k_classify.setArg(iarg++,res);
         k_classify.setArg(iarg++,slices);
-        k_classify.setArg(iarg++,0.000001f);
+        k_classify.setArg(iarg++,isolevel);
 
         try
         {
@@ -344,14 +345,13 @@ namespace rtps
             //dout<<"Num_args = "<<k_traverse[levels-1].kernel.getInfo<CL_KERNEL_NUM_ARGS>()<<endl;
             for(int j = 0; j<levels; j++)
             {
-                dout<<"level = "<<j;
                 k_traverse[levels-1].setArg(iarg++,cl_histopyramid[j]);
             }
             k_traverse[levels-1].setArg(iarg++,cl_triangles.getDevicePtr());
             k_traverse[levels-1].setArg(iarg++,cl_normals.getDevicePtr());
-            k_traverse[levels-1].setArg(iarg++,res-1);
+            k_traverse[levels-1].setArg(iarg++,res);
             k_traverse[levels-1].setArg(iarg++,slices);
-            k_traverse[levels-1].setArg(iarg++,0.000001f);
+            k_traverse[levels-1].setArg(iarg++,isolevel);
             k_traverse[levels-1].setArg(iarg++,total);
             try
             {
@@ -364,7 +364,6 @@ namespace rtps
                 printf("ERROR(marchingcubes ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
             }
 
-            dout<<"Here"<<endl;
 #if 0
             vector<float> norms=cl_normals.copyToHost(total*3);
             float avg[3]={0.0f,0.0f,0.0f};
