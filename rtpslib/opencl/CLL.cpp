@@ -55,35 +55,23 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    cl::Program CL::loadProgram(std::string path, std::string options, std::string find, std::string replace)
+    cl::Program CL::loadProgram(std::string path, std::string options, bool filepath)
     {
         // Program Setup
 
         int length;
+		std::string kernel_source=path;
+		if(filepath)
+		{
         char* src = file_contents(path.c_str(), &length);
-        std::string kernel_source(src);
+        kernel_source=src;
         free(src);
-        if(find.size())
-        {
-            size_t pos = kernel_source.find(find);
-            if(pos>0&&pos<kernel_source.size())
-            {
-                kernel_source = kernel_source.replace(pos,find.size(),replace);
-            }
-            else
-            {
-                cerr<<"couldn't find "<<find<<" in kernel_source"<<endl;
-            }
-        }
-
-
-        //printf("kernel size: %d\n", pl);
-        //printf("kernel: \n %s\n", kernel_source.c_str());
+		}
         cl::Program program;
         try
         {
             cl::Program::Sources source(1,
-                                        std::make_pair(kernel_source.c_str(), length));
+				std::make_pair(kernel_source.c_str(),kernel_source.length() ));
 
             program = cl::Program(context, source);
 
@@ -129,13 +117,13 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    cl::Kernel CL::loadKernel(std::string path, std::string kernel_name, std::string options, std::string find, std::string replace)
+    cl::Kernel CL::loadKernel(std::string path, std::string kernel_name, std::string options,bool filepath)
     {
         cl::Program program;
         cl::Kernel kernel;
         try
         {
-            program = loadProgram(path,options,find,replace);
+            program = loadProgram(path,options,filepath);
             kernel = cl::Kernel(program, kernel_name.c_str(), &err);
         }
         catch (cl::Error er)

@@ -65,8 +65,8 @@ namespace rtps
         //setup an OpenCL context that shares with OpenGL
         void setup_gl_cl();
 
-        cl::Program loadProgram(std::string path, std::string options="", std::string find="", std::string replace="");
-        cl::Kernel loadKernel(std::string path, std::string name, std::string options="", std::string find="", std::string replace="");
+        cl::Program loadProgram(std::string path, std::string options="", bool filepath=true);
+        cl::Kernel loadKernel(std::string path, std::string name, std::string options="",bool filepath=true);
         cl::Kernel loadKernel(cl::Program program, std::string kernel_name);
 
         //TODO make more general

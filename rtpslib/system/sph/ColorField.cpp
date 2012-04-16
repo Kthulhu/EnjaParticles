@@ -71,9 +71,16 @@ namespace rtps
         texRes2D = res*slices;
         float* zeroImg = new float[texRes2D*texRes2D];
         memset(zeroImg,0,texRes2D*texRes2D*sizeof(float));
+		try
+		{
         //dout<<"-----------------texRes2D "<<texRes2D<<endl;
-        cl_colField=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_R, CL_FLOAT),texRes2D,texRes2D,0,zeroImg);
+        cl_colField=cl::Image2D(cli->context,CL_MEM_COPY_HOST_PTR|CL_MEM_READ_WRITE,cl::ImageFormat(CL_R, CL_FLOAT),texRes2D,texRes2D,0,zeroImg);
         cli->queue.finish();
+		}
+		catch(cl::Error er)
+		{
+			cout<<"ERROR(MarchingCubes): "<<er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
+		}
         delete[] zeroImg;
     }
     cl::Image2D ColorField::execute(Buffer<float4>& pos_s,

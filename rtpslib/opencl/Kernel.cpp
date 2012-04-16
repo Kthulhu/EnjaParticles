@@ -27,13 +27,13 @@
 namespace rtps
 {
 
-    Kernel::Kernel(CL *cli, std::string source, std::string name, std::string options, std::string find, std::string replace)
+    Kernel::Kernel(CL *cli, std::string source, std::string name, std::string options, bool filepath)
     {
         this->cli = cli;
         this->name = name;
         this->source = source;
         //TODO need to save the program
-        kernel = cli->loadKernel(source, name,options,find,replace);
+        kernel = cli->loadKernel(source, name,options, filepath);
     }
     Kernel::Kernel(CL *cli, cl::Program prog, std::string name)
     {

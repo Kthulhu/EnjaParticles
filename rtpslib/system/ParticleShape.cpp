@@ -290,7 +290,7 @@ namespace rtps
         glLogicOp(GL_OR);
 
         //FIXME: I Need to render a full screen quad in order to have blending work correctly.
-        for(int i = 0;i<voxelResolution; i++)
+        /*for(int i = 0;i<voxelResolution; i++)
         {
             glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, volumeTexture, 0, i );
             //glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -298,7 +298,7 @@ namespace rtps
             glBlitFramebuffer(0,0,voxelResolution,voxelResolution,
                                 0,0,voxelResolution,voxelResolution,
                                 GL_COLOR_BUFFER_BIT,GL_NEAREST);
-        }
+        }*/
         glLogicOp(GL_COPY);
         glDisable(GL_BLEND);
         glDisable(GL_COLOR_LOGIC_OP);

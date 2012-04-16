@@ -50,7 +50,7 @@ namespace rtps
         {
             cli = NULL;
         };
-        Kernel(CL *cli, std::string source, std::string name, std::string options="", std::string find="", std::string replace="");
+        Kernel(CL *cli, std::string source, std::string name, std::string options="",bool filepath=true);
         Kernel(CL *cli, cl::Program program, std::string name);
 
         //we will want to access buffers by name when going accross systems

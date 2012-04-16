@@ -132,6 +132,8 @@ namespace rtps
     }
     void MeshEffect::renderInstanced(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size,Light& light)
     {
+		if(size<=0)
+			return;
         glEnableVertexAttribArray(0);
         glVertexAttribDivisorARB(0,0);
         //glEnableVertexAttribArray(1);

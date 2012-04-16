@@ -74,19 +74,23 @@ namespace rtps
         region[0]=2;region[1]=2;region[2]=1;
         try
         {
-            path = path + "/marchingcubes.cl";
-            k_classify = Kernel(cli, path, "classifyCubes2D");
-            k_construct = Kernel(cli, path, "constructHPLevel2D");
+            string file = path + "/classifycubes.cl";
+            k_classify = Kernel(cli, file, "classifyCubes2D");
+            file = path + "/constructhp.cl";
+            k_construct = Kernel(cli, file, "constructHPLevel2D");
             //Really lame that opencl doesn't allow variable number of arguments.
             //Opencl 1.2 allows for 2D image arrays. But for current compatability
             //I use diff kernels for each of the different levels.
+            file = path + "/traversehp.cl";
+			string source;
+			readFile(file,source);
             for(unsigned int i = 0; i<15;i++)
             {
                 stringstream s;
-                s<<"traverseHP2D"<<i+1;
-                k_traverse.push_back(Kernel(cli,path,s.str()));
-                //k_traverse.push_back(Kernel(cli,path,"traverseHP2D"));
-                dout<<"Num_args = "<<k_traverse[i].kernel.getInfo<CL_KERNEL_NUM_ARGS>()<<endl;
+                s<<"-DLEVELS="<<i+1;
+                k_traverse.push_back(Kernel(cli,source,"traverseHP2D",s.str(),false));
+				dout<<"levels = "<<i<<endl;
+				dout<<"num_args ="<<k_traverse[i].kernel.getInfo<CL_KERNEL_NUM_ARGS>()<<endl;
             }
         }
         catch (cl::Error er)
@@ -122,8 +126,15 @@ namespace rtps
         //dout<<"level = "<<0<<" levelRes = "<<levelRes<<endl;
         float* zeroImg = new float[texRes2D*texRes2D*4];
         memset(zeroImg,0,texRes2D*texRes2D*4*sizeof(float));
-        cl_histopyramid[0]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),texRes2D,texRes2D,0,zeroImg);
+		try
+		{
+        cl_histopyramid[0]=cl::Image2D(cli->context,CL_MEM_COPY_HOST_PTR|CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),texRes2D,texRes2D,0,zeroImg);
         cli->queue.finish();
+		}
+		catch(cl::Error er)
+		{
+				cout<<"ERROR(MarchingCubes): "<<er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
+		}
         delete[] zeroImg;
         for(float i = 1; i<levels; i++)
         {
@@ -131,18 +142,26 @@ namespace rtps
             float* zeroImg2 = new float[levelRes*levelRes*4];
             memset(zeroImg2,0,levelRes*levelRes*4*sizeof(float));
             //dout<<"level = "<<i<<" levelRes = "<<levelRes<<endl;
-            cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),levelRes,levelRes,0,zeroImg2);
+            cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_COPY_HOST_PTR|CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),levelRes,levelRes,0,zeroImg2);
             delete[] zeroImg2;
 #endif
             levelRes /=2;
             float* zeroImg2 = new float[levelRes*levelRes];
             memset(zeroImg2,0,levelRes*levelRes*sizeof(float));
+			try
+			{
             //dout<<"level = "<<i<<" levelRes = "<<levelRes<<endl;
-            cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_R, CL_FLOAT),levelRes,levelRes,0,zeroImg2);
+            cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_COPY_HOST_PTR|CL_MEM_READ_WRITE,cl::ImageFormat(CL_R, CL_FLOAT),levelRes,levelRes,0,zeroImg2);
             cli->queue.finish();
+			}
+			catch(cl::Error er)
+			{
+				cout<<"ERROR(MarchingCubes): "<<er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
+			}
             delete[] zeroImg2;
 
         }
+	
     }
 
     struct Mesh* MarchingCubes::execute(cl::Image2D& colorfield,
@@ -345,17 +364,19 @@ namespace rtps
             //dout<<"Num_args = "<<k_traverse[levels-1].kernel.getInfo<CL_KERNEL_NUM_ARGS>()<<endl;
             for(int j = 0; j<levels; j++)
             {
-                k_traverse[levels-1].setArg(iarg++,cl_histopyramid[j]);
+                k_traverse[levels-2].setArg(iarg++,cl_histopyramid[j]);
             }
-            k_traverse[levels-1].setArg(iarg++,cl_triangles.getDevicePtr());
-            k_traverse[levels-1].setArg(iarg++,cl_normals.getDevicePtr());
-            k_traverse[levels-1].setArg(iarg++,res);
-            k_traverse[levels-1].setArg(iarg++,slices);
-            k_traverse[levels-1].setArg(iarg++,isolevel);
-            k_traverse[levels-1].setArg(iarg++,total);
+            k_traverse[levels-2].setArg(iarg++,cl_triangles.getDevicePtr());
+            k_traverse[levels-2].setArg(iarg++,cl_normals.getDevicePtr());
+            k_traverse[levels-2].setArg(iarg++,res);
+            k_traverse[levels-2].setArg(iarg++,slices);
+            k_traverse[levels-2].setArg(iarg++,isolevel);
+            k_traverse[levels-2].setArg(iarg++,total);
+			dout<<"iargs = "<<iarg<<endl;
+			dout<<"num_args ="<<k_traverse[levels-2].kernel.getInfo<CL_KERNEL_NUM_ARGS>()<<endl;
             try
             {
-                float gputime = k_traverse[levels-1].execute(cl::NDRange(total));
+                float gputime = k_traverse[levels-2].execute(cl::NDRange(total));
                 if(gputime > 0)
                     timer->set(gputime);
             }
