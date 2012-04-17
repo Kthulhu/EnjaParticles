@@ -45,7 +45,7 @@ __kernel void leapfrog(
 {
     unsigned int i = get_global_id(0);
     //int num = get_global_size(0); // for access functions in cl_macros.h
-    int num = sphp->num;
+    int num = sphp[0].num;
     if (i >= num) return;
 
     /*
@@ -54,7 +54,7 @@ __kernel void leapfrog(
     float4 f = force(i);
     */
 
-    float4 p = pos_s[i] * sphp->simulation_scale;
+    float4 p = pos_s[i] * sphp[0].simulation_scale;
     float4 v = vel_s[i];
     float4 f = force_s[i];
 
@@ -63,21 +63,21 @@ __kernel void leapfrog(
 
     //external force is gravity
     //Make gravity a vector...
-    f+=sphp->gravity;
-    //f.y += sphp->gravity;
-    //f.z += sphp->gravity;//sphp->mass*sphp->gravity;
+    f+=sphp[0].gravity;
+    //f.y += sphp[0].gravity;
+    //f.z += sphp[0].gravity;//sphp[0].mass*sphp[0].gravity;
     f.w = 0.f;
     
     float speed = length(f);
-    if (speed > sphp->velocity_limit) //velocity limit, need to pass in as struct
+    if (speed > sphp[0].velocity_limit) //velocity limit, need to pass in as struct
     {
-        f *= sphp->velocity_limit/speed;
+        f *= sphp[0].velocity_limit/speed;
     }
 
-    float4 vnext = v + dt*f;//(f/sphp->mass);
+    float4 vnext = v + dt*f;//(f/sphp[0].mass);
 
     //float4 vnext = v;// + dt*f;
-    vnext += sphp->xsph_factor * (xsph_s[i]);///sphp->mass);
+    vnext += sphp[0].xsph_factor * (xsph_s[i]);///sphp[0].mass);
 
     float4 veval = 0.5f*(v+vnext);
 
@@ -90,10 +90,10 @@ __kernel void leapfrog(
     //uint originalIndex = i;
 
     //float dens = density(i);
-    p.xyz /= sphp->simulation_scale;
+    p.xyz /= sphp[0].simulation_scale;
 
 
-    //unsorted_pos(originalIndex) = (float4)(pos(i).xyz / sphp->simulation_scale, 1.);
+    //unsorted_pos(originalIndex) = (float4)(pos(i).xyz / sphp[0].simulation_scale, 1.);
     //unsorted_pos(originalIndex)     = (float4)(p.xyz, dens);
     //unsorted_pos(originalIndex)     = p;
     ///unsorted_vel(originalIndex)     = vnext;

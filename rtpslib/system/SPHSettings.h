@@ -55,7 +55,7 @@ namespace rtps
 
         float friction_coef;
         float restitution_coef;
-        float shear;
+        //float shear;
         float attraction;
         float spring;
 
@@ -78,27 +78,55 @@ namespace rtps
         int num;
         int max_num;
 
-        float4 gravity; // -9.8 m/sec^2
-        /*
+        float4 gravity;
+		//float padding[3]; //using this because padding doesn't seem to work correctly in windows
+		// -9.8 m/sec^2
+        
         void print()
         {
-            printf("----- SPHParams ----\n");
-            printf("mass: %f\n", mass);
-            printf("rest distance: %f\n", rest_distance);
-            printf("smoothing distance: %f\n", smoothing_distance);
-            printf("simulation_scale: %f\n", simulation_scale);
-            printf("--------------------\n");
+			std::cout<<"rest_density = "<<rest_density<<std::endl;
+        std::cout<<"mass = "<<mass<<std::endl;
+        std::cout<<"rest_distance = "<<rest_distance<<std::endl;
+        std::cout<<"smoothing_distance = "<<smoothing_distance<<std::endl;
+        std::cout<<"simulation_scale = "<<simulation_scale<<std::endl;
+        
+        //dynamic params
+        std::cout<<"boundary_stiffness = "<<boundary_stiffness<<std::endl;
+        std::cout<<"boundary_dampening = "<<boundary_dampening<<std::endl;
+        std::cout<<"boundary_distance = "<<boundary_distance<<std::endl;
+        std::cout<<"K = "<<K<<std::endl;        //gas constant
+        
+        std::cout<<"viscosity = "<<viscosity<<std::endl;
+        std::cout<<"velocity_limit = "<<velocity_limit<<std::endl;
+        std::cout<<"xpsh_factor = "<<xsph_factor<<std::endl;
 
-            printf("friction_coef: %f\n", friction_coef);
-            printf("restitution_coef: %f\n", restitution_coef);
-            printf("damping: %f\n", boundary_dampening);
-            printf("shear: %f\n", shear);
-            printf("attraction: %f\n", attraction);
-            printf("spring: %f\n", spring);
-            printf("gravity: %f\n", gravity);
-            printf("choice: %d\n", choice);
+        std::cout<<"friction_coef = "<<friction_coef<<std::endl;
+        std::cout<<"restitution_coef = "<<restitution_coef<<std::endl;
+        //float shear;
+        std::cout<<"attraction = "<<attraction<<std::endl;
+        std::cout<<"spring = "<<spring<<std::endl;
+
+        //constants
+        std::cout<<"epsilon = "<<EPSILON<<std::endl;
+
+        //Kernel Coefficients
+        std::cout<<"wpoly6_coef = "<<wpoly6_coef<<std::endl;
+        std::cout<<"wpoly6_d_coef = "<<wpoly6_d_coef<<std::endl;
+        std::cout<<"wpoly6_dd_coef = "<<wpoly6_dd_coef<<std::endl; // laplacian
+        std::cout<<"wspiky_coef = "<<wspiky_coef<<std::endl;
+        std::cout<<"wspiky_d_coef = "<<wspiky_d_coef<<std::endl;
+
+        std::cout<<"wspiky_dd_coef = "<<wspiky_dd_coef<<std::endl;
+        std::cout<<"wvisc_coef = "<<wvisc_coef<<std::endl;
+        std::cout<<"wvisc_d_coef = "<<wvisc_d_coef<<std::endl;
+        std::cout<<"wvisc_dd_coef = "<<wvisc_dd_coef<<std::endl;
+
+        //CL parameters
+        std::cout<<"num = "<<num<<std::endl;
+        std::cout<<"max_num = "<<max_num<<std::endl;
+
+        std::cout<<"gravity = "<<gravity<<std::endl;
         }
-        */
     } SPHParams
 #ifndef WIN32
 	__attribute__((aligned(16)));

@@ -60,23 +60,23 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
                        )
 {
     // get the particle info (in the current grid) to test against
-    float4 position_j = pos[index_j] * sphp->simulation_scale;
+    float4 position_j = pos[index_j] * sphp[0].simulation_scale;
     float4 r = (position_i - position_j);
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
 
     // is this particle within cutoff?
-    if (rlen <= sphp->smoothing_distance)
+    if (rlen <= sphp[0].smoothing_distance)
     {
         // avoid divide by 0 in Wspiky_dr
-        rlen = max(rlen, sphp->EPSILON);
+        rlen = max(rlen, sphp[0].EPSILON);
 
-        float kern = Wspiky(rlen, sphp->smoothing_distance, sphp)* (1.0/density[index_j]);
+        float kern = Wspiky(rlen, sphp[0].smoothing_distance, sphp)* (1.0/density[index_j]);
 
-        pt->force.x += kern;
+        pt[0].force.x += kern;
         //debugging
-        //pt->force.w += kern;
+        //pt[0].force.w += kern;
     }
 }
 
@@ -106,8 +106,8 @@ __kernel void colorfield_update(
     float tmp = 1.0f/(res-1);
     //float4 texPos=(float4)(s*tmp,1.0,0.5,1.0f);
     float4 texPos=(float4)(s*tmp,t*tmp,r*tmp,1.0f);
-    texPos = (texPos*(gp->bnd_max-gp->bnd_min)+gp->bnd_min);
-    //texPos = (texPos*(gp->grid_max-gp->grid_min)+gp->grid_min)*sphp->simulation_scale;
+    texPos = (texPos*(gp[0].bnd_max-gp[0].bnd_min)+gp[0].bnd_min);
+    //texPos = (texPos*(gp[0].grid_max-gp[0].grid_min)+gp[0].grid_min)*sphp[0].simulation_scale;
     texPos.w=1.0f;
     // Do calculations on particles in neighboring cells
     PointData pt;
@@ -115,7 +115,7 @@ __kernel void colorfield_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, 0, 0, texPos, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    float tmpiso = pt.force.x*sphp->mass;//(pt.force.x>0.0f);//ceil(pt.force.x*sphp->mass);
+    float tmpiso = pt.force.x*sphp[0].mass;//(pt.force.x>0.0f);//ceil(pt.force.x*sphp[0].mass);
     //write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),(float4)(tmpiso,0.0f,0.0f,1.0f));//,tmpiso,tmpiso,tmpiso));
     write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),tmpiso);//,tmpiso,tmpiso,tmpiso));
     //write_imagef(img,map3Dto2D((int4)(s,t,r,0),res,slices),(float4)(1.0f,1.0f,1.0f,1.0f));

@@ -54,24 +54,24 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 {
 
     // get the particle info (in the current grid) to test against
-    float4 position_j = pos[index_j] * prbp->simulation_scale; 
+    float4 position_j = pos[index_j] * prbp[0].simulation_scale; 
     float4 r = (position_j - position_i); 
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
     // is this particle within cutoff?
-    if((rlen <= 2.*prbp->smoothing_distance)&&objectIndex[index_i]!=objectIndex[index_j])
+    if((rlen <= 2.*prbp[0].smoothing_distance)&&objectIndex[index_i]!=objectIndex[index_j])
     {
         // avoid divide by 0 in Wspiky_dr
-        rlen = max(rlen, prbp->EPSILON);
+        rlen = max(rlen, prbp[0].EPSILON);
         float4 norm = r/rlen;
         float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
-        float stiff = (prbp->spring*massnorm);
-        float4 springForce = -stiff*(2.*prbp->smoothing_distance-rlen)*(norm);
+        float stiff = (prbp[0].spring*massnorm);
+        float4 springForce = -stiff*(2.*prbp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel = vel[index_j]-vel[index_i];
 
-        float4 dampeningForce = prbp->dampening*sqrt(stiff*massnorm)*(relvel);
+        float4 dampeningForce = prbp[0].dampening*sqrt(stiff*massnorm)*(relvel);
         float4 normalForce=(springForce+dot(dampeningForce,norm)*norm); 
         
         relvel.w=0.0;
@@ -79,13 +79,13 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         //Use Gram Schmidt process to find tangential velocity to the particle
         float4 tangVel=relvel-dot(relvel,norm)*norm;
         float4 frictionalForce=0.0f;
-        if(length(tangVel)>prbp->friction_static_threshold)
-            frictionalForce = -prbp->friction_dynamic*length(normalForce)*(fast_normalize(tangVel));
-            //frictionalForce = -prbp->friction_dynamic*tangVel;
+        if(length(tangVel)>prbp[0].friction_static_threshold)
+            frictionalForce = -prbp[0].friction_dynamic*length(normalForce)*(fast_normalize(tangVel));
+            //frictionalForce = -prbp[0].friction_dynamic*tangVel;
         else
-            frictionalForce = -prbp->friction_static*tangVel;
+            frictionalForce = -prbp[0].friction_static*tangVel;
         
-        pt->linear_force += (springForce+dampeningForce+frictionalForce);
+        pt[0].linear_force += (springForce+dampeningForce+frictionalForce);
     }
 }
 
@@ -107,14 +107,14 @@ __kernel void force_update(
                        )
 {
     // particle index
-    int num = prbp->num;
+    int num = prbp[0].num;
     //int numParticles = get_global_size(0);
     //int num = get_global_size(0);
 
     int index = get_global_id(0);
     if (index >= num) return;
 
-    float4 position_i = pos[index] * prbp->simulation_scale;
+    float4 position_i = pos[index] * prbp[0].simulation_scale;
 
     // Do calculations on particles in neighboring cells
     PointData pt;

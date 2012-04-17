@@ -22,5 +22,5 @@
 ****************************************************************************************/
 
 
-pt->center_of_mass += pos(index_j);
-pt->num_neighbors += 1;
+pt[0].center_of_mass += pos(index_j);
+pt[0].num_neighbors += 1;

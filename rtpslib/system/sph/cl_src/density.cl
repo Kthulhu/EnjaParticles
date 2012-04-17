@@ -52,28 +52,28 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
                         DEBUG_ARGS
                        )
 {
-    int num = sphp->num;
+    int num = sphp[0].num;
 
     // get the particle info (in the current grid) to test against
-    float4 position_j = pos[index_j] * sphp->simulation_scale; 
+    float4 position_j = pos[index_j] * sphp[0].simulation_scale; 
     float4 r = (position_i - position_j); 
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
 
     // is this particle within cutoff?
-    if (rlen <= sphp->smoothing_distance)
+    if (rlen <= sphp[0].smoothing_distance)
     {
         //iej is 0 when we are looking at same particle
         //we allow calculations and just multiply force and xsph
         //by iej to avoid branching
         //int iej = index_i != index_j;
         // return density.x for single neighbor
-        //float Wij = sphp->wpoly6_coef * Wpoly6(r, sphp->smoothing_distance, sphp);
-        float Wij = Wpoly6(r, sphp->smoothing_distance, sphp);
+        //float Wij = sphp[0].wpoly6_coef * Wpoly6(r, sphp[0].smoothing_distance, sphp);
+        float Wij = Wpoly6(r, sphp[0].smoothing_distance, sphp);
 
-        pt->density.x += Wij;//*(float)iej;
-        //pt->density.x += sphp->mass*Wij;
+        pt[0].density.x += Wij;//*(float)iej;
+        //pt[0].density.x += sphp[0].mass*Wij;
     }
 }
 
@@ -94,7 +94,7 @@ __kernel void density_update(
                        )
 {
     // particle index
-    int num = sphp->num;
+    int num = sphp[0].num;
     //int numParticles = get_global_size(0);
     //int num = get_global_size(0);
 
@@ -102,7 +102,7 @@ __kernel void density_update(
     if (index >= num) return;
 
 #if 1
-    float4 position_i = pos[index] * sphp->simulation_scale;
+    float4 position_i = pos[index] * sphp[0].simulation_scale;
 
     //debuging
     clf[index] = (float4)(99,0,0,0);
@@ -114,12 +114,12 @@ __kernel void density_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    density[index] = sphp->wpoly6_coef * sphp->mass * pt.density.x;
+    density[index] = sphp[0].wpoly6_coef * sphp[0].mass * pt.density.x;
     /*
-    clf[index].x = pt.density.x * sphp->wpoly6_coef;
+    clf[index].x = pt.density.x * sphp[0].wpoly6_coef;
     clf[index].y = pt.density.y;
-    clf[index].z = sphp->smoothing_distance;
-    clf[index].w = sphp->mass;
+    clf[index].z = sphp[0].smoothing_distance;
+    clf[index].w = sphp[0].mass;
     */
     clf[index].w = density[index];
 #endif

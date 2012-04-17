@@ -62,13 +62,13 @@ __kernel void hash(
 {
     // particle index
     uint index = get_global_id(0);
-    //int num = sphp->num;
+    //int num = sphp[0].num;
     //int num = get_global_size(0);
     //comment this out to hash everything if using max_num
     if (index >= num) return;
 
     // initialize to -1 (used in kernel datastructures in build_datastructures_wrap.cpp
-    //int grid_size = (int) (gp->grid_res.x*gp->grid_res.y*gp->grid_res.z);
+    //int grid_size = (int) (gp[0].grid_res.x*gp[0].grid_res.y*gp[0].grid_res.z);
     //if (index < grid_size) {   // grid_size: 1400
     //cell_indices_start[index] = 0xffffffff; 
     //}
@@ -78,23 +78,23 @@ __kernel void hash(
     float4 p = pos_u[index]; // macro
 
     // get address in grid
-    //int4 gridPos = calcGridCell(p, gp->grid_min, gp->grid_inv_delta);
-    int4 gridPos = calcGridCell(p, gp->grid_min, gp->grid_delta);
+    //int4 gridPos = calcGridCell(p, gp[0].grid_min, gp[0].grid_inv_delta);
+    int4 gridPos = calcGridCell(p, gp[0].grid_min, gp[0].grid_delta);
     bool wrap_edges = false;
-    //uint hash = (uint) calcGridHash(gridPos, gp->grid_res, wrap_edges);//, fdebug, idebug);
-    int hash = calcGridHash(gridPos, gp->grid_res, wrap_edges);//, fdebug, idebug);
+    //uint hash = (uint) calcGridHash(gridPos, gp[0].grid_res, wrap_edges);//, fdebug, idebug);
+    int hash = calcGridHash(gridPos, gp[0].grid_res, wrap_edges);//, fdebug, idebug);
 
     cli[index].xyz = gridPos.xyz;
     cli[index].w = hash;
-    //cli[index].w = (gridPos.z*gp->grid_res.y + gridPos.y) * gp->grid_res.x + gridPos.x; 
+    //cli[index].w = (gridPos.z*gp[0].grid_res.y + gridPos.y) * gp[0].grid_res.x + gridPos.x; 
 
-    hash = hash > gp->nb_cells ? gp->nb_cells : hash;
-    hash = hash < 0 ? gp->nb_cells : hash;
+    hash = hash > gp[0].nb_cells ? gp[0].nb_cells : hash;
+    hash = hash < 0 ? gp[0].nb_cells : hash;
     /*
        //problem is that when we cut num we are hashing the wrong stuff?
     if (index >= num)
     {
-        hash = gp->nb_cells;
+        hash = gp[0].nb_cells;
     }
     */
     // store grid hash and particle index
@@ -103,53 +103,53 @@ __kernel void hash(
 
     sort_indexes[index] = index;
 
-    //fdebug[index] = gp->grid_inv_delta;
-    //fdebug[index] = (float4)((p.x - gp->grid_min.x) * gp->grid_inv_delta.x, p.x, 0,0);
-    //clf[index] = (float4)((p.x - gp->grid_min.x) * gp->grid_delta.x, p.x, 0,0);
+    //fdebug[index] = gp[0].grid_inv_delta;
+    //fdebug[index] = (float4)((p.x - gp[0].grid_min.x) * gp[0].grid_inv_delta.x, p.x, 0,0);
+    //clf[index] = (float4)((p.x - gp[0].grid_min.x) * gp[0].grid_delta.x, p.x, 0,0);
     //clf[index] = p;
-    //cli[index].w = sphp->max_num;
+    //cli[index].w = sphp[0].max_num;
 
 
 /*
-    clf[0].x = sphp->mass;
-    clf[0].y = sphp->rest_distance;
-    clf[0].z = sphp->smoothing_distance;
-    clf[0].w = sphp->simulation_scale;
+    clf[0].x = sphp[0].mass;
+    clf[0].y = sphp[0].rest_distance;
+    clf[0].z = sphp[0].smoothing_distance;
+    clf[0].w = sphp[0].simulation_scale;
 
-    clf[1].x = sphp->boundary_stiffness;
-    clf[1].y = sphp->boundary_dampening;
-    clf[1].z = sphp->boundary_distance;
-    clf[1].w = sphp->EPSILON;
+    clf[1].x = sphp[0].boundary_stiffness;
+    clf[1].y = sphp[0].boundary_dampening;
+    clf[1].z = sphp[0].boundary_distance;
+    clf[1].w = sphp[0].EPSILON;
 
-    clf[2].x = sphp->PI;       //delicious
-    clf[2].y = sphp->K;        //speed of sound
-    clf[2].z = sphp->viscosity;
-    clf[2].w = sphp->velocity_limit;
+    clf[2].x = sphp[0].PI;       //delicious
+    clf[2].y = sphp[0].K;        //speed of sound
+    clf[2].z = sphp[0].viscosity;
+    clf[2].w = sphp[0].velocity_limit;
 
-    clf[3].x = sphp->xsph_factor;
-    clf[3].y = sphp->gravity; // -9.8 m/sec^2
-    clf[3].z = sphp->friction_coef;
-    clf[3].w = sphp->restitution_coef;
+    clf[3].x = sphp[0].xsph_factor;
+    clf[3].y = sphp[0].gravity; // -9.8 m/sec^2
+    clf[3].z = sphp[0].friction_coef;
+    clf[3].w = sphp[0].restitution_coef;
 
-    clf[4].x = sphp->shear;
-    clf[4].y = sphp->attraction;
-    clf[4].z = sphp->spring;
+    clf[4].x = sphp[0].shear;
+    clf[4].y = sphp[0].attraction;
+    clf[4].z = sphp[0].spring;
     //kernel coefficients
-    clf[4].w = sphp->wpoly6_coef;
+    clf[4].w = sphp[0].wpoly6_coef;
 
-    clf[5].x = sphp->wpoly6_d_coef;
-    clf[5].y = sphp->wpoly6_dd_coef; // laplacian
-    clf[5].z = sphp->wspiky_coef;
-    clf[5].w = sphp->wspiky_d_coef;
+    clf[5].x = sphp[0].wpoly6_d_coef;
+    clf[5].y = sphp[0].wpoly6_dd_coef; // laplacian
+    clf[5].z = sphp[0].wspiky_coef;
+    clf[5].w = sphp[0].wspiky_d_coef;
 
-    clf[6].x = sphp->wspiky_dd_coef;
-    clf[6].y = sphp->wvisc_coef;
-    clf[6].z = sphp->wvisc_d_coef;
-    clf[6].w = sphp->wvisc_dd_coef;
+    clf[6].x = sphp[0].wspiky_dd_coef;
+    clf[6].y = sphp[0].wvisc_coef;
+    clf[6].z = sphp[0].wvisc_d_coef;
+    clf[6].w = sphp[0].wvisc_dd_coef;
 
-    clf[7].x = sphp->num;
-    clf[7].z = sphp->choice; // which kind of calculation to invoke
-    clf[7].w = sphp->max_num;
+    clf[7].x = sphp[0].num;
+    clf[7].z = sphp[0].choice; // which kind of calculation to invoke
+    clf[7].w = sphp[0].max_num;
 */
 
 

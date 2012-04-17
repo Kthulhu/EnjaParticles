@@ -80,8 +80,8 @@ void global_to_shared_tri(__global float* tri_gl, __local float* tri_f, int one_
 // one_tri: nb floats in one Triangle structure
 {
 /*
-	thread id: 0 --> get_global_size(0);
-	local thread id: 0 -> get_local_size(0);
+	thread id: 0 -[0]. get_global_size(0);
+	local thread id: 0 [0]. get_local_size(0);
 	thread id: get_global_id(0);  ==> particle number
 	local id: get_local_id(0);   
 */
@@ -105,8 +105,8 @@ void global_to_shared_boxes(__global float* box_gl, __local float* box_f, int on
 // one_tri: nb floats in one Triangle structure
 {
 /*
-	thread id: 0 --> get_global_size(0);
-	local thread id: 0 -> get_local_size(0);
+	thread id: 0 -[0]. get_global_size(0);
+	local thread id: 0 [0]. get_local_size(0);
 	thread id: get_global_id(0);  ==> particle number
 	local id: get_local_id(0);   
 */
@@ -145,9 +145,9 @@ float intersect_triangle_ge(float4 pos, float4 vel, __local Triangle* tri, float
     //can't use commas with STRINGIFY trick
     float4 edge1;
     float4 edge2;
-    float4 v0 = tri->verts[0] * scale;
-    float4 v1 = tri->verts[1] * scale;
-    float4 v2 = tri->verts[2] * scale;
+    float4 v0 = tri[0].verts[0] * scale;
+    float4 v1 = tri[0].verts[1] * scale;
+    float4 v2 = tri[0].verts[2] * scale;
 
     edge1 = v1 - v0;
     edge2 = v2 - v0;
@@ -205,9 +205,9 @@ float intersect_triangle_segment(float4 pos, float4 vel, __local Triangle* tri, 
     /* 
      * Ericson: Real Time Collision Detection. pp 191-192
      */
-    float4 a = tri->verts[0] * scale;
-    float4 b = tri->verts[1] * scale;
-    float4 c = tri->verts[2] * scale;
+    float4 a = tri[0].verts[0] * scale;
+    float4 b = tri[0].verts[1] * scale;
+    float4 c = tri[0].verts[2] * scale;
 
     float4 ab = b - a;
     float4 ac = c - a;
@@ -219,11 +219,11 @@ float intersect_triangle_segment(float4 pos, float4 vel, __local Triangle* tri, 
     float4 q = pos + vn*dist;
     float4 qp = p - q;
 
-    //float4 n = tri->normal;
+    //float4 n = tri[0].normal;
     float4 n = cross_product(ab, ac);
     //something seems to be wrong with Blender's normals
     //so to be safe we calculate here
-    tri->normal = v3normalize(n);
+    tri[0].normal = v3normalize(n);
 
     float d = dot(qp, n);
     if ( d <= 0.0f) return 2*dist;
@@ -265,9 +265,9 @@ bool intersect_box_ge(float4 pos, float4 vel, __local Box* box, float dt)
 
 	// is pos1 inside the box. If yes, collide is true
 
-	if (pos1.x > box->xmin && pos1.x < box->xmax && 
-	    pos1.y > box->ymin && pos1.y < box->ymax && 
-	    pos1.z > box->zmin && pos1.z < box->zmax) {
+	if (pos1.x > box[0].xmin && pos1.x < box[0].xmax && 
+	    pos1.y > box[0].ymin && pos1.y < box[0].ymax && 
+	    pos1.z > box[0].zmin && pos1.z < box[0].zmax) {
 
 		return true;
 	}
@@ -313,31 +313,31 @@ float4 collisions_triangle(float4 pos,
     //dtdt *= dtdt;
     for (int j=0; j < (last-first); j++)
     {
-        //distance = intersect_triangle_ge(pos, vel, &triangles[j], sphp->boundary_distance, eps, sphp->simulation_scale);
+        //distance = intersect_triangle_ge(pos, vel, &triangles[j], sphp[0].boundary_distance, eps, sphp[0].simulation_scale);
         float bnd_scale = 1.0f; //(this needs to scale with # of particles, bigger for more particles (because of smaller radius, not enough time to react to forces)
         //ideally we would make this scale with the timestep, or do other more sophisticated collision detection routines
-        float bound_dist = bnd_scale * sphp->boundary_distance;
-        distance = intersect_triangle_segment(pos, vel, &triangles[j], bound_dist, sphp->EPSILON, sphp->simulation_scale);
+        float bound_dist = bnd_scale * sphp[0].boundary_distance;
+        distance = intersect_triangle_segment(pos, vel, &triangles[j], bound_dist, sphp[0].EPSILON, sphp[0].simulation_scale);
         //distance = intersect_triangle_ge(pos, vel, &triangles[j], dt, eps);
         //if ( distance != -1)
-        //distance = sphp->boundary_distance - distance;
+        //distance = sphp[0].boundary_distance - distance;
         distance = bound_dist - distance;
-        //distance = sphp->rest_distance - distance;
-        if (distance > eps)// && distance < sphp->boundary_distance)
+        //distance = sphp[0].rest_distance - distance;
+        if (distance > eps)// && distance < sphp[0].boundary_distance)
         {
             //Krog boundary forces
-            f += calculateRepulsionForce(triangles[j].normal, vel, sphp->boundary_stiffness, sphp->boundary_dampening, distance);
+            f += calculateRepulsionForce(triangles[j].normal, vel, sphp[0].boundary_stiffness, sphp[0].boundary_dampening, distance);
             f += calculateFrictionForce(vel, force, triangles[j].normal, friction_kinetic, friction_static_limit);
             //Harada boundary wall forces
 
             //kind of works (but should use mass in calculation)
             //f += distance * triangles[j].normal * dtdt;
 
-            //float repulse_fac = sphp->mass;
+            //float repulse_fac = sphp[0].mass;
             /*
             //doesn't really work
             float repulse_fac = .05f;
-            float drepulse = sphp->rest_distance;
+            float drepulse = sphp[0].rest_distance;
             //f += repulse_fac*(drepulse - distance) * triangles[j].normal * dtdt;
             f += repulse_fac*distance*(1 - distance/drepulse) * triangles[j].normal * dtdt;
 
@@ -363,7 +363,7 @@ float4 collisions_triangle(float4 pos,
 #if 0
             //playing with stickiness
             float kstick = -.5f;
-            float dstick = sphp->rest_distance;
+            float dstick = sphp[0].rest_distance;
             f += kstick*dt*distance*(1 - distance/dstick) * triangles[j].normal;
 #endif
         }
@@ -448,14 +448,14 @@ __kernel void collision_triangle(   //__global float4* vars_sorted,
 {
 #if 1
     unsigned int i = get_global_id(0);
-	int num = sphp->num;
+	int num = sphp[0].num;
 
     /*
     float4 p = pos(i);
     float4 v = vel(i);
     float4 f = force(i);
     */
-    float4 p = pos_s[i] * sphp->simulation_scale;
+    float4 p = pos_s[i] * sphp[0].simulation_scale;
     float4 v = vel_s[i];
     float4 f = force_s[i];
 
@@ -493,10 +493,10 @@ __kernel void collision_triangle(   //__global float4* vars_sorted,
 
     /*
     clf[i] = rf;
-    //clf[i].w = pos(i).z / sphp->simulation_scale;
-    clf[i].w = pos_s[i].z / sphp->simulation_scale;
+    //clf[i].w = pos(i).z / sphp[0].simulation_scale;
+    clf[i].w = pos_s[i].z / sphp[0].simulation_scale;
     cli[i].x = (int)rf.w;
-    cli[i].y = sphp->num;
+    cli[i].y = sphp[0].num;
     cli[i].z = get_local_size(0);
     */
     

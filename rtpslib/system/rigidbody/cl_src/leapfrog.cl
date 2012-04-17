@@ -43,14 +43,14 @@ __kernel void leapfrog(
                     DEBUG_ARGS)
 {
     unsigned int i = get_global_id(0);
-    float4 p = comPos[i]*prbp->simulation_scale ;
+    float4 p = comPos[i]*prbp[0].simulation_scale ;
     float4 v = comVel[i];
     float4 lf = comLinearForce[i];
     Quaternion q = comRot[i];
     float4 w = comAngVel[i];
     float4 tf = comTorqueForce[i];
 
-    lf+=rbMass[i]*prbp->gravity;
+    lf+=rbMass[i]*prbp[0].gravity;
 
     float4 a = lf/rbMass[i];
     a.w=0.0f;
@@ -64,7 +64,7 @@ __kernel void leapfrog(
 
     float4 veval = 0.5f*(v+vnext);
     p += dt*vnext;
-    p.xyz/=prbp->simulation_scale;
+    p.xyz/=prbp[0].simulation_scale;
     p.w = 1.0f; //just in case
     //need to fix torque scaling.
     float4 L = dt*(tf);

@@ -29,6 +29,6 @@
 float4 vj = vel[index_j];
 	        
 // rule 2. alignment
-pt->alignment += vj;   
+pt[0].alignment += vj;   
 
 #endif

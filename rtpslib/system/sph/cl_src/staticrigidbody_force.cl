@@ -53,14 +53,14 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
                        )
 {
     // get the particle info (in the current grid) to test against
-    float4 position_j = pos_j[index_j] * sphp->simulation_scale; 
+    float4 position_j = pos_j[index_j] * sphp[0].simulation_scale; 
     float4 r = (position_j - position_i); 
     r.w = 0.f; // I stored density in 4th component
     // |r|
     float rlen = length(r);
 
     // is this particle within cutoff?
-    if (rlen <= 2* sphp->smoothing_distance)
+    if (rlen <= 2* sphp[0].smoothing_distance)
     {
 
         //iej is 0 when we are looking at same particle
@@ -69,12 +69,12 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         int iej = index_i != index_j;
 
         // avoid divide by 0 in Wspiky_dr
-        rlen = max(rlen, sphp->EPSILON);
+        rlen = max(rlen, sphp[0].EPSILON);
         float4 norm = r/rlen;
         //need to have a better way of handling stiffness..
         float massnorm=((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
         float stiff = rbParams.s0*massnorm;
-        float4 springForce = -stiff*(2.*sphp->smoothing_distance-rlen)*(norm);
+        float4 springForce = -stiff*(2.*sphp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel = vel[index_i];
 
@@ -95,8 +95,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
             frictionalForce = -rbParams.s3*length(normalForce)*(normalize(tangVel));
         else
             frictionalForce = -rbParams.s4*tangVel;
-        pt->force += (normalForce+frictionalForce);*/
-        pt->force+=normalForce;
+        pt[0].force += (normalForce+frictionalForce);*/
+        pt[0].force+=normalForce;
     }
 }
 
@@ -117,14 +117,14 @@ __kernel void force_update(
                        )
 {
     // particle index
-    int num = sphp->num;
+    int num = sphp[0].num;
     //int numParticles = get_global_size(0);
     //int num = get_global_size(0);
 
     int index = get_global_id(0);
     if (index >= num) return;
 
-    float4 position_i = pos[index] * sphp->simulation_scale;
+    float4 position_i = pos[index] * sphp[0].simulation_scale;
 
     //debuging
     clf[index] = (float4)(99,0,0,0);
@@ -136,7 +136,7 @@ __kernel void force_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
-    force[index] += pt.force/sphp->mass;
+    force[index] += pt.force/sphp[0].mass;
     clf[index].xyz = pt.force.xyz;
 }
 

@@ -50,13 +50,13 @@ __kernel void euler_integration(
                    
 {
     unsigned int i = get_global_id(0);
-    int num = flockp->num;
+    int num = flockp[0].num;
     
     if(i >= num) 
 	    return;
 
 	// positions
-	float4 pi = pos_s[i] * flockp->simulation_scale;
+	float4 pi = pos_s[i] * flockp[0].simulation_scale;
 
 	// velocities
     float4 vi = vel_s[i];
@@ -79,16 +79,16 @@ __kernel void euler_integration(
 	float4 leaderfollowing = leaderfollowing_s[i]; 
 
     // weights for the rules
-	float w_sep = flockp->w_sep;    
-	float w_aln = flockp->w_align; 
-	float w_coh = flockp->w_coh;
-    float w_goal = flockp->w_goal;
-    float w_avoid = flockp->w_avoid;  
-	float w_leadfoll = flockp->w_leadfoll;   
+	float w_sep = flockp[0].w_sep;    
+	float w_aln = flockp[0].w_align; 
+	float w_coh = flockp[0].w_coh;
+    float w_goal = flockp[0].w_goal;
+    float w_avoid = flockp[0].w_avoid;  
+	float w_leadfoll = flockp[0].w_leadfoll;   
 	
     // boundary limits, used to computed boundary conditions    
-	float4 bndMax = gridp->bnd_max;
-	float4 bndMin = gridp->bnd_min;
+	float4 bndMax = gridp[0].bnd_max;
+	float4 bndMin = gridp[0].bnd_min;
 
 	// RULE 1. SEPARATION
 	vel_sep = separation * w_sep;
@@ -115,14 +115,14 @@ __kernel void euler_integration(
     // constrain veleleration
     float velspeed = length(vel);
     float4 velnorm = fast_normalize(vel);
-    if(velspeed > flockp->max_speed){
+    if(velspeed > flockp[0].max_speed){
         // set magnitude to Max Speed
-        vel = velnorm * flockp->max_speed;
+        vel = velnorm * flockp[0].max_speed;
     }
 
     // add circular velocity field
     float4 v = (float4)(-3*pi.y, pi.x, 0.f, 0.f);
-    v *= flockp->ang_vel;    
+    v *= flockp[0].ang_vel;    
     vel += v;
     float4 veldiff = fast_normalize(cross(vi,vel));
     // add veleleration to velocity
@@ -162,7 +162,7 @@ __kernel void euler_integration(
     //float4 tmp = cross((float4)(0.0f,1.0f,0.0f,0.0f),vi);
     rotation_u[originalIndex].xyz = veldiff.xyz;
     rotation_u[originalIndex].w = 1.0f+fast_normalize(vi).z;
-    pos_u[originalIndex] = (float4)(pi.xyz/flockp->simulation_scale, 1.f);    // changed the last component to 1 for my boids, im not using density
+    pos_u[originalIndex] = (float4)(pi.xyz/flockp[0].simulation_scale, 1.f);    // changed the last component to 1 for my boids, im not using density
 }
 
 #endif

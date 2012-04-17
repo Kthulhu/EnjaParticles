@@ -30,7 +30,7 @@ __kernel void meshToParticles(
     uint s = get_global_id(0);
     uint t = get_global_id(1);
     uint r = get_global_id(2);
-    //int num = sphp->num;
+    //int num = sphp[0].num;
     //int num = get_global_size(0);
     //if (index >= num) return;
 

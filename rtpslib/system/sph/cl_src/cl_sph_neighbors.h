@@ -30,16 +30,16 @@
 //----------------------------------------------------------------------
 void zeroPoint(PointData* pt)
 {
-    pt->density = (float4)(0.,0.,0.,0.);
-    pt->color = (float4)(0.,0.,0.,0.);
-    pt->color_normal = (float4)(0.,0.,0.,0.);
-    pt->force = (float4)(0.,0.,0.,0.);
-    pt->surf_tens = (float4)(0.,0.,0.,0.);
-    pt->color_lapl = 0.;
-    pt->xsph = (float4)(0.,0.,0.,0.);
-    pt->viscosity = (float4)(0.,0.,0.,0.);
-    //	pt->center_of_mass = (float4)(0.,0.,0.,0.);
-    //pt->num_neighbors = 0;
+    pt[0].density = (float4)(0.,0.,0.,0.);
+    pt[0].color = (float4)(0.,0.,0.,0.);
+    pt[0].color_normal = (float4)(0.,0.,0.,0.);
+    pt[0].force = (float4)(0.,0.,0.,0.);
+    pt[0].surf_tens = (float4)(0.,0.,0.,0.);
+    pt[0].color_lapl = 0.;
+    pt[0].xsph = (float4)(0.,0.,0.,0.);
+    pt[0].viscosity = (float4)(0.,0.,0.,0.);
+    //	pt[0].center_of_mass = (float4)(0.,0.,0.,0.);
+    //pt[0].num_neighbors = 0;
 }
 
 /*--------------------------------------------------------------*/
@@ -61,10 +61,10 @@ void IterateParticlesInCell(
                            )
 {
     // get hash (of position) of current cell
-    uint cellHash = calcGridHash(cellPos, gp->grid_res, false);
+    uint cellHash = calcGridHash(cellPos, gp[0].grid_res, false);
 
     //need to check cellHash to make sure its not out of bounds
-    if(cellHash >= gp->nb_cells)
+    if(cellHash >= gp[0].nb_cells)
     {
         return;
     }
@@ -113,8 +113,8 @@ void IterateParticlesInNearbyCells(
     // initialize force on particle (collisions)
 
     // get cell in grid for the given position
-    //int4 cell = calcGridCell(position_i, gp->grid_min, gp->grid_inv_delta);
-    int4 cell = calcGridCell(position_i, gp->grid_min, gp->grid_delta);
+    //int4 cell = calcGridCell(position_i, gp[0].grid_min, gp[0].grid_inv_delta);
+    int4 cell = calcGridCell(position_i, gp[0].grid_min, gp[0].grid_delta);
 
     // iterate through the 3^3 cells in and around the given position
     // can't unroll these loops, they are not innermost

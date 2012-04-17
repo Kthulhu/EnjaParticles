@@ -45,7 +45,7 @@ inline void ForNeighbor(
                 DEBUG_ARGS
 				)
 {
-    int num = flockp->num;
+    int num = flockp[0].num;
 	
 	// get the particle info (in the current grid) to test against
 	float4 position_j = pos[index_j]; 
@@ -57,7 +57,7 @@ inline void ForNeighbor(
 	float rlen = length(r);
 
     // neighbor within the radius?    
-    if(rlen <= flockp->search_radius)
+    if(rlen <= flockp[0].search_radius)
     {
         if(index_i != index_j){
 	        // positions
@@ -67,11 +67,11 @@ inline void ForNeighbor(
             float4 s = r;       //pi - pj;
 	        float  d = rlen;    //length(s);
 	
-		     if(d <= flockp->min_dist){ 
+		     if(d <= flockp[0].min_dist){ 
                 s.w = 0.0f;
                 s = fast_normalize(s);
                 s /= d;
-	            pt->leaderfollowing+= s;        // accumulate the leaderfollowing vector
+	            pt[0].leaderfollowing+= s;        // accumulate the leaderfollowing vector
 	        }
         }
     }
@@ -95,14 +95,14 @@ __kernel void rule_leaderfollowing(
 				)
 {
     // particle index
-	int num = flockp->num;
+	int num = flockp[0].num;
 
     int index = get_global_id(0);
     if (index >= num) return;
 
     // mymese debbug
-    //clf[index] = (float4)(flockp->smoothing_distance,flockp->min_dist, flockp->search_radius, 10.);
-	//cli[index] = (int4)(flockp->num,flockp->num,0,0);
+    //clf[index] = (float4)(flockp[0].smoothing_distance,flockp[0].min_dist, flockp[0].search_radius, 10.);
+	//cli[index] = (int4)(flockp[0].num,flockp[0].num,0,0);
 
     float4 position_i = pos[index];
 
@@ -116,10 +116,10 @@ __kernel void rule_leaderfollowing(
         // is a follower: compute arrival and separation
     
         // create the rectangle in front of the leader
-        float4 corner = (float4)(position_i.x + flockp->min_dist/2, position_i.y, position_i.z, 0.f);
+        float4 corner = (float4)(position_i.x + flockp[0].min_dist/2, position_i.y, position_i.z, 0.f);
 
-        float4 vcorner1 = corner * 5.f * flockp->min_dist; 
-        float4 vcorner2 = corner * 3.f * flockp->min_dist;
+        float4 vcorner1 = corner * 5.f * flockp[0].min_dist; 
+        float4 vcorner2 = corner * 3.f * flockp[0].min_dist;
     
         float4 vposition = position_i - corner;    
 
@@ -128,13 +128,13 @@ __kernel void rule_leaderfollowing(
         }
 
         // set the offset point behind the leader
-        float4 target_offset_point = pos[0] - (float4)(flockp->min_dist/2, flockp->min_dist/2, flockp->min_dist/2,0.f);
+        float4 target_offset_point = pos[0] - (float4)(flockp[0].min_dist/2, flockp[0].min_dist/2, flockp[0].min_dist/2,0.f);
 
         // compute arrival behavior
         float4 target_offset = target_offset_point - position_i;
         float distance = length(target_offset);
-        float ramped_speed = flockp->max_speed * (distance/flockp->slowing_distance);
-        float clipped_speed = min(ramped_speed, flockp->max_speed);
+        float ramped_speed = flockp[0].max_speed * (distance/flockp[0].slowing_distance);
+        float clipped_speed = min(ramped_speed, flockp[0].max_speed);
         float4 desired_velocity = (clipped_speed/distance) * target_offset;
 
         // compute the leader following behavior

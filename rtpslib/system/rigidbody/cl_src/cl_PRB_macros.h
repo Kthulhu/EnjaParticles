@@ -50,7 +50,7 @@
 #define XSPH 9
 
 //#define numParticles num
-#define numParticles prbp->max_num
+#define numParticles prbp[0].max_num
 
 #define FETCH(t, i) t[i]
 #define FETCH_VAR(t, i, ivar) t[i+ivar*numParticles]

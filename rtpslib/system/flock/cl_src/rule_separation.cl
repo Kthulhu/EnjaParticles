@@ -26,9 +26,9 @@
 #define _RULE_SEPARATION_CL_
 
 // rule 1. separation
-if(rlen <= flockp->min_dist){ 
+if(rlen <= flockp[0].min_dist){ 
     r /= rlen;
-    pt->separation += r;        
+    pt[0].separation += r;        
 }
 
 #endif

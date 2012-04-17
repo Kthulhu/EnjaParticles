@@ -34,7 +34,7 @@ uint scanwarp(uint val, volatile __local uint* sData, int maxlevel)
     if (3 <= maxlevel) { sData[idx] += sData[idx - 8]; }
     if (4 <= maxlevel) { sData[idx] += sData[idx -16]; }
 
-    return sData[idx] - val;  // convert inclusive -> exclusive
+    return sData[idx] - val;  // convert inclusive [0]. exclusive
 }
 
 //----------------------------------------------------------------------------

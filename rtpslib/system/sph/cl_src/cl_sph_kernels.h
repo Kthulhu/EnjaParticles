@@ -38,7 +38,7 @@ float Wpoly6(float4 r, float h, __constant struct SPHParams* params)
     return alpha * hr2*hr2*hr2;
 #else 
     float hr2 = (h*h-r2); 
-    //return params->wpoly6_coef * hr2*hr2*hr2;
+    //return params[0].wpoly6_coef * hr2*hr2*hr2;
     return hr2*hr2*hr2;
 #endif
 
@@ -91,7 +91,7 @@ float Wspiky_dr(float rlen, float h, __constant struct SPHParams* params)
 #else
     float hr2 = h - rlen;
     //return -hr2*hr2/rlen;
-    //return hr2*hr2/(rlen + params->EPSILON);
+    //return hr2*hr2/(rlen + params[0].EPSILON);
     return hr2*hr2/rlen;
 #endif
 }

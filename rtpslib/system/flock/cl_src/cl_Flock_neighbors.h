@@ -30,15 +30,15 @@
 //----------------------------------------------------------------------
 void zeroPoint(Boid* pt)
 {
-	pt->separation  = (float4)(0.,0.,0.,0.);
-	pt->alignment   = (float4)(0.,0.,0.,0.);
-	pt->cohesion    = (float4)(0.,0.,0.,0.);
-	pt->goal        = (float4)(0.,0.,0.,0.);
-	pt->avoid       = (float4)(0.,0.,0.,0.);
-	pt->leaderfollowing= (float4)(0.,0.,0.,0.);
-	pt->color       = (float4)(0.,0.,0.,0.);
-	pt->num_flockmates = 0;
-    pt->num_nearestFlockmates = 0;
+	pt[0].separation  = (float4)(0.,0.,0.,0.);
+	pt[0].alignment   = (float4)(0.,0.,0.,0.);
+	pt[0].cohesion    = (float4)(0.,0.,0.,0.);
+	pt[0].goal        = (float4)(0.,0.,0.,0.);
+	pt[0].avoid       = (float4)(0.,0.,0.,0.);
+	pt[0].leaderfollowing= (float4)(0.,0.,0.,0.);
+	pt[0].color       = (float4)(0.,0.,0.,0.);
+	pt[0].num_flockmates = 0;
+    pt[0].num_nearestFlockmates = 0;
 }
 
 /*--------------------------------------------------------------*/
@@ -58,10 +58,10 @@ void IterateParticlesInCell(ARGS,
 )
 {
     // get hash (of position) of current cell
-    uint cellHash = calcGridHash(cellPos, gp->grid_res, false);
+    uint cellHash = calcGridHash(cellPos, gp[0].grid_res, false);
 
     //need to check cellHash to make sure its not out of bounds
-    if(cellHash >= gp->nb_cells){ return; }
+    if(cellHash >= gp[0].nb_cells){ return; }
     
     /* get start/end positions for this cell/bucket */
     uint startIndex = FETCH(cell_indexes_start,cellHash);
@@ -92,7 +92,7 @@ void IterateParticlesInNearbyCells(ARGS,
                                 DEBUG_ARGS
                                 )       
 {
-    int4 cell = calcGridCell(position_i, gp->grid_min, gp->grid_delta);
+    int4 cell = calcGridCell(position_i, gp[0].grid_min, gp[0].grid_delta);
 
     // iterate through the 3^3 cells in and around the given position
     // can't unroll these loops, they are not innermost 

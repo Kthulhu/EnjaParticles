@@ -47,7 +47,7 @@ __kernel void euler(
 {
     unsigned int i = get_global_id(0);
 
-    float4 p = comPos[i]*prbp->simulation_scale ;
+    float4 p = comPos[i]*prbp[0].simulation_scale ;
     float4 v = comVel[i];
     float4 lf = comLinearForce[i];
     Quaternion q = comRot[i];
@@ -68,7 +68,7 @@ __kernel void euler(
 
     v += dt*(a);
     p += dt*v;
-    p.xyz/=prbp->simulation_scale;
+    p.xyz/=prbp[0].simulation_scale;
     p.w = 1.0f; //just in case
 //need to fix torque scaling.
     float4 L = dt*(tf);

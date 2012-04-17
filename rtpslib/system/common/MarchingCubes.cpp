@@ -27,7 +27,6 @@
 #include "MarchingCubes.h"
 
 using namespace std;
-
 namespace rtps
 {
     MarchingCubes::MarchingCubes(const MarchingCubes& mc)
@@ -89,8 +88,6 @@ namespace rtps
                 stringstream s;
                 s<<"-DLEVELS="<<i+1;
                 k_traverse.push_back(Kernel(cli,source,"traverseHP2D",s.str(),false));
-				dout<<"levels = "<<i<<endl;
-				dout<<"num_args ="<<k_traverse[i].kernel.getInfo<CL_KERNEL_NUM_ARGS>()<<endl;
             }
         }
         catch (cl::Error er)

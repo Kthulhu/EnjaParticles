@@ -25,10 +25,10 @@
 #ifndef _DENSITY_UPDATE_CL_
 #define _DENSITY_UPDATE_CL_
 
-//float Wij = sphp->wpoly6_coef * Wpoly6(r, sphp->smoothing_distance, sphp);
-float Wij = Wpoly6(r, sphp->smoothing_distance, sphp);
+//float Wij = sphp[0].wpoly6_coef * Wpoly6(r, sphp[0].smoothing_distance, sphp);
+float Wij = Wpoly6(r, sphp[0].smoothing_distance, sphp);
 
-pt->density.x += sphp->mass*Wij;
-//pt->density.x += sphp->mass*Wij;
+pt[0].density.x += sphp[0].mass*Wij;
+//pt[0].density.x += sphp[0].mass*Wij;
 //----------------------------------------------------------------------
 #endif

@@ -52,14 +52,16 @@ namespace rtps
         //dout<<"Here"<<endl;
         setupTimers();
 
-        std::vector<SPHParams> vparams(0);
-        vparams.push_back(sphp);
-        cl_sphp = Buffer<SPHParams>(cli, vparams);
+        cl_sphp = Buffer<SPHParams>(cli, sphp);
+		
         //dout<<"Here"<<endl;
         calculate();
         updateParams();
         setupDomain(sphp.smoothing_distance/sphp.simulation_scale,sphp.simulation_scale);
-
+		sphp.print();
+		vector<SPHParams> tmp = cl_sphp.copyToHost(1);
+		dout<<"received from the gpu"<<endl;
+		tmp[0].print();
         //dout<<"Here"<<endl;
         spacing = settings->GetSettingAs<float>("spacing");
         //dout<<"Here"<<endl;

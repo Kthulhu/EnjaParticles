@@ -24,18 +24,27 @@
 
 
 template <class T>
-Buffer<T>::Buffer(CL *cli, int num ,T data)
+Buffer<T>::Buffer(CL *cli, const T& data)
 {
     this->cli = cli;
 
-    std::vector<T> vec(num);
-    std::fill(vec.begin(), vec.end(), data);
-    std::cout<<"vec size = "<<vec.size()<<std::endl;
+	///This is a work around for our custom structs on windows. __declspec(align(16)) doesn't work with stl Vectors!
+	cl_buf=cl::Buffer(cli->context,CL_MEM_READ_WRITE,sizeof(T),NULL,&cli->err);
+	cl_buffer.push_back(cl_buf);
+	copyToDevice(data);
+}
 
-    cl_buf=cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err);
-    //cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err));
-    cl_buffer.push_back(cl_buf);
-    copyToDevice(vec);
+template <class T>
+Buffer<T>::Buffer(CL *cli, int num ,const T& data)
+{
+    this->cli = cli;
+	std::vector<T> vec(num);
+	std::fill(vec.begin(), vec.end(), data);
+
+	cl_buf=cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err);
+	cl_buffer.push_back(cl_buf);
+	copyToDevice(vec);
+	//cl_buffer.push_back(cl::Buffer(cli->context, CL_MEM_READ_WRITE, vec.size()*sizeof(T), NULL, &cli->err));
 }
 
 template <class T>
@@ -113,12 +122,20 @@ void Buffer<T>::release()
 }
 
 template <class T>
+void Buffer<T>::copyToDevice(const T& data)
+{
+    cl::Event event;
+    cli->err = cli->queue.enqueueWriteBuffer(*((cl::Buffer*)&cl_buffer[0]), CL_TRUE, 0, sizeof(T), &data, NULL, &event);
+    cli->queue.finish();
+}
+
+template <class T>
 void Buffer<T>::copyToDevice(const T& data,int start)
 {
     T d[1];
     d[0]=data;
     cl::Event event;
-    cli->err = cli->queue.enqueueWriteBuffer(*((cl::Buffer*)&cl_buffer[0]), CL_TRUE, start*sizeof(T), sizeof(T), &d, NULL, &event);
+    cli->err = cli->queue.enqueueWriteBuffer(*((cl::Buffer*)&cl_buffer[0]), CL_TRUE, start*sizeof(T), sizeof(T), &data, NULL, &event);
     cli->queue.finish();
 }
 

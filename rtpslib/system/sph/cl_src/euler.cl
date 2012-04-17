@@ -45,10 +45,10 @@ __kernel void euler(
                    float dt)
 {
     unsigned int i = get_global_id(0);
-    int num = sphp->num;
+    int num = sphp[0].num;
     if (i >= num) return;
 
-    float4 p = pos_s[i]*sphp->simulation_scale;
+    float4 p = pos_s[i]*sphp[0].simulation_scale;
     float4 v = vel_s[i];
     float4 f = force_s[i];
 
@@ -62,10 +62,10 @@ __kernel void euler(
     }
 
     v += dt*f;
-    //p += dt*v / sphp->simulation_scale;
+    //p += dt*v / sphp[0].simulation_scale;
     p += dt*v;
     p.w = 1.0f; //just in case
-    p.xyz /= sphp->simulation_scale;
+    p.xyz /= sphp[0].simulation_scale;
 
     uint originalIndex = sort_indices[i];
 

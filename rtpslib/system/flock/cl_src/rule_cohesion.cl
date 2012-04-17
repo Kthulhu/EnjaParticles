@@ -29,6 +29,6 @@
 float4 pj = position_j;
 	
 // rule 3. cohesion
-pt->cohesion += pj;
+pt[0].cohesion += pj;
 
 #endif

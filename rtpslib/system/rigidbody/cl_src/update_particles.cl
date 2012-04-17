@@ -52,7 +52,7 @@ __kernel void update_particles(
     {
         float4 rotPos =(float4)(dot(m.s0123,pos_l[i]),dot(m.s4567,pos_l[i]),dot(m.s89ab,pos_l[i]),0.0f);
         //pos_u[i]=rotPos+comPos[index];
-        pos_u[i].xyz=(rotPos.xyz/prbp->simulation_scale)+comPos[index].xyz;
+        pos_u[i].xyz=(rotPos.xyz/prbp[0].simulation_scale)+comPos[index].xyz;
         pos_u[i].w = 1.0;
         velocity_u[i].xyz = comVel[index].xyz + cross3F4(comAngVel[index],pos_l[i]).xyz;
         clf[i]=velocity_u[i];

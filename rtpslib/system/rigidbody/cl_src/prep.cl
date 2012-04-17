@@ -54,7 +54,7 @@ __kernel void prep(
                   )
 {
     uint i = get_global_id(0);
-    int num = sphp->num;
+    int num = sphp[0].num;
     if (i >= num) return;
 
     uint index = sort_indices[i];

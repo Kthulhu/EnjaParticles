@@ -42,10 +42,10 @@ inline void ForNeighbor(ARGS,
  	  			        __constant struct FLOCKParameters* flockp
                         DEBUG_ARGS)
 {
-    int num = flockp->num;
+    int num = flockp[0].num;
 	
 	// get the particle info (in the current grid) to test against
-	float4 position_j = pos[index_j] * flockp->simulation_scale; 
+	float4 position_j = pos[index_j] * flockp[0].simulation_scale; 
 
 	float4 r = (position_i - position_j); 
 	r.w = 0.f; 
@@ -54,22 +54,22 @@ inline void ForNeighbor(ARGS,
 	float rlen = length(r);
 
     // neighbor within the radius?    
-    if(rlen <= flockp->search_radius)
+    if(rlen <= flockp[0].search_radius)
     {
         if(index_i != index_j){
 	
 	        // number of flockmates 
-            pt->num_flockmates++;
+            pt[0].num_flockmates++;
 
-            if(flockp->w_sep > 0.f){
+            if(flockp[0].w_sep > 0.f){
                 #include "rule_separation.cl"
             }
 
-            if(flockp->w_align > 0.f){
+            if(flockp[0].w_align > 0.f){
                 #include "rule_alignment.cl"
             }
 
-            if(flockp->w_coh > 0.f){
+            if(flockp[0].w_coh > 0.f){
                 #include "rule_cohesion.cl"
             }
         }
@@ -91,12 +91,12 @@ __kernel void rules(ARGS,
 				DEBUG_ARGS)
 {
     // particle index
-	int num = flockp->num;
+	int num = flockp[0].num;
 
     int index = get_global_id(0);
     if (index >= num) return;
 
-    float4 position_i = pos[index] * flockp->simulation_scale;
+    float4 position_i = pos[index] * flockp[0].simulation_scale;
     float4 velocity_i = vel[index];
 
     // Do calculations on particles in neighboring cells
@@ -106,13 +106,13 @@ __kernel void rules(ARGS,
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp, flockp DEBUG_ARGV);
 
     // average separation
-    if(flockp->w_sep > 0.f && pt.num_nearestFlockmates > 0){
+    if(flockp[0].w_sep > 0.f && pt.num_nearestFlockmates > 0){
         pt.separation /= (float)pt.num_nearestFlockmates;
         pt.separation.w = 0.f;
     }
 
     // average alignment
-    if(flockp->w_align > 0.f && pt.num_flockmates > 0){
+    if(flockp[0].w_align > 0.f && pt.num_flockmates > 0){
 	    // dividing by the number of flockmates to get the desired velocity 
 	    pt.alignment /= (float)pt.num_flockmates;
         pt.alignment -= velocity_i;
@@ -120,7 +120,7 @@ __kernel void rules(ARGS,
     }
 
     // average cohesion
-    if(flockp->w_coh > 0.f && pt.num_flockmates > 0){
+    if(flockp[0].w_coh > 0.f && pt.num_flockmates > 0){
 	    // dividing by the number of flockmates to get the center of mass 
 	    pt.cohesion /= (float)pt.num_flockmates;
         pt.cohesion -= position_i;
@@ -128,17 +128,17 @@ __kernel void rules(ARGS,
     }
    
     // compute goal
-    if(flockp->w_goal > 0.f){
+    if(flockp[0].w_goal > 0.f){
         #include "rule_goal.cl"
     }
     
     // compute avoid
-    if(flockp->w_avoid > 0.f){
+    if(flockp[0].w_avoid > 0.f){
         #include "rule_avoid.cl"
     }
 
     //clf[index] = pt.goal;//(float4)(3.,3.,3.,3.); //pt.separation; 
-    //cli[index] = (int4)((int)flockp->w_sep,(int)flockp->w_align,(int)flockp->w_coh,(int)flockp->w_goal);
+    //cli[index] = (int4)((int)flockp[0].w_sep,(int)flockp[0].w_align,(int)flockp[0].w_coh,(int)flockp[0].w_goal);
     
     flockmates[index].x = pt.num_flockmates;
     flockmates[index].y = pt.num_nearestFlockmates;

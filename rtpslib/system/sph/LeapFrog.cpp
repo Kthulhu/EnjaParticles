@@ -75,42 +75,39 @@ namespace sph
         k_leapfrog.setArg(iargs++, indices.getDevicePtr());
         k_leapfrog.setArg(iargs++, sphp.getDevicePtr());
         k_leapfrog.setArg(iargs++, dt); //time step
+		k_leapfrog.setArg(iargs++, clf_debug.getDevicePtr()); 
 
         int local_size = 128;
         float gputime = k_leapfrog.execute(num, local_size);
         if(gputime > 0)
             timer->set(gputime);
 
+#if 1 //printouts    
+        //DEBUGING
+        
+        if(num > 0)// && choice == 0)
+        {
+            printf("***** leapfrog diagnostics ******\n");
+            printf("num %d\n", num);
 
+            std::vector<float4> clf(num);
+			std::vector<float4> force(num);
+            
+            clf_debug.copyToHost(clf);
+			force_s.copyToHost(force);
+
+
+            for (int i=0; i < num && i<5; i++) 
+            {
+                printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
+				printf("force: %f, %f, %f, %f\n", force[i].x, force[i].y, force[i].z, force[i].w);
+            }
+			dout<<"size of sphparam = "<<sizeof(SPHParams)<<endl;
+        }
+#endif
 } //namespace sph
 
-#if 0
-#define DENS 0
-#define POS 1
-#define VEL 2
 
-        printf("************ LeapFrog **************\n");
-            int nbc = num+5;
-            std::vector<float4> poss(nbc);
-            std::vector<float4> uposs(nbc);
-            std::vector<float4> dens(nbc);
-
-            //cl_vars_sorted.copyToHost(dens, DENS*sphp.max_num);
-            cl_vars_sorted.copyToHost(poss, POS*sphp.max_num);
-            cl_vars_unsorted.copyToHost(uposs, POS*sphp.max_num);
-
-            for (int i=0; i < nbc; i++)
-            //for (int i=0; i < 10; i++) 
-            {
-                poss[i] = poss[i] / sphp.simulation_scale;
-                //printf("-----\n");
-                //printf("clf_debug: %f, %f, %f, %f\n", clf[i].x, clf[i].y, clf[i].z, clf[i].w);
-                printf("pos sorted: %f, %f, %f, %f\n", poss[i].x, poss[i].y, poss[i].z, poss[i].w);
-                printf("pos unsorted: %f, %f, %f, %f\n", uposs[i].x, uposs[i].y, uposs[i].z, uposs[i].w);
-                //printf("dens sorted: %f, %f, %f, %f\n", dens[i].x, dens[i].y, dens[i].z, dens[i].w);
-            }
-
-#endif
 
         /*
          * enables us to cut off after a couple iterations

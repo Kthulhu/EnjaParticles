@@ -29,11 +29,11 @@ __kernel void permute(
                             )
 {
     uint index = get_global_id(0);
-    //int num = sphp->num;
+    //int num = sphp[0].num;
    if (index >= num) return;
     //cell_indices_end[index] = 42;
     uint sorted_index = sort_indices[index];
-    pos_s[index]     = pos_u[sorted_index];// * sphp->simulation_scale;
+    pos_s[index]     = pos_u[sorted_index];// * sphp[0].simulation_scale;
     vel_s[index]     = vel_u[sorted_index];
     veleval_s[index] = veleval_u[sorted_index]; // not sure if needed
     color_s[index]   = color_u[sorted_index];

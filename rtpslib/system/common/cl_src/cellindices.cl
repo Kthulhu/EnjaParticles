@@ -21,10 +21,10 @@ __kernel void cellindices(
                             )
 {
     uint index = get_global_id(0);
-    //int num = sphp->num;
+    //int num = sphp[0].num;
     //int num = get_global_size(0);
     //if (index >= num) return;
-    uint ncells = gp->nb_cells;
+    uint ncells = gp[0].nb_cells;
 
     uint hash = sort_hashes[index];
 
@@ -50,9 +50,9 @@ __kernel void cellindices(
         sharedHash[0] = hashm1;
         //sharedHash[0] = sort_hashes[index-1];
         /*
-        if(hash >= gp->nb_cells-1) //if particles go out of bounds, delete them
+        if(hash >= gp[0].nb_cells-1) //if particles go out of bounds, delete them
         {
-            //cell_indices_end[gp->nb_cells - 2] = index + 1; //make sure last cell index is right // this is totally confused
+            //cell_indices_end[gp[0].nb_cells - 2] = index + 1; //make sure last cell index is right // this is totally confused
             if(num_changed[0] == 0)
             {
                 num_changed[0] = index; //new number of particles to use
@@ -78,7 +78,7 @@ __kernel void cellindices(
     //but we can't keep going if our index goes out of bounds of the number of particles
     if (index >= num) return;
 
-    //if(hash < gp->nb_cells)
+    //if(hash < gp[0].nb_cells)
     //{
     //if ((index == 0 || hash != sharedHash[tid]))
     if (index == 0)
