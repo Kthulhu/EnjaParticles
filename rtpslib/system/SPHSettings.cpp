@@ -166,7 +166,7 @@ namespace rtps
         sphp.friction_coef = settings->GetSettingAs<float>("friction_kinetic");
         sphp.restitution_coef = settings->GetSettingAs<float>("restitution");
         //next 3 not used at the moment
-        //sphp.shear = settings->GetSettingAs<float>("shear");
+        sphp.shear = settings->GetSettingAs<float>("shear");
         sphp.attraction = settings->GetSettingAs<float>("attraction");
         sphp.spring = settings->GetSettingAs<float>("spring");
         //sphp.surface_threshold;
@@ -188,7 +188,7 @@ namespace rtps
         sphp.num = settings->GetSettingAs<int>("num_particles");
         sphp.max_num = settings->GetSettingAs<int>("max_num_particles");
 		sphp.gravity.print("Gravity sph");
-		dout<<"cl mem size of sphp="<<cl_sphp.getBuffer().getInfo<CL_MEM_SIZE>()<<endl;
+	//	dout<<"cl mem size of sphp="<<cl_sphp.getBuffer().getInfo<CL_MEM_SIZE>()<<endl;
         //update the OpenCL buffer
         //std::vector<SPHParams> vparams();
         //vparams.push_back(sphp);

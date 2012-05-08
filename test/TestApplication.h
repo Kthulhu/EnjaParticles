@@ -61,7 +61,7 @@ namespace rtps
                 );
 
         private:
-            GLuint windowWidth,windowHeight;
+            GLuint windowWidth,windowHeight, environTex;
             std::map<std::string,System*> systems;
             std::map<std::string,ParticleEffect*> effects;
             MeshEffect* meshRenderer;

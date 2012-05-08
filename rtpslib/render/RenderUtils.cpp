@@ -270,6 +270,46 @@ namespace rtps
         free(im);
         return retTex;
     }
+    GLuint RenderUtils::loadCubemapTexture(const string& texpath)
+    {
+        //Load an image with stb_image
+        int w,h,channels;
+        int force_channels = 0;
+
+        unsigned char *imposx = stbi_load( string(texpath).append("posx.jpg").c_str(), &w, &h, &channels, force_channels );
+        unsigned char *imposy = stbi_load( string(texpath).append("posy.jpg").c_str(), &w, &h, &channels, force_channels );
+        unsigned char *imposz = stbi_load( string(texpath).append("posz.jpg").c_str(), &w, &h, &channels, force_channels );
+        unsigned char *imnegx = stbi_load( string(texpath).append("negx.jpg").c_str(), &w, &h, &channels, force_channels );
+        unsigned char *imnegy = stbi_load( string(texpath).append("negy.jpg").c_str(), &w, &h, &channels, force_channels );
+        unsigned char *imnegz = stbi_load( string(texpath).append("negz.jpg").c_str(), &w, &h, &channels, force_channels );
+
+        GLuint retTex=0;
+        glGenTextures(1, &retTex);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, retTex);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        GLenum format = GL_RGBA;
+        if(channels = 3)
+            format = GL_RGB;
+        //Define all 6 faces
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imposx);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imnegx);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imposy);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imnegy);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imposz);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imnegz);
+        glBindTexture(GL_TEXTURE_2D,0);
+        free(imposx);
+        free(imposy);
+        free(imposz);
+        free(imnegx);
+        free(imnegy);
+        free(imnegz);
+        return retTex;
+    }
 }
 
 

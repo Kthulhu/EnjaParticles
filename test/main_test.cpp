@@ -85,9 +85,9 @@ int main(int argc, char** argv)
             | GLUT_MULTISAMPLE
 		//|GLUT_STEREO //if you want stereo you must uncomment this.
 		);
-    glutInitWindowSize(640, 480);
-    glutInitWindowPosition (glutGet(GLUT_SCREEN_WIDTH)/2 - 640/2,
-                            glutGet(GLUT_SCREEN_HEIGHT)/2 - 480/2);
+    glutInitWindowSize(800, 600);
+    glutInitWindowPosition (glutGet(GLUT_SCREEN_WIDTH)/2 - 800/2,
+                            glutGet(GLUT_SCREEN_HEIGHT)/2 - 600/2);
     std::stringstream ss;
     ss << "Real-Time Particle System " << std::ends;
     glutWindowHandle = glutCreateWindow(ss.str().c_str());

@@ -120,6 +120,10 @@ namespace rtps
             readFile(shaderSrc+"/render_lit_vert.glsl",vert);
             readFile(shaderSrc+"/render_lit_frag.glsl",frag);
             addShader("renderLitShader",vert,frag,geom,tessCont,tessEval);
+            vert = frag = geom="";
+            readFile(shaderSrc+"/render_water_IBL_vert.glsl",vert);
+            readFile(shaderSrc+"/render_water_IBL_frag.glsl",frag);
+            addShader("renderFluidShader",vert,frag,geom,tessCont,tessEval);
             //readFile(shaderSrc+"/renderInstanced_geom.glsl",geom);
         }
 

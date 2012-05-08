@@ -48,8 +48,8 @@ namespace rtps
     {
         glewInit();
         GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
-        windowHeight=640;
-        windowWidth=480;
+        windowHeight=800;
+        windowWidth=600;
         cli = new CL();
 
         renderType="default";
@@ -89,7 +89,7 @@ namespace rtps
         light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
         light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
         //mass=100.0f;
-        mass=1.0f;
+        mass=0.01f;
         sizeScale=1.0f;
         string scenefile = path+"/demo_scene.obj";
 
@@ -104,6 +104,7 @@ namespace rtps
         loadMeshScene(meshesfile);
         build_shapes(scene, scene->mRootNode);
         build_dynamic_shapes(dynamicMeshScene, dynamicMeshScene->mRootNode);
+        environTex = RenderUtils::loadCubemapTexture(path+"/cubemaps/");
     }
 
     void TestApplication::setWindowHeight(GLuint windowHeight) {
@@ -204,9 +205,9 @@ namespace rtps
                 //spray hose
                 cout<<"about to make hose"<<endl;
                 float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
-                float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-0.5f,1.0f);
-                float4 velocity(-1.f, -1.f, -5.f, 0);
-                float radius= 1.5f;
+                float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-1.5f,1.0f);
+                float4 velocity(-1.25f, -1.25f, -3.0f, 0);
+                float radius= 2.0f;
                 //sph sets spacing and multiplies by radius value
                 systems["water"]->addHose(1000, center, velocity,radius, col1);
                 return;
@@ -428,7 +429,63 @@ namespace rtps
             glEnd();
             glLineWidth (1.0);
 
+            /*glEnable(GL_TEXTURE_GEN_S);
+            glEnable(GL_TEXTURE_GEN_T);
+            glEnable(GL_TEXTURE_GEN_R);
+            glEnable(GL_TEXTURE_CUBE_MAP);
 
+            glBindTexture(GL_TEXTURE_CUBE_MAP, environTex);
+            glBegin(GL_QUADS);
+            glNormal3f(-1.0, 0.0, 0.0);
+            glTexCoord2f(0.0, 0.0); glVertex3f(100.0, -100.0,  100.0);
+            glTexCoord2f(1.0, 0.0); glVertex3f(100.0, -100.0, -100.0);
+            glTexCoord2f(1.0, 1.0); glVertex3f(100.0,  100.0, -100.0);
+            glTexCoord2f(0.0, 1.0); glVertex3f(100.0,  100.0,  100.0);
+            glEnd();
+
+            glBegin(GL_QUADS);
+            glNormal3f(1.0, 0.0, 0.0);
+            glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, -100.0, -100.0);
+            glTexCoord2f(1.0, 0.0); glVertex3f(-100.0, -100.0,  100.0);
+            glTexCoord2f(1.0, 1.0); glVertex3f(-100.0,  100.0,  100.0);
+            glTexCoord2f(0.0, 1.0); glVertex3f(-100.0,  100.0, -100.0);
+            glEnd();
+
+            glBegin(GL_QUADS);
+            glNormal3f( 0.0, -1.0, 0.0);
+            glTexCoord2f(0.0, 1.0); glVertex3f(-100.0,  100.0, -100.0);
+            glTexCoord2f(0.0, 0.0); glVertex3f(-100.0,  100.0,  100.0);
+            glTexCoord2f(1.0, 0.0); glVertex3f( 100.0,  100.0,  100.0);
+            glTexCoord2f(1.0, 1.0); glVertex3f( 100.0,  100.0, -100.0);
+            glEnd();
+
+            glBegin(GL_QUADS);
+            glNormal3f( 0.0, 1.0, 0.0);
+            glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, -100.0, -100.0);
+            glTexCoord2f(0.0, 1.0); glVertex3f(-100.0, -100.0,  100.0);
+            glTexCoord2f(1.0, 1.0); glVertex3f( 100.0, -100.0,  100.0);
+            glTexCoord2f(1.0, 0.0); glVertex3f( 100.0, -100.0, -100.0);
+            glEnd();
+
+            glBegin(GL_QUADS);
+            glNormal3f( 0.0, 0.0, -1.0);
+            glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, -100.0,  100.0);
+            glTexCoord2f(1.0, 0.0); glVertex3f( 100.0, -100.0,  100.0);
+            glTexCoord2f(1.0, 1.0); glVertex3f( 100.0,  100.0,  100.0);
+            glTexCoord2f(0.0, 1.0); glVertex3f(-100.0,  100.0,  100.0);
+            glEnd();
+
+            glBegin(GL_QUADS);
+            glNormal3f( 0.0, 0.0, 1.0);
+            glTexCoord2f(0.0, 0.0); glVertex3f( 100.0, -100.0, -100.0);
+            glTexCoord2f(1.0, 0.0); glVertex3f(-100.0, -100.0, -100.0);
+            glTexCoord2f(1.0, 1.0); glVertex3f(-100.0,  100.0, -100.0);
+            glTexCoord2f(0.0, 1.0); glVertex3f( 100.0,  100.0, -100.0);
+            glEnd();
+
+            glDisable(GL_TEXTURE_CUBE_MAP);
+
+            glDisable(GL_TEXTURE_GEN_R);*/
             //RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
             ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
             meshRenderer->renderInstanced(dynamicMeshs["dynamicShape0"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
@@ -466,17 +523,18 @@ namespace rtps
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
             //glBlendFunc(GL_ONE,GL_ONE);
             Mesh* mcMesh = sph->getMCMesh();
+            glEnable(GL_BLEND);
             if(sph->getSettings()->GetSettingAs<bool>("use_color_field","0")&&mcMesh)
             {
 		glEnable(GL_CULL_FACE);
-                meshRenderer->render(mcMesh,light);
+                //meshRenderer->render(mcMesh,light);
+                meshRenderer->renderFluid(mcMesh,environTex,0,light);
 		glDisable(GL_CULL_FACE);
             }
             else
             {
                 effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
             }
-            glEnable(GL_BLEND);
             display(true);
 #else
         glMatrixMode(GL_PROJECTION);
@@ -519,6 +577,7 @@ namespace rtps
     int TestApplication::writeMovieFrame(const char* filename, const char* dir)
     {
         GLubyte* image = new GLubyte[windowWidth*windowHeight*3];
+	dout<<"width = "<<windowWidth<<" height = "<<windowHeight<<endl;
         stringstream s;
         s<<dir<<filename;
         s.fill('0');

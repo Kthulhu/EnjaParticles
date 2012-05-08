@@ -75,14 +75,13 @@ namespace sph
         k_leapfrog.setArg(iargs++, indices.getDevicePtr());
         k_leapfrog.setArg(iargs++, sphp.getDevicePtr());
         k_leapfrog.setArg(iargs++, dt); //time step
-		k_leapfrog.setArg(iargs++, clf_debug.getDevicePtr()); 
 
         int local_size = 128;
         float gputime = k_leapfrog.execute(num, local_size);
         if(gputime > 0)
             timer->set(gputime);
 
-#if 1 //printouts    
+#if 0 //printouts    
         //DEBUGING
         
         if(num > 0)// && choice == 0)

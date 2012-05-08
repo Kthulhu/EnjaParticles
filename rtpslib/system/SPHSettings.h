@@ -55,7 +55,7 @@ namespace rtps
 
         float friction_coef;
         float restitution_coef;
-        //float shear;
+        float shear;
         float attraction;
         float spring;
 

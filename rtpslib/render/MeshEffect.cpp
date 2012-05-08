@@ -32,7 +32,110 @@ namespace rtps
     MeshEffect::MeshEffect(RenderSettings set, ShaderLibrary& lib):ParticleEffect(set,lib)
     {}
     MeshEffect::~MeshEffect(){}
-    void MeshEffect::render(Mesh* mesh,Light& light)
+    void MeshEffect::renderFluid(Mesh* mesh,GLuint cubeMap, GLuint sceneTex, Light& light)
+    {
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glMultMatrixf((float*)&mesh->modelMat);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
+        if(mesh->colbo)
+        {
+			glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->colbo);
+            glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
+        }
+        if(mesh->hasNormals)
+        {
+            glEnableVertexAttribArray(2);
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
+            glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,0,0);
+        }
+        if(mesh->hasTexture)
+        {
+            glEnableVertexAttribArray(3);
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->texCoordsbo);
+            glVertexAttribPointer(3,2,GL_FLOAT,GL_FALSE,0,0);
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D,mesh->tex);
+        }
+        if(mesh->ibo)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
+        //TODO: Create My own matrix class to handle this. Or use boost. That way
+        //I can be opengl 3+ compliant.
+        float16 modelview;
+        glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+        //modelview.transpose();
+        float16 invModelview(modelview);
+        invModelview.inverse();
+
+        float16 project;
+        glGetFloatv(GL_PROJECTION_MATRIX,project.m);
+        //project.transpose();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+        glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(), "reflectionCubeSampler"), 0);
+        glUseProgram(m_shaderLibrary.shaders["renderFluidShader"].getProgram());
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"modelview"),1,false,modelview.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"project"),1,false,project.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"viewinvmat"),1,false,invModelview.m);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"light.diffuse"),1,&light.diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"light.specular"),1,&light.specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"light.ambient"),1,&light.ambient.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"light.pos"),1,&light.pos.x);
+
+//        modelview.print("modelview");
+//        project.print("projection");
+//        dout<<"ibo "<<mesh->ibo<<endl;
+//        dout<<"ibosize "<<mesh->iboSize<<endl;
+//        dout<<"vbo "<<mesh->vbo<<endl;
+//        dout<<"vbosize "<<mesh->vboSize<<endl;
+//        dout<<"normals "<<mesh->normalbo<<endl;
+//        dout<<"texcoords "<<mesh->texCoordsbo<<endl;
+        if(mesh->iboSize)
+            glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
+        else
+        {
+        //glUseProgram(0);
+//            glUseProgram(0);
+            /*glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(3, GL_FLOAT, 0,0);
+
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
+            glEnableClientState(GL_NORMAL_ARRAY);
+            glNormalPointer(GL_FLOAT, 0,0 );*/
+
+            glDrawArrays(GL_TRIANGLES,0,mesh->vboSize);
+            //glBindBuffer(GL_ARRAY_BUFFER,0);
+            //glDisableClientState(GL_VERTEX_ARRAY);
+            //glDisableClientState(GL_NORMAL_ARRAY);
+        }
+        glUseProgram(0);
+        glDisableVertexAttribArray(0);
+        if(mesh->colbo)
+        {
+            glDisableVertexAttribArray(1);
+        }
+        if(mesh->hasNormals)
+        {
+            glDisableVertexAttribArray(2);
+        }
+        if(mesh->hasTexture)
+        {
+            glDisableVertexAttribArray(3);
+            glDisable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D,0);
+        }
+        glPopMatrix();
+    }
+        void MeshEffect::render(Mesh* mesh,Light& light)
     {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
