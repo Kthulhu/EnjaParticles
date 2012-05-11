@@ -386,6 +386,7 @@ namespace rtps
     {
 
         glClearColor(.9f, .9f, .9f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
 #if 1
@@ -397,12 +398,84 @@ namespace rtps
         {*/
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
-            gluPerspective(65.0, windowWidth/(double)windowHeight, 0.3, 100.0);
+            gluPerspective(65.0, windowWidth/(double)windowHeight, 0.3, 1000.0);
+                        // set view matrix
 
-            // set view matrix
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
+
+            glPushMatrix();
+            glRotatef(rotation.x, 1.0, 0.0, 0.0);
+            glRotatef(rotation.y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
+            glTranslatef(translation.x, translation.z, translation.y);
+
+            glDisable(GL_TEXTURE_2D);
+            glEnable(GL_TEXTURE_GEN_S);
+            glEnable(GL_TEXTURE_GEN_T);
+            glEnable(GL_TEXTURE_GEN_R);
+            glEnable(GL_TEXTURE_CUBE_MAP);
+
+            glBindTexture(GL_TEXTURE_CUBE_MAP, environTex);
+            // draw the skybox
+            const GLfloat fSkyDist = 100.0;
+            const GLfloat fTex = 1.0f;
+
+            glBegin(GL_TRIANGLE_STRIP);
+
+            //west
+                glTexCoord3f(-fTex, -fTex , fTex);
+                glVertex3f(-fSkyDist, -fSkyDist,  fSkyDist);
+                glTexCoord3f(-fTex, fTex, fTex);
+                glVertex3f(-fSkyDist, fSkyDist,  fSkyDist);
+                glTexCoord3f(-fTex, -fTex, -fTex);
+                glVertex3f(-fSkyDist, -fSkyDist, -fSkyDist);
+                glTexCoord3f(-fTex, fTex,-fTex);
+                glVertex3f(-fSkyDist, fSkyDist,  -fSkyDist);
+            //north
+                glTexCoord3f(fTex, -fTex,-fTex);
+                glVertex3f(fSkyDist, -fSkyDist, -fSkyDist);
+                glTexCoord3f(fTex, fTex,-fTex);
+                glVertex3f(fSkyDist, fSkyDist, -fSkyDist);
+            //east
+                glTexCoord3f( fTex, -fTex, fTex);
+                glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
+                glTexCoord3f( fTex, fTex, fTex);
+                glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
+            //south
+                glTexCoord3f( -fTex, -fTex, fTex);
+                glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
+                glTexCoord3f( -fTex, fTex, fTex);
+                glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
+            glEnd();
+            glBegin(GL_QUADS);
+            //up
+                glTexCoord3f( -fTex, fTex, -fTex);
+                glVertex3f( -fSkyDist, fSkyDist,  -fSkyDist);
+                glTexCoord3f( -fTex, fTex, fTex);
+                glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
+                glTexCoord3f( fTex, fTex, fTex);
+                glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
+                glTexCoord3f( fTex, fTex, -fTex);
+                glVertex3f( fSkyDist, fSkyDist,  -fSkyDist);
+            //down
+                glTexCoord3f( fTex, -fTex, -fTex);
+                glVertex3f( fSkyDist, -fSkyDist,  -fSkyDist);
+                glTexCoord3f( fTex, -fTex, fTex);
+                glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
+                glTexCoord3f( -fTex, -fTex, fTex);
+                glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
+                glTexCoord3f( -fTex, -fTex, -fTex);
+                glVertex3f( -fSkyDist, -fSkyDist,  -fSkyDist);
+            glEnd();
+
+            glDisable(GL_TEXTURE_CUBE_MAP);
+
+            glDisable(GL_TEXTURE_GEN_R);
+
+
+            glPopMatrix();
+
             glRotatef(-90, 1.0, 0.0, 0.0);
 
             glRotatef(rotation.x, 1.0, 0.0, 0.0);
@@ -429,63 +502,7 @@ namespace rtps
             glEnd();
             glLineWidth (1.0);
 
-            /*glEnable(GL_TEXTURE_GEN_S);
-            glEnable(GL_TEXTURE_GEN_T);
-            glEnable(GL_TEXTURE_GEN_R);
-            glEnable(GL_TEXTURE_CUBE_MAP);
 
-            glBindTexture(GL_TEXTURE_CUBE_MAP, environTex);
-            glBegin(GL_QUADS);
-            glNormal3f(-1.0, 0.0, 0.0);
-            glTexCoord2f(0.0, 0.0); glVertex3f(100.0, -100.0,  100.0);
-            glTexCoord2f(1.0, 0.0); glVertex3f(100.0, -100.0, -100.0);
-            glTexCoord2f(1.0, 1.0); glVertex3f(100.0,  100.0, -100.0);
-            glTexCoord2f(0.0, 1.0); glVertex3f(100.0,  100.0,  100.0);
-            glEnd();
-
-            glBegin(GL_QUADS);
-            glNormal3f(1.0, 0.0, 0.0);
-            glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, -100.0, -100.0);
-            glTexCoord2f(1.0, 0.0); glVertex3f(-100.0, -100.0,  100.0);
-            glTexCoord2f(1.0, 1.0); glVertex3f(-100.0,  100.0,  100.0);
-            glTexCoord2f(0.0, 1.0); glVertex3f(-100.0,  100.0, -100.0);
-            glEnd();
-
-            glBegin(GL_QUADS);
-            glNormal3f( 0.0, -1.0, 0.0);
-            glTexCoord2f(0.0, 1.0); glVertex3f(-100.0,  100.0, -100.0);
-            glTexCoord2f(0.0, 0.0); glVertex3f(-100.0,  100.0,  100.0);
-            glTexCoord2f(1.0, 0.0); glVertex3f( 100.0,  100.0,  100.0);
-            glTexCoord2f(1.0, 1.0); glVertex3f( 100.0,  100.0, -100.0);
-            glEnd();
-
-            glBegin(GL_QUADS);
-            glNormal3f( 0.0, 1.0, 0.0);
-            glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, -100.0, -100.0);
-            glTexCoord2f(0.0, 1.0); glVertex3f(-100.0, -100.0,  100.0);
-            glTexCoord2f(1.0, 1.0); glVertex3f( 100.0, -100.0,  100.0);
-            glTexCoord2f(1.0, 0.0); glVertex3f( 100.0, -100.0, -100.0);
-            glEnd();
-
-            glBegin(GL_QUADS);
-            glNormal3f( 0.0, 0.0, -1.0);
-            glTexCoord2f(0.0, 0.0); glVertex3f(-100.0, -100.0,  100.0);
-            glTexCoord2f(1.0, 0.0); glVertex3f( 100.0, -100.0,  100.0);
-            glTexCoord2f(1.0, 1.0); glVertex3f( 100.0,  100.0,  100.0);
-            glTexCoord2f(0.0, 1.0); glVertex3f(-100.0,  100.0,  100.0);
-            glEnd();
-
-            glBegin(GL_QUADS);
-            glNormal3f( 0.0, 0.0, 1.0);
-            glTexCoord2f(0.0, 0.0); glVertex3f( 100.0, -100.0, -100.0);
-            glTexCoord2f(1.0, 0.0); glVertex3f(-100.0, -100.0, -100.0);
-            glTexCoord2f(1.0, 1.0); glVertex3f(-100.0,  100.0, -100.0);
-            glTexCoord2f(0.0, 1.0); glVertex3f( 100.0,  100.0, -100.0);
-            glEnd();
-
-            glDisable(GL_TEXTURE_CUBE_MAP);
-
-            glDisable(GL_TEXTURE_GEN_R);*/
             //RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
             ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
             meshRenderer->renderInstanced(dynamicMeshs["dynamicShape0"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);

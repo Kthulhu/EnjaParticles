@@ -270,7 +270,7 @@ namespace rtps
         free(im);
         return retTex;
     }
-    GLuint RenderUtils::loadCubemapTexture(const string& texpath)
+        GLuint RenderUtils::loadCubemapTexture(const string& texpath)
     {
         //Load an image with stb_image
         int w,h,channels;
@@ -284,11 +284,15 @@ namespace rtps
         unsigned char *imnegz = stbi_load( string(texpath).append("negz.jpg").c_str(), &w, &h, &channels, force_channels );
 
         GLuint retTex=0;
+        glEnable(GL_TEXTURE_CUBE_MAP);
         glGenTextures(1, &retTex);
         glBindTexture(GL_TEXTURE_CUBE_MAP, retTex);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_EXT);
+        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_EXT);
+        glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_EXT);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         GLenum format = GL_RGBA;
@@ -301,7 +305,8 @@ namespace rtps
         glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imnegy);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imposz);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imnegz);
-        glBindTexture(GL_TEXTURE_2D,0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP,0);
+        glDisable(GL_TEXTURE_CUBE_MAP);
         free(imposx);
         free(imposy);
         free(imposz);

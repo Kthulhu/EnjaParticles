@@ -87,6 +87,7 @@ namespace rtps
             {
                 stringstream s;
                 s<<"-DLEVELS="<<i+1;
+                s<<" -I"<<path;
                 k_traverse.push_back(Kernel(cli,source,"traverseHP2D",s.str(),false));
             }
         }
@@ -116,11 +117,11 @@ namespace rtps
         mesh.material.ambient=float3(0.0f,0.2f,0.6f);
         mesh.material.diffuse=float3(0.0f,0.2f,0.6f);
         mesh.material.specular=float3(1.0f,1.f,1.0f);
-        mesh.material.opacity=0.4;
-        mesh.material.shininess=50;
+        mesh.material.opacity=0.6;
+        mesh.material.shininess=100;
         cl_histopyramid.resize(levels);
         unsigned int levelRes = texRes2D;
-        //dout<<"level = "<<0<<" levelRes = "<<levelRes<<endl;
+        dout<<"level = "<<0<<" levelRes = "<<levelRes<<endl;
         float* zeroImg = new float[texRes2D*texRes2D*4];
         memset(zeroImg,0,texRes2D*texRes2D*4*sizeof(float));
 		try
@@ -138,7 +139,7 @@ namespace rtps
 #if 0
             float* zeroImg2 = new float[levelRes*levelRes*4];
             memset(zeroImg2,0,levelRes*levelRes*4*sizeof(float));
-            //dout<<"level = "<<i<<" levelRes = "<<levelRes<<endl;
+            dout<<"level = "<<i<<" levelRes = "<<levelRes<<endl;
             cl_histopyramid[i]=cl::Image2D(cli->context,CL_MEM_COPY_HOST_PTR|CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT),levelRes,levelRes,0,zeroImg2);
             delete[] zeroImg2;
 #endif
@@ -158,7 +159,7 @@ namespace rtps
             delete[] zeroImg2;
 
         }
-	
+
     }
 
     struct Mesh* MarchingCubes::execute(cl::Image2D& colorfield,
