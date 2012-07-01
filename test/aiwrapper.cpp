@@ -1,9 +1,13 @@
 #include "aiwrapper.h"
-
-const struct aiScene* getScene()
+#include "../rtpslib/RTPS.h"
+using namespace std;
+namespace rtps
 {
+const struct aiScene* AIWrapper::getScene()
+{
+	return sc;
 }
-void loadMeshes (std::map<QString,Mesh*>* meshes, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
+void AIWrapper::loadMeshes (std::map<QString,Mesh*>& meshes, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
 {
 unsigned int n = 0, t,i;
 
@@ -92,8 +96,8 @@ unsigned int n = 0, t,i;
             }
 
             stringstream s;
-            s<<mesh->mName<<mesh->mNumFaces;
-            meshes[s.str()]=me;
+            s<<mesh->mName.data<<mesh->mNumFaces;
+            meshes[QString(s.str().c_str())]=me;
             //dout<<"minCoord ("<<minCoord.x<<","<<minCoord.y<<","<<minCoord.z<<")"<<endl;
             //dout<<"maxCoord ("<<maxCoord.x<<","<<maxCoord.y<<","<<maxCoord.z<<")"<<endl;
             //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
@@ -102,8 +106,6 @@ unsigned int n = 0, t,i;
             float3 adjmaxCoord=float3(maxCoord.x+space,maxCoord.y+space,maxCoord.z+space);
             space = systems["rb1"]->getSpacing();
             ParticleShape* shape = new ParticleShape(adjminCoord,adjmaxCoord,space);*/
-#if 1
-
         }
 
         // draw all children
@@ -111,7 +113,7 @@ unsigned int n = 0, t,i;
             loadMeshes(meshes, nd->mChildren[n],m);
         }
 }
-void recursive_render (const struct aiNode* nd)
+void AIWrapper::recursive_render (const struct aiNode* nd)
 {
 unsigned int n = 0, t,i=0;
         struct aiMatrix4x4 m = nd->mTransformation;
@@ -173,7 +175,7 @@ unsigned int n = 0, t,i=0;
 
         glPopMatrix();
 }
-void apply_material(const struct aiMaterial *mtl, Mesh* mesh)
+void AIWrapper::apply_material(const struct aiMaterial *mtl, Mesh* mesh)
 {
 float c[4];
 
@@ -256,32 +258,32 @@ float c[4];
             fill_mode = GL_FILL;
         //glPolygonMode(GL_FRONT_AND_BACK, fill_mode);
 }
-void set_float4(float f[4], float a, float b, float c, float d)
+void AIWrapper::set_float4(float f[4], float a, float b, float c, float d)
 {
         f[0] = a;
         f[1] = b;
         f[2] = c;
         f[3] = d;
 }
-void color4_to_float4(const struct aiColor4D *c, float f[4])
+void AIWrapper::color4_to_float4(const struct aiColor4D *c, float f[4])
 {
         f[0] = c->r;
         f[1] = c->g;
         f[2] = c->b;
         f[3] = c->a;
 }
-void get_bounding_box (struct aiVector3D* min, struct aiVector3D* max)
+void AIWrapper::get_bounding_box (struct aiVector3D* minBB, struct aiVector3D* maxBB)
 {
         struct aiMatrix4x4 trafo;
         aiIdentityMatrix4(&trafo);
 
         minBB->x = minBB->y = minBB->z =  1e10f;
         maxBB->x = maxBB->y = maxBB->z = -1e10f;
-        get_bounding_box_for_node(scene->mRootNode,minBB,maxBB,&trafo);
+        get_bounding_box_for_node(sc->mRootNode,minBB,maxBB,&trafo);
 }
-void get_bounding_box_for_node (const struct aiNode* nd,
-    struct aiVector3D* min,
-    struct aiVector3D* max,
+void AIWrapper::get_bounding_box_for_node (const struct aiNode* nd,
+    struct aiVector3D* minBB,
+    struct aiVector3D* maxBB,
     struct aiMatrix4x4* trafo
 )
 {
@@ -292,7 +294,7 @@ void get_bounding_box_for_node (const struct aiNode* nd,
         aiMultiplyMatrix4(trafo,&nd->mTransformation);
 
         for (; n < nd->mNumMeshes; ++n) {
-            const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+            const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
             for (t = 0; t < mesh->mNumVertices; ++t) {
 
                 struct aiVector3D tmp = mesh->mVertices[t];
@@ -313,11 +315,11 @@ void get_bounding_box_for_node (const struct aiNode* nd,
         }
         *trafo = prev;
 }
-void loadScene(const QString& filename)
+void AIWrapper::loadScene(const QString& filename)
 {
         // we are taking one of the postprocessing presets to avoid
         // spelling out 20+ single postprocessing flags here.
-        sc = aiImportFile(filename.c_str(),aiProcessPreset_TargetRealtime_MaxQuality);
+        sc = aiImportFile(filename.toAscii().data(),aiProcessPreset_TargetRealtime_MaxQuality);
 
         if (sc) {
             get_bounding_box(&scene_min,&scene_max);
@@ -327,7 +329,8 @@ void loadScene(const QString& filename)
         }
         else
         {
-            cerr<<"Scene file couldn't be imported from: "<<filename<<endl;
+            cerr<<"Scene file couldn't be imported from: "<<filename.toAscii().data()<<endl;
         }
 
+}
 }

@@ -70,6 +70,8 @@ set (test_mc_SOURCES
 set(moc_hdrs glwidget.h mainwindow.h)
 QT4_WRAP_CPP(_mocFiles ${moc_hdrs})
 set (test_qt_SOURCES
+    ParamParser
+    aiwrapper
     glwidget.cpp
     mainwindow.cpp
     mainqt.cpp
@@ -93,7 +95,7 @@ INCLUDE_DIRECTORIES(${test_mc_INCLUDES})
 ADD_EXECUTABLE(test_marching_cubes.x ${test_mc_SOURCES})
 
 INCLUDE_DIRECTORIES(${test_qt_INCLUDES} ${QT_INCLUDE_DIR} ${QT_QTOPENGL_INCLUDE_DIR})
-ADD_EXECUTABLE(test_qt.x ${test_qt_SOURCES} ${_mocFiles} )
+ADD_EXECUTABLE(test_qt.x  ${_mocFiles} ${test_qt_SOURCES})
 
 #message("current build dir:\n")
 #message("${BASE_DIR}/rtps/build")

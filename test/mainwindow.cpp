@@ -3,13 +3,14 @@
 
  #include "glwidget.h"
  #include "mainwindow.h"
-
- MainWindow::MainWindow()
+namespace rtps
+{
+ MainWindow::MainWindow(std::string path)
  {
      centralWidget = new QWidget;
      setCentralWidget(centralWidget);
 
-     glWidget = new GLWidget;
+     glWidget = new GLWidget(path,this);
      pixmapLabel = new QLabel;
 
      glWidgetArea = new QScrollArea;
@@ -25,12 +26,8 @@
      pixmapLabelArea->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
      pixmapLabelArea->setMinimumSize(50, 50);
 
-     xSlider = createSlider(SIGNAL(xRotationChanged(int)),
-                            SLOT(setXRotation(int)));
-     ySlider = createSlider(SIGNAL(yRotationChanged(int)),
-                            SLOT(setYRotation(int)));
-     zSlider = createSlider(SIGNAL(zRotationChanged(int)),
-                            SLOT(setZRotation(int)));
+     //paramSlider = createFloatSlider(SIGNAL(parameterValueChanged(float)),
+    //                        SLOT(setParameterValue(float)));
 
      createActions();
      createMenus();
@@ -38,14 +35,10 @@
      QGridLayout *centralLayout = new QGridLayout;
      centralLayout->addWidget(glWidgetArea, 0, 0);
      centralLayout->addWidget(pixmapLabelArea, 0, 1);
-     centralLayout->addWidget(xSlider, 1, 0, 1, 2);
-     centralLayout->addWidget(ySlider, 2, 0, 1, 2);
-     centralLayout->addWidget(zSlider, 3, 0, 1, 2);
+     //centralLayout->addWidget(paramSlider, 1, 0, 1, 2);
      centralWidget->setLayout(centralLayout);
 
-     xSlider->setValue(15 * 16);
-     ySlider->setValue(345 * 16);
-     zSlider->setValue(0 * 16);
+     //paramSlider->setValue(15 * 16);
 
      setWindowTitle(tr("Grabber"));
      resize(400, 300);
@@ -164,3 +157,4 @@
 
      return glWidget->size();
  }
+}

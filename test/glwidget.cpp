@@ -35,13 +35,16 @@
 #include <float.h>
  #include "glwidget.h"
 
- GLWidget::GLWidget(QWidget *parent)
+using namespace std;
+namespace rtps
+{
+ GLWidget::GLWidget(std::string bPath,QWidget *parent)
      : QGLWidget(parent)
  {
+     binaryPath=bPath;
      glewInit();
      GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
      cli = new CL();
-     renderType="default";
 	RenderSettings rs;
         //rs.blending=false;
         rs.blending=false;
@@ -56,7 +59,7 @@
         //rs.windowWidth=windowWidth;
         //rs.windowHeight=windowHeight;
         lib = new ShaderLibrary();
-	string shaderpath=path+"/shaders";
+	string shaderpath=bPath+"/shaders";
         lib->initializeShaders(shaderpath);
         effects["default"]=new ParticleEffect(rs,*lib);
         //effects["sprite"]=new ParticleEffect();
@@ -86,11 +89,11 @@
         //loadScene(scenefile);
         renderMovie=false;
         frameCounter=0;
-        string meshesfile = path+"/demo_mesh_scene.obj";
+        //string meshesfile = path+"/demo_mesh_scene.obj";
         //loadMeshScene(meshesfile);
         //build_shapes(scene, scene->mRootNode);
         //build_dynamic_shapes(dynamicMeshScene, dynamicMeshScene->mRootNode);
-        environTex = RenderUtils::loadCubemapTexture(path+"/cubemaps/");
+        environTex = RenderUtils::loadCubemapTexture(bPath+"/cubemaps/");
 
      fov=65.0f;
      near=0.3f;
@@ -103,19 +106,19 @@
  GLWidget::~GLWidget()
  {
 
-for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+	for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
             delete i->second;
         }
-        for(map<string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+        for(map<QString,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
         {
             delete i->second;
         }
-        for(map<string,ParticleShape*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
+        for(map<QString,ParticleShape*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
         {
             delete i->second;
         }
-        for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
+        for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
         {
             delete i->second;
         }
@@ -278,11 +281,11 @@ for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
 */
             //FIXME: Have a method to give renderType to each System. That way we can have different
             //Systems with the different effects.
-            for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
             {
                 if(renderVelocity)
                 {
-                    effects[renderType]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
+                    effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
                 }
                 //effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
                 //FIXME:This is a horrible way of doing this!!
@@ -347,9 +350,9 @@ for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
  {
      int side = qMin(width, height);
      glViewport(0, 0, width, height);
-     for(map<string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+     for(map<QString,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
         {
-            i->second->setWindowDimensions(w,h);
+            i->second->setWindowDimensions(width,height);
         }
      glMatrixMode(GL_PROJECTION);
      glLoadIdentity();
@@ -370,9 +373,48 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
 {
 
 }
-void GLWidget::readParamFile(std::istream& is, QString path)
+void GLWidget::readParamFile(std::istream& is)
 {
+	ParamParser p;
+        vector<RTPSSettings*> sysSettings;
+        vector<string> names;
+        p.readParameterFile(is,sysSettings ,names );
+        for(unsigned int i = 0; i<sysSettings.size(); i++)
+        {
+            //#ifdef WIN32
+            //    sysSettings[i]->SetSetting("rtps_path",".");
+            //#else
+            //    sysSettings[i]->SetSetting("rtps_path","./bin");
+            //#endif
+			sysSettings[i]->SetSetting("rtps_path",binaryPath);
+            //Fixme::This is hacky. I need to determine an efficient way to do simulation scaling
+            //for rigid bodies to work well with sph.
+            if(sysSettings[i]->GetSettingAs<string>("system")!="sph")
+            {
+                sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
+                sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
+            }
+            systems[QString(names[i].c_str())]=RTPS::generateSystemInstance(sysSettings[i],cli);
+            systemRenderType[QString(names[i].c_str())] = "default";
+            dout<<"names[i] \'"<<names[i]<<"\'"<<endl;
 
+        }
+        gridMin = systems["water"]->getSettings()->GetSettingAs<float4>("domain_min");
+        gridMax = systems["water"]->getSettings()->GetSettingAs<float4>("domain_max");
+        for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        {
+            for(map<QString,System*>::iterator j = systems.begin(); j!=systems.end(); j++)
+            {
+                if(i==j)
+                    continue;
+                //FIXME: More hacking. Don't add flocks to interaction systems yet!
+                //The framework isn't defined for systems interacting with flocks yet.
+                if(i->second->getSettings()->GetSettingAs<string>("system")=="flock"||
+                        j->second->getSettings()->GetSettingAs<string>("system")=="flock")
+                    continue;
+                i->second->addInteractionSystem(j->second);
+            }
+        }
 }
 int GLWidget::writeMovieFrame(const char* filename, const char* dir)
 {
@@ -395,14 +437,16 @@ int GLWidget::writeMovieFrame(const char* filename, const char* dir)
         delete[] image;
         return 0;
 }
-void GLWidget::createParticleShape(Mesh* mesh)
+ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-        float* pos = new float[mesh->vbosize*3];
+        float* pos = new float[mesh->vboSize*3];
+        glGetBufferSubData(GL_ARRAY_BUFFER,0,mesh->vboSize*3*sizeof(float),pos);
         float3 minCoord(FLT_MAX,FLT_MAX,FLT_MAX);
         float3 maxCoord(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-        for(int i = 0; i < mesh->vbosize*3; i++)
+        for(int i = 0; i < mesh->vboSize; i++)
 	{
+            float x=pos[(i*3)],y=pos[(i*3)+1],z=pos[(i*3)+2];
             if(x<minCoord.x)
                 minCoord.x=x;
             if(x>maxCoord.x)
@@ -416,14 +460,16 @@ void GLWidget::createParticleShape(Mesh* mesh)
             if(z>maxCoord.z)
                 maxCoord.z=z;
 	}
-            float space = systems["rb1"]->getSpacing();
+	delete[] pos;
+	pos =0;
+            float space = systems[system]->getSpacing();
             ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
 
 
-            shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
+            shape->voxelizeMesh(mesh->vbo,mesh->ibo,mesh->iboSize);
             //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
             //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
-            s<<"surface";
+            //s<<"surface";
             //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
 
             /*dout<<"mesh name = "<<s.str()<<endl;
@@ -434,7 +480,7 @@ void GLWidget::createParticleShape(Mesh* mesh)
             dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
             dout<<"spacing = "<<space<<endl;*/
 
-            return shape
+            return shape;
 
 }
     void GLWidget::display(bool blend)
@@ -447,7 +493,7 @@ void GLWidget::createParticleShape(Mesh* mesh)
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         }
-        for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
+        for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
         {
             if((!blend&&i->second->material.opacity==1.0f) || (blend &&i->second->material.opacity<1.0f))
                 meshRenderer->render(i->second,light);
@@ -459,7 +505,7 @@ void GLWidget::createParticleShape(Mesh* mesh)
         glDisable(GL_NORMALIZE);
         glDisable(GL_CULL_FACE);
     }
-void GLWidget::setParameterValue(const QString& parameter, const string& value)
+void GLWidget::setParameterValue(const QString& system, const QString& parameter, const string& value)
 {
 
 }
@@ -467,11 +513,13 @@ void GLWidget::loadScene(const QString& filename)
 {
      scene->loadScene(filename);
      scene->loadMeshes(meshes,scene->getScene()->mRootNode);
-     for(map<QString,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
+     for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
      {
-          ParticleShape* shape = createParticleShape(i->second)
+          ParticleShape* shape = createParticleShape("rb1",i->second);
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
             float16 modelview;
+            float16 mat;
+            memcpy(&mat,&i->second->modelMat,sizeof(float16));
             glMatrixMode(GL_MODELVIEW);
             glPushMatrix();
             glLoadIdentity();
@@ -494,10 +542,10 @@ void GLWidget::loadScene(const QString& filename)
 void GLWidget::loadMeshScene(const QString& filename)
 {
      dynamicMeshScene->loadScene(filename);
-     dynamicMeshScene->loadMeshes(dynamicMeshes,dynamicMeshScenes->getScene()->mRootNode);
-     for(map<QString,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
+     dynamicMeshScene->loadMeshes(dynamicMeshes,dynamicMeshScene->getScene()->mRootNode);
+     for(map<QString,Mesh*>::iterator i = dynamicMeshes.begin(); i!=dynamicMeshes.end(); i++)
      {
-          ParticleShape* shape = createParticleShape(i->second)
+          ParticleShape* shape = createParticleShape("rb1",i->second);
           pShapes[i->first]=shape;
      }
 }
@@ -505,51 +553,15 @@ void GLWidget::loadMeshScene(const QString& filename)
 
 void GLWidget::loadParameterFile(const QString& filename)
 {
-	ParamParser p;
-        vector<RTPSSettings*> sysSettings;
-        vector<string> names;
-        p.readParameterFile(is,sysSettings ,names );
-        for(unsigned int i = 0; i<sysSettings.size(); i++)
-        {
-            //#ifdef WIN32
-            //    sysSettings[i]->SetSetting("rtps_path",".");
-            //#else
-            //    sysSettings[i]->SetSetting("rtps_path","./bin");
-            //#endif
-			sysSettings[i]->SetSetting("rtps_path",path);
-            //Fixme::This is hacky. I need to determine an efficient way to do simulation scaling
-            //for rigid bodies to work well with sph.
-            if(sysSettings[i]->GetSettingAs<string>("system")!="sph")
-            {
-                sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
-                sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
-            }
-            systems[names[i]]=RTPS::generateSystemInstance(sysSettings[i],cli);
-            dout<<"names[i] \'"<<names[i]<<"\'"<<endl;
-
-        }
-        gridMin = systems["water"]->getSettings()->GetSettingAs<float4>("domain_min");
-        gridMax = systems["water"]->getSettings()->GetSettingAs<float4>("domain_max");
-        for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-        {
-            for(map<string,System*>::iterator j = systems.begin(); j!=systems.end(); j++)
-            {
-                if(i==j)
-                    continue;
-                //FIXME: More hacking. Don't add flocks to interaction systems yet!
-                //The framework isn't defined for systems interacting with flocks yet.
-                if(i->second->getSettings()->GetSettingAs<string>("system")=="flock"||
-                        j->second->getSettings()->GetSettingAs<string>("system")=="flock")
-                    continue;
-                i->second->addInteractionSystem(j->second);
-            }
-        }
+	ifstream is(filename.toAscii().data(),ifstream::in);
+        readParamFile(is);
 }
 void GLWidget::ResetSimulations()
 {
 
 }
-void GLWidget::parameterValueChanged(const QString& parameter, const QString& value)
+/*void GLWidget::parameterValueChanged(const QString& parameter, const QString& value)
 {
-
+	
+}*/
 }

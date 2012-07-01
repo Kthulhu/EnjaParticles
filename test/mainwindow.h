@@ -2,6 +2,7 @@
  #define MAINWINDOW_H
 
  #include <QMainWindow>
+#include <string.h>
 
  class QAction;
  class QLabel;
@@ -10,13 +11,14 @@
  class QSlider;
 
  class GLWidget;
-
+namespace rtps
+{
  class MainWindow : public QMainWindow
  {
      Q_OBJECT
 
  public:
-     MainWindow();
+     MainWindow(std::string path);
 
  private slots:
      void renderIntoPixmap();
@@ -49,5 +51,5 @@
      QAction *aboutAct;
      QAction *aboutQtAct;
  };
-
+};
  #endif
