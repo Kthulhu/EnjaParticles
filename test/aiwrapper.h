@@ -1,3 +1,7 @@
+
+#ifdef AIWRAPPER_H
+#define AIWRAPPER_H
+
 #include <assimp/assimp.h>
 #include <assimp/aiPostProcess.h>
 #include <assimp/aiScene.h>
@@ -6,7 +10,8 @@
 class AIWrapper
 {
 public:
-    void build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform=aiMatrix4x4(1.0f,0.0f,0.0f,0.0f,
+    const struct aiScene* getScene();
+    void loadMeshes (std::map<QString,Mesh*>* meshes, const struct aiNode* nd, struct aiMatrix4x4 parentTransform=aiMatrix4x4(1.0f,0.0f,0.0f,0.0f,
                                                                                                                     0.0f,1.0f,0.0f,0.0f,
                                                                                                                     0.0f,0.0f,1.0f,0.0f,
                                                                                                                     0.0f,0.0f,0.0f,1.0f) );
@@ -20,7 +25,9 @@ public:
             struct aiVector3D* max,
             struct aiMatrix4x4* trafo
         );
+    void loadScene(const QString& filename);
 private:
-     const struct aiScene* scene;
+     const struct aiScene* sc;
      struct aiVector3D scene_min, scene_max, scene_center;
 };
+#endif

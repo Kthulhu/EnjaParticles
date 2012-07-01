@@ -2,6 +2,7 @@
  #define GLWIDGET_H
 
  #include <QGLWidget>
+#include "aiwrapper.h"
 
  class GLWidget : public QGLWidget
  {
@@ -31,6 +32,8 @@
      void keyPressEvent(QKeyEvent *event);
      void readParamFile(std::istream& is, QString path);
      int writeMovieFrame(const char* filename, const char* dir);
+     void display(bool transparent);
+     void createParticleShape(Mesh* mesh);
 
  private:
 	GLuint environTex;
@@ -38,14 +41,15 @@
 	std::map<QString,ParticleEffect*> effects;
 	MeshEffect* meshRenderer;
 	std::map<QString,ParticleShape*> pShapes;
-	std::map<QString,Mesh*> meshs;
-	std::map<QString,Mesh*> dynamicMeshs;
+	std::map<QString,Mesh*> meshes;
+	std::map<QString,Mesh*> dynamicMeshes;
 	ShaderLibrary* lib;
 	QString renderType;
 	float4 rotation; //may want to consider quaternions for this at some point.
 	float3 translation;
 	Light light;
 	int2 mousePos;
+	float fov,near,far;
 	int mouseButtons;
 	// the global Assimp scene object
 	AIWrapper* scene;
