@@ -27,6 +27,10 @@ FIND_PACKAGE (OpenGL)
 FIND_PACKAGE (OPENCL)
 FIND_PACKAGE (GLEW)
 
+
+SET(QT_USE_OPENGL TRUE)
+FIND_PACKAGE (Qt4 REQUIRED)
+INCLUDE(${QT_USE_FILE})
 FIND_LIBRARY(ASSIMP_LIBRARIES assimp
     PATHS ENV LD_LIBRARY_PATH /usr/lib/
 )
@@ -63,6 +67,15 @@ set (test_mc_SOURCES
     test_marching_cubes.cpp
     )
 
+set(moc_hdrs glwidget.h mainwindow.h)
+QT4_WRAP_CPP(_mocFiles ${moc_hdrs})
+set (test_qt_SOURCES
+    glwidget.cpp
+    mainwindow.cpp
+    mainqt.cpp
+    )
+
+
 
 #INCLUDE_DIRECTORIES(${test_INCLUDES})
 #ADD_EXECUTABLE(test_render.x ${test_render_SOURCES})
@@ -78,6 +91,10 @@ ADD_EXECUTABLE(test.x ${test_SOURCES})
 
 INCLUDE_DIRECTORIES(${test_mc_INCLUDES})
 ADD_EXECUTABLE(test_marching_cubes.x ${test_mc_SOURCES})
+
+INCLUDE_DIRECTORIES(${test_qt_INCLUDES} ${QT_INCLUDE_DIR} ${QT_QTOPENGL_INCLUDE_DIR})
+ADD_EXECUTABLE(test_qt.x ${test_qt_SOURCES} ${_mocFiles} )
+
 #message("current build dir:\n")
 #message("${BASE_DIR}/rtps/build")
 
@@ -112,12 +129,18 @@ TARGET_LINK_LIBRARIES (test.x
 TARGET_LINK_LIBRARIES (test_marching_cubes.x
     ${LINK_LIBS}
 )
+TARGET_LINK_LIBRARIES (test_qt.x
+    ${LINK_LIBS}
+    ${QT_LIBRARIES}
+    ${QT_QTOPENGL_LIBRARIES}
+)
 #IF(WIN32)
 #install (TARGETS test_render.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (TARGETS torusTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (TARGETS torusRBTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS test.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS test_marching_cubes.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+install (TARGETS test_qt.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES MathFunctions.h DESTINATION include)
 
 #ENDIF(WIN32)
