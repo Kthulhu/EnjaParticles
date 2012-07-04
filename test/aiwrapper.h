@@ -5,11 +5,11 @@
 #include <assimp/assimp.h>
 #include <assimp/aiPostProcess.h>
 #include <assimp/aiScene.h>
-#include <QString>
 #include <map>
 #include <string>
 #include <iostream>
 
+#include <QString>
 //Mesh is defined in mesh effect
 #include "../rtpslib/render/MeshEffect.h"
 #define aisgl_min(x,y) (x<y?x:y)

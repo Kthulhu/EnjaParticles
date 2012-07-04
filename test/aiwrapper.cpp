@@ -24,7 +24,7 @@ unsigned int n = 0, t,i;
             const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
 
             //dout<<"num faces "<<mesh->mNumFaces<<endl;
-            
+
             Mesh* me=new Mesh();
             //dout<<"material index = "<<mesh->mMaterialIndex<<endl;
             apply_material(sc->mMaterials[mesh->mMaterialIndex],me);

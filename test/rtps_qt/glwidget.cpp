@@ -21,40 +21,63 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 #include <GL/glew.h>
+#include <QtGui>
 #include <QGLWidget>
-#include <QString>
-#include <QTimer>
-
 #include "ParamParser.h"
-
 #include "../rtpslib/RTPS.h"
-#include "../rtpslib/render/ParticleEffect.h"
 #include "../rtpslib/render/SSEffect.h"
 #include "../rtpslib/render/MeshEffect.h"
-#include "../rtpslib/system/ParticleRigidBody.h"
-#include "../rtpslib/system/SPH.h"
-#include "../rtpslib/system/FLOCK.h"
-
-#include <math.h>
+#include <../rtpslib/system/ParticleRigidBody.h>
+#include <../rtpslib/system/SPH.h>
+#include <../rtpslib/system/FLOCK.h>
+ #include <math.h>
 #include <sstream>
 #include <float.h>
-
-#include "aiwrapper.h"
-#include "glwidget.h"
-
-#include "../rtpslib/render/util/stb_image_write.h"
+ #include "glwidget.h"
 
 using namespace std;
 namespace rtps
 {
  GLWidget::GLWidget(std::string bPath,QWidget *parent)
-     : QGLWidget(QGLFormat(QGL::AlphaChannel|QGL::DeprecatedFunctions),parent)
+     : QGLWidget(parent)
  {
-     cout<<"profile = "<<this->format().profile()<<endl;
-     cout<<"Major Version = "<<this->format().majorVersion()<<endl;
-     cout<<"Minor Version = "<<this->format().minorVersion()<<endl;
      binaryPath=bPath;
-             //mass=100.0f;
+     glewInit();
+     GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
+     cli = new CL();
+	RenderSettings rs;
+        //rs.blending=false;
+        rs.blending=false;
+        float nf[2];
+        glGetFloatv(GL_DEPTH_RANGE,nf);
+        rs.m_near = nf[0];
+        rs.m_far = nf[1];
+        //dout<<"near = "<<rs.near<<endl;
+        //dout<<"far = "<<rs.far<<endl;
+        //dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
+        //rs.particleRadius = systems["water"]->getSpacing()*20.f;
+        //rs.windowWidth=windowWidth;
+        //rs.windowHeight=windowHeight;
+        lib = new ShaderLibrary();
+	string shaderpath=bPath+"/shaders";
+        lib->initializeShaders(shaderpath);
+        effects["default"]=new ParticleEffect(rs,*lib);
+        //effects["sprite"]=new ParticleEffect();
+        rs.blending=true;
+        //rs.particleRadius =systems["water"]->getSpacing()*.6f;
+        effects["ssfr"]=new SSEffect(rs, *lib);
+        meshRenderer=new MeshEffect(rs, *lib);
+        translation.x = -5.00f;
+        translation.y = -5.00f;//300.f;
+        translation.z = 5.00f;
+        rotation.x=0.0f;
+        rotation.y=0.0f;
+        light.diffuse.x=1.0;light.diffuse.y=1.0;light.diffuse.z=1.0;
+        //light.ambient.x=0.3;light.ambient.y=0.3;light.ambient.z=0.3;
+        light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
+        light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
+        light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
+        //mass=100.0f;
         mass=0.01f;
         sizeScale=1.0f;
         //string scenefile = path+"/demo_scene.obj";
@@ -70,7 +93,13 @@ namespace rtps
         //loadMeshScene(meshesfile);
         //build_shapes(scene, scene->mRootNode);
         //build_dynamic_shapes(dynamicMeshScene, dynamicMeshScene->mRootNode);
+        environTex = RenderUtils::loadCubemapTexture(bPath+"/cubemaps/");
+
+     fov=65.0f;
+     near=0.3f;
+     far=1000.0f;
      QTimer *timer = new QTimer(this);
+     connect(timer, SIGNAL(timeout()), this, SLOT(advanceGears()));
      timer->start(20);
  }
 
@@ -101,49 +130,6 @@ namespace rtps
 
  void GLWidget::initializeGL()
  {
-    glewInit();
-     fov=65.0f;
-     near=0.3f;
-     far=1000.0f;
-     GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
-     cout<<"Major Version = "<<glGetVersion(GL_MAJOR)<<endl;
-     cout<<"Minor Version = "<<glGetVersion(GL_MINOR)<<endl;
-
-     cli = new CL();
-	RenderSettings rs;
-        //rs.blending=false;
-        rs.blending=false;
-        float nf[2];
-        glGetFloatv(GL_DEPTH_RANGE,nf);
-        rs.m_near = nf[0];
-        rs.m_far = nf[1];
-        //dout<<"near = "<<rs.near<<endl;
-        //dout<<"far = "<<rs.far<<endl;
-        //dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
-        //rs.particleRadius = systems["water"]->getSpacing()*20.f;
-        //rs.windowWidth=windowWidth;
-        //rs.windowHeight=windowHeight;
-        lib = new ShaderLibrary();
-	string shaderpath=binaryPath+"/shaders";
-        lib->initializeShaders(shaderpath);
-        effects["default"]=new ParticleEffect(rs,*lib);
-        //effects["sprite"]=new ParticleEffect();
-        rs.blending=true;
-        //rs.particleRadius =systems["water"]->getSpacing()*.6f;
-        effects["ssfr"]=new SSEffect(rs, *lib);
-        meshRenderer=new MeshEffect(rs, *lib);
-        translation.x = -5.00f;
-        translation.y = -5.00f;//300.f;
-        translation.z = 5.00f;
-        rotation.x=0.0f;
-        rotation.y=0.0f;
-        light.diffuse.x=1.0;light.diffuse.y=1.0;light.diffuse.z=1.0;
-        //light.ambient.x=0.3;light.ambient.y=0.3;light.ambient.z=0.3;
-        light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
-        light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
-        light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
-
-        environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
      static const GLfloat lightPos[4] = { 5.0f, 5.0f, 10.0f, 1.0f };
      static const GLfloat reflectance1[4] = { 0.8f, 0.1f, 0.0f, 1.0f };
      static const GLfloat reflectance2[4] = { 0.0f, 0.8f, 0.2f, 1.0f };
@@ -171,8 +157,8 @@ namespace rtps
 
  void GLWidget::paintGL()
  {
-        glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
 #if 1
         /*if (stereo_enabled)
@@ -268,7 +254,7 @@ namespace rtps
                   YP[3] = {0,1,0}, YN[3] = {0,-1,0},
                   ZP[3] = {0,0,1}, ZN[3] = {0,0,-1};
             glLineWidth (20.0);
-            /*glBegin (GL_LINES);
+            glBegin (GL_LINES);
             glColor3f (1,0,0); // X axis is red.
             glVertex3fv (ORG);
             glVertex3fv (XP );
@@ -280,7 +266,7 @@ namespace rtps
             glVertex3fv (ZP );
             glEnd();
             glLineWidth (1.0);
-            */
+
             //RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
             /*ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
             meshRenderer->renderInstanced(dynamicMeshs["dynamicShape0"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
@@ -375,12 +361,12 @@ namespace rtps
 
  void GLWidget::mousePressEvent(QMouseEvent *event)
  {
-
+     
  }
 
  void GLWidget::mouseMoveEvent(QMouseEvent *event)
  {
-
+     
  }
 
 void GLWidget::keyPressEvent(QKeyEvent *event)
@@ -519,7 +505,7 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
         glDisable(GL_NORMALIZE);
         glDisable(GL_CULL_FACE);
     }
-void GLWidget::setParameterValue(const QString& system, const QString& parameter, const QString& value)
+void GLWidget::setParameterValue(const QString& system, const QString& parameter, const string& value)
 {
 
 }
@@ -576,6 +562,6 @@ void GLWidget::ResetSimulations()
 }
 /*void GLWidget::parameterValueChanged(const QString& parameter, const QString& value)
 {
-
+	
 }*/
 }

@@ -1,31 +1,22 @@
 #ifndef GLWIDGET_H
  #define GLWIDGET_H
 
-#include "structs.h"
-#include "../rtpslib/render/ParticleEffect.h"
-#include "../rtpslib/system/ParticleShape.h"
-
-#include <map>
-#include <string>
-#include <fstream>
 #include <QGLWidget>
 #include <QString>
-#include <QTimer>
-//#include <QtGui>
+#include <map>
+#include <string>
+#include <iostream>
+#include <fstream>
 
+#include "../../rtpslib/render/MeshEffect.h"
+#include "../../rtpslib/system/System.h"
+#include "../../rtpslib/system/ParticleShape.h"
+#include "../../rtpslib/render/ParticleEffect.h"
 
+#include "../../rtpslib/render/util/stb_image_write.h"
+#include "../aiwrapper.h"
 namespace rtps
 {
-    struct Mesh;
-
-    class System;
-    class AIWrapper;
-    class MeshEffect;
-    class ParticleEffect;
-    class ShaderLibrary;
-    class CL;
-
-
  class GLWidget : public QGLWidget
  {
      Q_OBJECT
@@ -36,7 +27,7 @@ namespace rtps
 
 
  public slots:
-     void setParameterValue(const QString& system, const QString& parameter, const QString& value);
+     void setParameterValue(const QString& system, const QString& parameter, const string& value);
      void loadScene(const QString& filename);
      void loadMeshScene(const QString& filename);
      void loadParameterFile(const QString& filename);
@@ -78,7 +69,7 @@ namespace rtps
 	AIWrapper* scene;
 	AIWrapper* dynamicMeshScene;
 	GLuint scene_list;
-
+	
 	int frameCounter;
 	bool renderMovie;
 
@@ -87,7 +78,7 @@ namespace rtps
 	float mass;
 	CL* cli;
 	bool paused,renderVelocity;
-    std::string binaryPath;
+	string binaryPath;
  };
 };
  #endif
