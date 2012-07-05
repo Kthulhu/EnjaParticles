@@ -21,8 +21,8 @@
             <param name="boundary_stiffness" >20000.0</param>
             <param name="boundary_dampening" >256.0</param>
             <param name="integrator" >leapfrog</param>
-            <param name="time_step" >0.004</param>
-            <param name="use_color_field">1</param>
+            <param name="time_step" >0.003</param>
+            <param name="use_color_field">0</param>
             <param name="color_field_res">32</param>
         </parameters>
         <parameters type="render">
@@ -47,11 +47,11 @@
             <param name="friction_dynamic" >0.0</param>
             <param name="friction_static" >0.00</param>
             <param name="friction_static_threshold" >0.0001</param>
-            <param name="penetration_factor" >.03</param>
-            <param name="restitution" >.25</param>
+            <param name="penetration_factor" >.02</param>
+            <param name="restitution" >.604</param>
             <!--<param name="integrator" >euler</param>-->
             <param name="integrator" >leapfrog</param>
-            <param name="time_step" >0.004</param>
+            <param name="time_step" >0.003</param>
         </parameters>
         <parameters type="render">
             <param name="render_type" >default</param>

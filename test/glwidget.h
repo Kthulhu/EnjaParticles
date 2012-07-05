@@ -31,7 +31,7 @@ namespace rtps
      Q_OBJECT
 
  public:
-     GLWidget(std::string bpath, QWidget *parent = 0);
+     GLWidget(QGLContext* ctx,std::string bpath, QWidget *parent = 0);
      ~GLWidget();
 
 
@@ -43,6 +43,7 @@ namespace rtps
      void ResetSimulations();
 
  signals:
+     void systemMapChanged(const std::vector<std::string>& sysNames);
      //void parameterValueChanged(const QString& parameter, const QString& value);
 
  protected:
@@ -50,6 +51,7 @@ namespace rtps
      void paintGL();
      void resizeGL(int width, int height);
      void mousePressEvent(QMouseEvent *event);
+     void mouseReleaseEvent(QMouseEvent *event);
      void mouseMoveEvent(QMouseEvent *event);
      void keyPressEvent(QKeyEvent *event);
      void readParamFile(std::istream& is);
@@ -57,6 +59,8 @@ namespace rtps
      void display(bool transparent);
      ParticleShape* createParticleShape(const QString& system, Mesh* mesh);
 
+ protected slots:
+     void update();
  private:
 	GLuint environTex;
 	std::map<QString,System*> systems;
@@ -88,6 +92,7 @@ namespace rtps
 	CL* cli;
 	bool paused,renderVelocity;
     std::string binaryPath;
+    QTimer *timer;
  };
 };
  #endif

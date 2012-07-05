@@ -9,6 +9,7 @@
  class QMenu;
  class QScrollArea;
  class QSlider;
+ class QComboBox;
 
  class GLWidget;
 namespace rtps
@@ -21,10 +22,11 @@ namespace rtps
      MainWindow(std::string path);
 
  private slots:
-     void renderIntoPixmap();
-     void grabFrameBuffer();
-     void clearPixmap();
      void about();
+     void loadParameters();
+     void loadScene();
+     void loadDynamicMeshes();
+     void setSystemNames(const std::vector<std::string>& sysNames);
 
  private:
      void createActions();
@@ -34,19 +36,14 @@ namespace rtps
      QSize getSize();
 
      QWidget *centralWidget;
-     QScrollArea *glWidgetArea;
-     QScrollArea *pixmapLabelArea;
      GLWidget *glWidget;
-     QLabel *pixmapLabel;
-     QSlider *xSlider;
-     QSlider *ySlider;
-     QSlider *zSlider;
+     QComboBox *systemSelector;
 
      QMenu *fileMenu;
      QMenu *helpMenu;
-     QAction *grabFrameBufferAct;
-     QAction *renderIntoPixmapAct;
-     QAction *clearPixmapAct;
+     QAction *loadParametersAct;
+     QAction *loadSceneAct;
+     QAction *loadDynamicMeshesAct;
      QAction *exitAct;
      QAction *aboutAct;
      QAction *aboutQtAct;

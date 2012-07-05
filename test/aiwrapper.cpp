@@ -97,6 +97,7 @@ unsigned int n = 0, t,i;
 
             stringstream s;
             s<<mesh->mName.data<<mesh->mNumFaces;
+            dout<<"Mesh name = "<<s.str()<<endl;
             meshes[QString(s.str().c_str())]=me;
             //dout<<"minCoord ("<<minCoord.x<<","<<minCoord.y<<","<<minCoord.z<<")"<<endl;
             //dout<<"maxCoord ("<<maxCoord.x<<","<<maxCoord.y<<","<<maxCoord.z<<")"<<endl;

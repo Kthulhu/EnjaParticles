@@ -22,6 +22,8 @@
 ****************************************************************************************/
 #include <GL/glew.h>
 #include <QGLWidget>
+#include <QMouseEvent>
+#include <QKeyEvent>
 #include <QString>
 #include <QTimer>
 
@@ -47,13 +49,10 @@
 using namespace std;
 namespace rtps
 {
- GLWidget::GLWidget(std::string bPath,QWidget *parent)
-     : QGLWidget(QGLFormat(QGL::AlphaChannel|QGL::DeprecatedFunctions),parent)
+ GLWidget::GLWidget(QGLContext* ctx,std::string bPath,QWidget *parent)
+     : QGLWidget(ctx,parent)
  {
-     cout<<"profile = "<<this->format().profile()<<endl;
-     cout<<"Major Version = "<<this->format().majorVersion()<<endl;
-     cout<<"Minor Version = "<<this->format().minorVersion()<<endl;
-     binaryPath=bPath;
+     	binaryPath=bPath;
              //mass=100.0f;
         mass=0.01f;
         sizeScale=1.0f;
@@ -61,77 +60,65 @@ namespace rtps
 
         renderVelocity=false;
         paused=false;
-        //scene=NULL;
         scene_list=0;
-        //loadScene(scenefile);
+        scene=new AIWrapper();
+        dynamicMeshScene=new AIWrapper();
         renderMovie=false;
         frameCounter=0;
-        //string meshesfile = path+"/demo_mesh_scene.obj";
-        //loadMeshScene(meshesfile);
-        //build_shapes(scene, scene->mRootNode);
-        //build_dynamic_shapes(dynamicMeshScene, dynamicMeshScene->mRootNode);
-     QTimer *timer = new QTimer(this);
-     timer->start(20);
+     timer = new QTimer(this);
+     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+     timer->start(33);
  }
 
  GLWidget::~GLWidget()
  {
-
-	for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-        {
-            delete i->second;
-        }
-        for(map<QString,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
-        {
-            delete i->second;
-        }
-        for(map<QString,ParticleShape*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
-        {
-            delete i->second;
-        }
-        for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
-        {
-            delete i->second;
-        }
-        delete meshRenderer;
-        delete cli;
-        delete lib;
-     makeCurrent();
+    makeCurrent();
+    for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+    {
+        delete i->second;
+    }
+    for(map<QString,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+    {
+        delete i->second;
+    }
+    for(map<QString,ParticleShape*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
+    {
+        delete i->second;
+    }
+    for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
+    {
+        delete i->second;
+    }
+    delete meshRenderer;
+    delete dynamicMeshScene;
+    delete scene;
+    delete cli;
+    delete lib;
+    delete timer;
  }
 
  void GLWidget::initializeGL()
  {
-    glewInit();
+
+     //needs to call make current before glew init. Seems to
+     //not have a valid context otherwise.
+     makeCurrent();
+     dout<<"profile = "<<this->context()->format().profile()<<endl;
+     dout<<"Major Version = "<<this->context()->format().majorVersion()<<endl;
+     dout<<"Minor Version = "<<this->context()->format().minorVersion()<<endl;
+     dout<<"version 3.3 supported = "<<(int)(this->context()->format().openGLVersionFlags()&QGLFormat::OpenGL_Version_3_3)<<endl;
+     glewInit();
+     GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
+     dout<<"Pixel buffer supported? "<<(bGLEW?"yes":"no")<<endl;
+     dout<<"Version = "<<(const char*)glGetString(GL_VERSION)<<endl;
+     dout<<"valid context"<<context()->isValid()<<endl;
+
      fov=65.0f;
      near=0.3f;
      far=1000.0f;
-     GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
-     cout<<"Major Version = "<<glGetVersion(GL_MAJOR)<<endl;
-     cout<<"Minor Version = "<<glGetVersion(GL_MINOR)<<endl;
 
      cli = new CL();
-	RenderSettings rs;
-        //rs.blending=false;
-        rs.blending=false;
-        float nf[2];
-        glGetFloatv(GL_DEPTH_RANGE,nf);
-        rs.m_near = nf[0];
-        rs.m_far = nf[1];
-        //dout<<"near = "<<rs.near<<endl;
-        //dout<<"far = "<<rs.far<<endl;
-        //dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
-        //rs.particleRadius = systems["water"]->getSpacing()*20.f;
-        //rs.windowWidth=windowWidth;
-        //rs.windowHeight=windowHeight;
-        lib = new ShaderLibrary();
-	string shaderpath=binaryPath+"/shaders";
-        lib->initializeShaders(shaderpath);
-        effects["default"]=new ParticleEffect(rs,*lib);
-        //effects["sprite"]=new ParticleEffect();
-        rs.blending=true;
-        //rs.particleRadius =systems["water"]->getSpacing()*.6f;
-        effects["ssfr"]=new SSEffect(rs, *lib);
-        meshRenderer=new MeshEffect(rs, *lib);
+
         translation.x = -5.00f;
         translation.y = -5.00f;//300.f;
         translation.z = 5.00f;
@@ -144,19 +131,8 @@ namespace rtps
         light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
 
         environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
-     static const GLfloat lightPos[4] = { 5.0f, 5.0f, 10.0f, 1.0f };
-     static const GLfloat reflectance1[4] = { 0.8f, 0.1f, 0.0f, 1.0f };
-     static const GLfloat reflectance2[4] = { 0.0f, 0.8f, 0.2f, 1.0f };
-     static const GLfloat reflectance3[4] = { 0.2f, 0.2f, 1.0f, 1.0f };
 
-     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-     glEnable(GL_LIGHTING);
-     glEnable(GL_LIGHT0);
-     glEnable(GL_DEPTH_TEST);
-     glEnable(GL_NORMALIZE);
-     //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-     // viewport
-        glViewport(0, 0, width(), height());
+        //glViewport(0, 0, width(), height());
 
         // projection
         glMatrixMode(GL_PROJECTION);
@@ -171,8 +147,8 @@ namespace rtps
 
  void GLWidget::paintGL()
  {
-        glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
 #if 1
         /*if (stereo_enabled)
@@ -202,7 +178,7 @@ namespace rtps
 
             glBegin(GL_TRIANGLE_STRIP);
 
-            //west
+           //west
                 glTexCoord3f(-fTex, -fTex , fTex);
                 glVertex3f(-fSkyDist, -fSkyDist,  fSkyDist);
                 glTexCoord3f(-fTex, fTex, fTex);
@@ -291,8 +267,9 @@ namespace rtps
                 //effects[renderType]->render(flock->getPosVBO(),flock->getColVBO(),flock->getNum());
                 meshRenderer->renderInstanced(dynamicMeshs["dynamicShape1"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
             }
-            display(false);
+            
 */
+		display(false);
             //FIXME: Have a method to give renderType to each System. That way we can have different
             //Systems with the different effects.
             for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
@@ -301,7 +278,7 @@ namespace rtps
                 {
                     effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
                 }
-                //effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
+                effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
                 //FIXME:This is a horrible way of doing this!!
                 //if(i->first=="rb1")
                 //{
@@ -357,13 +334,12 @@ namespace rtps
             writeMovieFrame("image","./frames/");
             frameCounter++;
         }
-	updateGL();
  }
 
  void GLWidget::resizeGL(int width, int height)
  {
      int side = qMin(width, height);
-     glViewport(0, 0, width, height);
+     //glViewport(0, 0, width, height);
      for(map<QString,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
         {
             i->second->setWindowDimensions(width,height);
@@ -375,17 +351,281 @@ namespace rtps
 
  void GLWidget::mousePressEvent(QMouseEvent *event)
  {
+        mouseButtons |= event->button();
+        mousePos.x = event->x();
+        mousePos.y = event->y();
+updateGL();
+ }
+ void GLWidget::mouseReleaseEvent(QMouseEvent *event)
+ {
+        mouseButtons &= !event->button();
 
+        mousePos.x = event->x();
+        mousePos.y = event->y();
+updateGL();
  }
 
  void GLWidget::mouseMoveEvent(QMouseEvent *event)
  {
+        float dx, dy;
+        dx = event->x() - mousePos.x;
+        dy = event->y() - mousePos.y;
 
+        if (mouseButtons & Qt::LeftButton)
+        {
+            rotation.x += dy * 0.2f;
+            rotation.y += dx * 0.2f;
+        }
+        else if (mouseButtons & Qt::RightButton)
+        {
+            translation.z -= dy * 0.1f;
+        }
+
+        mousePos.x = event->x();
+        mousePos.y = event->y();
+updateGL();
  }
 
 void GLWidget::keyPressEvent(QKeyEvent *event)
 {
+//should update this eventually.
+char key=event->text().at(0).toAscii();
+        unsigned int nn=0;
+        switch (key)
+        {
+            case ' ':
+                paused=!paused;
+                return;
+            case 'f': //flocks
+            {
+                nn = systems["flock1"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/2;
+                systems["flock1"]->addBox(nn, gridMin+float4(0.5f,0.5f,gridMax.z-3.0f,1.0f), gridMin+float4(3.0f,3.0f,gridMax.z-0.5f,1.0f), false);
+                return;
+            }
 
+            case 'e': //dam break
+            {
+                nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/2;
+                float4 col1 = float4(0.05f, 0.15f, .8f, 0.1f);
+                systems["water"]->addBox(nn, gridMin+float4(0.5f,0.5f,0.5f,1.0f), gridMax-float4(0.5f,0.5f,0.5f,1.0f), false,col1);
+                //ps2->system->addBox(nn, min, max, false);
+                return;
+            }
+            case 'g':
+            {
+                //nn = 16384;
+                nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles");
+                float4 minCoord = float4(1.0f, 1.0f, 5.0f, 1.0f);
+                //float4 max = float4(7.5f, 7.5f, 7.5f, 1.0f);
+                float4 maxCoord = float4(9.5f, 9.5f,9.5, 1.0f);
+                float4 col1 = float4(0.05f, 0.15f, .8f, 0.1f);
+                systems["water"]->addBox(nn, minCoord, maxCoord, false,col1);
+                //ps2->system->addBox(nn, min, max, false);
+                return;
+            }
+            case 'p': //print timers
+                cout<<"SPH timers:"<<endl;
+                systems["water"]->printTimers();
+                cout<<"RB timers:"<<endl;
+                systems["rb1"]->printTimers();
+                return;
+            case '\033': // escape quits
+            case '\015': // Enter quits
+            case 'Q':    // Q quits
+            case 'q':    // q (or escape) quits
+                // Cleanup up and quit
+                //appDestroy();
+                return;
+            case 'b':
+            {
+                //matrix is to position the rigidbody at 7,7,7 with no rotations.
+                float16 mat(1.0f,0.0f,0.0f,7.0f,
+                        0.0f,1.0f,0.0f,7.0f,
+                        0.0f,0.0f,1.0f,7.0f,
+                        0.0f,0.0f,0.0f,1.0f);
+                float4 velocity(0.0f,0.0f,0.0f,0.0f);
+                float4 color(1.0f,0.0f,0.0f,1.0f);
+                //systems["rb1"]->addParticleShape(bunnyShape->getVoxelTexture(),bunnyShape->getMaxDim(),float4(bunnyShape->getMin(),0.0f),mat,bunnyShape->getVoxelResolution(),velocity,color,mass);
+                /*printf("deleting willy nilly\n");
+                systems["water"]->testDelete();
+                systems["rb1"]->testDelete();*/
+
+                return;
+            }
+            case 'h':
+            {
+                //spray hose
+                cout<<"about to make hose"<<endl;
+                float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
+                float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-1.5f,1.0f);
+                float4 velocity(-1.25f, -1.25f, -3.0f, 0);
+                float radius= 2.0f;
+                //sph sets spacing and multiplies by radius value
+                systems["water"]->addHose(1000, center, velocity,radius, col1);
+                return;
+            }
+            case 'H':
+            {
+                //spray hose
+                cout<<"about to make hose"<<endl;
+                float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
+                float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-0.5f,1.0f);
+                float4 velocity(-1.5f, -1.5f, -4.f, 0.f);
+                float radius= 3.0f;
+                center = float4(gridMin.x+2.0f, gridMin.y+2.0f,gridMax.z-0.5f,1.0f);
+                velocity=float4(1.5f, 0.5f, -.05f, 0.f);
+                systems["flock1"]->addHose(50000, center, velocity,radius);
+                return;
+            }
+            case 'n':
+                renderMovie=!renderMovie;
+                break;
+            case '`':
+                //stereo_enabled = !stereo_enabled;
+                break;
+            case 't': //place a cube for collision
+                {
+                    float4 center=(gridMin+gridMax);
+                    center/=2.0f;
+                    float innerRadius=1.0f;
+                    float outerRadius=4.0f;
+                    float thickness=2.0f;
+                    systems["water"]->addTorus(systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")/2,center,innerRadius,outerRadius,thickness);
+                    return;
+                }
+                //add static floor
+            case 'u':
+            {
+                float4 col1 = float4(0.0f, 0.8f, 0.2f, 1.f);
+                float4 size = float4(1.f,1.f,1.f,0.f);
+                float4 position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+.1f,1.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMin.z+.5f,1.0f), false, col1,0.0f);
+                position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMin.x+0.5f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                position = float4(gridMin.x+0.1f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMin.y+0.5f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                position = float4(gridMax.x-0.5f, gridMin.y+0.1f,gridMin.z+0.1f,1.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                position = float4(gridMin.x+0.1f, gridMax.y-0.5f,gridMin.z+0.1f,1.0f);
+                systems["rb1"]->addBox(10000, position, float4(gridMax.x-0.1f,gridMax.y-0.1f,gridMax.z-.1f,1.0f), false, col1,0.0f);
+                return;
+            }
+            case 'R': //drop a rectangle
+                {
+
+                    float4 col1 = float4(0.5f, 0.9f, 0.0f, 1.f);
+
+                    float4 size = float4(1.f,1.f,1.f,0.f);
+                    size=size*sizeScale;
+                    float4 mid = (gridMax-gridMin);
+                    mid = mid/2.0f;
+                    mid.z=0.f;
+                    float4 position = float4(0.0f, 0.0f,gridMax.z-(size.z/2.f),1.0f);
+                    position.x = mid.x-(size.x/2.0f);
+                    position.y = mid.y-(size.y/2.0f);
+                    position.w = 0.0f;
+                    systems["rb1"]->addBox(1000, position, position+size, false, col1,mass);
+                    return;
+                }
+
+            case 'r': //drop a ball
+            {
+                ParticleShape* shape=pShapes["rb1"];
+                float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+                trans +=7.0f;
+                float16 modelview;
+                glMatrixMode(GL_MODELVIEW);
+                glPushMatrix();
+                glLoadIdentity();
+                //glRotatef(rotation.x, 1.0, 0.0, 0.0);
+                glTranslatef(trans, trans, trans);
+                glRotatef(-180, 1.0f, 0.0f, 0.0f);
+                glRotatef(-90, 0.0f, 0.0f, 1.0f);
+                //glTranslatef(translation.x, translation.z, translation.y);
+                glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+                glPopMatrix();
+                modelview.print("modelview");
+                modelview.transpose();
+
+                systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),modelview,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),mass);
+
+                /*    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
+                    float size = 1.0f;
+                    size=size*sizeScale;
+                    float4 mid = (gridMax-gridMin);
+                    mid = mid/2.0f;
+                    mid.w = 0.0f;
+
+                    systems["rb1"]->addBall(1000, mid, size,false, col1,mass);*/
+                    return;
+                }
+            case 'v':
+                renderVelocity=!renderVelocity;
+                return;
+            case 'C':
+                return;
+            case '2':
+                light.pos.z -= 0.1f;
+                break;
+            case '6':
+                light.pos.x += 0.1f;
+                break;
+            case '8':
+                light.pos.z += 0.1f;
+                break;
+            case '4':
+                light.pos.x -= 0.1f;
+                break;
+            case '3':
+                light.pos.y += 0.1f;
+                break;
+            case '1':
+                light.pos.y -= 0.1f;
+                break;
+            case 'w':
+                translation.z -= 0.1f;
+                break;
+            case 'a':
+                translation.x += 0.1f;
+                break;
+            case 's':
+                translation.z += 0.1f;
+                break;
+            case 'd':
+                translation.x -= 0.1f;
+                break;
+            case 'z':
+                translation.y += 0.1f;
+                break;
+            case 'x':
+                translation.y -= 0.1f;
+                break;
+            case '+':
+                mass+=100.0f;//0.1f;
+                break;
+            case '-':
+                mass-=100.0f;//0.1f;
+                break;
+            case '[':
+                //sizeScale+=0.5f;
+                {
+                unsigned int res=systems["water"]->getSettings()->GetSettingAs<unsigned int>("color_field_res","32");
+                res=res<<1;
+                systems["water"]->getSettings()->SetSetting("color_field_res",res);
+                break;
+                }
+            case ']':
+                {
+                //sizeScale-=0.5f;
+                unsigned int res=systems["water"]->getSettings()->GetSettingAs<unsigned int>("color_field_res","32");
+                res=res>>1;
+                systems["water"]->getSettings()->SetSetting("color_field_res",res);
+                break;
+                }
+            default:
+                return;
+        }
+updateGL();
 }
 void GLWidget::readParamFile(std::istream& is)
 {
@@ -429,6 +669,7 @@ void GLWidget::readParamFile(std::istream& is)
                 i->second->addInteractionSystem(j->second);
             }
         }
+        emit systemMapChanged(names);
 }
 int GLWidget::writeMovieFrame(const char* filename, const char* dir)
 {
@@ -519,6 +760,7 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
         glDisable(GL_NORMALIZE);
         glDisable(GL_CULL_FACE);
     }
+
 void GLWidget::setParameterValue(const QString& system, const QString& parameter, const QString& value)
 {
 
@@ -569,10 +811,66 @@ void GLWidget::loadParameterFile(const QString& filename)
 {
 	ifstream is(filename.toAscii().data(),ifstream::in);
         readParamFile(is);
+	RenderSettings rs;
+        //rs.blending=false;
+        rs.blending=false;
+        float nf[2];
+        glGetFloatv(GL_DEPTH_RANGE,nf);
+        rs.m_near = nf[0];
+        rs.m_far = nf[1];
+        //dout<<"near = "<<rs.near<<endl;
+        //dout<<"far = "<<rs.far<<endl;
+        //dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
+        rs.particleRadius = systems["water"]->getSpacing()*20.f;
+        rs.windowWidth=width();
+        rs.windowHeight=height();
+        lib = new ShaderLibrary();
+	string shaderpath=binaryPath+"/shaders";
+        lib->initializeShaders(shaderpath);
+        effects["default"]=new ParticleEffect(rs,*lib);
+        //effects["sprite"]=new ParticleEffect();
+        rs.blending=true;
+        rs.particleRadius =systems["water"]->getSpacing()*.6f;
+        effects["ssfr"]=new SSEffect(rs, *lib);
+        meshRenderer=new MeshEffect(rs, *lib);
 }
 void GLWidget::ResetSimulations()
 {
 
+}
+void GLWidget::update()
+{
+        if(!paused)
+        {
+            glFinish();
+            for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            {
+                i->second->acquireGLBuffers();
+                i->second->update();
+                i->second->interact();
+            }
+
+            for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            {
+                i->second->integrate();
+                i->second->postProcess();
+                i->second->releaseGLBuffers();
+            }
+            /*systems["water"]->acquireGLBuffers();
+            systems["rb1"]->acquireGLBuffers();
+            systems["water"]->update();
+            systems["rb1"]->update();
+            systems["water"]->interact();
+            systems["rb1"]->interact();
+            systems["water"]->integrate();
+            systems["rb1"]->integrate();
+            systems["water"]->postProcess();
+            systems["rb1"]->postProcess();
+            //streamline->addStreamLine(systems["water"]->getPositionBufferUnsorted(),systems["water"]->getColorBufferUnsorted(),systems["water"]->getNum());
+            systems["water"]->releaseGLBuffers();
+            systems["rb1"]->releaseGLBuffers();*/
+        }
+	updateGL();
 }
 /*void GLWidget::parameterValueChanged(const QString& parameter, const QString& value)
 {
