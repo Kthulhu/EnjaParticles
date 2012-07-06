@@ -16,19 +16,22 @@
 
 
      gravityX = new QLineEdit("0.0",this);
+     gravityX->setObjectName("gravityx");
      gravityX->setMaxLength(5);
      gravityX->setFixedWidth(50);
      gravityY = new QLineEdit("0.0",this);
+     gravityY->setObjectName("gravityy");
      gravityY->setMaxLength(5);
      gravityY->setFixedWidth(50);
      gravityZ = new QLineEdit("-9.8",this);
+     gravityZ->setObjectName("gravityz");
      gravityZ->setMaxLength(5);
      gravityZ->setFixedWidth(50);
 
      connect(xSPHSlider,SIGNAL(valueChanged(int)),this,SLOT(triggerValue(int)));
-     connect(gravityX,SIGNAL(valueChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
-     connect(gravityY,SIGNAL(valueChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
-     connect(gravityZ,SIGNAL(valueChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
+     connect(gravityX,SIGNAL(textChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
+     connect(gravityY,SIGNAL(textChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
+     connect(gravityZ,SIGNAL(textChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
 
 
      QBoxLayout::Direction direction;
@@ -81,9 +84,9 @@ void SPHParameterGroup::setValue(const QString& value)
 }
  void SPHParameterGroup::triggerValue(int value)
  {
-     emit valueChanged(value);
+     emit valueChanged(this->sender()->objectName(),QString::number(value));
  }
  void SPHParameterGroup::triggerValue(const QString& value)
  {
-     emit valueChanged(value);
+     emit valueChanged(this->sender()->objectName(),value);
  }

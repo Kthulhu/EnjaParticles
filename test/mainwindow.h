@@ -27,7 +27,7 @@ namespace rtps
      void loadScene();
      void loadDynamicMeshes();
      void setSystemNames(const std::vector<std::string>& sysNames);
-     void sliderChanged(int value);
+     void valueChanged(const QString& parameterName, const QString& value);
 
  private:
      void createActions();

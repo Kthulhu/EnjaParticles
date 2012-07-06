@@ -15,16 +15,17 @@
                   QWidget *parent = 0);
 
  signals:
-     void valueChanged(int value);
-     void valueChanged(const QString& value);
+     //void valueChanged(int value);
+     //void valueChanged(const QString& value);
+     void valueChanged(const QString& parameterName, const QString& value);
 
  public slots:
      void setValue(int value);
      void setValue(const QString& value);
 
 protected slots:
-void triggerValue(int value);
-void triggerValue(const QString& value);
+     void triggerValue(int value);
+     void triggerValue(const QString& value);
 
 protected:
 QGroupBox* createVectorInput(const QString& title, QLineEdit* x,QLineEdit* y,QLineEdit* z);

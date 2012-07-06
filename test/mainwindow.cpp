@@ -29,7 +29,7 @@ namespace rtps
      QLabel* slider1Label = new QLabel("Slider1:",this);
      QLabel* slider2Label = new QLabel("Slider2:",this);*/
      sphParams = new SPHParameterGroup(Qt::Horizontal, "SPH Parameters",this);
-     connect(sphParams, SIGNAL(valueChanged(int)), this, SLOT(sliderChanged(int)));
+     connect(sphParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
 
      connect(glWidget,SIGNAL(systemMapChanged(const std::vector<std::string>&)),this,SLOT(setSystemNames(const std::vector<std::string>&)));
 
@@ -50,7 +50,7 @@ namespace rtps
      centralWidget->setLayout(centralLayout);
 
      setWindowTitle(tr("RTPS Library Test"));
-     resize(1250, 600);
+     resize(1250, 700);
  }
 
  void MainWindow::about()
@@ -141,11 +141,14 @@ for(int i = 0;i<sysNames.size(); i++)
      return slider;
  }
 
-void MainWindow::sliderChanged(int value)
+void MainWindow::valueChanged(const QString& parameterName, const QString& value)
 {
     QString system = systemSelector->currentText();
-    const QString& parameter = this->sender()->objectName();
-    dout<<"sys = "<<(const char*)system.toAscii().data()<<" parameter = "<<(const char*)parameter.toAscii().data()<<" value = "<<value<<endl;
+    dout<<"----------"<<endl;
+    dout<<"sys = "<<(const char*)system.toAscii().data()<<endl;
+    dout<<"parameter = "<<(const char*)parameterName.toAscii().data()<<endl;
+    dout<<"value = "<<(const char*)value.toAscii().data()<<endl;
+    dout<<"----------"<<endl;
 }
 
  QSize MainWindow::getSize()
