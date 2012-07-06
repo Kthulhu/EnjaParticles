@@ -67,13 +67,14 @@ set (test_mc_SOURCES
     test_marching_cubes.cpp
     )
 
-set(moc_hdrs glwidget.h mainwindow.h)
+set(moc_hdrs glwidget.h mainwindow.h sphparametergroup.h)
 QT4_WRAP_CPP(_mocFiles ${moc_hdrs})
 set (test_qt_SOURCES
     ParamParser
     aiwrapper
     glwidget.cpp
     mainwindow.cpp
+    sphparametergroup.cpp
     mainqt.cpp
     )
 

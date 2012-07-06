@@ -94,7 +94,6 @@ namespace rtps
     delete scene;
     delete cli;
     delete lib;
-    delete timer;
  }
 
  void GLWidget::initializeGL()
@@ -267,7 +266,7 @@ namespace rtps
                 //effects[renderType]->render(flock->getPosVBO(),flock->getColVBO(),flock->getNum());
                 meshRenderer->renderInstanced(dynamicMeshs["dynamicShape1"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
             }
-            
+
 */
 		display(false);
             //FIXME: Have a method to give renderType to each System. That way we can have different

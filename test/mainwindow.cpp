@@ -1,10 +1,11 @@
 #include <QtGui>
- #include <QtOpenGL>
+#include <QtOpenGL>
 #include <QComboBox>
- #include <QFileDialog>
+#include <QFileDialog>
+#include "glwidget.h"
+#include "mainwindow.h"
+#include "sphparametergroup.h"
 
- #include "glwidget.h"
- #include "mainwindow.h"
 namespace rtps
 {
  MainWindow::MainWindow(std::string path)
@@ -21,6 +22,14 @@ namespace rtps
 
      systemSelector = new QComboBox(this);
      systemSelector->addItem(QString("Please Load Parameter File"));
+     systemSelectorLabel = new QLabel("System:",this);
+
+     /*QSlider* slider1 = createSlider("test1");
+     QSlider* slider2 = createSlider("test2");
+     QLabel* slider1Label = new QLabel("Slider1:",this);
+     QLabel* slider2Label = new QLabel("Slider2:",this);*/
+     sphParams = new SPHParameterGroup(Qt::Horizontal, "SPH Parameters",this);
+     connect(sphParams, SIGNAL(valueChanged(int)), this, SLOT(sliderChanged(int)));
 
      connect(glWidget,SIGNAL(systemMapChanged(const std::vector<std::string>&)),this,SLOT(setSystemNames(const std::vector<std::string>&)));
 
@@ -29,13 +38,19 @@ namespace rtps
 
      QGridLayout *centralLayout = new QGridLayout;
      //centralLayout->addWidget(glWidgetArea, 0, 0);
-     centralLayout->addWidget(systemSelector, 0, 0, 0, 1);
-     centralLayout->addWidget(glWidget, 0, 1,0,4);
-     
+     centralLayout->addWidget(systemSelectorLabel, 0, 0);
+     centralLayout->addWidget(systemSelector, 0, 1,1,1);
+     /*centralLayout->addWidget(slider1Label, 1, 0);
+     centralLayout->addWidget(slider1, 1, 1 );
+     centralLayout->addWidget(slider2Label, 2, 0);
+     centralLayout->addWidget(slider2, 2, 1);*/
+     centralLayout->addWidget(sphParams,1,0,14,2);
+     centralLayout->addWidget(glWidget, 0, 2,15,6);
+
      centralWidget->setLayout(centralLayout);
 
      setWindowTitle(tr("RTPS Library Test"));
-     resize(800, 600);
+     resize(1250, 600);
  }
 
  void MainWindow::about()
@@ -107,24 +122,31 @@ namespace rtps
  }
 void MainWindow::setSystemNames(const std::vector<std::string>& sysNames)
 {
+    systemSelector->clear();
 for(int i = 0;i<sysNames.size(); i++)
 {
     systemSelector->addItem(QString(sysNames[i].c_str()));
 }
 }
- QSlider *MainWindow::createSlider(const char *changedSignal,
-                                   const char *setterSlot)
+ QSlider *MainWindow::createSlider(const char *name)
  {
-     QSlider *slider = new QSlider(Qt::Horizontal);
-     slider->setRange(0, 360 * 16);
-     slider->setSingleStep(16);
-     slider->setPageStep(15 * 16);
-     slider->setTickInterval(15 * 16);
+     QSlider *slider = new QSlider(Qt::Horizontal,this);
+     slider->setObjectName(name);
+     slider->setRange(0, 100);
+     slider->setSingleStep(10);
+     slider->setPageStep(10);
+     slider->setTickInterval(10);
      slider->setTickPosition(QSlider::TicksRight);
-     connect(slider, SIGNAL(valueChanged(int)), glWidget, setterSlot);
-     connect(glWidget, changedSignal, slider, SLOT(setValue(int)));
+     connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sliderChanged(int)));
      return slider;
  }
+
+void MainWindow::sliderChanged(int value)
+{
+    QString system = systemSelector->currentText();
+    const QString& parameter = this->sender()->objectName();
+    dout<<"sys = "<<(const char*)system.toAscii().data()<<" parameter = "<<(const char*)parameter.toAscii().data()<<" value = "<<value<<endl;
+}
 
  QSize MainWindow::getSize()
  {

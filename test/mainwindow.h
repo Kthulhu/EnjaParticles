@@ -10,8 +10,8 @@
  class QScrollArea;
  class QSlider;
  class QComboBox;
-
  class GLWidget;
+ class SPHParameterGroup;
 namespace rtps
 {
  class MainWindow : public QMainWindow
@@ -27,17 +27,23 @@ namespace rtps
      void loadScene();
      void loadDynamicMeshes();
      void setSystemNames(const std::vector<std::string>& sysNames);
+     void sliderChanged(int value);
 
  private:
      void createActions();
      void createMenus();
-     QSlider *createSlider(const char *changedSignal, const char *setterSlot);
-     void setPixmap(const QPixmap &pixmap);
+     //QSlider *createSlider(const char *changedSignal, const char *setterSlot);
+     //
+     QSlider *createSlider(const char *name);
      QSize getSize();
 
      QWidget *centralWidget;
+     QScrollArea *parameters;
      GLWidget *glWidget;
      QComboBox *systemSelector;
+     QLabel *systemSelectorLabel;
+
+     SPHParameterGroup *sphParams;
 
      QMenu *fileMenu;
      QMenu *helpMenu;
