@@ -29,7 +29,9 @@ namespace rtps
      rendererSelector->addItem(QString("Points"));
      rendererSelector->addItem(QString("Screen Space"));
      rendererSelector->addItem(QString("Mesh Renderer"));
-     connect(rendererSelector, SIGNAL(textChanged(const QString&)), glWidget, SLOT(changeRenderer(const QString&)));
+     connect(rendererSelector, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(setRenderer(const QString&)));
+
+     connect(this,SIGNAL(rendererChanged(const QString&, const QString&)),glWidget, SLOT(changeRenderer(const QString&, const QString&)));
 
      sphParams = new SPHParameterGroup(Qt::Horizontal, "SPH Parameters",this);
      connect(sphParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
@@ -147,6 +149,11 @@ for(int i = 0;i<sysNames.size(); i++)
      connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sliderChanged(int)));
      return slider;
  }*/
+void MainWindow::setRenderer(const QString& renderer)
+{
+    QString system = systemSelector->currentText();
+    emit rendererChanged(system,renderer);
+}
 
 void MainWindow::valueChanged(const QString& parameterName, const QString& value)
 {

@@ -23,7 +23,9 @@ namespace rtps
      MainWindow(std::string path);
 
 signals:
-void parameterValueChanged(const QString& system, const QString& parameterName, const QString value);
+void parameterValueChanged(const QString& system, const QString& parameterName, const QString& value);
+void rendererChanged(const QString& system, const QString& renderer);
+
 
  private slots:
      void about();
@@ -31,6 +33,7 @@ void parameterValueChanged(const QString& system, const QString& parameterName, 
      void loadScene();
      void loadDynamicMeshes();
      void setSystemNames(const std::vector<std::string>& sysNames);
+     void setRenderer(const QString& value);
      void valueChanged(const QString& parameterName, const QString& value);
 
  private:

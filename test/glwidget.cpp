@@ -648,7 +648,7 @@ void GLWidget::readParamFile(std::istream& is)
                 sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
             }
             systems[QString(names[i].c_str())]=RTPS::generateSystemInstance(sysSettings[i],cli);
-            systemRenderType[QString(names[i].c_str())] = "default";
+            systemRenderType[QString(names[i].c_str())] = "Points";
             dout<<"names[i] \'"<<names[i]<<"\'"<<endl;
 
         }
@@ -861,6 +861,7 @@ void GLWidget::update()
 }
 void GLWidget::changeRenderer(const QString& system, const QString& renderer)
 {
+     dout<<"system = "<<(const char*)system.toAscii().data()<<"renderer = "<<(const char*)renderer.toAscii().data()<<endl;
      systemRenderType[system]=renderer;
 }
 }
