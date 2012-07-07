@@ -41,6 +41,7 @@ namespace rtps
      void loadMeshScene(const QString& filename);
      void loadParameterFile(const QString& filename);
      void ResetSimulations();
+     void changeRenderer(const QString& system, const QString& renderer);
 
  signals:
      void systemMapChanged(const std::vector<std::string>& sysNames);

@@ -10,6 +10,7 @@
  class QScrollArea;
  class QSlider;
  class QComboBox;
+ class QString;
  class GLWidget;
  class SPHParameterGroup;
 namespace rtps
@@ -20,6 +21,9 @@ namespace rtps
 
  public:
      MainWindow(std::string path);
+
+signals:
+void parameterValueChanged(const QString& system, const QString& parameterName, const QString value);
 
  private slots:
      void about();
@@ -42,6 +46,7 @@ namespace rtps
      GLWidget *glWidget;
      QComboBox *systemSelector;
      QLabel *systemSelectorLabel;
+     QComboBox *rendererSelector;
 
      SPHParameterGroup *sphParams;
 

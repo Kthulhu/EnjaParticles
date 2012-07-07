@@ -23,15 +23,19 @@ namespace rtps
      systemSelector = new QComboBox(this);
      systemSelector->addItem(QString("Please Load Parameter File"));
      systemSelectorLabel = new QLabel("System:",this);
+     connect(glWidget,SIGNAL(systemMapChanged(const std::vector<std::string>&)),this,SLOT(setSystemNames(const std::vector<std::string>&)));
 
-     /*QSlider* slider1 = createSlider("test1");
-     QSlider* slider2 = createSlider("test2");
-     QLabel* slider1Label = new QLabel("Slider1:",this);
-     QLabel* slider2Label = new QLabel("Slider2:",this);*/
+     rendererSelector = new QComboBox(this);
+     rendererSelector->addItem(QString("Points"));
+     rendererSelector->addItem(QString("Screen Space"));
+     rendererSelector->addItem(QString("Mesh Renderer"));
+     connect(rendererSelector, SIGNAL(textChanged(const QString&)), glWidget, SLOT(changeRenderer(const QString&)));
+
      sphParams = new SPHParameterGroup(Qt::Horizontal, "SPH Parameters",this);
      connect(sphParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
 
-     connect(glWidget,SIGNAL(systemMapChanged(const std::vector<std::string>&)),this,SLOT(setSystemNames(const std::vector<std::string>&)));
+     connect(this, SIGNAL(parameterValueChanged(const QString&,const QString&,const QString&)),
+             glWidget,SLOT(setParameterValue(const QString&,const QString&,const QString&)));
 
      createActions();
      createMenus();
@@ -40,11 +44,13 @@ namespace rtps
      //centralLayout->addWidget(glWidgetArea, 0, 0);
      centralLayout->addWidget(systemSelectorLabel, 0, 0);
      centralLayout->addWidget(systemSelector, 0, 1,1,1);
+     centralLayout->addWidget(new QLabel("Renderer:"), 1, 0);
+     centralLayout->addWidget(rendererSelector, 1, 1,1,1);
      /*centralLayout->addWidget(slider1Label, 1, 0);
      centralLayout->addWidget(slider1, 1, 1 );
      centralLayout->addWidget(slider2Label, 2, 0);
      centralLayout->addWidget(slider2, 2, 1);*/
-     centralLayout->addWidget(sphParams,1,0,14,2);
+     centralLayout->addWidget(sphParams,2,0,14,2);
      centralLayout->addWidget(glWidget, 0, 2,15,6);
 
      centralWidget->setLayout(centralLayout);
@@ -128,7 +134,8 @@ for(int i = 0;i<sysNames.size(); i++)
     systemSelector->addItem(QString(sysNames[i].c_str()));
 }
 }
- QSlider *MainWindow::createSlider(const char *name)
+
+/* QSlider *MainWindow::createSlider(const char *name)
  {
      QSlider *slider = new QSlider(Qt::Horizontal,this);
      slider->setObjectName(name);
@@ -139,16 +146,17 @@ for(int i = 0;i<sysNames.size(); i++)
      slider->setTickPosition(QSlider::TicksRight);
      connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sliderChanged(int)));
      return slider;
- }
+ }*/
 
 void MainWindow::valueChanged(const QString& parameterName, const QString& value)
 {
     QString system = systemSelector->currentText();
-    dout<<"----------"<<endl;
+    /*dout<<"----------"<<endl;
     dout<<"sys = "<<(const char*)system.toAscii().data()<<endl;
     dout<<"parameter = "<<(const char*)parameterName.toAscii().data()<<endl;
     dout<<"value = "<<(const char*)value.toAscii().data()<<endl;
-    dout<<"----------"<<endl;
+    dout<<"----------"<<endl;*/
+    emit parameterValueChanged(system,parameterName,value);
 }
 
  QSize MainWindow::getSize()

@@ -4,7 +4,9 @@
  #include <QGroupBox>
 
  class QSlider;
+ class FloatSlider;
  class QLineEdit;
+
  class SPHParameterGroup : public QGroupBox
  {
      Q_OBJECT
@@ -15,22 +17,24 @@
                   QWidget *parent = 0);
 
  signals:
-     //void valueChanged(int value);
-     //void valueChanged(const QString& value);
      void valueChanged(const QString& parameterName, const QString& value);
 
  public slots:
      void setValue(int value);
+     void setValue(float value);
      void setValue(const QString& value);
 
-protected slots:
+ protected slots:
      void triggerValue(int value);
+     void triggerValue(float value);
      void triggerValue(const QString& value);
 
-protected:
-QGroupBox* createVectorInput(const QString& title, QLineEdit* x,QLineEdit* y,QLineEdit* z);
+ protected:
+     QGroupBox* createVectorInput(const QString& title, QLineEdit* x,QLineEdit* y,QLineEdit* z);
  private:
-     QSlider* xSPHSlider;
+     FloatSlider* xSPHSlider;
+     FloatSlider* gasConstantSlider;
+     FloatSlider* viscositySlider;
      QLineEdit *gravityX,*gravityY,*gravityZ;
  };
 

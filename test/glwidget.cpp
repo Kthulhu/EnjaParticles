@@ -762,7 +762,7 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
 
 void GLWidget::setParameterValue(const QString& system, const QString& parameter, const QString& value)
 {
-
+    systems[system]->getSettings()->SetSetting(std::string(parameter.toAscii().data()),std::string(value.toAscii().data()));
 }
 void GLWidget::loadScene(const QString& filename)
 {
@@ -826,12 +826,13 @@ void GLWidget::loadParameterFile(const QString& filename)
         lib = new ShaderLibrary();
 	string shaderpath=binaryPath+"/shaders";
         lib->initializeShaders(shaderpath);
-        effects["default"]=new ParticleEffect(rs,*lib);
+        effects["Points"]=new ParticleEffect(rs,*lib);
         //effects["sprite"]=new ParticleEffect();
         rs.blending=true;
         rs.particleRadius =systems["water"]->getSpacing()*.6f;
-        effects["ssfr"]=new SSEffect(rs, *lib);
+        effects["Screen Space"]=new SSEffect(rs, *lib);
         meshRenderer=new MeshEffect(rs, *lib);
+        effects["Mesh Renderer"]= new MeshEffect(rs,*lib);
 }
 void GLWidget::ResetSimulations()
 {
@@ -855,24 +856,11 @@ void GLWidget::update()
                 i->second->postProcess();
                 i->second->releaseGLBuffers();
             }
-            /*systems["water"]->acquireGLBuffers();
-            systems["rb1"]->acquireGLBuffers();
-            systems["water"]->update();
-            systems["rb1"]->update();
-            systems["water"]->interact();
-            systems["rb1"]->interact();
-            systems["water"]->integrate();
-            systems["rb1"]->integrate();
-            systems["water"]->postProcess();
-            systems["rb1"]->postProcess();
-            //streamline->addStreamLine(systems["water"]->getPositionBufferUnsorted(),systems["water"]->getColorBufferUnsorted(),systems["water"]->getNum());
-            systems["water"]->releaseGLBuffers();
-            systems["rb1"]->releaseGLBuffers();*/
         }
 	updateGL();
 }
-/*void GLWidget::parameterValueChanged(const QString& parameter, const QString& value)
+void GLWidget::changeRenderer(const QString& system, const QString& renderer)
 {
-
-}*/
+     systemRenderType[system]=renderer;
+}
 }
