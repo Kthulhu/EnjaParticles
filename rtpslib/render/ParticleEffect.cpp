@@ -84,7 +84,7 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Camera* view, const Light* light,const Material* material, float scale )
+    void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale )
     {
 
         glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -110,10 +110,10 @@ namespace rtps
         glPointSize(pointRadius*scale);
 
         if(renderAsSpheres)
-            renderPointsAsSpheres(posVBO,colVBO,num,view,light,material,scale);
+            renderPointsAsSpheres(posVBO,colVBO,num,light,material,scale);
         else
         {
-            glUseProgram(m_shaderLibrary->shaders["passThrough"]);
+            glUseProgram(m_shaderLibrary->shaders["passThrough"].getProgram() );
             drawArrays(posVBO, colVBO, num);
         }
         glDepthMask(GL_TRUE);

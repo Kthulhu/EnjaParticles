@@ -50,6 +50,13 @@ namespace rtps
             this->z = z;
 	    this->w = 0.0f;
         }
+        float3& operator+=(const float3 &rhs)
+        {
+            x=rhs.x;
+            y=rhs.y;
+            z=rhs.z;
+            return *this;
+        }
         friend float3 operator+(float3& a, float3& b)
         {
             float3 c = float3(a.x+b.x, a.y+b.y, a.z+b.z);
@@ -63,6 +70,14 @@ namespace rtps
         void print(const char* msg=0)
         {
             printf("%s: %f, %f, %f\n", msg, x, y, z);
+        }
+
+        void normalize()
+        {
+            float dist = sqrt(x*x+y*y+z*z);
+            x/=dist;
+            y/=dist;
+            z/=dist;
         }
 
         float3& operator*(float b)

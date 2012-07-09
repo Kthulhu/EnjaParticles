@@ -1,7 +1,7 @@
 #ifndef GLWIDGET_H
  #define GLWIDGET_H
 
-#include "structs.h"
+#include "../rtpslib/structs.h"
 #include "../rtpslib/render/ParticleEffect.h"
 #include "../rtpslib/system/ParticleShape.h"
 
@@ -48,6 +48,8 @@ namespace rtps
      //void parameterValueChanged(const QString& parameter, const QString& value);
 
  protected:
+     void renderSkyBox();
+     void cameraChanged();
      void initializeGL();
      void paintGL();
      void resizeGL(int width, int height);
@@ -76,7 +78,7 @@ namespace rtps
     //float4 rotation; //may want to consider quaternions for this at some point.
     //float3 translation;
     Camera* view;
-	Light light;
+    Light* light;
     int2 mousePos;
 	int mouseButtons;
 	// the global Assimp scene object

@@ -88,9 +88,9 @@ namespace rtps
     public:
         MeshEffect(ShaderLibrary* lib, GLuint width = 600, GLuint height = 800,GLfloat pointRadius = 0.5f,bool blending = false);
         ~MeshEffect();
-        void renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light& light);
-        virtual void renderInstanced(Mesh* mesh, GLuint pos, GLuint quat,unsigned int number,Light& light);
-        virtual void render(Mesh* mesh, Light& light);
+        void renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light* light);
+        virtual void renderInstanced(Mesh* mesh, GLuint pos, GLuint quat,unsigned int number,Light* light);
+        virtual void render(Mesh* mesh, Light* light);
     };
 };
 

@@ -1,6 +1,7 @@
 #include "Camera.h"
 
-
+namespace rtps
+{
 void Camera::move(float delX, float delY, float delZ)
 {
     pos += rotation * float3(delX*moveSpeed, 0.0f, 0.0f);
@@ -9,12 +10,12 @@ void Camera::move(float delX, float delY, float delZ)
     updateViewMatrix();
 }
 
-void Camera::rotate(float rotateDelX,rotateDelY)
+void Camera::rotate(float rotateDelX, float rotateDelY)
 {
-    Quaternion nrot(float3(1.0f, 0.0f, 0.0f), rotateDelX * rotateSpeed * PIOVER180);
-    rotation = rotation * nrot;
-    Quaternion nrot(float3(0.0f, 1.0f, 0.0f), rotateDelX * rotateSpeed * PIOVER180);
-    rotation = nrot * rotation;
+    Quaternion xrot(float3(1.0f, 0.0f, 0.0f), rotateDelX * rotateSpeed * PIOVER180);
+    rotation = rotation * xrot;
+    Quaternion yrot(float3(0.0f, 1.0f, 0.0f), rotateDelY * rotateSpeed * PIOVER180);
+    rotation = yrot * rotation;
     updateViewMatrix();
 }
 
@@ -31,7 +32,7 @@ void Camera::setProjectionMatrixPerspective(float l, float r, float b, float t, 
     projectionMatrix[15] = 0;
 }
 
-void Camera::setProjectionMatrixOrtho(float l, float r, float b, float t, float n,
+void Camera::setProjectionMatrixOrthographic(float l, float r, float b, float t, float n,
                               float f)
 {
     projectionMatrix.loadIdentity();
@@ -47,6 +48,10 @@ const float16& Camera::getProjectionMatrix()
 {
     return projectionMatrix;
 }
+const float16& Camera::getInverseProjectionMatrix()
+{
+    return invViewMatrix;
+}
 
 void Camera::updateProjectionMatrix()
 {
@@ -56,7 +61,7 @@ void Camera::updateProjectionMatrix()
         double h = nearClip * tangent;         // half height of near plane
         double w = h * aspectRatio;          // half width of near plane
 
-        setPerspectiveFrustum(-w, w, -h, h, nearClip, farClip);
+        setProjectionMatrixPerspective(-w, w, -h, h, nearClip, farClip);
     }
     else
     {
@@ -79,9 +84,12 @@ const float16& Camera::getInverseViewMatrix()
 void Camera::updateViewMatrix()
 {
     viewMatrix = rotation.getMatrix();
+    //FIXME: might not have to transpose.
+    viewMatrix.transpose();
     viewMatrix[3]=pos.x;
     viewMatrix[7]=pos.y;
     viewMatrix[11]=pos.z;
     invViewMatrix=viewMatrix;
     invViewMatrix.inverse();
+}
 }

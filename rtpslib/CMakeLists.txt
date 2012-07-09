@@ -87,7 +87,7 @@ set (rtpslib_SOURCES
     ${rtpslib_SOURCE_DIR}/render/MeshEffect
     ${rtpslib_SOURCE_DIR}/render/ParticleEffect
     ${rtpslib_SOURCE_DIR}/render/SSEffect
-    ${rtpslib_SOURCE_DIR}/render/StreamlineEffect
+    #${rtpslib_SOURCE_DIR}/render/StreamlineEffect
     ${rtpslib_SOURCE_DIR}/render/ShaderLibrary
     ${rtpslib_SOURCE_DIR}/render/RenderUtils
     ${rtpslib_SOURCE_DIR}/render/util/stb_image.c

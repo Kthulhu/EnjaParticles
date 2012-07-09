@@ -94,6 +94,8 @@ namespace rtps
     delete scene;
     delete cli;
     delete lib;
+    delete view;
+    delete light;
  }
 
  void GLWidget::initializeGL()
@@ -111,10 +113,11 @@ namespace rtps
 
      cli = new CL();
 
-    light.diffuse.x=1.0;light.diffuse.y=1.0;light.diffuse.z=1.0;
-    light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
-    light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
-    light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
+     light = new Light();
+    light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
+    light->ambient.x=1.0;light->ambient.y=1.0;light->ambient.z=1.0;
+    light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
+    light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
 
     environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
 
@@ -122,30 +125,30 @@ namespace rtps
     lib = new ShaderLibrary();
     lib->initializeShaders(binaryPath+"/shaders");
     effects["Points"]=new ParticleEffect(lib,width(),height(),20.0f,false);
-    effects["Screen Space"]=new SSEffect(lib,SmoothingFilter::GAUSSIAN_BLUR,width,height,20.0f,true);
+    effects["Screen Space"]=new SSEffect(lib,GUASSIAN_BLUR,width(),height(),20.0f,true);
     effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),20.0f,false);
 
     //set the projection and view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
-        glUseProgram(program);
-        GLint location = glGetUniformLocation(i->getProgram(),"viewMatrix");
+        glUseProgram(i->second.getProgram());
+        GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getViewMatrix().m);
-        location = glGetUniformLocation(i->getProgram(),"projectionMatrix");
+        location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getProjectionMatrix().m);
-        location = glGetUniformLocation(i->getProgram(),"inverseViewMatrix");
+        location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getInverseViewMatrix().m);
-        location = glGetUniformLocation(i->getProgram(),"inverseProjectionMatrix");
+        location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getInverseProjectionMatrix().m);
         glUseProgram(0);
     }
     GLuint program = lib->shaders["sphereShader"].getProgram();
     glUseProgram(program);
-    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->fov * (0.5f * 3.1415926535f/180.0f)));
+    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * 3.1415926535f/180.0f)));
     glUseProgram(0);
  }
 
@@ -214,7 +217,7 @@ namespace rtps
      glDisable(GL_TEXTURE_CUBE_MAP);
 
      glDisable(GL_TEXTURE_GEN_R);
-     view->shaders["passThrough"];
+     glUseProgram(0);
 
  }
 
@@ -224,6 +227,7 @@ namespace rtps
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
 #if 1
+        renderSkyBox();
         display(false);
         //FIXME: Have a method to give renderType to each System. That way we can have different
         //Systems with the different effects.
@@ -265,10 +269,11 @@ namespace rtps
      //set the projection and view matricies for all shaders.
      for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
      {
-         GLint location = glGetUniformLocation(i->getProgram(),"projectionMatrix");
+         glUseProgram(i->second.getProgram());
+         GLint location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
          if(location!=-1)
              glUniformMatrix4fv(location,1,false,view->getProjectionMatrix().m);
-         location = glGetUniformLocation(i->getProgram(),"inverseProjectionMatrix");
+         location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
          if(location!=-1)
              glUniformMatrix4fv(location,1,false,view->getInverseProjectionMatrix().m);
      }
@@ -308,13 +313,15 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
 void GLWidget::cameraChanged()
 {
+
     //update the view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
-        GLint location = glGetUniformLocation(i->getProgram(),"viewMatrix");
+        glUseProgram(i->second.getProgram());
+        GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getViewMatrix().m);
-        location = glGetUniformLocation(i->getProgram(),"inverseViewMatrix");
+        location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getInverseViewMatrix().m);
     }
@@ -495,21 +502,27 @@ char key=event->text().at(0).toAscii();
             }
             case 'w':
                 view->move(0.0f,0.0f,-1.0f);
+                cameraChanged();
                 break;
             case 'a':
                 view->move(1.0f,0.0f,0.0f);
+                cameraChanged();
                 break;
             case 's':
                 view->move(0.0f,0.0f,1.0f);
+                cameraChanged();
                 break;
             case 'd':
                 view->move(-1.0f,0.0f,0.0f);
+                cameraChanged();
                 break;
             case 'z':
                 view->move(0.0f,1.0f,0.0f);
+                cameraChanged();
                 break;
             case 'x':
                 view->move(0.0f,-1.0f,0.0f);
+                cameraChanged();
                 break;
             case '+':
                 mass+=100.0f;

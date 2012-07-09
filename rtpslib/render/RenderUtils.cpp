@@ -51,7 +51,7 @@ namespace rtps
 
         glTexCoord2f(0.f,1.f);
         glVertex2f(0.f,height);
-        glEnd();=
+        glEnd();
     }
     void RenderUtils::writeTextures(const map<string,GLuint>& texs)
     {

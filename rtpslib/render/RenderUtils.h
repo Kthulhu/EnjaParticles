@@ -53,7 +53,7 @@ namespace rtps
     public:
         static void orthoProjection();
         static void perspectiveProjection();
-        static void fullscreenQuad();
+        static void fullscreenQuad(float width, float height);
         static void renderBox(float4 min, float4 max, float4 color=float4(0.0f,1.0f,0.0f,1.0f));
         static void renderQuad(float4 min, float4 max, GLuint tex = 0); //put in render utils
         static void writeTextures(const std::map<std::string,GLuint>& texs);

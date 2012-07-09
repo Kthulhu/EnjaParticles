@@ -1,3 +1,7 @@
+#include "Quaternion.h"
+#define TOLERANCE 0.00001f
+namespace rtps
+{
 // Convert to Axis/Angles
 void Quaternion::getAxisAngle(float3 *axis, float *angle)
 {
@@ -27,7 +31,7 @@ float16 Quaternion::getMatrix() const
     return float16( 1.0f - 2.0f * (y2 + z2), 2.0f * (xy - wz), 2.0f * (xz + wy), 0.0f,
             2.0f * (xy + wz), 1.0f - 2.0f * (x2 + z2), 2.0f * (yz - wx), 0.0f,
             2.0f * (xz - wy), 2.0f * (yz + wx), 1.0f - 2.0f * (x2 + y2), 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f)
+            0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 // Convert from Euler Angles
@@ -61,7 +65,7 @@ void Quaternion::FromAxis(const float3 &v, float angle)
 {
     float sinAngle;
     angle *= 0.5f;
-    Vector3 vn(v);
+    float3 vn(v);
     vn.normalize();
 
     sinAngle = sin(angle);
@@ -102,7 +106,7 @@ Quaternion Quaternion::operator* (const Quaternion &rq) const
 
 // We need to get the inverse of a quaternion to properly apply a quaternion-rotation to a vector
 // The conjugate of a quaternion is the same as the inverse, as long as the quaternion is unit-length
-Quaternion Quaternion::getConjugate()
+Quaternion Quaternion::getConjugate() const
 {
     return Quaternion(-x, -y, -z, w);
 }
@@ -121,4 +125,5 @@ void Quaternion::normalize()
         y /= mag;
         z /= mag;
     }
+}
 }

@@ -77,9 +77,12 @@ namespace rtps
             tessEval="";
             readFile(shaderSrc+"/sphere.vert",vert);
             readFile(shaderSrc+"/sphere.frag",frag);
-			dout<<"vertex: \n"<<vert<<std::endl;
-			dout<<"frag: \n"<<frag<<std::endl;
             addShader("sphereShader",vert,frag,geom,tessCont,tessEval);
+            vert = "";
+            frag = "";
+            readFile(shaderSrc+"/passthrough.vert",vert);
+            readFile(shaderSrc+"/passthrough.frag",frag);
+            addShader("passThrough",vert,frag,geom,tessCont,tessEval);
             //frag="";
             //readFile(shaderSrc+"/sphere_light.glsl",frag);
             //addShader("sphereLightShader",vert,frag,geom,tessCont,tessEval);
@@ -146,7 +149,7 @@ namespace rtps
             shaders[name].setShader(GL_TESS_CONTROL_SHADER,tessCont);
             shaders[name].setShader(GL_TESS_EVALUATION_SHADER,tessEval);
 #endif
-            dout<<"Program = "<<shaders[name].compileProgram()<<std::endl;
+            //dout<<"Program = "<<shaders[name].compileProgram()<<std::endl;
         }
     };
 }

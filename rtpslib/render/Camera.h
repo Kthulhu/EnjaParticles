@@ -6,18 +6,16 @@
 
 // modified from http://content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-#define PIOVER180 M_PI/180.0f
-
+namespace rtps
+{
 enum Projection
 {
     PERSPECTIVE_PROJECTION = 0,
     ORTHOGRAPHIC_PROJECTION
 };
-
 class RTPS_EXPORT Camera
 {
+public:
     Camera(float3 pos = float3(0.0f, 0.0f, 0.0f), float fov=65.0f,
            float near = 0.3f, float far = 1000.0f, unsigned int width=600,
            unsigned int height=800)
@@ -30,9 +28,9 @@ class RTPS_EXPORT Camera
         this->height=height;
         moveSpeed=1.0f;
         rotateSpeed=1.0f;
-        currentProjection=Projection::PERSPECTIVE_PROJECTION;
+        currentProjection=PERSPECTIVE_PROJECTION;
         updateProjectionMatrix();
-        updateModelviewMatrix();
+        updateViewMatrix();
     }
 
     void move(float delX,float delY,float delZ);
@@ -45,10 +43,10 @@ class RTPS_EXPORT Camera
     double getFOV(){return fov;}
 
     void setNearClip(double near){this->nearClip=near; updateProjectionMatrix();}
-    double getNearClip(){return near;}
+    double getNearClip(){return nearClip;}
 
-    void setFarClip(double far){this->far=farClip; updateProjectionMatrix();}
-    double getFarClip(){return far;}
+    void setFarClip(double far){this->farClip=far; updateProjectionMatrix();}
+    double getFarClip(){return farClip;}
 
     void setWidth(unsigned int width){this->width = width; aspectRatio=width/((double)height); updateProjectionMatrix();}
     unsigned int getWidth(){return width;}
@@ -80,9 +78,9 @@ class RTPS_EXPORT Camera
 protected:
     void updateProjectionMatrix();
     void updateViewMatrix();
-    void setProjectionMartrixPerspective(float l, float r, float b, float t, float n,
+    void setProjectionMatrixPerspective(float l, float r, float b, float t, float n,
                                          float f);
-    void setProjectionMatrixOrtho(float l, float r, float b, float t, float n,
+    void setProjectionMatrixOrthographic(float l, float r, float b, float t, float n,
                                   float f);
 
     float3 pos;
@@ -102,6 +100,7 @@ protected:
 
     unsigned int width;
     unsigned int height;
-}
+};
+};
 
 #endif

@@ -46,7 +46,7 @@
 #include "sph/LeapFrog.h"
 #include "sph/Lifetime.h"
 #include "sph/Euler.h"
-#include "../rtpslib/system/common/Hose.h"
+#include "common/Hose.h"
 #include "../rtps_common.h"
 
 namespace rtps

@@ -29,11 +29,11 @@
 using namespace std;
 namespace rtps
 {
-    MeshEffect::MeshEffect(ShaderLibrary* lib, GLuint width = 600, GLuint height = 800, GLfloat pointRadius = 0.5f,bool blending = false):
+    MeshEffect::MeshEffect(ShaderLibrary* lib, GLuint width, GLuint height, GLfloat pointRadius,bool blending):
         ParticleEffect(lib,width,height,pointRadius,blending)
     {}
     MeshEffect::~MeshEffect(){}
-    void MeshEffect::renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light& light)
+    void MeshEffect::renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light* light)
     {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();

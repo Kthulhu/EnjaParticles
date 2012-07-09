@@ -37,10 +37,10 @@
 using namespace std;
 namespace rtps
 {
-    SSEffect::SSEffect(ShaderLibrary* lib, SmoothingFilter filter = SmoothingFilter::GUASSIAN_BLUR, GLuint width, GLuint height, GLfloat pointRadius,bool blending):
+    SSEffect::SSEffect(ShaderLibrary* lib, SmoothingFilter filter, GLuint width, GLuint height, GLfloat pointRadius,bool blending):
         ParticleEffect(lib,width,height,pointRadius,blending)
     {
-        cout<<"Shaderlib size = "<<m_shaderLibrary.shaders.size()<<endl;
+        //cout<<"Shaderlib size = "<<m_shaderLibrary.shaders.size()<<endl;
         m_fbos.resize(1);
         glGenFramebuffersEXT(1,&m_fbos[0]);
         createFramebufferTextures();
@@ -69,7 +69,7 @@ namespace rtps
                 glUseProgram(smoothingProgram);
                 glUniform1i( glGetUniformLocation(smoothingProgram, "depthTex"),0);
                 glUniform1i( glGetUniformLocation(smoothingProgram, "width"),width);
-                RenderUtils::fullscreenQuad();
+                RenderUtils::fullscreenQuad(width,height);
 
                 glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
                 currentDepthBuffer="depth";
@@ -89,13 +89,13 @@ namespace rtps
                 currentDepthBuffer="depth";
                 break;
             case CURVATURE_FLOW:
-            glUseProgram(m_shaderLibrary.shaders["curvatureFlowShader"].getProgram());
+            glUseProgram(m_shaderLibrary->shaders["curvatureFlowShader"].getProgram());
             glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["curvatureFlowShader"].getProgram(),"depthTex"),0);
             glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["curvatureFlowShader"].getProgram(),"width"),width);
             glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["curvatureFlowShader"].getProgram(),"height"),height);
             for(unsigned int i = 0; i<numberOfCurvatureIterations; i++)
             {
-                RenderUtils::fullscreenQuad();
+                RenderUtils::fullscreenQuad(width,height);
                 glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
                 if(i%2)
                     currentDepthBuffer="depth";
@@ -108,7 +108,7 @@ namespace rtps
             default:
                 break;
         }
-        RenderUtils::fullscreenQuad();
+        RenderUtils::fullscreenQuad(width,height);
     }
 
     void SSEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale)
@@ -187,13 +187,13 @@ namespace rtps
         glUseProgram(normalProgram);
         glUniform1i( glGetUniformLocation(normalProgram, "depthTex"),0);
         //glUniform1i( glGetUniformLocation(normalProgram, "colorTex"),1);
-        glUniform1f( glGetUniformLocation(normalProgram, "del_x"),1.0/((float)m_settings.windowWidth));
-        glUniform1f( glGetUniformLocation(normalProgram, "del_y"),1.0/((float)m_settings.windowHeight));
-        glUniform3fv(glGetUniformLocation(normalProgram,"material.diffuse"),1,&mesh->material.diffuse.x);
-        glUniform3fv(glGetUniformLocation(normalProgram,"material.specular"),1,&mesh->material.specular.x);
-        glUniform3fv(glGetUniformLocation(normalProgram,"material.ambient"),1,&mesh->material.ambient.x);
-        glUniform1fv(glGetUniformLocation(normalProgram,"material.shininess"),1,&mesh->material.shininess);
-        glUniform1fv(glGetUniformLocation(normalProgram,"material.opacity"),1,&mesh->material.opacity);
+        glUniform1f( glGetUniformLocation(normalProgram, "del_x"),1.0/((float)width));
+        glUniform1f( glGetUniformLocation(normalProgram, "del_y"),1.0/((float)height));
+        glUniform3fv(glGetUniformLocation(normalProgram,"material.diffuse"),1,&material->diffuse.x);
+        glUniform3fv(glGetUniformLocation(normalProgram,"material.specular"),1,&material->specular.x);
+        glUniform3fv(glGetUniformLocation(normalProgram,"material.ambient"),1,&material->ambient.x);
+        glUniform1fv(glGetUniformLocation(normalProgram,"material.shininess"),1,&material->shininess);
+        glUniform1fv(glGetUniformLocation(normalProgram,"material.opacity"),1,&material->opacity);
         glUniform3fv(glGetUniformLocation(normalProgram,"light->diffuse"),1,&light->diffuse.x);
         glUniform3fv(glGetUniformLocation(normalProgram,"light->specular"),1,&light->specular.x);
         glUniform3fv(glGetUniformLocation(normalProgram,"light->ambient"),1,&light->ambient.x);
@@ -223,7 +223,7 @@ namespace rtps
         glUseProgram(copyProgram);
         glUniform1i( glGetUniformLocation(copyProgram, "normalTex"),0);
         glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);
-        RenderUtils::fullscreenQuad();
+        RenderUtils::fullscreenQuad(width,height);
 
 
 
@@ -277,59 +277,59 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,m_settings.windowWidth,m_settings.windowHeight,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,width,height,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
         glGenTextures(1, &m_glFramebufferTexs["depth2"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["depth2"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,m_settings.windowWidth,m_settings.windowHeight,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,width,height,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
         glGenTextures(1,&m_glFramebufferTexs["thickness"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["thickness"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
-        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,width,height,0,GL_RGBA,GL_FLOAT,NULL);
         glGenTextures(1,&m_glFramebufferTexs["depthColor"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["depthColor"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
         glGenTextures(1,&m_glFramebufferTexs["normalColor"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["normalColor"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
-        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,width,height,0,GL_RGBA,GL_FLOAT,NULL);
         glGenTextures(1,&m_glFramebufferTexs["lightColor"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["lightColor"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
         glGenTextures(1,&m_glFramebufferTexs["Color"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["Color"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
         glGenTextures(1,&m_glFramebufferTexs["depthColorSmooth"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["depthColorSmooth"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
-        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,m_settings.windowWidth,m_settings.windowHeight,0,GL_RGBA,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,width,height,0,GL_RGBA,GL_FLOAT,NULL);
 
     }
 

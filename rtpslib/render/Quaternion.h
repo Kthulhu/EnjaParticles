@@ -6,12 +6,31 @@
 #include "../structs.h"
 #include "../rtps_common.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+#define PIOVER180 M_PI/180.0f
 
+namespace rtps
+{
 class RTPS_EXPORT Quaternion
 {
 
 public:
     Quaternion(){x=y=z=0.0f; w=1.0f;}
+    Quaternion(float x, float y, float z, float w)
+    {
+        this->x=x;
+        this->y=y;
+        this->z=z;
+        this->w=w;
+    }
+    Quaternion(float3 axis, float angle)
+    {
+        this->x=axis.x;
+        this->y=axis.y;
+        this->z=axis.z;
+        this->w=angle;
+    }
 
     // Convert to Axis/Angles
     void getAxisAngle(float3 *axis, float *angle);
@@ -33,7 +52,7 @@ public:
 
     // We need to get the inverse of a quaternion to properly apply a quaternion-rotation to a vector
     // The conjugate of a quaternion is the same as the inverse, as long as the quaternion is unit-length
-    Quaternion getConjugate();
+    Quaternion getConjugate() const;
 
     // normalising a quaternion works similar to a vector. This method will not do anything
     // if the quaternion is close enough to being unit-length. define TOLERANCE as something
@@ -42,5 +61,5 @@ public:
 private:
     float x,y,z,w;
 };
-
+};
 #endif // QUATERNION_H
