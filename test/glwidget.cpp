@@ -131,7 +131,7 @@ namespace rtps
 
         environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
 
-        //glViewport(0, 0, width(), height());
+        glViewport(0, 0, width(), height());
 
         // projection
         glMatrixMode(GL_PROJECTION);
@@ -337,8 +337,7 @@ namespace rtps
 
  void GLWidget::resizeGL(int width, int height)
  {
-     int side = qMin(width, height);
-     //glViewport(0, 0, width, height);
+     glViewport(0, 0, width, height);
      for(map<QString,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
         {
             i->second->setWindowDimensions(width,height);

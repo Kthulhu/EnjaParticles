@@ -15,8 +15,8 @@ struct Light
     vec3 pos;
 };
 
-uniform mat4 modelview;
-uniform mat4 project;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
 uniform Material material;
 uniform Light light;
 
@@ -50,15 +50,15 @@ void main()
     vec4 viewPos;
     vec3 eyePos;
     norm = normalize(rotate(vec4( normal, 0.0),com_rot).xyz);
-    norm = normalize(modelview*vec4(norm,0.0f)).xyz;
+    norm = normalize((viewMatrix*vec4(norm,0.0f)).xyz);
     vec4 localcoord=rotate(vec4(pos,0.0),com_rot);
-    viewPos = modelview*vec4(localcoord.xyz+com_pos.xyz,1.0);
+    viewPos = viewMatrix*vec4(localcoord.xyz+com_pos.xyz,1.0);
     eyePos = viewPos.xyz/viewPos.w;
 
     lightDir = normalize(light.pos-eyePos);
     //lightDir = normalize(light.pos);
 
-    gl_Position= project*viewPos;
+    gl_Position= projectionMatrix*viewPos;
 //    lightDir = normalize(gl_LightPosition[0].position.xyz-com_pos.xyz);
 
     //gl_Position=project*modelview*(localcoord+com_pos);

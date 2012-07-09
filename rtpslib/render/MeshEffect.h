@@ -86,7 +86,7 @@ namespace rtps
     class MeshEffect : public ParticleEffect
     {
     public:
-        MeshEffect(RenderSettings set, ShaderLibrary& lib);
+        MeshEffect(ShaderLibrary* lib, GLuint width = 600, GLuint height = 800, GLfloat near=0.0f, GLfloat far =1.0f,GLfloat pointRadius = 0.5f,bool blending = false);
         ~MeshEffect();
         void renderFluid(Mesh* mesh,GLuint cubeMap, GLuint sceneTex, Light& light);
         virtual void renderInstanced(Mesh* mesh, GLuint pos, GLuint quat,unsigned int number,Light& light);

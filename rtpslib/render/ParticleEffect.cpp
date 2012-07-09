@@ -38,11 +38,15 @@ using namespace std;
 namespace rtps
 {
 
-    ParticleEffect::ParticleEffect(RenderSettings rs, ShaderLibrary& lib):m_settings(rs), m_shaderLibrary(lib)
+    ParticleEffect::ParticleEffect(ShaderLibrary* lib, GLuint width, GLuint height, GLfloat pointRadius ,bool blending)
     {
+        m_shaderLibrary = lib;
+        this->width=width;
+        this->height=height;
+        this->pointRadius=pointRadius;
+        this->blending=blending;
         m_writeFramebuffers = false;
     }
-
 
 
     //----------------------------------------------------------------------
@@ -80,33 +84,37 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num)
+    void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Camera* view, const Light* light,const Material* material, float scale )
     {
 
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 
         glDepthMask(GL_TRUE);
-        if (m_settings.blending)
+        if(blending)
         {
             //glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
-        else
-        {
-            //glEnable(GL_DEPTH_TEST);
-        }
+        //else
+        //{
+           //glEnable(GL_DEPTH_TEST);
+        //}
 
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
         // draws circles instead of squares
         glEnable(GL_POINT_SMOOTH);
-        //TODO make the point size a setting
-        glPointSize(m_settings.particleRadius);
+        glPointSize(pointRadius*scale);
 
-        drawArrays(posVBO, colVBO, num);
+        if(renderAsSpheres)
+            renderPointsAsSpheres(posVBO,colVBO,num,view,light,material,scale);
+        else
+        {
+            drawArrays(posVBO, colVBO, num);
+        }
         glDepthMask(GL_TRUE);
 
         glDisable(GL_LIGHTING);
@@ -114,7 +122,7 @@ namespace rtps
         glPopClientAttrib();
         glPopAttrib();
         //glDisable(GL_POINT_SMOOTH);
-        if (m_settings.blending)
+        if (blending)
         {
             glDisable(GL_BLEND);
         }
@@ -130,7 +138,7 @@ namespace rtps
         m_writeFramebuffers=true;
     }
 
-    void ParticleEffect::renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num)
+    void ParticleEffect::renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Camera* view,  const Light* light,const Material* material, float scale)
     {
 
         glEnable(GL_POINT_SPRITE);
@@ -142,9 +150,9 @@ namespace rtps
         //float particle_radius = 0.125f * 0.5f;
         glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)m_settings.windowWidth) / tanf(65. * (0.5f * 3.1415926535f/180.0f)));
 
-        glUniform1f( glGetUniformLocation(program, "pointRadius"), m_settings.particleRadius);
-        glUniform1f( glGetUniformLocation(program, "near"), m_settings.m_near );
-        glUniform1f( glGetUniformLocation(program, "far"), m_settings.m_far);
+        glUniform1f( glGetUniformLocation(program, "pointRadius"), pointScale*scale);
+        glUniform1f( glGetUniformLocation(program, "near"), near );
+        glUniform1f( glGetUniformLocation(program, "far"), far);
 
         //glColor3f(1., 1., 1.);
 
@@ -156,7 +164,7 @@ namespace rtps
         glDisable(GL_POINT_SPRITE);
     }
 
-    void ParticleEffect::renderVector(GLuint posVBO, GLuint vecVBO, unsigned int num, float scale)
+    void ParticleEffect::renderVector(GLuint posVBO, GLuint vecVBO, const Camera* view,  unsigned int num, float scale)
     {
         glBindBuffer(GL_ARRAY_BUFFER, vecVBO);
         glColorPointer(4, GL_FLOAT, 0, 0);

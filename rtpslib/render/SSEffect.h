@@ -41,14 +41,26 @@ namespace rtps
     class RTPS_EXPORT SSEffect : public ParticleEffect
     {
     public:
-        SSEffect(RenderSettings rs, ShaderLibrary& lib);
+        SSEffect(ShaderLibrary* lib, SmoothingFilter filter = SmoothingFilter::BILATERAL_GAUSSIAN_BLUR, GLuint width = 600, GLuint height = 800, GLfloat near=0.0f, GLfloat far =1.0f,GLfloat pointRadius = 0.5f,bool blending = false);
         ~SSEffect();
         void smoothDepth();
-        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num);
+        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
         virtual void setWindowDimensions(GLuint width, GLuint height);
+        virtual void setSmoothingFilter(SmoothingFilter filter){this->smoothing=filter;}
+        virtual SmoothingFilter getSmoothingFilter(){return smoothing;}
+        virtual void setRenderThickness(bool thickness){this->thickness = thickness;}
+        virtual bool getRenderThickness(){return thickness;}
+        virtual void setNumberOfCurvatureIterations(unsigned int num){numberOfCurvatureIterations=num;}
+        virtual unsigned int getNumberOfCurvatureIterations(){return numberOfCurvatureIterations;}
+        virtual void setFilterRadius(unsigned int filterRadius){this->filterRadius=filterRadius;}
+        virtual unsigned int getFilterRadius(){return this->filterRadius;}
     protected:
         virtual void deleteFramebufferTextures();
         virtual void createFramebufferTextures();
+        bool thickness;
+        unsigned int filterRadius;
+        unsigned int numberOfCurvatureIterations;
+        std::string currentDepthBuffer;
         SmoothingFilter smoothing;
     };
 };

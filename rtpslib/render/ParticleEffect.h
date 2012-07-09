@@ -47,8 +47,8 @@
 #include "../structs.h"
 #include "../timer_eb.h"
 #include "ShaderLibrary.h"
-#include "RenderSettings.h"
 #include "RenderUtils.h"
+#include "Camera.h"
 
 #include "../rtps_common.h"
 
@@ -73,35 +73,40 @@ namespace rtps
         float opacity;
     };
 
-    /*enum Shaders
-    {
-        SHADER_DEPTH=0,SHADER_CURVATURE_FLOW,SHADER_FRESNEL
-    };*/
-
     class RTPS_EXPORT ParticleEffect
     {
     public:
-        ParticleEffect(RenderSettings rs, ShaderLibrary& lib);
+        ParticleEffect(ShaderLibrary* lib, GLuint width = 600, GLuint height = 800, GLfloat pointRadius = 0.5f,bool blending = false);
         ~ParticleEffect();
 
-        void renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num);
-        void renderVector(GLuint posVBO, GLuint vecVBO, unsigned int num, float scale=1.0f);
-        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num);
-        virtual void setWindowDimensions(GLuint width, GLuint height){m_settings.windowWidth=width;m_settings.windowHeight=height;}
-        void writeBuffersToDisk();
+        void renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Camera* view, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
+        void renderVector(GLuint posVBO, GLuint vecVBO, const Camera* view, unsigned int num, float scale=1.0f);
+        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, const Camera* view, const Light* light = NULL,const Material* material = NULL, float scale = 1.0f);
+        virtual void setWindowDimensions(GLuint width, GLuint height){this->width=width;this->height=height;}
+        virtual void setPointRadius(GLfloat radius){pointRadius=radius;}
+        virtual GLfloat getPointRadius(){ return pointRadius;}
+        virtual void setRenderAsSpheres(bool renderAsSpheres){this->renderAsSpheres=renderAsSpheres;}
+        virtual bool getRenderAsSpheres(){return renderAsSpheres;}
+        virtual void setBlending(bool blending){this->blending=blending;}
+        virtual bool getBlending(){return blending;}
+        virtual void writeBuffersToDisk();
 
     protected:
         void drawArrays(GLuint posVBO, GLuint colVBO, unsigned int num);
         virtual void deleteFramebufferTextures(){}
         virtual void createFramebufferTextures(){}
         void writeFramebufferTextures(){RenderUtils::writeTextures(m_glFramebufferTexs);}
-        //virtual int setupTimers();
-        //virtual void printTimers();
-        ShaderLibrary& m_shaderLibrary;
+        virtual int setupTimers();
+        virtual void printTimers();
+
+        ShaderLibrary* m_shaderLibrary;
         std::map<std::string,GLuint> m_glFramebufferTexs;
         std::map<std::string,GLuint> m_glTextures;
         std::vector<GLuint> m_fbos;
-        RenderSettings m_settings;
+
+        GLuint width, height;
+        GLfloat pointRadius,near,far,fov;
+        bool renderAsSpheres,blending;
         bool m_writeFramebuffers;
         EB::TimerList m_timers;
     };

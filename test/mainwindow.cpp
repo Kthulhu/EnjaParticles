@@ -56,6 +56,7 @@ namespace rtps
      centralLayout->addWidget(glWidget, 0, 2,15,6);
 
      centralWidget->setLayout(centralLayout);
+     this->setStyleSheet("QMainWindow {background: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0, stop: 0 #777777, stop: 0.65 #777777, stop: 1 #F9F9F9);}");
 
      setWindowTitle(tr("RTPS Library Test"));
      resize(1250, 700);

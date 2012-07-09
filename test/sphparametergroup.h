@@ -20,9 +20,13 @@
      void valueChanged(const QString& parameterName, const QString& value);
 
  public slots:
-     void setValue(int value);
-     void setValue(float value);
-     void setValue(const QString& value);
+     void setXSPHValue(float value);
+     void setGasConstantValue(float value);
+     void setViscosityValue(float value);
+     void setXSPHValue(const QString& value);
+     void setGasConstantValue(const QString& value);
+     void setViscosityValue(const QString& value);
+
 
  protected slots:
      void triggerValue(int value);
@@ -33,8 +37,11 @@
      QGroupBox* createVectorInput(const QString& title, QLineEdit* x,QLineEdit* y,QLineEdit* z);
  private:
      FloatSlider* xSPHSlider;
+     QLineEdit* xSPHLineEdit;
      FloatSlider* gasConstantSlider;
+     QLineEdit* gasConstantLineEdit;
      FloatSlider* viscositySlider;
+     QLineEdit* viscosityLineEdit;
      QLineEdit *gravityX,*gravityY,*gravityZ;
  };
 

@@ -29,7 +29,8 @@
 using namespace std;
 namespace rtps
 {
-    MeshEffect::MeshEffect(RenderSettings set, ShaderLibrary& lib):ParticleEffect(set,lib)
+    MeshEffect::MeshEffect(ShaderLibrary* lib, GLuint width = 600, GLuint height = 800, GLfloat near=0.0f, GLfloat far =1.0f,GLfloat pointRadius = 0.5f,bool blending = false):
+        ParticleEffect(lib,width,height,near,far,pointRadius,blending)
     {}
     MeshEffect::~MeshEffect(){}
     void MeshEffect::renderFluid(Mesh* mesh,GLuint cubeMap, GLuint sceneTex, Light& light)
@@ -75,20 +76,20 @@ namespace rtps
         //project.transpose();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
-        glUniform1i(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(), "reflectionCubeSampler"), 0);
-        glUseProgram(m_shaderLibrary.shaders["renderFluidShader"].getProgram());
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"modelview"),1,false,modelview.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"project"),1,false,project.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"viewinvmat"),1,false,invModelview.m);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
-        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
-        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"light.diffuse"),1,&light.diffuse.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"light.specular"),1,&light.specular.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"light.ambient"),1,&light.ambient.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderFluidShader"].getProgram(),"light.pos"),1,&light.pos.x);
+        glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(), "reflectionCubeSampler"), 0);
+        glUseProgram(m_shaderLibrary->shaders["renderFluidShader"].getProgram());
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"modelview"),1,false,modelview.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"project"),1,false,project.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"viewinvmat"),1,false,invModelview.m);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light->diffuse"),1,&light->diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light->specular"),1,&light->specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light->ambient"),1,&light->ambient.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light->pos"),1,&light->pos.x);
 
 //        modelview.print("modelview");
 //        project.print("projection");
@@ -135,7 +136,7 @@ namespace rtps
         }
         glPopMatrix();
     }
-        void MeshEffect::render(Mesh* mesh,Light& light)
+        void MeshEffect::render(Mesh* mesh,Light* light)
     {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -175,18 +176,18 @@ namespace rtps
         glGetFloatv(GL_PROJECTION_MATRIX,project.m);
         //project.transpose();
 
-        glUseProgram(m_shaderLibrary.shaders["renderLitShader"].getProgram());
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"modelview"),1,false,modelview.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"project"),1,false,project.m);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
-        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
-        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"light.diffuse"),1,&light.diffuse.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"light.specular"),1,&light.specular.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"light.ambient"),1,&light.ambient.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderLitShader"].getProgram(),"light.pos"),1,&light.pos.x);
+        glUseProgram(m_shaderLibrary->shaders["renderLitShader"].getProgram());
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"modelview"),1,false,modelview.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"project"),1,false,project.m);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->diffuse"),1,&light->diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->specular"),1,&light->specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->ambient"),1,&light->ambient.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->pos"),1,&light->pos.x);
 
 //        modelview.print("modelview");
 //        project.print("projection");
@@ -233,7 +234,7 @@ namespace rtps
         }
         glPopMatrix();
     }
-    void MeshEffect::renderInstanced(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size,Light& light)
+    void MeshEffect::renderInstanced(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size,Light* light)
     {
 		if(size<=0)
 			return;
@@ -280,18 +281,18 @@ namespace rtps
         glGetFloatv(GL_PROJECTION_MATRIX,project.m);
         //project.transpose();
 
-        glUseProgram(m_shaderLibrary.shaders["renderInstancedShader"].getProgram());
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"modelview"),1,false,modelview.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"project"),1,false,project.m);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
-        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
-        glUniform1fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"light.diffuse"),1,&light.diffuse.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"light.specular"),1,&light.specular.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"light.ambient"),1,&light.ambient.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary.shaders["renderInstancedShader"].getProgram(),"light.pos"),1,&light.pos.x);
+        glUseProgram(m_shaderLibrary->shaders["renderInstancedShader"].getProgram());
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"modelview"),1,false,modelview.m);
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"project"),1,false,project.m);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
+        glUniform1fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light->diffuse"),1,&light->diffuse.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light->specular"),1,&light->specular.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light->ambient"),1,&light->ambient.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light->pos"),1,&light->pos.x);
         glDrawElementsInstancedEXT(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0,size);
         glUseProgram(0);
         glDisableVertexAttribArray(0);

@@ -15,8 +15,8 @@ struct Light
     vec3 pos;
 };
 
-uniform mat4 modelview;
-uniform mat4 project;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
 uniform Material material;
 uniform Light light;
 layout (location = 0) in vec3 pos;
@@ -32,8 +32,8 @@ void main()
 {
     vec4 viewPos;
     vec3 eyePos;
-    norm = normalize(modelview*vec4(normal,0.0f)).xyz;
-    viewPos = modelview*vec4(pos,1.0);
+    norm = normalize(viewMatrix*vec4(normal,0.0f)).xyz;
+    viewPos = viewMatrix*vec4(pos,1.0);
     eyePos = viewPos.xyz/viewPos.w;
     
     //color=col;
@@ -41,5 +41,5 @@ void main()
     //lightDir = normalize(light.pos);
     halfLightDir=normalize(light.pos+eyePos);
 
-    gl_Position= project*viewPos;
+    gl_Position= projectionMatrix*viewPos;
 }

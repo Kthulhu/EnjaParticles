@@ -6,6 +6,10 @@ FloatSlider::FloatSlider(Qt::Orientation orientation, QWidget* parent)
 {
     scale =1.0f;
 }
+void FloatSlider::setValue(float value)
+{
+    QSlider::setValue(value/scale);
+}
 void FloatSlider::setScale(float scale)
 {
     this->scale=scale;

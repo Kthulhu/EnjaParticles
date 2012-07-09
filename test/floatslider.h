@@ -10,6 +10,7 @@ public:
     void setScale(float scale);
 public slots:
     void sliderChange(SliderChange change);
+    void setValue(float value);
 signals:
     void valueChanged(float value);
 private:
