@@ -79,9 +79,9 @@ namespace rtps
         ParticleEffect(ShaderLibrary* lib, GLuint width = 600, GLuint height = 800, GLfloat pointRadius = 0.5f,bool blending = false);
         ~ParticleEffect();
 
-        void renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Camera* view, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
-        void renderVector(GLuint posVBO, GLuint vecVBO, const Camera* view, unsigned int num, float scale=1.0f);
-        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, const Camera* view, const Light* light = NULL,const Material* material = NULL, float scale = 1.0f);
+        void renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
+        void renderVector(GLuint posVBO, GLuint vecVBO, unsigned int num, float scale=1.0f);
+        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light = NULL,const Material* material = NULL, float scale = 1.0f);
         virtual void setWindowDimensions(GLuint width, GLuint height){this->width=width;this->height=height;}
         virtual void setPointRadius(GLfloat radius){pointRadius=radius;}
         virtual GLfloat getPointRadius(){ return pointRadius;}

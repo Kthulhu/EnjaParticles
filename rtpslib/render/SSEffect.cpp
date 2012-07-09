@@ -37,8 +37,8 @@
 using namespace std;
 namespace rtps
 {
-    SSEffect::SSEffect(ShaderLibrary* lib, SmoothingFilter filter = SmoothingFilter::GUASSIAN_BLUR, GLuint width = 600, GLuint height = 800, GLfloat near=0.0f, GLfloat far =1.0f,GLfloat pointRadius = 0.5f,bool blending = false):
-        ParticleEffect(lib,width,height,near,far,pointRadius,blending)
+    SSEffect::SSEffect(ShaderLibrary* lib, SmoothingFilter filter = SmoothingFilter::GUASSIAN_BLUR, GLuint width, GLuint height, GLfloat pointRadius,bool blending):
+        ParticleEffect(lib,width,height,pointRadius,blending)
     {
         cout<<"Shaderlib size = "<<m_shaderLibrary.shaders.size()<<endl;
         m_fbos.resize(1);
@@ -177,19 +177,28 @@ namespace rtps
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         //glBindFramebuffer(GL_DRAW_FRAMEBUFFER,fbos[0]);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["Color"]);
+        //glActiveTexture(GL_TEXTURE1);
+        //glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["Color"]);
         //Render the normals for the new "surface".
         glDrawBuffer(GL_COLOR_ATTACHMENT2_EXT);
         glClearColor(0.0f,0.0f,0.0f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        GLuint normalProgram = m_shaderLibrary.shaders["depth2NormalShader"].getProgram();
+        GLuint normalProgram = m_shaderLibrary->shaders["depth2NormalShader"].getProgram();
         glUseProgram(normalProgram);
         glUniform1i( glGetUniformLocation(normalProgram, "depthTex"),0);
-        glUniform1i( glGetUniformLocation(normalProgram, "colorTex"),1);
+        //glUniform1i( glGetUniformLocation(normalProgram, "colorTex"),1);
         glUniform1f( glGetUniformLocation(normalProgram, "del_x"),1.0/((float)m_settings.windowWidth));
         glUniform1f( glGetUniformLocation(normalProgram, "del_y"),1.0/((float)m_settings.windowHeight));
-        RenderUtils::fullscreenQuad();
+        glUniform3fv(glGetUniformLocation(normalProgram,"material.diffuse"),1,&mesh->material.diffuse.x);
+        glUniform3fv(glGetUniformLocation(normalProgram,"material.specular"),1,&mesh->material.specular.x);
+        glUniform3fv(glGetUniformLocation(normalProgram,"material.ambient"),1,&mesh->material.ambient.x);
+        glUniform1fv(glGetUniformLocation(normalProgram,"material.shininess"),1,&mesh->material.shininess);
+        glUniform1fv(glGetUniformLocation(normalProgram,"material.opacity"),1,&mesh->material.opacity);
+        glUniform3fv(glGetUniformLocation(normalProgram,"light->diffuse"),1,&light->diffuse.x);
+        glUniform3fv(glGetUniformLocation(normalProgram,"light->specular"),1,&light->specular.x);
+        glUniform3fv(glGetUniformLocation(normalProgram,"light->ambient"),1,&light->ambient.x);
+        glUniform3fv(glGetUniformLocation(normalProgram,"light->pos"),1,&light->pos.x);
+        RenderUtils::fullscreenQuad(width, height);
 
         //TODO: should add another shader for performing compositing
 
@@ -210,7 +219,7 @@ namespace rtps
         glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"]);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
-        GLuint copyProgram = m_shaderLibrary.shaders["copyShader"].getProgram();
+        GLuint copyProgram = m_shaderLibrary->shaders["copyShader"].getProgram();
         glUseProgram(copyProgram);
         glUniform1i( glGetUniformLocation(copyProgram, "normalTex"),0);
         glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);

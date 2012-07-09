@@ -73,11 +73,11 @@ namespace rtps
 	std::map<QString,Mesh*> dynamicMeshes;
 	ShaderLibrary* lib;
 	//QString renderType;
-	float4 rotation; //may want to consider quaternions for this at some point.
-	float3 translation;
+    //float4 rotation; //may want to consider quaternions for this at some point.
+    //float3 translation;
+    Camera* view;
 	Light light;
-	int2 mousePos;
-	float fov,near,far;
+    int2 mousePos;
 	int mouseButtons;
 	// the global Assimp scene object
 	AIWrapper* scene;
@@ -93,7 +93,6 @@ namespace rtps
 	CL* cli;
 	bool paused,renderVelocity;
     std::string binaryPath;
-    QTimer *timer;
  };
 };
  #endif

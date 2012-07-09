@@ -113,6 +113,7 @@ namespace rtps
             renderPointsAsSpheres(posVBO,colVBO,num,view,light,material,scale);
         else
         {
+            glUseProgram(m_shaderLibrary->shaders["passThrough"]);
             drawArrays(posVBO, colVBO, num);
         }
         glDepthMask(GL_TRUE);
@@ -138,23 +139,16 @@ namespace rtps
         m_writeFramebuffers=true;
     }
 
-    void ParticleEffect::renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Camera* view,  const Light* light,const Material* material, float scale)
+    void ParticleEffect::renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale)
     {
 
         glEnable(GL_POINT_SPRITE);
         glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        GLuint program = m_shaderLibrary.shaders["sphereShader"].getProgram();
+        GLuint program = m_shaderLibrary->shaders["sphereShader"].getProgram();
 
         glUseProgram(program);
-        //float particle_radius = 0.125f * 0.5f;
-        glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)m_settings.windowWidth) / tanf(65. * (0.5f * 3.1415926535f/180.0f)));
-
-        glUniform1f( glGetUniformLocation(program, "pointRadius"), pointScale*scale);
-        glUniform1f( glGetUniformLocation(program, "near"), near );
-        glUniform1f( glGetUniformLocation(program, "far"), far);
-
-        //glColor3f(1., 1., 1.);
+        glUniform1f( glGetUniformLocation(program, "pointRadius"), pointRadius*scale);
 
         drawArrays(posVBO, colVBO, num);
 
@@ -164,7 +158,7 @@ namespace rtps
         glDisable(GL_POINT_SPRITE);
     }
 
-    void ParticleEffect::renderVector(GLuint posVBO, GLuint vecVBO, const Camera* view,  unsigned int num, float scale)
+    void ParticleEffect::renderVector(GLuint posVBO, GLuint vecVBO,  unsigned int num, float scale)
     {
         glBindBuffer(GL_ARRAY_BUFFER, vecVBO);
         glColorPointer(4, GL_FLOAT, 0, 0);
@@ -175,8 +169,8 @@ namespace rtps
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
 
-        glUseProgram(m_shaderLibrary.shaders["vectorShader"].getProgram());
-        glUniform1f(glGetUniformLocation(m_shaderLibrary.shaders["vectorShader"].getProgram(), "scale"),scale);
+        glUseProgram(m_shaderLibrary->shaders["vectorShader"].getProgram());
+        glUniform1f(glGetUniformLocation(m_shaderLibrary->shaders["vectorShader"].getProgram(), "scale"),scale);
         //Need to disable these for blender
         glDisableClientState(GL_NORMAL_ARRAY);
         glDrawArrays(GL_POINTS, 0, num);

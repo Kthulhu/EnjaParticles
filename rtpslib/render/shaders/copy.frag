@@ -1,3 +1,6 @@
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+
 uniform sampler2D normalTex;
 uniform sampler2D depthTex;
 

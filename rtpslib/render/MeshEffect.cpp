@@ -29,11 +29,11 @@
 using namespace std;
 namespace rtps
 {
-    MeshEffect::MeshEffect(ShaderLibrary* lib, GLuint width = 600, GLuint height = 800, GLfloat near=0.0f, GLfloat far =1.0f,GLfloat pointRadius = 0.5f,bool blending = false):
-        ParticleEffect(lib,width,height,near,far,pointRadius,blending)
+    MeshEffect::MeshEffect(ShaderLibrary* lib, GLuint width = 600, GLuint height = 800, GLfloat pointRadius = 0.5f,bool blending = false):
+        ParticleEffect(lib,width,height,pointRadius,blending)
     {}
     MeshEffect::~MeshEffect(){}
-    void MeshEffect::renderFluid(Mesh* mesh,GLuint cubeMap, GLuint sceneTex, Light& light)
+    void MeshEffect::renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light& light)
     {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -63,24 +63,14 @@ namespace rtps
         }
         if(mesh->ibo)
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
-        //TODO: Create My own matrix class to handle this. Or use boost. That way
-        //I can be opengl 3+ compliant.
-        float16 modelview;
-        glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
-        //modelview.transpose();
-        float16 invModelview(modelview);
-        invModelview.inverse();
 
-        float16 project;
-        glGetFloatv(GL_PROJECTION_MATRIX,project.m);
-        //project.transpose();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
         glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(), "reflectionCubeSampler"), 0);
         glUseProgram(m_shaderLibrary->shaders["renderFluidShader"].getProgram());
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"modelview"),1,false,modelview.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"project"),1,false,project.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"viewinvmat"),1,false,invModelview.m);
+        //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"modelview"),1,false,modelview.m);
+        //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"project"),1,false,project.m);
+        //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"viewinvmat"),1,false,invModelview.m);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
@@ -91,32 +81,11 @@ namespace rtps
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light->ambient"),1,&light->ambient.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light->pos"),1,&light->pos.x);
 
-//        modelview.print("modelview");
-//        project.print("projection");
-//        dout<<"ibo "<<mesh->ibo<<endl;
-//        dout<<"ibosize "<<mesh->iboSize<<endl;
-//        dout<<"vbo "<<mesh->vbo<<endl;
-//        dout<<"vbosize "<<mesh->vboSize<<endl;
-//        dout<<"normals "<<mesh->normalbo<<endl;
-//        dout<<"texcoords "<<mesh->texCoordsbo<<endl;
         if(mesh->iboSize)
             glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
         else
         {
-        //glUseProgram(0);
-//            glUseProgram(0);
-            /*glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glVertexPointer(3, GL_FLOAT, 0,0);
-
-            glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
-            glEnableClientState(GL_NORMAL_ARRAY);
-            glNormalPointer(GL_FLOAT, 0,0 );*/
-
             glDrawArrays(GL_TRIANGLES,0,mesh->vboSize);
-            //glBindBuffer(GL_ARRAY_BUFFER,0);
-            //glDisableClientState(GL_VERTEX_ARRAY);
-            //glDisableClientState(GL_NORMAL_ARRAY);
         }
         glUseProgram(0);
         glDisableVertexAttribArray(0);
@@ -177,8 +146,8 @@ namespace rtps
         //project.transpose();
 
         glUseProgram(m_shaderLibrary->shaders["renderLitShader"].getProgram());
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"modelview"),1,false,modelview.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"project"),1,false,project.m);
+        //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"modelview"),1,false,modelview.m);
+        //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"project"),1,false,project.m);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
@@ -282,8 +251,8 @@ namespace rtps
         //project.transpose();
 
         glUseProgram(m_shaderLibrary->shaders["renderInstancedShader"].getProgram());
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"modelview"),1,false,modelview.m);
-        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"project"),1,false,project.m);
+        //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"modelview"),1,false,modelview.m);
+        //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"project"),1,false,project.m);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"material.specular"),1,&mesh->material.specular.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);

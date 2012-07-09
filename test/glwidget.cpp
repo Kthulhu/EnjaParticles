@@ -65,7 +65,7 @@ namespace rtps
         dynamicMeshScene=new AIWrapper();
         renderMovie=false;
         frameCounter=0;
-     timer = new QTimer(this);
+     QTimer* timer = new QTimer(this);
      connect(timer, SIGNAL(timeout()), this, SLOT(update()));
      timer->start(33);
  }
@@ -102,46 +102,120 @@ namespace rtps
      //needs to call make current before glew init. Seems to
      //not have a valid context otherwise.
      makeCurrent();
-     dout<<"profile = "<<this->context()->format().profile()<<endl;
-     dout<<"Major Version = "<<this->context()->format().majorVersion()<<endl;
-     dout<<"Minor Version = "<<this->context()->format().minorVersion()<<endl;
-     dout<<"version 3.3 supported = "<<(int)(this->context()->format().openGLVersionFlags()&QGLFormat::OpenGL_Version_3_3)<<endl;
      glewInit();
-     GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
-     dout<<"Pixel buffer supported? "<<(bGLEW?"yes":"no")<<endl;
-     dout<<"Version = "<<(const char*)glGetString(GL_VERSION)<<endl;
-     dout<<"valid context"<<context()->isValid()<<endl;
+     //TODO: Add stereo camera
+     view = new Camera(float3(-5.0f,-5.0f,5.0f),65.0f,0.3f,1000.0f,width(),height());
+     view->setMoveSpeed(0.1f);
+     view->setRotateSpeed(0.2f);
 
-     fov=65.0f;
-     near=0.3f;
-     far=1000.0f;
 
      cli = new CL();
 
-        translation.x = -5.00f;
-        translation.y = -5.00f;//300.f;
-        translation.z = 5.00f;
-        rotation.x=0.0f;
-        rotation.y=0.0f;
-        light.diffuse.x=1.0;light.diffuse.y=1.0;light.diffuse.z=1.0;
-        //light.ambient.x=0.3;light.ambient.y=0.3;light.ambient.z=0.3;
-        light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
-        light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
-        light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
+    light.diffuse.x=1.0;light.diffuse.y=1.0;light.diffuse.z=1.0;
+    light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
+    light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
+    light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
 
-        environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
+    environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
 
-        glViewport(0, 0, width(), height());
+    glViewport(0, 0, width(), height());
+    lib = new ShaderLibrary();
+    lib->initializeShaders(binaryPath+"/shaders");
+    effects["Points"]=new ParticleEffect(lib,width(),height(),20.0f,false);
+    effects["Screen Space"]=new SSEffect(lib,SmoothingFilter::GAUSSIAN_BLUR,width,height,20.0f,true);
+    effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),20.0f,false);
 
-        // projection
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluPerspective(fov, width()/(double)height(), near, far);
-        // set view matrix
-        glClearColor(.9f, .9f, .9f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+    //set the projection and view matricies for all shaders.
+    for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+    {
+        glUseProgram(program);
+        GLint location = glGetUniformLocation(i->getProgram(),"viewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,false,view->getViewMatrix().m);
+        location = glGetUniformLocation(i->getProgram(),"projectionMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,false,view->getProjectionMatrix().m);
+        location = glGetUniformLocation(i->getProgram(),"inverseViewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,false,view->getInverseViewMatrix().m);
+        location = glGetUniformLocation(i->getProgram(),"inverseProjectionMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,false,view->getInverseProjectionMatrix().m);
+        glUseProgram(0);
+    }
+    GLuint program = lib->shaders["sphereShader"].getProgram();
+    glUseProgram(program);
+    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->fov * (0.5f * 3.1415926535f/180.0f)));
+    glUseProgram(0);
+ }
+
+ void GLWidget::renderSkyBox()
+ {
+     glDisable(GL_TEXTURE_2D);
+     glEnable(GL_TEXTURE_GEN_S);
+     glEnable(GL_TEXTURE_GEN_T);
+     glEnable(GL_TEXTURE_GEN_R);
+     glEnable(GL_TEXTURE_CUBE_MAP);
+
+     glUseProgram(lib->shaders["passThrough"].getProgram());
+     glBindTexture(GL_TEXTURE_CUBE_MAP, environTex);
+     // draw the skybox
+     const GLfloat fSkyDist = 100.0;
+     const GLfloat fTex = 1.0f;
+
+     glBegin(GL_TRIANGLE_STRIP);
+
+    //west
+         glTexCoord3f(-fTex, -fTex , fTex);
+         glVertex3f(-fSkyDist, -fSkyDist,  fSkyDist);
+         glTexCoord3f(-fTex, fTex, fTex);
+         glVertex3f(-fSkyDist, fSkyDist,  fSkyDist);
+         glTexCoord3f(-fTex, -fTex, -fTex);
+         glVertex3f(-fSkyDist, -fSkyDist, -fSkyDist);
+         glTexCoord3f(-fTex, fTex,-fTex);
+         glVertex3f(-fSkyDist, fSkyDist,  -fSkyDist);
+     //north
+         glTexCoord3f(fTex, -fTex,-fTex);
+         glVertex3f(fSkyDist, -fSkyDist, -fSkyDist);
+         glTexCoord3f(fTex, fTex,-fTex);
+         glVertex3f(fSkyDist, fSkyDist, -fSkyDist);
+     //east
+         glTexCoord3f( fTex, -fTex, fTex);
+         glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
+         glTexCoord3f( fTex, fTex, fTex);
+         glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
+     //south
+         glTexCoord3f( -fTex, -fTex, fTex);
+         glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
+         glTexCoord3f( -fTex, fTex, fTex);
+         glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
+     glEnd();
+     glBegin(GL_QUADS);
+     //up
+         glTexCoord3f( -fTex, fTex, -fTex);
+         glVertex3f( -fSkyDist, fSkyDist,  -fSkyDist);
+         glTexCoord3f( -fTex, fTex, fTex);
+         glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
+         glTexCoord3f( fTex, fTex, fTex);
+         glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
+         glTexCoord3f( fTex, fTex, -fTex);
+         glVertex3f( fSkyDist, fSkyDist,  -fSkyDist);
+     //down
+         glTexCoord3f( fTex, -fTex, -fTex);
+         glVertex3f( fSkyDist, -fSkyDist,  -fSkyDist);
+         glTexCoord3f( fTex, -fTex, fTex);
+         glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
+         glTexCoord3f( -fTex, -fTex, fTex);
+         glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
+         glTexCoord3f( -fTex, -fTex, -fTex);
+         glVertex3f( -fSkyDist, -fSkyDist,  -fSkyDist);
+     glEnd();
+
+     glDisable(GL_TEXTURE_CUBE_MAP);
+
+     glDisable(GL_TEXTURE_GEN_R);
+     view->shaders["passThrough"];
+
  }
 
  void GLWidget::paintGL()
@@ -150,182 +224,26 @@ namespace rtps
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
 #if 1
-        /*if (stereo_enabled)
+        display(false);
+        //FIXME: Have a method to give renderType to each System. That way we can have different
+        //Systems with the different effects.
+        for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
-            render_stereo();
+            if(renderVelocity)
+            {
+                effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
+            }
+            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
         }
-        else
-        {*/
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
 
-            glPushMatrix();
-            glRotatef(rotation.x, 1.0, 0.0, 0.0);
-            glRotatef(rotation.y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-            glTranslatef(translation.x, translation.z, translation.y);
-
-            glDisable(GL_TEXTURE_2D);
-            glEnable(GL_TEXTURE_GEN_S);
-            glEnable(GL_TEXTURE_GEN_T);
-            glEnable(GL_TEXTURE_GEN_R);
-            glEnable(GL_TEXTURE_CUBE_MAP);
-
-            glBindTexture(GL_TEXTURE_CUBE_MAP, environTex);
-            // draw the skybox
-            const GLfloat fSkyDist = 100.0;
-            const GLfloat fTex = 1.0f;
-
-            glBegin(GL_TRIANGLE_STRIP);
-
-           //west
-                glTexCoord3f(-fTex, -fTex , fTex);
-                glVertex3f(-fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f(-fTex, fTex, fTex);
-                glVertex3f(-fSkyDist, fSkyDist,  fSkyDist);
-                glTexCoord3f(-fTex, -fTex, -fTex);
-                glVertex3f(-fSkyDist, -fSkyDist, -fSkyDist);
-                glTexCoord3f(-fTex, fTex,-fTex);
-                glVertex3f(-fSkyDist, fSkyDist,  -fSkyDist);
-            //north
-                glTexCoord3f(fTex, -fTex,-fTex);
-                glVertex3f(fSkyDist, -fSkyDist, -fSkyDist);
-                glTexCoord3f(fTex, fTex,-fTex);
-                glVertex3f(fSkyDist, fSkyDist, -fSkyDist);
-            //east
-                glTexCoord3f( fTex, -fTex, fTex);
-                glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f( fTex, fTex, fTex);
-                glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
-            //south
-                glTexCoord3f( -fTex, -fTex, fTex);
-                glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f( -fTex, fTex, fTex);
-                glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
-            glEnd();
-            glBegin(GL_QUADS);
-            //up
-                glTexCoord3f( -fTex, fTex, -fTex);
-                glVertex3f( -fSkyDist, fSkyDist,  -fSkyDist);
-                glTexCoord3f( -fTex, fTex, fTex);
-                glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
-                glTexCoord3f( fTex, fTex, fTex);
-                glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
-                glTexCoord3f( fTex, fTex, -fTex);
-                glVertex3f( fSkyDist, fSkyDist,  -fSkyDist);
-            //down
-                glTexCoord3f( fTex, -fTex, -fTex);
-                glVertex3f( fSkyDist, -fSkyDist,  -fSkyDist);
-                glTexCoord3f( fTex, -fTex, fTex);
-                glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f( -fTex, -fTex, fTex);
-                glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f( -fTex, -fTex, -fTex);
-                glVertex3f( -fSkyDist, -fSkyDist,  -fSkyDist);
-            glEnd();
-
-            glDisable(GL_TEXTURE_CUBE_MAP);
-
-            glDisable(GL_TEXTURE_GEN_R);
-
-
-            glPopMatrix();
-
-            glRotatef(-90, 1.0, 0.0, 0.0);
-
-            glRotatef(rotation.x, 1.0, 0.0, 0.0);
-            glRotatef(rotation.y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-            glTranslatef(translation.x, translation.z, translation.y);
-            //Draw Origin - Found code at http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=248059
-
-            float ORG[3] = {0,0,0};
-
-            float XP[3] = {1,0,0}, XN[3] = {-1,0,0},
-                  YP[3] = {0,1,0}, YN[3] = {0,-1,0},
-                  ZP[3] = {0,0,1}, ZN[3] = {0,0,-1};
-            glLineWidth (20.0);
-            /*glBegin (GL_LINES);
-            glColor3f (1,0,0); // X axis is red.
-            glVertex3fv (ORG);
-            glVertex3fv (XP );
-            glColor3f (0,1,0); // Y axis is green.
-            glVertex3fv (ORG);
-            glVertex3fv (YP );
-            glColor3f (0,0,1); // z axis is blue.
-            glVertex3fv (ORG);
-            glVertex3fv (ZP );
-            glEnd();
-            glLineWidth (1.0);
-            */
-            //RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
-            /*ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
-            meshRenderer->renderInstanced(dynamicMeshs["dynamicShape0"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
-            if(systems.find("flock1")!=systems.end())
-            {
-                //dout<<"flock------------------"<<endl;
-                FLOCK* flock = (FLOCK*)systems["flock1"];
-                //effects[renderType]->render(flock->getPosVBO(),flock->getColVBO(),flock->getNum());
-                meshRenderer->renderInstanced(dynamicMeshs["dynamicShape1"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
-            }
-
-*/
-		display(false);
-            //FIXME: Have a method to give renderType to each System. That way we can have different
-            //Systems with the different effects.
-            for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-            {
-                if(renderVelocity)
-                {
-                    effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
-                }
-                effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
-                //FIXME:This is a horrible way of doing this!!
-                //if(i->first=="rb1")
-                //{
-                //    ParticleRigidBody* prb=((ParticleRigidBody*)i->second);
-                //    effects["default"]->render(prb->getStaticVBO(),prb->getColVBO(),prb->getStaticNum());
-                //}
-            }
-            //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
-            /*SPH* sph = (SPH*)systems["water"];
-            glEnable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunc(GL_ONE,GL_ONE);
-            Mesh* mcMesh = sph->getMCMesh();
-            glEnable(GL_BLEND);
-            if(sph->getSettings()->GetSettingAs<bool>("use_color_field","0")&&mcMesh)
-            {
-		glEnable(GL_CULL_FACE);
-                //meshRenderer->render(mcMesh,light);
-                meshRenderer->renderFluid(mcMesh,environTex,0,light);
-		glDisable(GL_CULL_FACE);
-            }
-            else
-            {
-                effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
-            }*/
-            display(true);
+        display(true);
 #else
-        // set view matrix
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glRotatef(-90, 1.0, 0.0, 0.0);
-
-        glRotatef(rotation.x, 1.0, 0.0, 0.0);
-        glRotatef(rotation.y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-        glTranslatef(translation.x, translation.z, translation.y);
-
         meshRenderer->render(dynamicMeshs["dynamicShape1"],light);
         glColor4f(0.1f,0.2f,0.4f,1.0f);
         displayShape(pShapes["dynamicShape1"],float3(5.0f,3.f,1.0f),systems["water"]->getSpacing());
         displayShape(pShapes["dynamicShape11"],float3(8.0f,3.f,1.0f),systems["water"]->getSpacing()/2.0f);
         displayShape(pShapes["dynamicShape112"],float3(11.0f,3.f,1.0f),systems["water"]->getSpacing()/4.0f);
         displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
-        //displayShape(pShapes["dynamicShape11234"],float3(10.0f,0.0f,0.0f),systems["water"]->getSpacing()/16.0f);
-        //}
-        //glDisable(GL_DEPTH_TEST);
-
 #endif
         glDisable(GL_MULTISAMPLE_ARB);
         if(renderMovie)
@@ -342,9 +260,18 @@ namespace rtps
         {
             i->second->setWindowDimensions(width,height);
         }
-     glMatrixMode(GL_PROJECTION);
-     glLoadIdentity();
-     gluPerspective(fov, width/(double)height, near, far);
+     view->setWidth(width);
+     view->setHeight(height);
+     //set the projection and view matricies for all shaders.
+     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+     {
+         GLint location = glGetUniformLocation(i->getProgram(),"projectionMatrix");
+         if(location!=-1)
+             glUniformMatrix4fv(location,1,false,view->getProjectionMatrix().m);
+         location = glGetUniformLocation(i->getProgram(),"inverseProjectionMatrix");
+         if(location!=-1)
+             glUniformMatrix4fv(location,1,false,view->getInverseProjectionMatrix().m);
+     }
  }
 
  void GLWidget::mousePressEvent(QMouseEvent *event)
@@ -352,37 +279,46 @@ namespace rtps
         mouseButtons |= event->button();
         mousePos.x = event->x();
         mousePos.y = event->y();
-updateGL();
+        //updateGL();
  }
  void GLWidget::mouseReleaseEvent(QMouseEvent *event)
  {
         mouseButtons &= !event->button();
-
         mousePos.x = event->x();
         mousePos.y = event->y();
-updateGL();
+        //updateGL();
  }
 
- void GLWidget::mouseMoveEvent(QMouseEvent *event)
- {
-        float dx, dy;
-        dx = event->x() - mousePos.x;
-        dy = event->y() - mousePos.y;
+void GLWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    float dx, dy;
+    dx = event->x() - mousePos.x;
+    dy = event->y() - mousePos.y;
 
-        if (mouseButtons & Qt::LeftButton)
-        {
-            rotation.x += dy * 0.2f;
-            rotation.y += dx * 0.2f;
-        }
-        else if (mouseButtons & Qt::RightButton)
-        {
-            translation.z -= dy * 0.1f;
-        }
+    if (mouseButtons & Qt::RightButton)
+    {
+        view->rotate(dx,dy);
+        cameraChanged();
+    }
 
-        mousePos.x = event->x();
-        mousePos.y = event->y();
-updateGL();
- }
+    mousePos.x = event->x();
+    mousePos.y = event->y();
+    updateGL();
+}
+
+void GLWidget::cameraChanged()
+{
+    //update the view matricies for all shaders.
+    for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+    {
+        GLint location = glGetUniformLocation(i->getProgram(),"viewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,false,view->getViewMatrix().m);
+        location = glGetUniformLocation(i->getProgram(),"inverseViewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,false,view->getInverseViewMatrix().m);
+    }
+}
 
 void GLWidget::keyPressEvent(QKeyEvent *event)
 {
@@ -556,53 +492,30 @@ char key=event->text().at(0).toAscii();
 
                     systems["rb1"]->addBall(1000, mid, size,false, col1,mass);*/
                     return;
-                }
-            case 'v':
-                renderVelocity=!renderVelocity;
-                return;
-            case 'C':
-                return;
-            case '2':
-                light.pos.z -= 0.1f;
-                break;
-            case '6':
-                light.pos.x += 0.1f;
-                break;
-            case '8':
-                light.pos.z += 0.1f;
-                break;
-            case '4':
-                light.pos.x -= 0.1f;
-                break;
-            case '3':
-                light.pos.y += 0.1f;
-                break;
-            case '1':
-                light.pos.y -= 0.1f;
-                break;
+            }
             case 'w':
-                translation.z -= 0.1f;
+                view->move(0.0f,0.0f,-1.0f);
                 break;
             case 'a':
-                translation.x += 0.1f;
+                view->move(1.0f,0.0f,0.0f);
                 break;
             case 's':
-                translation.z += 0.1f;
+                view->move(0.0f,0.0f,1.0f);
                 break;
             case 'd':
-                translation.x -= 0.1f;
+                view->move(-1.0f,0.0f,0.0f);
                 break;
             case 'z':
-                translation.y += 0.1f;
+                view->move(0.0f,1.0f,0.0f);
                 break;
             case 'x':
-                translation.y -= 0.1f;
+                view->move(0.0f,-1.0f,0.0f);
                 break;
             case '+':
-                mass+=100.0f;//0.1f;
+                mass+=100.0f;
                 break;
             case '-':
-                mass-=100.0f;//0.1f;
+                mass-=100.0f;
                 break;
             case '[':
                 //sizeScale+=0.5f;
@@ -808,30 +721,7 @@ void GLWidget::loadMeshScene(const QString& filename)
 void GLWidget::loadParameterFile(const QString& filename)
 {
 	ifstream is(filename.toAscii().data(),ifstream::in);
-        readParamFile(is);
-	RenderSettings rs;
-        //rs.blending=false;
-        rs.blending=false;
-        float nf[2];
-        glGetFloatv(GL_DEPTH_RANGE,nf);
-        rs.m_near = nf[0];
-        rs.m_far = nf[1];
-        //dout<<"near = "<<rs.near<<endl;
-        //dout<<"far = "<<rs.far<<endl;
-        //dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
-        rs.particleRadius = systems["water"]->getSpacing()*20.f;
-        rs.windowWidth=width();
-        rs.windowHeight=height();
-        lib = new ShaderLibrary();
-	string shaderpath=binaryPath+"/shaders";
-        lib->initializeShaders(shaderpath);
-        effects["Points"]=new ParticleEffect(rs,*lib);
-        //effects["sprite"]=new ParticleEffect();
-        rs.blending=true;
-        rs.particleRadius =systems["water"]->getSpacing()*.6f;
-        effects["Screen Space"]=new SSEffect(rs, *lib);
-        meshRenderer=new MeshEffect(rs, *lib);
-        effects["Mesh Renderer"]= new MeshEffect(rs,*lib);
+    readParamFile(is);
 }
 void GLWidget::ResetSimulations()
 {

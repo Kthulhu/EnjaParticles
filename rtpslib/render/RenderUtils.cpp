@@ -37,43 +37,21 @@ using namespace std;
 
 namespace rtps
 {
-
-    void RenderUtils::orthoProjection()
+    void RenderUtils::fullscreenQuad(float width, float height)
     {
-        glMatrixMode(GL_PROJECTION);                    // Select Projection
-        glPushMatrix();                         // Push The Matrix
-        glLoadIdentity();                       // Reset The Matrix
-        gluOrtho2D( 0,1,0,1);
-        glMatrixMode(GL_MODELVIEW);                 // Select Modelview Matrix
-        glPushMatrix();                         // Push The Matrix
-        glLoadIdentity();                       // Reset The Matrix
-    }
-
-    void RenderUtils::perspectiveProjection()
-    {
-        glMatrixMode( GL_PROJECTION );                  // Select Projection
-        glPopMatrix();                          // Pop The Matrix
-        glMatrixMode( GL_MODELVIEW );                   // Select Modelview
-        glPopMatrix();                          // Pop The Matrix
-    }
-
-    void RenderUtils::fullscreenQuad()
-    {
-        orthoProjection();
         glBegin(GL_QUADS);
         glTexCoord2f(0.f,0.f);
         glVertex2f(0.f,0.f);
 
         glTexCoord2f(1.f,0.f);
-        glVertex2f(1.f,0.f);
+        glVertex2f(width,0.f);
 
         glTexCoord2f(1.f,1.f);
-        glVertex2f(1.f,1.f);
+        glVertex2f(width,height);
 
         glTexCoord2f(0.f,1.f);
-        glVertex2f(0.f,1.f);
-        glEnd();
-        perspectiveProjection();
+        glVertex2f(0.f,height);
+        glEnd();=
     }
     void RenderUtils::writeTextures(const map<string,GLuint>& texs)
     {

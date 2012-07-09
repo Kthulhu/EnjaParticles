@@ -28,16 +28,16 @@ class RTPS_EXPORT Camera
         this->farClip=far;
         this->width=width;
         this->height=height;
+        moveSpeed=1.0f;
+        rotateSpeed=1.0f;
+        currentProjection=Projection::PERSPECTIVE_PROJECTION;
         updateProjectionMatrix();
         updateModelviewMatrix();
     }
 
-    void moveX(float delX);
-    void moveY(float delY);
-    void moveZ(float delZ);
+    void move(float delX,float delY,float delZ);
 
-    void rotateX(float rotateDelX);
-    void rotateY(float rotateDelY);
+    void rotate(float rotateDelX, float rotateDelY);
 
     //void tick(float seconds);
 
@@ -73,6 +73,7 @@ class RTPS_EXPORT Camera
     Projection getProjectionType(){return currentProjection;}
 
     const float16& getProjectionMatrix();
+    const float16& getInverseProjectionMatrix();
     const float16& getViewMatrix();
     const float16& getInverseViewMatrix();
 
@@ -87,6 +88,7 @@ protected:
     float3 pos;
     Quaternion rotation;
     float16 projectionMatrix;
+    float16 invProjectionMatrix;
     float16 viewMatrix;
     float16 invViewMatrix;
 

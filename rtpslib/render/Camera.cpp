@@ -1,44 +1,23 @@
 #include "Camera.h"
 
 
-void Camera::moveX(float delX)
+void Camera::move(float delX, float delY, float delZ)
 {
     pos += rotation * float3(delX*moveSpeed, 0.0f, 0.0f);
-}
-
-void Camera::moveY(float delY)
-{
     pos.y -= delY*moveSpeed;
-}
-
-void Camera::moveZ(float delZ)
-{
     pos += rotation * float3(0.0f, 0.0f, -delZ*moveSpeed);
+    updateViewMatrix();
 }
 
-void Camera::rotateX(float rotateDelX)
+void Camera::rotate(float rotateDelX,rotateDelY)
 {
     Quaternion nrot(float3(1.0f, 0.0f, 0.0f), rotateDelX * rotateSpeed * PIOVER180);
     rotation = rotation * nrot;
-}
-
-void Camera::rotateY(float rotateDelY)
-{
     Quaternion nrot(float3(0.0f, 1.0f, 0.0f), rotateDelX * rotateSpeed * PIOVER180);
     rotation = nrot * rotation;
+    updateViewMatrix();
 }
 
-/*void Camera::tick(float seconds)
-{
-    if (rot.x != 0.0f) rotateX(rot.x * seconds * rotspeed);
-    if (rot.y != 0.0f) rotateY(rot.y * seconds * rotspeed);
-
-    if (move.x != 0.0f) moveX(move.x * seconds * movespeed);
-    if (move.y != 0.0f) moveY(move.y * seconds * movespeed);
-    if (move.z != 0.0f) moveZ(move.z * seconds * movespeed);
-    if((rot.x != 0.0f)||(rot.y != 0.0f)||(move.x != 0.0f)||(move.y != 0.0f)||(move.z != 0.0f))
-            updateModelviewMatrix();
-}*/
 void Camera::setProjectionMatrixPerspective(float l, float r, float b, float t, float n, float f)
 {
     projectionMatrix.loadIdentity();
@@ -81,8 +60,10 @@ void Camera::updateProjectionMatrix()
     }
     else
     {
-        setProjectionMatrixOrthographic(-width,width,height,height,nearClip,farClip)
+        setProjectionMatrixOrthographic(-width,width,height,height,nearClip,farClip);
     }
+    invProjectionMatrix = projectionMatrix;
+    invProjectionMatrix.inverse();
 }
 
 const float16& Camera::getViewMatrix()
