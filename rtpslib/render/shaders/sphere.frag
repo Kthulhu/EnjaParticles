@@ -5,7 +5,7 @@ uniform mat4 projectionMatrix;
 uniform float pointRadius;  // point size in world space
 //uniform float near;
 //uniform float far;
-varying vec3 posEye;        // position of center in eye space
+varying in vec3 posEye;        // position of center in eye space
 
 void main()
 {

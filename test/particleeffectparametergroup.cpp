@@ -17,37 +17,6 @@
      pointScaleSlider->setValue(15);
      pointScaleSlider->setScale(0.01);
 
-     gasConstantSlider = new FloatSlider(orientation,this);
-     gasConstantSlider->setObjectName("gas_constant");
-     gasConstantSlider->setTickPosition(QSlider::TicksBelow);
-     gasConstantSlider->setTickInterval(10);
-     gasConstantSlider->setSingleStep(1);
-     gasConstantSlider->setRange(1,100);
-     gasConstantSlider->setValue(20);
-     gasConstantSlider->setScale(0.05);
-
-     viscositySlider = new FloatSlider(orientation,this);
-     viscositySlider->setObjectName("viscosity");
-     viscositySlider->setTickPosition(QSlider::TicksBelow);
-     viscositySlider->setTickInterval(100);
-     viscositySlider->setSingleStep(1);
-     viscositySlider->setRange(1,100000);
-     viscositySlider->setValue(10000);
-     viscositySlider->setScale(0.00001);
-
-
-     gravityX = new QLineEdit("0.0",this);
-     gravityX->setObjectName("gravityx");
-     gravityX->setMaxLength(5);
-     gravityX->setFixedWidth(50);
-     gravityY = new QLineEdit("0.0",this);
-     gravityY->setObjectName("gravityy");
-     gravityY->setMaxLength(5);
-     gravityY->setFixedWidth(50);
-     gravityZ = new QLineEdit("-9.8",this);
-     gravityZ->setObjectName("gravityz");
-     gravityZ->setMaxLength(5);
-     gravityZ->setFixedWidth(50);
 
      connect(pointScaleSlider,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(gasConstantSlider,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));

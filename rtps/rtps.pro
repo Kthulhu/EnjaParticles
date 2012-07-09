@@ -91,4 +91,6 @@ OTHER_FILES += \
     ../rtpslib/render/shaders/normal.vert \
     ../rtpslib/render/shaders/normal.frag \
     ../rtpslib/render/shaders/passthrough.vert \
-    ../rtpslib/render/shaders/passthrough.frag
+    ../rtpslib/render/shaders/passthrough.frag \
+    ../rtpslib/render/shaders/skybox.frag \
+    ../rtpslib/render/shaders/skybox.vert

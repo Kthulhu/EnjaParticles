@@ -18,7 +18,7 @@ struct Light
 
 uniform Material material;
 uniform Light light;
-``
+
 uniform sampler2D depthTex;
 uniform float del_x;
 uniform float del_y;
@@ -68,7 +68,7 @@ void main()
         n = normalize(n);
         vec3 ambientColor=material.ambient*light.ambient;
         //vec3 specularColor=material.specular*light.specular*pow(max(dot(nnorm, halfLightDir), 0.0) , material.shininess);
-        vec3 lightDir = normalize(light.pos-posEye);
+        vec3 lightDir = normalize(light.position-posEye);
         vec3 ref = normalize(reflect(-lightDir,n));
         float spec = max(0.0,dot(n,ref));
         vec3 specularColor=material.specular*pow(spec,material.shininess);

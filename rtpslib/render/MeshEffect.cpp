@@ -137,12 +137,12 @@ namespace rtps
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
         //TODO: Create My own matrix class to handle this. Or use boost. That way
         //I can be opengl 3+ compliant.
-        float16 modelview;
-        glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+        //float16 modelview;
+        //glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
         //modelview.transpose();
 
-        float16 project;
-        glGetFloatv(GL_PROJECTION_MATRIX,project.m);
+        //float16 project;
+        //glGetFloatv(GL_PROJECTION_MATRIX,project.m);
         //project.transpose();
 
         glUseProgram(m_shaderLibrary->shaders["renderLitShader"].getProgram());
@@ -242,12 +242,12 @@ namespace rtps
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
         //TODO: Create My own matrix class to handle this. Or use boost. That way
         //I can be opengl 3+ compliant.
-        float16 modelview;
-        glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+        //float16 modelview;
+        //glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
         //modelview.transpose();
 
-        float16 project;
-        glGetFloatv(GL_PROJECTION_MATRIX,project.m);
+        //float16 project;
+        //glGetFloatv(GL_PROJECTION_MATRIX,project.m);
         //project.transpose();
 
         glUseProgram(m_shaderLibrary->shaders["renderInstancedShader"].getProgram());

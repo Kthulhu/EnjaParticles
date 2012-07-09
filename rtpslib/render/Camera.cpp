@@ -4,22 +4,49 @@ namespace rtps
 {
 void Camera::move(float delX, float delY, float delZ)
 {
+    if(delX!=0.0f)
+        pos += rotation * float3(delX*moveSpeed, 0.0f, 0.0f);
+    if(delY!=0.0f)
+        pos.y -= delY*moveSpeed;
+    if(delZ!=0.0f)
+        pos += rotation * float3(0.0f, 0.0f, -delZ*moveSpeed);
+    updateViewMatrix();
+}
+
+void Camera::moveX(float delX)
+{
     pos += rotation * float3(delX*moveSpeed, 0.0f, 0.0f);
+    updateViewMatrix();
+}
+
+void Camera::moveY(float delY)
+{
     pos.y -= delY*moveSpeed;
+    updateViewMatrix();
+}
+
+void Camera::moveZ(float delZ)
+{
     pos += rotation * float3(0.0f, 0.0f, -delZ*moveSpeed);
     updateViewMatrix();
 }
 
-void Camera::rotate(float rotateDelX, float rotateDelY)
+void Camera::rotate(float rotateDelX, float rotateDelZ)
 {
-    Quaternion xrot(float3(1.0f, 0.0f, 0.0f), rotateDelX * rotateSpeed * PIOVER180);
-    rotation = rotation * xrot;
-    Quaternion yrot(float3(0.0f, 1.0f, 0.0f), rotateDelY * rotateSpeed * PIOVER180);
-    rotation = yrot * rotation;
+    if(rotateDelX!=0.0f)
+    {
+        Quaternion xrot(float3(1.0f, 0.0f, 0.0f), rotateDelX * rotateSpeed * PIOVER180);
+        rotation = rotation * xrot;
+    }
+    if(rotateDelZ)
+    {
+        Quaternion yrot(float3(0.0f, 0.0f, 1.0f), rotateDelZ * rotateSpeed * PIOVER180);
+        rotation = yrot * rotation;
+    }
     updateViewMatrix();
 }
 
-void Camera::setProjectionMatrixPerspective(float l, float r, float b, float t, float n, float f)
+void Camera::setProjectionMatrixPerspective(double l, double r, double b, double t, double n, double f)
 {
     projectionMatrix.loadIdentity();
     projectionMatrix[0]  = 2 * n / (r - l);
@@ -30,10 +57,11 @@ void Camera::setProjectionMatrixPerspective(float l, float r, float b, float t, 
     projectionMatrix[11] = -(2 * f * n) / (f - n);
     projectionMatrix[14] = -1;
     projectionMatrix[15] = 0;
+    projectionMatrix.transpose();
 }
 
-void Camera::setProjectionMatrixOrthographic(float l, float r, float b, float t, float n,
-                              float f)
+void Camera::setProjectionMatrixOrthographic(double l, double r, double b, double t, double n,
+                              double f)
 {
     projectionMatrix.loadIdentity();
     projectionMatrix[0]  = 2 / (r - l);
@@ -42,6 +70,7 @@ void Camera::setProjectionMatrixOrthographic(float l, float r, float b, float t,
     projectionMatrix[7]  = -(t + b) / (t - b);
     projectionMatrix[10] = -2 / (f - n);
     projectionMatrix[11] = -(f + n) / (f - n);
+    projectionMatrix.transpose();
 }
 
 const float16& Camera::getProjectionMatrix()
@@ -57,7 +86,7 @@ void Camera::updateProjectionMatrix()
 {
     if(currentProjection==PERSPECTIVE_PROJECTION)
     {
-        double tangent = tanf(fov/2 * PIOVER180); // tangent of half fovY
+        double tangent = tanf(fov *0.5 * PIOVER180); // tangent of half fovY
         double h = nearClip * tangent;         // half height of near plane
         double w = h * aspectRatio;          // half width of near plane
 
@@ -65,7 +94,7 @@ void Camera::updateProjectionMatrix()
     }
     else
     {
-        setProjectionMatrixOrthographic(-width,width,height,height,nearClip,farClip);
+        setProjectionMatrixOrthographic(-width,width,-height,height,nearClip,farClip);
     }
     invProjectionMatrix = projectionMatrix;
     invProjectionMatrix.inverse();

@@ -1,10 +1,11 @@
+#version 120
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
 uniform float pointRadius;
 uniform float pointScale;   // scale to calculate size in pixels
 
-out vec3 posEye;        // position of center in eye space
+varying out vec3 posEye;        // position of center in eye space
 
 void main()
 {

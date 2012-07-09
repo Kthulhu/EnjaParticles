@@ -342,13 +342,21 @@ namespace rtps
 
         void loadIdentity()
         {
-            m[0]= 1; m[1]= 0; m[2]= 0; m[3]= 0;
-            m[4]= 0; m[5]= 1; m[6]= 0; m[7]= 0;
-            m[8]= 0; m[9]= 0; m[10]= 1; m[11]= 0;
-            m[12]= 0; m[13]= 0; m[14]= 0; m[15]= 1;
+            m[0]= 1.; m[1]= 0.; m[2]= 0.; m[3]= 0.;
+            m[4]= 0.; m[5]= 1.; m[6]= 0.; m[7]= 0.;
+            m[8]= 0.; m[9]= 0.; m[10]= 1.; m[11]= 0.;
+            m[12]= 0.; m[13]= 0.; m[14]= 0.; m[15]= 1.;
         }
 
-        void print(const char* msg=0)
+        bool operator==(const float16 &rhs) const
+        {
+            return m[0]==rhs.m[0]&&m[1]==rhs.m[1]&&m[2]==rhs.m[2]&&m[3]==rhs.m[3]&&
+                    m[4]==rhs.m[4]&&m[5]==rhs.m[5]&&m[6]==rhs.m[6]&&m[7]==rhs.m[7]&&
+                    m[8]==rhs.m[8]&&m[9]==rhs.m[9]&&m[10]==rhs.m[10]&&m[11]==rhs.m[11]&&
+                    m[12]==rhs.m[12]&&m[13]==rhs.m[13]&&m[14]==rhs.m[14]&&m[15]==rhs.m[15];
+        }
+
+        void print(const char* msg=0) const
         {
             printf("%s: %f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f\n%f, %f, %f, %f\n",
                     msg, m[0],m[1],m[2],m[3],

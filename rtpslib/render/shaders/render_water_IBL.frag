@@ -20,9 +20,9 @@ struct Light
 uniform Material material;
 uniform Light light;
 
-uniform mat4 modelview;
-uniform mat4 project;
-uniform mat4 viewinvmat; //ViewMatrixInverse or ViewMatrixTranspose
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 inverseViewMatrix; //ViewMatrixInverse or ViewMatrixTranspose
 smooth in vec3 normalVec, eyeVec, lightVec;
 
 //uniform sampler2D reflectionEquiSampler;
@@ -62,7 +62,7 @@ vec3 equirectangular(vec3 vec)
 
 vec3 to_world(vec3 vec)
 {
-	vec3 wvec = (viewinvmat*vec4(vec, 1.0)-viewinvmat[3]).xyz;
+        vec3 wvec = (inverseViewMatrix*vec4(vec, 1.0)-inverseViewMatrix[3]).xyz;
 	return normalize(wvec);
 }
 

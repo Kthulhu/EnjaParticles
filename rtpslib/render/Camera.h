@@ -26,6 +26,7 @@ public:
         this->farClip=far;
         this->width=width;
         this->height=height;
+        aspectRatio=(double)width/(double)height;
         moveSpeed=1.0f;
         rotateSpeed=1.0f;
         currentProjection=PERSPECTIVE_PROJECTION;
@@ -34,6 +35,10 @@ public:
     }
 
     void move(float delX,float delY,float delZ);
+    void moveX(float delX);
+    void moveY(float delY);
+    void moveZ(float delZ);
+
 
     void rotate(float rotateDelX, float rotateDelY);
 
@@ -78,10 +83,10 @@ public:
 protected:
     void updateProjectionMatrix();
     void updateViewMatrix();
-    void setProjectionMatrixPerspective(float l, float r, float b, float t, float n,
-                                         float f);
-    void setProjectionMatrixOrthographic(float l, float r, float b, float t, float n,
-                                  float f);
+    void setProjectionMatrixPerspective(double l, double r, double b, double t, double n,
+                                         double f);
+    void setProjectionMatrixOrthographic(double l, double r, double b, double t, double n,
+                                  double f);
 
     float3 pos;
     Quaternion rotation;

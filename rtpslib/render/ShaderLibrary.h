@@ -83,6 +83,11 @@ namespace rtps
             readFile(shaderSrc+"/passthrough.vert",vert);
             readFile(shaderSrc+"/passthrough.frag",frag);
             addShader("passThrough",vert,frag,geom,tessCont,tessEval);
+            vert = "";
+            frag = "";
+            readFile(shaderSrc+"/skybox.vert",vert);
+            readFile(shaderSrc+"/skybox.frag",frag);
+            addShader("skybox",vert,frag,geom,tessCont,tessEval);
             //frag="";
             //readFile(shaderSrc+"/sphere_light.glsl",frag);
             //addShader("sphereLightShader",vert,frag,geom,tessCont,tessEval);
@@ -103,9 +108,9 @@ namespace rtps
             //frag = "";
             //readFile(shaderSrc+"/composite_screen_space.frag",frag);
             //addShader("compositeScreenSpace",vert,frag,geom,tessCont,tessEval);
-            frag = "";
-            readFile(shaderSrc+"/light_post_process.frag",frag);
-            addShader("lightPostProcess",vert,frag,geom,tessCont,tessEval);
+            //frag = "";
+            //readFile(shaderSrc+"/light_post_process.frag",frag);
+            //addShader("lightPostProcess",vert,frag,geom,tessCont,tessEval);
             vert = frag = "";
             readFile(shaderSrc+"/normal.vert",vert);
             readFile(shaderSrc+"/normal.frag",frag);
@@ -149,7 +154,7 @@ namespace rtps
             shaders[name].setShader(GL_TESS_CONTROL_SHADER,tessCont);
             shaders[name].setShader(GL_TESS_EVALUATION_SHADER,tessEval);
 #endif
-            //dout<<"Program = "<<shaders[name].compileProgram()<<std::endl;
+            dout<<"Name = "<<name<<" Program = "<<shaders[name].compileProgram()<<std::endl;
         }
     };
 }

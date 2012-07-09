@@ -65,6 +65,11 @@ namespace rtps
         dynamicMeshScene=new AIWrapper();
         renderMovie=false;
         frameCounter=0;
+        cli=NULL;
+        view=NULL;
+        light=NULL;
+        lib=NULL;
+
      QTimer* timer = new QTimer(this);
      connect(timer, SIGNAL(timeout()), this, SLOT(update()));
      timer->start(33);
@@ -106,27 +111,78 @@ namespace rtps
      makeCurrent();
      glewInit();
      //TODO: Add stereo camera
-     view = new Camera(float3(-5.0f,-5.0f,5.0f),65.0f,0.3f,1000.0f,width(),height());
-     view->setMoveSpeed(0.1f);
-     view->setRotateSpeed(0.2f);
+     if(!view)
+     {
+        view = new Camera(float3(-5.0f,5.0f,-5.0f),65.0f,0.3f,1000.0f,width(),height());
+        view->setMoveSpeed(0.1f);
+        view->setRotateSpeed(0.2f);
+     }
 
+     //DEBUGGING===========
+     //const float16& myProjectionMatrix = view->getProjectionMatrix();
+     //const float16& myViewMatrix = view->getViewMatrix();
+     //float16 projectionMatrix;
+     //float16 viewMatrix;
 
-     cli = new CL();
+     // projection
+     //glMatrixMode(GL_PROJECTION);
+     //glLoadIdentity();
+     //gluPerspective(60.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 100.0);
+     //gluPerspective(65.0, (GLfloat)width() / (GLfloat)height(), 0.3, 100.0);
+     //gluPerspective(90.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 10000.0); //for lorentz
 
-     light = new Light();
-    light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
-    light->ambient.x=1.0;light->ambient.y=1.0;light->ambient.z=1.0;
-    light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
-    light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
+     // set view matrix
+     //glClearColor(.9f, .9f, .9f, 1.0f);
+     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+     //glMatrixMode(GL_MODELVIEW);
+     //glLoadIdentity();
+     //glRotatef(-90, 1.0, 0.0, 0.0);
 
+     //glRotatef(0.0, 1.0, 0.0, 0.0);
+     //glRotatef(0.0, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
+     //glTranslatef(-5., 5., -5.);
+
+     //glGetFloatv(GL_PROJECTION_MATRIX,projectionMatrix.m);
+     //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
+
+     /*if(!(myProjectionMatrix==projectionMatrix))
+     {
+         dout<<"I'm not correctly caclulating my projection matrix."<<endl;
+     }
+     myProjectionMatrix.print("myProjectionMatrix");
+     projectionMatrix.print("projectionMatrix");
+     if(!(viewMatrix==myViewMatrix))
+     {
+         dout<<"I'm not correctly calculating my view Matrix."<<endl;
+     }*/
+
+     //DEBUGGING===========
+
+     if(!cli)
+        cli = new CL();
+
+     if(!light)
+     {
+         light = new Light();
+        light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
+        light->ambient.x=1.0;light->ambient.y=1.0;light->ambient.z=1.0;
+        light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
+        light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
+    }
     environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
 
+
     glViewport(0, 0, width(), height());
-    lib = new ShaderLibrary();
-    lib->initializeShaders(binaryPath+"/shaders");
-    effects["Points"]=new ParticleEffect(lib,width(),height(),20.0f,false);
-    effects["Screen Space"]=new SSEffect(lib,GUASSIAN_BLUR,width(),height(),20.0f,true);
-    effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),20.0f,false);
+    if(!lib){
+        lib = new ShaderLibrary();
+        lib->initializeShaders(binaryPath+"/shaders");
+        effects["Points"]=new ParticleEffect(lib,width(),height(),20.0f,false);
+        effects["Screen Space"]=new SSEffect(lib,GUASSIAN_BLUR,width(),height(),20.0f,true);
+        effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),20.0f,false);
+
+        //FIXME: Need to find an elegant solution to handling mesh effects
+        meshRenderer= new MeshEffect(lib,width(),height(),20.0f,false);
+    }
 
     //set the projection and view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
@@ -135,20 +191,27 @@ namespace rtps
         GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getViewMatrix().m);
+        //dout<<i->first<<" viewMatrixLocation = "<<location<<endl;
         location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getProjectionMatrix().m);
+        //dout<<i->first<<" projectionMatrixLocation = "<<location<<endl;
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getInverseViewMatrix().m);
+        //dout<<i->first<<" inverseViewMatrixLocation = "<<location<<endl;
         location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,false,view->getInverseProjectionMatrix().m);
+        //dout<<i->first<<" inverseProjectionMatrixLocation = "<<location<<endl;
         glUseProgram(0);
     }
     GLuint program = lib->shaders["sphereShader"].getProgram();
     glUseProgram(program);
     glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * 3.1415926535f/180.0f)));
+    program = lib->shaders["skybox"].getProgram();
+    glUseProgram(program);
+    glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);
     glUseProgram(0);
  }
 
@@ -160,59 +223,84 @@ namespace rtps
      glEnable(GL_TEXTURE_GEN_R);
      glEnable(GL_TEXTURE_CUBE_MAP);
 
-     glUseProgram(lib->shaders["passThrough"].getProgram());
-     glBindTexture(GL_TEXTURE_CUBE_MAP, environTex);
+     glUseProgram(lib->shaders["skybox"].getProgram());
+     glActiveTexture(GL_TEXTURE0);
+     glBindTexture(GL_TEXTURE_CUBE_MAP,environTex);
+
      // draw the skybox
      const GLfloat fSkyDist = 100.0;
      const GLfloat fTex = 1.0f;
 
-     glBegin(GL_TRIANGLE_STRIP);
+     const GLfloat skyBox[] = { fSkyDist,-fSkyDist,-fSkyDist,
+                                -fSkyDist,-fSkyDist,-fSkyDist,
+                                -fSkyDist,fSkyDist,-fSkyDist,
+                                fSkyDist,fSkyDist,-fSkyDist,
 
-    //west
-         glTexCoord3f(-fTex, -fTex , fTex);
-         glVertex3f(-fSkyDist, -fSkyDist,  fSkyDist);
-         glTexCoord3f(-fTex, fTex, fTex);
-         glVertex3f(-fSkyDist, fSkyDist,  fSkyDist);
-         glTexCoord3f(-fTex, -fTex, -fTex);
-         glVertex3f(-fSkyDist, -fSkyDist, -fSkyDist);
-         glTexCoord3f(-fTex, fTex,-fTex);
-         glVertex3f(-fSkyDist, fSkyDist,  -fSkyDist);
-     //north
-         glTexCoord3f(fTex, -fTex,-fTex);
-         glVertex3f(fSkyDist, -fSkyDist, -fSkyDist);
-         glTexCoord3f(fTex, fTex,-fTex);
-         glVertex3f(fSkyDist, fSkyDist, -fSkyDist);
-     //east
-         glTexCoord3f( fTex, -fTex, fTex);
-         glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
-         glTexCoord3f( fTex, fTex, fTex);
-         glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
-     //south
-         glTexCoord3f( -fTex, -fTex, fTex);
-         glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
-         glTexCoord3f( -fTex, fTex, fTex);
-         glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
-     glEnd();
-     glBegin(GL_QUADS);
-     //up
-         glTexCoord3f( -fTex, fTex, -fTex);
-         glVertex3f( -fSkyDist, fSkyDist,  -fSkyDist);
-         glTexCoord3f( -fTex, fTex, fTex);
-         glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
-         glTexCoord3f( fTex, fTex, fTex);
-         glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
-         glTexCoord3f( fTex, fTex, -fTex);
-         glVertex3f( fSkyDist, fSkyDist,  -fSkyDist);
-     //down
-         glTexCoord3f( fTex, -fTex, -fTex);
-         glVertex3f( fSkyDist, -fSkyDist,  -fSkyDist);
-         glTexCoord3f( fTex, -fTex, fTex);
-         glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
-         glTexCoord3f( -fTex, -fTex, fTex);
-         glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
-         glTexCoord3f( -fTex, -fTex, -fTex);
-         glVertex3f( -fSkyDist, -fSkyDist,  -fSkyDist);
-     glEnd();
+                                fSkyDist, -fSkyDist, fSkyDist,
+                                fSkyDist, -fSkyDist, -fSkyDist,
+                                fSkyDist, fSkyDist, -fSkyDist,
+                                fSkyDist, fSkyDist, fSkyDist,
+
+                                -fSkyDist,-fSkyDist,fSkyDist,
+                                fSkyDist,-fSkyDist,fSkyDist,
+                                fSkyDist,fSkyDist,fSkyDist,
+                                -fSkyDist,fSkyDist,fSkyDist,
+
+                                -fSkyDist,-fSkyDist,-fSkyDist,
+                                -fSkyDist,-fSkyDist,fSkyDist,
+                                -fSkyDist,fSkyDist,fSkyDist,
+                                -fSkyDist,fSkyDist,-fSkyDist,
+
+                                -fSkyDist,fSkyDist,-fSkyDist,
+                                -fSkyDist,fSkyDist,fSkyDist,
+                                fSkyDist,fSkyDist,fSkyDist,
+                                fSkyDist,fSkyDist,-fSkyDist,
+
+                                -fSkyDist,-fSkyDist, -fSkyDist,
+                                -fSkyDist,-fSkyDist,fSkyDist,
+                                fSkyDist,-fSkyDist,fSkyDist,
+                                fSkyDist,-fSkyDist,-fSkyDist};
+
+     const GLfloat skyBoxTex[] = { fTex,-fTex,-fTex,
+                                -fTex,-fTex,-fTex,
+                                -fTex,fTex,-fTex,
+                                fTex,fTex,-fTex,
+
+                                fTex, -fTex, fTex,
+                                fTex, -fTex, -fTex,
+                                fTex, fTex, -fTex,
+                                fTex, fTex, fTex,
+
+                                -fTex,-fTex,fTex,
+                                fTex,-fTex,fTex,
+                                fTex,fTex,fTex,
+                                -fTex,fTex,fTex,
+
+                                -fTex,-fTex,-fTex,
+                                -fTex,-fTex,fTex,
+                                -fTex,fTex,fTex,
+                                -fTex,fTex,-fTex,
+
+                                -fTex,fTex,-fTex,
+                                -fTex,fTex,fTex,
+                                fTex,fTex,fTex,
+                                fTex,fTex,-fTex,
+
+                                -fTex,-fTex, -fTex,
+                                -fTex,-fTex,fTex,
+                                fTex,-fTex,fTex,
+                                fTex,-fTex,-fTex};
+
+     glVertexPointer(3, GL_FLOAT, 0, skyBox);
+     glTexCoordPointer(3, GL_FLOAT, 0, skyBoxTex);
+
+     glEnableClientState(GL_VERTEX_ARRAY);
+     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+     glDrawArrays(GL_QUADS, 0, 6);
+
+     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+     glDisableClientState(GL_VERTEX_ARRAY);
 
      glDisable(GL_TEXTURE_CUBE_MAP);
 
@@ -229,6 +317,7 @@ namespace rtps
 #if 1
         renderSkyBox();
         display(false);
+#if 1
         //FIXME: Have a method to give renderType to each System. That way we can have different
         //Systems with the different effects.
         for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
@@ -241,6 +330,7 @@ namespace rtps
         }
 
         display(true);
+#endif
 #else
         meshRenderer->render(dynamicMeshs["dynamicShape1"],light);
         glColor4f(0.1f,0.2f,0.4f,1.0f);
@@ -501,7 +591,7 @@ char key=event->text().at(0).toAscii();
                     return;
             }
             case 'w':
-                view->move(0.0f,0.0f,-1.0f);
+                view->move(0.0f,-1.0f,0.0f);
                 cameraChanged();
                 break;
             case 'a':
@@ -509,7 +599,7 @@ char key=event->text().at(0).toAscii();
                 cameraChanged();
                 break;
             case 's':
-                view->move(0.0f,0.0f,1.0f);
+                view->move(0.0f,1.0f,0.0f);
                 cameraChanged();
                 break;
             case 'd':
@@ -517,11 +607,11 @@ char key=event->text().at(0).toAscii();
                 cameraChanged();
                 break;
             case 'z':
-                view->move(0.0f,1.0f,0.0f);
+                view->move(0.0f,0.0f,1.0f);
                 cameraChanged();
                 break;
             case 'x':
-                view->move(0.0f,-1.0f,0.0f);
+                view->move(0.0f,0.0f,-1.0f);
                 cameraChanged();
                 break;
             case '+':
@@ -697,23 +787,21 @@ void GLWidget::loadScene(const QString& filename)
      {
           ParticleShape* shape = createParticleShape("rb1",i->second);
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
-            float16 modelview;
             float16 mat;
             memcpy(&mat,&i->second->modelMat,sizeof(float16));
-            glMatrixMode(GL_MODELVIEW);
-            glPushMatrix();
-            glLoadIdentity();
+            //glMatrixMode(GL_MODELVIEW);
+            //glPushMatrix();
+            //glLoadIdentity();
             //glRotatef(rotation.x, 1.0, 0.0, 0.0);
-            glTranslatef(trans, trans, trans);
-            glRotatef(-180, 1.0, 0.0, 0.0);
-            glRotatef(-90, 0.0, 0.0, 1.0);
+            //glTranslatef(trans, trans, trans);
+            //glRotatef(-180, 1.0, 0.0, 0.0);
+            //glRotatef(-90, 0.0, 0.0, 1.0);
             //glTranslatef(translation.x, translation.z, translation.y);
-            glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
-            glPopMatrix();
-            modelview.print("modelview");
-            modelview.transpose();
             mat.print("mat before");
-            mat = mat*modelview;
+            mat[3]=trans;
+            mat[7]=trans;
+            mat[11]=trans;
+            mat = mat*view->getViewMatrix();
             mat.print("mat after");
           systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
           pShapes[i->first]=shape;
