@@ -129,10 +129,10 @@ namespace rtps
      float16 viewMatrix;
 
      // projection
-     glMatrixMode(GL_PROJECTION);
-     glLoadIdentity();
+     //glMatrixMode(GL_PROJECTION);
+     //glLoadIdentity();
      //gluPerspective(60.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 100.0);
-     gluPerspective(65.0, (double)width() / (double)height(), 0.3, 100.0);
+     //gluPerspective(65.0, (double)width() / (double)height(), 0.3, 100.0);
      //gluPerspective(90.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 10000.0); //for lorentz
 
      // set view matrix
@@ -146,15 +146,15 @@ namespace rtps
      //glRotatef(0.0, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
      //glTranslatef(-5., 5., -5.);
 
-     glGetFloatv(GL_PROJECTION_MATRIX,projectionMatrix.m);
+     //glGetFloatv(GL_PROJECTION_MATRIX,projectionMatrix.m);
      //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
 
      //if(!(myProjectionMatrix==projectionMatrix))
      //{
      //    dout<<"I'm not correctly caclulating my projection matrix."<<endl;
      //}
-     myProjectionMatrix.print("myProjectionMatrix");
-     projectionMatrix.print("projectionMatrix");
+     //myProjectionMatrix.print("myProjectionMatrix");
+     //projectionMatrix.print("projectionMatrix");
      //if(!(viewMatrix==myViewMatrix))
      //{
      //    dout<<"I'm not correctly calculating my view Matrix."<<endl;
@@ -185,9 +185,9 @@ namespace rtps
     if(!lib){
         lib = new ShaderLibrary();
         lib->initializeShaders(binaryPath+"/shaders");
-        effects["Points"]=new ParticleEffect(lib,width(),height(),20.0f,false);
-        effects["Screen Space"]=new SSEffect(lib,GUASSIAN_BLUR,width(),height(),20.0f,true);
-        effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),20.0f,false);
+        effects["Points"]=new ParticleEffect(lib,width(),height(),.75f,false);
+        effects["Screen Space"]=new SSEffect(lib,GAUSSIAN_BLUR,width(),height(),.75f,true);
+        effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),.75f,false);
 
         //FIXME: Need to find an elegant solution to handling mesh effects
         meshRenderer= new MeshEffect(lib,width(),height(),20.0f,false);
@@ -223,7 +223,7 @@ namespace rtps
     }
     GLuint program = lib->shaders["sphereShader"].getProgram();
     glUseProgram(program);
-    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * 3.1415926535f/180.0f)));
+    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
     program = lib->shaders["skybox"].getProgram();
     glUseProgram(program);
     glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);
@@ -341,7 +341,7 @@ namespace rtps
             {
                 effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
             }
-            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
+            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),light,NULL,i->second->getSpacing());
         }
 
         display(true);
@@ -811,9 +811,9 @@ void GLWidget::loadScene(const QString& filename)
      for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
      {
           ParticleShape* shape = createParticleShape("rb1",i->second);
-          i->second->modelMat.m[12]=5.;
-          i->second->modelMat.m[13]=5.;
-          i->second->modelMat.m[14]=-5.;
+          //i->second->modelMat.m[12]=-5.;
+          //i->second->modelMat.m[13]=-5.;
+          //i->second->modelMat.m[14]=5.;
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
             float16 mat;
             memcpy(&mat,&i->second->modelMat,sizeof(float16));
@@ -871,7 +871,9 @@ void GLWidget::update()
 }
 void GLWidget::changeRenderer(const QString& system, const QString& renderer)
 {
-     dout<<"system = "<<(const char*)system.toAscii().data()<<"renderer = "<<(const char*)renderer.toAscii().data()<<endl;
+     //dout<<"system = "<<(const char*)system.toAscii().data()<<"renderer = "<<(const char*)renderer.toAscii().data()<<endl;
      systemRenderType[system]=renderer;
+     //FIXME: temporary Debugging hack!
+     effects[renderer]->writeBuffersToDisk();
 }
 }
