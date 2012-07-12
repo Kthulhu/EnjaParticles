@@ -11,7 +11,7 @@
             <param name="gravity_alphas">0.00 0.00</param>
             <param name="gravity_mass">1.0 1.5</param>
             <param name="gravity_sources">2.5 2.5 2.5 1.0 7.5 7.5 7.5 1.0</param>
-            <param name="gravity" >0.0 0.0 -9.8 0.0</param>
+            <param name="gravity" >0.0 -9.8 0.0 0.0</param>
             <param name="gas_constant" >1.0</param>
             <param name="viscosity" >0.001</param>
             <param name="velocity_limit" >600.0</param>
@@ -42,7 +42,7 @@
             <param name="gravity_alphas">0.00 0.00</param>
             <param name="gravity_mass">1.0 1.5</param>
             <param name="gravity_sources">2.5 2.5 2.5 1.0 7.5 7.5 7.5 1.0</param>
-            <param name="gravity" >0.0 0.0 -9.8 0.0</param>
+            <param name="gravity" >0.0 -9.8 0.0 0.0</param>
             <param name="velocity_limit" >600.0</param>
             <param name="friction_dynamic" >0.0</param>
             <param name="friction_static" >0.00</param>

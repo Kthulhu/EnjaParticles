@@ -45,6 +45,7 @@ namespace rtps
         this->height=height;
         this->pointRadius=pointRadius;
         this->blending=blending;
+        this->renderAsSpheres=true;
         m_writeFramebuffers = false;
     }
 

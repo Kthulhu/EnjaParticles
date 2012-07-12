@@ -119,9 +119,9 @@ void Camera::updateViewMatrix()
     viewMatrix = rotation.getMatrix();
     //FIXME: might not have to transpose.
     //viewMatrix.transpose();
-    viewMatrix[12]=-pos.x;
-    viewMatrix[13]=-pos.y;
-    viewMatrix[14]=-pos.z;
+    viewMatrix[12]=pos.x;
+    viewMatrix[13]=pos.y;
+    viewMatrix[14]=pos.z;
     //viewMatrix[3]=pos.x;
     //viewMatrix[7]=pos.y;
     //viewMatrix[11]=pos.z;

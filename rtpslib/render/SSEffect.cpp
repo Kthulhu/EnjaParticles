@@ -46,6 +46,10 @@ namespace rtps
         createFramebufferTextures();
         smoothing=filter;
         currentDepthBuffer="depth";
+        bilateralRange=0.01f;
+        filterRadius=8.0f;
+        falloff=0.001f;
+        numberOfCurvatureIterations=50;
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness"],0);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT1_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColor"],0);
@@ -64,47 +68,88 @@ namespace rtps
             case NO_SMOOTHING:
                 currentDepthBuffer="depth";
                 return;
-            case SEPERABLE_GAUSS_BLUR:
-                smoothingProgram= m_shaderLibrary->shaders["gaussBlurXShader"].getProgram();
+            case SEPERABLE_GAUSSIAN_BLUR:
+                smoothingProgram= m_shaderLibrary->shaders["gaussianBlurXShader"].getProgram();
                 glUseProgram(smoothingProgram);
                 glUniform1i( glGetUniformLocation(smoothingProgram, "depthTex"),0);
-                glUniform1i( glGetUniformLocation(smoothingProgram, "width"),width);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "del_x"),1.0f/(float)width);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "falloff"),falloff);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),filterRadius);
                 RenderUtils::fullscreenQuad(width,height);
 
                 glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
                 currentDepthBuffer="depth";
                 glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-                smoothingProgram= m_shaderLibrary->shaders["gaussBlurYShader"].getProgram();
+                smoothingProgram= m_shaderLibrary->shaders["gaussianBlurYShader"].getProgram();
                 glUseProgram(smoothingProgram);
                 glUniform1i( glGetUniformLocation(smoothingProgram, "depthTex"),0);
-                glUniform1i( glGetUniformLocation(smoothingProgram, "height"),height);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "del_y"),1.0f/(float)height);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "falloff"),falloff);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),filterRadius);
                 currentDepthBuffer="depth2";
                 break;
-            case BILATERAL_GAUSSIAN_BLUR:
-                glUseProgram(m_shaderLibrary->shaders["bilateralGaussianBlurShader"].getProgram());
-                glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["bilateralGaussianBlurShader"].getProgram(),"depthTex"),0);
-                glUniform1f( glGetUniformLocation(m_shaderLibrary->shaders["bilateralGaussianBlurShader"].getProgram(), "del_x"),1.0f/(width));
-                glUniform1f( glGetUniformLocation(m_shaderLibrary->shaders["bilateralGaussianBlurShader"].getProgram(), "del_y"),1.0f/(height));
+            case GAUSSIAN_BLUR:
+                smoothingProgram= m_shaderLibrary->shaders["gaussianBlurShader"].getProgram();
+                glUseProgram(smoothingProgram);
+                glUniform1i(glGetUniformLocation(smoothingProgram,"depthTex"),0);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "del_x"),1.0/((float)width));
+                glUniform1f( glGetUniformLocation(smoothingProgram, "del_y"),1.0/((float)height));
+                glUniform1f( glGetUniformLocation(smoothingProgram, "falloff"),falloff);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),filterRadius);
                 currentDepthBuffer="depth";
                 break;
-            case CURVATURE_FLOW:
-            glUseProgram(m_shaderLibrary->shaders["curvatureFlowShader"].getProgram());
-            glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["curvatureFlowShader"].getProgram(),"depthTex"),0);
-            glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["curvatureFlowShader"].getProgram(),"width"),width);
-            glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["curvatureFlowShader"].getProgram(),"height"),height);
-            for(unsigned int i = 0; i<numberOfCurvatureIterations; i++)
+            case BILATERAL_GAUSSIAN_BLUR:
             {
+                smoothingProgram= m_shaderLibrary->shaders["bilateralGaussianBlurShader"].getProgram();
+                float xdir[] = {1.0f/height,0.0f};
+                float ydir[] = {0.0f,1.0f/width};
+                glUseProgram(smoothingProgram);
+                glUniform1i( glGetUniformLocation(smoothingProgram, "depthTex"),0);
+                glUniform2fv( glGetUniformLocation(smoothingProgram, "blurDir"),1,xdir);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "sig_range"),bilateralRange);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),filterRadius);
                 RenderUtils::fullscreenQuad(width,height);
-                glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
-                if(i%2)
-                    currentDepthBuffer="depth";
-                else
-                    currentDepthBuffer="depth2";
+
                 glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
+                glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
+                currentDepthBuffer="depth";
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+                glUniform2fv( glGetUniformLocation(smoothingProgram, "blurDir"),1,ydir);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "sig_range"),bilateralRange);
+                //glUniform1f( glGetUniformLocation(glsl_program[BILATERAL_GAUSSIAN_SHADER], "sig"),filterRadius);
+                currentDepthBuffer="depth2";
+                break;
             }
-            return;
+            case CURVATURE_FLOW:
+            {
+                smoothingProgram= m_shaderLibrary->shaders["curvatureFlowShader"].getProgram();
+                glUniform1i(glGetUniformLocation(smoothingProgram,"depthTex"),0);
+                //glUniform1f(glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER],"width"),(float)window_width);
+                //glUniform1f(glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER],"height"),(float)window_height);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "del_x"),1.0/((float)width));
+                glUniform1f( glGetUniformLocation(smoothingProgram, "del_y"),1.0/((float)height));
+                glUniform1f( glGetUniformLocation(smoothingProgram, "h_x"),1.0/((float)width-1));
+                glUniform1f( glGetUniformLocation(smoothingProgram, "h_y"),1.0/((float)height-1));
+                //glUniform1f( glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER], "focal_x"),focal_x);
+                //glUniform1f( glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER], "focal_y"),focal_y);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "dt"),1.0f/numberOfCurvatureIterations);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "distance_threshold"), falloff);
+
+                for(unsigned int i = 0; i<numberOfCurvatureIterations; i++)
+                {
+                    RenderUtils::fullscreenQuad(width,height);
+                    glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
+                    if(i%2)
+                        currentDepthBuffer="depth";
+                    else
+                        currentDepthBuffer="depth2";
+                    glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
+                    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+                }
+                return;
+            }
             default:
                 break;
         }
@@ -189,15 +234,47 @@ namespace rtps
         //glUniform1i( glGetUniformLocation(normalProgram, "colorTex"),1);
         glUniform1f( glGetUniformLocation(normalProgram, "del_x"),1.0/((float)width));
         glUniform1f( glGetUniformLocation(normalProgram, "del_y"),1.0/((float)height));
-        glUniform3fv(glGetUniformLocation(normalProgram,"material.diffuse"),1,&material->diffuse.x);
-        glUniform3fv(glGetUniformLocation(normalProgram,"material.specular"),1,&material->specular.x);
-        glUniform3fv(glGetUniformLocation(normalProgram,"material.ambient"),1,&material->ambient.x);
-        glUniform1fv(glGetUniformLocation(normalProgram,"material.shininess"),1,&material->shininess);
-        glUniform1fv(glGetUniformLocation(normalProgram,"material.opacity"),1,&material->opacity);
-        glUniform3fv(glGetUniformLocation(normalProgram,"light->diffuse"),1,&light->diffuse.x);
-        glUniform3fv(glGetUniformLocation(normalProgram,"light->specular"),1,&light->specular.x);
-        glUniform3fv(glGetUniformLocation(normalProgram,"light->ambient"),1,&light->ambient.x);
-        glUniform3fv(glGetUniformLocation(normalProgram,"light->pos"),1,&light->pos.x);
+        if(material)
+        {
+            glUniform3fv(glGetUniformLocation(normalProgram,"material.diffuse"),1,&material->diffuse.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"material.specular"),1,&material->specular.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"material.ambient"),1,&material->ambient.x);
+            glUniform1fv(glGetUniformLocation(normalProgram,"material.shininess"),1,&material->shininess);
+            glUniform1fv(glGetUniformLocation(normalProgram,"material.opacity"),1,&material->opacity);
+        }
+        else
+        {
+            Material defaultMat;
+            defaultMat.ambient=float3(0.0f,0.2f,0.6f);
+            defaultMat.diffuse=float3(0.0f,0.2f,0.6f);
+            defaultMat.specular=float3(1.0f,1.f,1.0f);
+            defaultMat.opacity=0.6;
+            defaultMat.shininess=100;
+            glUniform3fv(glGetUniformLocation(normalProgram,"material.diffuse"),1,&defaultMat.diffuse.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"material.specular"),1,&defaultMat.specular.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"material.ambient"),1,&defaultMat.ambient.x);
+            glUniform1fv(glGetUniformLocation(normalProgram,"material.shininess"),1,&defaultMat.shininess);
+            glUniform1fv(glGetUniformLocation(normalProgram,"material.opacity"),1,&defaultMat.opacity);
+        }
+        if(light)
+        {
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.diffuse"),1,&light->diffuse.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.specular"),1,&light->specular.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.ambient"),1,&light->ambient.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.pos"),1,&light->pos.x);
+        }
+        else
+        {
+            Light defaultLight;
+            defaultLight.ambient = float3(1.0f,1.0f,1.0f);
+            defaultLight.diffuse = float3(1.0f,1.0f,1.0f);
+            defaultLight.specular = float3(1.0f,1.0f,1.0f);
+            defaultLight.pos = float3(5.0f,5.0f,-5.0f);
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.diffuse"),1,&defaultLight.diffuse.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.specular"),1,&defaultLight.specular.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.ambient"),1,&defaultLight.ambient.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.pos"),1,&defaultLight.pos.x);
+        }
         RenderUtils::fullscreenQuad(width, height);
 
         //TODO: should add another shader for performing compositing

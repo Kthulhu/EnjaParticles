@@ -33,8 +33,8 @@ namespace rtps
     enum SmoothingFilter
     {
         NO_SMOOTHING = 0,
-        GUASSIAN_BLUR,
-        SEPERABLE_GAUSS_BLUR,
+        GAUSSIAN_BLUR,
+        SEPERABLE_GAUSSIAN_BLUR,
         BILATERAL_GAUSSIAN_BLUR,
         CURVATURE_FLOW
     };
@@ -58,7 +58,7 @@ namespace rtps
         virtual void deleteFramebufferTextures();
         virtual void createFramebufferTextures();
         bool thickness;
-        unsigned int filterRadius;
+        float filterRadius,falloff,bilateralRange;
         unsigned int numberOfCurvatureIterations;
         std::string currentDepthBuffer;
         SmoothingFilter smoothing;
