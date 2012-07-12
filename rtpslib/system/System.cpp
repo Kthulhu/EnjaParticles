@@ -501,7 +501,6 @@ namespace rtps
         GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
         glGetTexImage(GL_TEXTURE_3D_EXT,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
         float scale = max-min;
-        bool firstPart=false;
         for(int k = 0; k<voxelResolution; k++)
         {
             for(int j=0; j<voxelResolution; j++)

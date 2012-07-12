@@ -26,10 +26,11 @@ public:
     }
     Quaternion(float3 axis, float angle)
     {
-        this->x=axis.x;
-        this->y=axis.y;
-        this->z=axis.z;
-        this->w=angle;
+        //this->x=axis.x;
+        //this->y=axis.y;
+        //this->z=axis.z;
+        //this->w=angle;
+        FromAxis(axis,angle);
     }
 
     // Convert to Axis/Angles

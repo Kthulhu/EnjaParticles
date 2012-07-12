@@ -14,7 +14,28 @@ HEADERS += \
     ../rtpslib/render/StreamlineEffect.h \
     ../rtpslib/render/Camera.h \
     ../rtpslib/render/Quaternion.h \
-    ../rtpslib/render/RenderUtils.h
+    ../rtpslib/render/RenderUtils.h \
+    ../rtpslib/util.h \
+    ../rtpslib/timer_eb.h \
+    ../rtpslib/timege.h \
+    ../rtpslib/structs.h \
+    ../rtpslib/RTPSSettings.h \
+    ../rtpslib/rtps_common.h \
+    ../rtpslib/RTPS.h \
+    ../rtpslib/materials_lights.h \
+    ../rtpslib/gtod_windows.h \
+    ../rtpslib/debug.h \
+    ../rtpslib/system/System.h \
+    ../rtpslib/system/SPHSettings.h \
+    ../rtpslib/system/SPH.h \
+    ../rtpslib/system/Simple.h \
+    ../rtpslib/system/ParticleShape.h \
+    ../rtpslib/system/ParticleRigidBodyParams.h \
+    ../rtpslib/system/ParticleRigidBody.h \
+    ../rtpslib/system/ForceField.h \
+    ../rtpslib/system/FLOCKSettings.h \
+    ../rtpslib/system/FLOCK.h \
+    ../rtpslib/system/boids.h
 
 SOURCES += \
     ../test/sphparametergroup.cpp \
@@ -32,7 +53,23 @@ SOURCES += \
     ../rtpslib/render/StreamlineEffect.cpp \
     ../rtpslib/render/Camera.cpp \
     ../rtpslib/render/Quaternion.cpp \
-    ../rtpslib/render/RenderUtils.cpp
+    ../rtpslib/render/RenderUtils.cpp \
+    ../rtpslib/util.cpp \
+    ../rtpslib/timer_eb.cpp \
+    ../rtpslib/timege.cpp \
+    ../rtpslib/structs.cpp \
+    ../rtpslib/RTPSSettings.cpp \
+    ../rtpslib/RTPS.cpp \
+    ../rtpslib/gtod_windows.cpp \
+    ../rtpslib/system/System.cpp \
+    ../rtpslib/system/SPHSettings.cpp \
+    ../rtpslib/system/SPH.cpp \
+    ../rtpslib/system/Simple.cpp \
+    ../rtpslib/system/ParticleShape.cpp \
+    ../rtpslib/system/ParticleRigidBody.cpp \
+    ../rtpslib/system/FLOCKSettings.cpp \
+    ../rtpslib/system/FLOCK.cpp \
+    ../rtpslib/system/boids.cpp
 
 FORMS += \
     ../test/mainwindow.ui
@@ -93,4 +130,7 @@ OTHER_FILES += \
     ../rtpslib/render/shaders/passthrough.vert \
     ../rtpslib/render/shaders/passthrough.frag \
     ../rtpslib/render/shaders/skybox.frag \
-    ../rtpslib/render/shaders/skybox.vert
+    ../rtpslib/render/shaders/skybox.vert \
+    ../rtpslib/README \
+    ../rtpslib/CMakeLists.txt \
+    ../rtpslib/system/README

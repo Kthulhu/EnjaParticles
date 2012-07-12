@@ -58,7 +58,7 @@ namespace rtps
 
     struct RTPS_EXPORT Mesh
     {
-        aiMatrix4x4 modelMat;
+        float16 modelMat;
         GLuint vbo;
         GLuint colbo;
         GLuint normalbo;
@@ -76,11 +76,7 @@ namespace rtps
 		vbo=0;colbo=0;normalbo=0;ibo=0;
 		texCoordsbo=0;tex=0;hasNormals=false;
 		hasTexture=false; vboSize=0;
-		iboSize=0;drawMode=GL_TRIANGLES;
-                modelMat=aiMatrix4x4(1.0f,0.0f,0.0f,0.0f,
-                                     0.0f,1.0f,0.0f,0.0f,
-                                     0.0f,0.0f,1.0f,0.0f,
-                                     0.0f,0.0f,0.0f,1.0f);
+        iboSize=0;drawMode=GL_TRIANGLES;
 	}
     };
     class MeshEffect : public ParticleEffect

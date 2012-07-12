@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -43,7 +43,7 @@ float dist_squared(float4 vec)
 float dot(float4 a, float4 b)
 {
     return a.x*b.x + a.y*b.y + a.z*b.z;
-}  
+}
 
 float4 normalize(float4 a)
 {
@@ -55,6 +55,11 @@ float4 normalize3(float4 a)
     float magi = magnitude3(a);
 	magi = magi < 1.e-8 ? 1. : 1./magi;
     return float4(a.x*magi, a.y*magi, a.z*magi, a.w);
+}
+
+float3 cross(float3 a, float3 b)
+{
+    return float3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);
 }
 
 float4 cross(float4 a, float4 b)

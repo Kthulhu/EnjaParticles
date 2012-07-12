@@ -52,17 +52,25 @@ namespace rtps
         }
         float3& operator+=(const float3 &rhs)
         {
-            x=rhs.x;
-            y=rhs.y;
-            z=rhs.z;
+            x+=rhs.x;
+            y+=rhs.y;
+            z+=rhs.z;
             return *this;
         }
-        friend float3 operator+(float3& a, float3& b)
+        friend float3 operator+(const float3& a, const float3& b)
         {
             float3 c = float3(a.x+b.x, a.y+b.y, a.z+b.z);
             return c;
         }
-        friend float3 operator-(float3& a, float3& b)
+        friend float3 operator*(float a,const float3& b)
+        {
+            return float3(b.x*a,b.y*a,b.z*a);
+        }
+        friend float3 operator*(const float3& a, float b)
+        {
+            return float3(a.x*b,a.y*b,a.z*b);
+        }
+        friend float3 operator-(const float3& a,const float3& b)
         {
             float3 c = float3(a.x-b.x, a.y-b.y, a.z-b.z);
             return c;
@@ -75,18 +83,18 @@ namespace rtps
         void normalize()
         {
             float dist = sqrt(x*x+y*y+z*z);
-            x/=dist;
-            y/=dist;
-            z/=dist;
+            x=x/dist;
+            y=y/dist;
+            z=z/dist;
         }
 
-        float3& operator*(float b)
+        /*float3& operator*(float b)
         {
             x*=b;
             y*=b;
             z*=b;
             return *this;
-        }
+        }*/
     } float3;
 
     typedef struct int2
@@ -594,6 +602,7 @@ namespace rtps
     RTPS_EXPORT float dist_squared(float4 vec);
     RTPS_EXPORT float dot(float4 a, float4 b);
     RTPS_EXPORT float4 cross(float4 a, float4 b);
+    RTPS_EXPORT float3 cross(float3 a, float3 b);
     RTPS_EXPORT float4 normalize(float4 vect);
 	RTPS_EXPORT float4 normalize3(float4 vect); // only use first 3 components of vect
 	RTPS_EXPORT float magnitude3(float4 vec); // only use first 3 components of vec

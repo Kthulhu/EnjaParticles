@@ -79,7 +79,7 @@ unsigned int n = 0, t,i;
                         maxCoord.z=z;*/
                 }
             }
-            me->modelMat=m;
+            me->modelMat=mat;
             me->vbo=createVBO(vbo,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
             me->vboSize=mesh->mNumVertices;
             delete[] vbo;
@@ -114,7 +114,7 @@ unsigned int n = 0, t,i;
             loadMeshes(meshes, nd->mChildren[n],m);
         }
 }
-void AIWrapper::recursive_render (const struct aiNode* nd)
+/*void AIWrapper::recursive_render (const struct aiNode* nd)
 {
 unsigned int n = 0, t,i=0;
         struct aiMatrix4x4 m = nd->mTransformation;
@@ -175,7 +175,7 @@ unsigned int n = 0, t,i=0;
         }
 
         glPopMatrix();
-}
+}*/
 void AIWrapper::apply_material(const struct aiMaterial *mtl, Mesh* mesh)
 {
 float c[4];

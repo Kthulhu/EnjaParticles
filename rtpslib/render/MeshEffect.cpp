@@ -35,9 +35,9 @@ namespace rtps
     MeshEffect::~MeshEffect(){}
     void MeshEffect::renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light* light)
     {
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glMultMatrixf((float*)&mesh->modelMat);
+        //glMatrixMode(GL_MODELVIEW);
+        //glPushMatrix();
+        //glMultMatrixf((float*)&mesh->modelMat);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
         glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
@@ -66,8 +66,9 @@ namespace rtps
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
-        glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(), "reflectionCubeSampler"), 0);
+
         glUseProgram(m_shaderLibrary->shaders["renderFluidShader"].getProgram());
+        glUniform1i(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(), "reflectionCubeSampler"), 0);
         //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"modelview"),1,false,modelview.m);
         //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"project"),1,false,project.m);
         //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"viewinvmat"),1,false,invModelview.m);
@@ -103,13 +104,13 @@ namespace rtps
             glDisable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D,0);
         }
-        glPopMatrix();
+        //glPopMatrix();
     }
         void MeshEffect::render(Mesh* mesh,Light* light)
     {
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glMultMatrixf((float*)&mesh->modelMat);
+        //glMatrixMode(GL_MODELVIEW);
+        //glPushMatrix();
+        //glMultMatrixf((float*)&mesh->modelMat);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
         glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
@@ -146,6 +147,7 @@ namespace rtps
         //project.transpose();
 
         glUseProgram(m_shaderLibrary->shaders["renderLitShader"].getProgram());
+        glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"meshMatrix"),1,GL_FALSE,mesh->modelMat.m);
         //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"modelview"),1,false,modelview.m);
         //glUniformMatrix4fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"project"),1,false,project.m);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.diffuse"),1,&mesh->material.diffuse.x);
@@ -153,10 +155,10 @@ namespace rtps
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.ambient"),1,&mesh->material.ambient.x);
         glUniform1fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.shininess"),1,&mesh->material.shininess);
         glUniform1fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"material.opacity"),1,&mesh->material.opacity);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->diffuse"),1,&light->diffuse.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->specular"),1,&light->specular.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->ambient"),1,&light->ambient.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->pos"),1,&light->pos.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->diffuse"),1,&(light->diffuse.x));
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->specular"),1,&(light->specular.x));
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->ambient"),1,&(light->ambient.x));
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light->pos"),1,&(light->pos.x));
 
 //        modelview.print("modelview");
 //        project.print("projection");
@@ -201,7 +203,7 @@ namespace rtps
             glDisable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D,0);
         }
-        glPopMatrix();
+        //glPopMatrix();
     }
     void MeshEffect::renderInstanced(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size,Light* light)
     {

@@ -113,22 +113,26 @@ namespace rtps
      //TODO: Add stereo camera
      if(!view)
      {
-        view = new Camera(float3(-5.0f,5.0f,-5.0f),65.0f,0.3f,1000.0f,width(),height());
+        //view = new Camera(float3(5.0f,5.0f,5.0f),65.0,0.3,100.0,width(),height());
+        view = new Camera(float3(0.0f,0.0f,0.0f),65.0f,0.3f,100.0f,width(),height());
+        //view = new Camera(float3(-105.0f,-105.0f,-105.0f),65.0f,0.3f,1000.0f,width(),height());
+        //the models are all in different coordinate systems...
+        //view->rotate(-90.f,0.0f);
         view->setMoveSpeed(0.1f);
-        view->setRotateSpeed(0.2f);
+        view->setRotateSpeed(0.1f);
      }
 
      //DEBUGGING===========
-     //const float16& myProjectionMatrix = view->getProjectionMatrix();
-     //const float16& myViewMatrix = view->getViewMatrix();
-     //float16 projectionMatrix;
-     //float16 viewMatrix;
+     const float16& myProjectionMatrix = view->getProjectionMatrix();
+     const float16& myViewMatrix = view->getViewMatrix();
+     float16 projectionMatrix;
+     float16 viewMatrix;
 
      // projection
-     //glMatrixMode(GL_PROJECTION);
-     //glLoadIdentity();
+     glMatrixMode(GL_PROJECTION);
+     glLoadIdentity();
      //gluPerspective(60.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 100.0);
-     //gluPerspective(65.0, (GLfloat)width() / (GLfloat)height(), 0.3, 100.0);
+     gluPerspective(65.0, (double)width() / (double)height(), 0.3, 100.0);
      //gluPerspective(90.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 10000.0); //for lorentz
 
      // set view matrix
@@ -142,19 +146,22 @@ namespace rtps
      //glRotatef(0.0, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
      //glTranslatef(-5., 5., -5.);
 
-     //glGetFloatv(GL_PROJECTION_MATRIX,projectionMatrix.m);
+     glGetFloatv(GL_PROJECTION_MATRIX,projectionMatrix.m);
      //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
 
-     /*if(!(myProjectionMatrix==projectionMatrix))
-     {
-         dout<<"I'm not correctly caclulating my projection matrix."<<endl;
-     }
+     //if(!(myProjectionMatrix==projectionMatrix))
+     //{
+     //    dout<<"I'm not correctly caclulating my projection matrix."<<endl;
+     //}
      myProjectionMatrix.print("myProjectionMatrix");
      projectionMatrix.print("projectionMatrix");
-     if(!(viewMatrix==myViewMatrix))
-     {
-         dout<<"I'm not correctly calculating my view Matrix."<<endl;
-     }*/
+     //if(!(viewMatrix==myViewMatrix))
+     //{
+     //    dout<<"I'm not correctly calculating my view Matrix."<<endl;
+     //}
+     //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
+     //myViewMatrix.print("viewMatrix");
+     //viewMatrix.print("viewMatrix");
 
      //DEBUGGING===========
 
@@ -167,7 +174,9 @@ namespace rtps
         light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
         light->ambient.x=1.0;light->ambient.y=1.0;light->ambient.z=1.0;
         light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
-        light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
+        //light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
+        light->pos.x=5.0f; light->pos.y=5.0f; light->pos.z=-5.0f;
+
     }
     environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
 
@@ -184,26 +193,32 @@ namespace rtps
         meshRenderer= new MeshEffect(lib,width(),height(),20.0f,false);
     }
 
+    glClearColor(0.9f,0.9f,0.9f,1.0f);
     //set the projection and view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
         glUseProgram(i->second.getProgram());
         GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
-            glUniformMatrix4fv(location,1,false,view->getViewMatrix().m);
+            //glUniformMatrix4fv(location,1,GL_FALSE,viewMatrix.m);
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
         //dout<<i->first<<" viewMatrixLocation = "<<location<<endl;
         location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
         if(location!=-1)
-            glUniformMatrix4fv(location,1,false,view->getProjectionMatrix().m);
+            //glUniformMatrix4fv(location,1,GL_FALSE,projectionMatrix.m);
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
         //dout<<i->first<<" projectionMatrixLocation = "<<location<<endl;
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
-            glUniformMatrix4fv(location,1,false,view->getInverseViewMatrix().m);
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
         //dout<<i->first<<" inverseViewMatrixLocation = "<<location<<endl;
         location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
         if(location!=-1)
-            glUniformMatrix4fv(location,1,false,view->getInverseProjectionMatrix().m);
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
         //dout<<i->first<<" inverseProjectionMatrixLocation = "<<location<<endl;
+        location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
         glUseProgram(0);
     }
     GLuint program = lib->shaders["sphereShader"].getProgram();
@@ -229,7 +244,6 @@ namespace rtps
 
      // draw the skybox
      const GLfloat fSkyDist = 100.0;
-     const GLfloat fTex = 1.0f;
 
      const GLfloat skyBox[] = { fSkyDist,-fSkyDist,-fSkyDist,
                                 -fSkyDist,-fSkyDist,-fSkyDist,
@@ -261,46 +275,47 @@ namespace rtps
                                 fSkyDist,-fSkyDist,fSkyDist,
                                 fSkyDist,-fSkyDist,-fSkyDist};
 
-     const GLfloat skyBoxTex[] = { fTex,-fTex,-fTex,
-                                -fTex,-fTex,-fTex,
-                                -fTex,fTex,-fTex,
-                                fTex,fTex,-fTex,
+     const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
+                                0.f,0.f,0.f,//0.f,0.f,0.f,
+                                0.f,1.f,0.f,//0.f,1.f,0.f,
+                                1.f,1.f,0.f,//1.f,1.f,0.f,
 
-                                fTex, -fTex, fTex,
-                                fTex, -fTex, -fTex,
-                                fTex, fTex, -fTex,
-                                fTex, fTex, fTex,
+                                1.f,0.f,1.f,//1.f, 0.f, 1.f,
+                                1.f,0.f,0.f,//1.f, 0.f, 0.f,
+                                1.f,1.f,0.f,//1.f, 1.f, 0.f,
+                                1.f, 1.f, 1.f,
 
-                                -fTex,-fTex,fTex,
-                                fTex,-fTex,fTex,
-                                fTex,fTex,fTex,
-                                -fTex,fTex,fTex,
+                                0.f,0.f,1.f,
+                                1.f,0.f,1.f,
+                                1.f,1.f,1.f,
+                                0.f,1.f,1.f,
 
-                                -fTex,-fTex,-fTex,
-                                -fTex,-fTex,fTex,
-                                -fTex,fTex,fTex,
-                                -fTex,fTex,-fTex,
+                                0.f,0.f,0.f,
+                                0.f,0.f,1.f,
+                                0.f,1.f,1.f,
+                                0.f,1.f,0.f,
 
-                                -fTex,fTex,-fTex,
-                                -fTex,fTex,fTex,
-                                fTex,fTex,fTex,
-                                fTex,fTex,-fTex,
+                                0.f,1.f,0.f,
+                                0.f,1.f,1.f,
+                                1.f,1.f,1.f,
+                                1.f,1.f,0.f,
 
-                                -fTex,-fTex, -fTex,
-                                -fTex,-fTex,fTex,
-                                fTex,-fTex,fTex,
-                                fTex,-fTex,-fTex};
+                                0.f,0.f, 0.f,
+                                0.f,0.f,1.f,
+                                1.f,0.f,1.f,
+                                1.f,0.f,0.f};
 
-     glVertexPointer(3, GL_FLOAT, 0, skyBox);
-     glTexCoordPointer(3, GL_FLOAT, 0, skyBoxTex);
-
-     glEnableClientState(GL_VERTEX_ARRAY);
-     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+     //glVertexPointer(3, GL_FLOAT, 0, skyBox);
+     //glTexCoordPointer(3, GL_FLOAT, 0, skyBoxTex);
+     glEnableVertexAttribArray(0);
+     glEnableVertexAttribArray(1);
+     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,skyBox);
+     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,skyBoxTex);
 
      glDrawArrays(GL_QUADS, 0, 6);
 
-     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-     glDisableClientState(GL_VERTEX_ARRAY);
+     glDisableVertexAttribArray(0);
+     glDisableVertexAttribArray(1);
 
      glDisable(GL_TEXTURE_CUBE_MAP);
 
@@ -315,7 +330,7 @@ namespace rtps
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
 #if 1
-        renderSkyBox();
+        //renderSkyBox();
         display(false);
 #if 1
         //FIXME: Have a method to give renderType to each System. That way we can have different
@@ -362,10 +377,10 @@ namespace rtps
          glUseProgram(i->second.getProgram());
          GLint location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
          if(location!=-1)
-             glUniformMatrix4fv(location,1,false,view->getProjectionMatrix().m);
+             glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
          location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
          if(location!=-1)
-             glUniformMatrix4fv(location,1,false,view->getInverseProjectionMatrix().m);
+             glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
      }
  }
 
@@ -392,7 +407,11 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
     if (mouseButtons & Qt::RightButton)
     {
-        view->rotate(dx,dy);
+        //view->rotate(dx,dy);
+        view->rotate(dy,dx);
+        //view->rotate(dx,0.0);
+        //glRotatef(dx*.2f,1.0f,0.0f,0.0f);
+        //glRotatef(dy*.2f,0.0f,0.0f,1.0f);
         cameraChanged();
     }
 
@@ -404,16 +423,20 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 void GLWidget::cameraChanged()
 {
 
+    //view->getViewMatrix().print("myViewMatrix");
+    //float16 viewMatrix;
+    //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
+    //viewMatrix.print("viewMatrix");
     //update the view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
         glUseProgram(i->second.getProgram());
         GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
-            glUniformMatrix4fv(location,1,false,view->getViewMatrix().m);
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
-            glUniformMatrix4fv(location,1,false,view->getInverseViewMatrix().m);
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
     }
 }
 
@@ -562,23 +585,23 @@ char key=event->text().at(0).toAscii();
             case 'r': //drop a ball
             {
                 ParticleShape* shape=pShapes["rb1"];
-                float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
-                trans +=7.0f;
-                float16 modelview;
-                glMatrixMode(GL_MODELVIEW);
-                glPushMatrix();
-                glLoadIdentity();
+                //float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+                //trans +=7.0f;
+                //float16 modelview;
+                //glMatrixMode(GL_MODELVIEW);
+                //glPushMatrix();
+                //glLoadIdentity();
                 //glRotatef(rotation.x, 1.0, 0.0, 0.0);
-                glTranslatef(trans, trans, trans);
-                glRotatef(-180, 1.0f, 0.0f, 0.0f);
-                glRotatef(-90, 0.0f, 0.0f, 1.0f);
+                //glTranslatef(trans, trans, trans);
+                //glRotatef(-180, 1.0f, 0.0f, 0.0f);
+                //glRotatef(-90, 0.0f, 0.0f, 1.0f);
                 //glTranslatef(translation.x, translation.z, translation.y);
-                glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
-                glPopMatrix();
-                modelview.print("modelview");
-                modelview.transpose();
+                //glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+                //glPopMatrix();
+                //modelview.print("modelview");
+                //modelview.transpose();
 
-                systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),modelview,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),mass);
+                //systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),modelview,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),mass);
 
                 /*    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
                     float size = 1.0f;
@@ -591,27 +614,27 @@ char key=event->text().at(0).toAscii();
                     return;
             }
             case 'w':
-                view->move(0.0f,-1.0f,0.0f);
-                cameraChanged();
-                break;
-            case 'a':
-                view->move(1.0f,0.0f,0.0f);
-                cameraChanged();
-                break;
-            case 's':
-                view->move(0.0f,1.0f,0.0f);
-                cameraChanged();
-                break;
-            case 'd':
-                view->move(-1.0f,0.0f,0.0f);
-                cameraChanged();
-                break;
-            case 'z':
                 view->move(0.0f,0.0f,1.0f);
                 cameraChanged();
                 break;
-            case 'x':
+            case 'a':
+                view->move(-1.0f,0.0f,0.0f);
+                cameraChanged();
+                break;
+            case 's':
                 view->move(0.0f,0.0f,-1.0f);
+                cameraChanged();
+                break;
+            case 'd':
+                view->move(1.0f,0.0f,0.0f);
+                cameraChanged();
+                break;
+            case 'z':
+                view->move(0.0f,1.0f,0.0f);
+                cameraChanged();
+                break;
+            case 'x':
+                view->move(0.0f,-1.0f,0.0f);
                 cameraChanged();
                 break;
             case '+':
@@ -728,7 +751,9 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
                 minCoord.z=z;
             if(z>maxCoord.z)
                 maxCoord.z=z;
-	}
+    }
+        minCoord.print("minCoord");
+        maxCoord.print("maxCoord");
 	delete[] pos;
 	pos =0;
             float space = systems[system]->getSpacing();
@@ -756,7 +781,7 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
     {
         glEnable(GL_NORMALIZE);
         glEnable(GL_CULL_FACE);
-        glDisable(GL_LIGHTING);
+        //glDisable(GL_LIGHTING);
         if(blend)
         {
             glEnable(GL_BLEND);
@@ -786,23 +811,18 @@ void GLWidget::loadScene(const QString& filename)
      for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
      {
           ParticleShape* shape = createParticleShape("rb1",i->second);
+          i->second->modelMat.m[12]=5.;
+          i->second->modelMat.m[13]=5.;
+          i->second->modelMat.m[14]=-5.;
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
             float16 mat;
             memcpy(&mat,&i->second->modelMat,sizeof(float16));
-            //glMatrixMode(GL_MODELVIEW);
-            //glPushMatrix();
-            //glLoadIdentity();
-            //glRotatef(rotation.x, 1.0, 0.0, 0.0);
-            //glTranslatef(trans, trans, trans);
-            //glRotatef(-180, 1.0, 0.0, 0.0);
-            //glRotatef(-90, 0.0, 0.0, 1.0);
-            //glTranslatef(translation.x, translation.z, translation.y);
-            mat.print("mat before");
-            mat[3]=trans;
-            mat[7]=trans;
-            mat[11]=trans;
-            mat = mat*view->getViewMatrix();
-            mat.print("mat after");
+            //mat.print("mat before");
+            mat[12]=trans;
+            mat[13]=trans;
+            mat[14]=trans;
+            //mat = mat*view->getViewMatrix();
+            //mat.print("mat after");
           systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
           pShapes[i->first]=shape;
      }

@@ -5,16 +5,18 @@ namespace rtps
 // Convert to Axis/Angles
 void Quaternion::getAxisAngle(float3 *axis, float *angle)
 {
-    float scale = sqrt(x * x + y * y + z * z);
-    axis->x = x / scale;
-    axis->y = y / scale;
-    axis->z = z / scale;
+    //float scale = sqrt(x * x + y * y + z * z);
+    axis->x = x;//x / scale;
+    axis->y = y;///y / scale;
+    axis->z = z;//z / scale;
+    axis->normalize();
     *angle = acos(w) * 2.0f;
 }
 
 // Convert to Matrix
 float16 Quaternion::getMatrix() const
 {
+    //normalize();
     float x2 = x * x;
     float y2 = y * y;
     float z2 = z * z;
@@ -24,6 +26,7 @@ float16 Quaternion::getMatrix() const
     float wx = w * x;
     float wy = w * y;
     float wz = w * z;
+
 
     // This calculation would be a lot more complicated for non-unit length quaternions
     // Note: The constructor of Matrix4 expects the Matrix in column-major format like expected by
@@ -67,6 +70,7 @@ void Quaternion::FromAxis(const float3 &v, float angle)
     angle *= 0.5f;
     float3 vn(v);
     vn.normalize();
+    //vn.print("vn");
 
     sinAngle = sin(angle);
 
@@ -90,6 +94,8 @@ float3 Quaternion::operator* (const float3 &vec) const
 
     resQuat = vecQuat * getConjugate();
     resQuat = *this * resQuat;
+    //resQuat= *this*vecQuat;
+    //resQuat= resQuat*getConjugate();
 
     return (float3(resQuat.x, resQuat.y, resQuat.z));
 }
@@ -97,6 +103,13 @@ float3 Quaternion::operator* (const float3 &vec) const
 // Multiplying q1 with q2 applies the rotation q2 to q1
 Quaternion Quaternion::operator* (const Quaternion &rq) const
 {
+    //float3 a(x,y,z);
+    //float3 b(rq.x,rq.y,rq.z);
+    //float3 ans = cross(a,b);
+    //ans+= w*b+rq.w*a;
+    //float angle = w*rq.w - (a.x*rq.x+a.y*rq.y+a.z*rq.z);
+
+    //return Quaternion(ans,angle);
     // the constructor takes its arguments as (x, y, z, w)
     return Quaternion(w * rq.x + x * rq.w + y * rq.z - z * rq.y,
                       w * rq.y + y * rq.w + z * rq.x - x * rq.z,
