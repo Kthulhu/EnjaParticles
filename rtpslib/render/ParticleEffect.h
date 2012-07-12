@@ -105,7 +105,7 @@ namespace rtps
         std::vector<GLuint> m_fbos;
 
         GLuint width, height;
-        GLfloat pointRadius,near,far,fov;
+        GLfloat pointRadius;
         bool renderAsSpheres,blending;
         bool m_writeFramebuffers;
         EB::TimerList m_timers;

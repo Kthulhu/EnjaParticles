@@ -261,7 +261,7 @@ namespace rtps
         Gravity gravity;
         MeshToParticles m2p;
         MarchingCubes marchingcubes;
-        vector<System*> interactionSystem;
+        std::vector<System*> interactionSystem;
 
         void hash_and_sort();
         void bitonic_sort();

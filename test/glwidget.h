@@ -1,9 +1,8 @@
 #ifndef GLWIDGET_H
  #define GLWIDGET_H
 
+
 #include "../rtpslib/structs.h"
-#include "../rtpslib/render/ParticleEffect.h"
-#include "../rtpslib/system/ParticleShape.h"
 
 #include <map>
 #include <string>
@@ -13,15 +12,22 @@
 #include <QTimer>
 //#include <QtGui>
 
+//class QGLWidget;
+class QString;
+class QTimer;
 
 namespace rtps
 {
     struct Mesh;
+	struct Light;
+	struct Material;
 
+	class Camera;
     class System;
     class AIWrapper;
     class MeshEffect;
     class ParticleEffect;
+    class ParticleShape;
     class ShaderLibrary;
     class CL;
 

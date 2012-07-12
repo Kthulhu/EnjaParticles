@@ -27,7 +27,7 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 
-#include "../../opencl10/CL/cl.hpp"
+#include <CL/cl.hpp>
 #include "../rtps_common.h"
 
 namespace rtps

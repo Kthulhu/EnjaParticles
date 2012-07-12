@@ -1,9 +1,9 @@
-#include <QtGui>
-#include <QtOpenGL>
-#include <QComboBox>
-#include <QFileDialog>
+#include <GL/glew.h>
 #include "glwidget.h"
 #include "mainwindow.h"
+#include <QtGui>
+#include <QComboBox>
+#include <QFileDialog>
 #include "sphparametergroup.h"
 
 namespace rtps
@@ -167,26 +167,4 @@ void MainWindow::valueChanged(const QString& parameterName, const QString& value
     emit parameterValueChanged(system,parameterName,value);
 }
 
- QSize MainWindow::getSize()
- {
-     bool ok;
-     QString text = QInputDialog::getText(this, tr("Grabber"),
-                                          tr("Enter pixmap size:"),
-                                          QLineEdit::Normal,
-                                          tr("%1 x %2").arg(glWidget->width())
-                                                       .arg(glWidget->height()),
-                                          &ok);
-     if (!ok)
-         return QSize();
-
-     QRegExp regExp(tr("([0-9]+) *x *([0-9]+)"));
-     if (regExp.exactMatch(text)) {
-         int width = regExp.cap(1).toInt();
-         int height = regExp.cap(2).toInt();
-         if (width > 0 && width < 2048 && height > 0 && height < 2048)
-             return QSize(width, height);
-     }
-
-     return glWidget->size();
- }
 }

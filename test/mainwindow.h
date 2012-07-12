@@ -42,7 +42,6 @@ void rendererChanged(const QString& system, const QString& renderer);
      //QSlider *createSlider(const char *changedSignal, const char *setterSlot);
      //
      QSlider *createSlider(const char *name);
-     QSize getSize();
 
      QWidget *centralWidget;
      QScrollArea *parameters;

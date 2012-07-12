@@ -44,8 +44,6 @@
 #endif
 
 
-#include <assimp/assimp.h>
-
 #include "ParticleEffect.h"
 #include "../structs.h"
 #include "../timer_eb.h"

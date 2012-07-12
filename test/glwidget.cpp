@@ -22,13 +22,13 @@
 ****************************************************************************************/
 #include <GL/glew.h>
 #include <QGLWidget>
-#include <QMouseEvent>
-#include <QKeyEvent>
 #include <QString>
 #include <QTimer>
+#include <QMouseEvent>
+#include <QKeyEvent>
 
 #include "ParamParser.h"
-
+#include "../rtpslib/system/ParticleShape.h"
 #include "../rtpslib/RTPS.h"
 #include "../rtpslib/render/ParticleEffect.h"
 #include "../rtpslib/render/SSEffect.h"
@@ -41,8 +41,8 @@
 #include <sstream>
 #include <float.h>
 
-#include "aiwrapper.h"
 #include "glwidget.h"
+#include "aiwrapper.h"
 
 #include "../rtpslib/render/util/stb_image_write.h"
 
