@@ -84,7 +84,7 @@ void Quaternion::FromAxis(const float3 &v, float angle)
 float3 Quaternion::operator* (const float3 &vec) const
 {
     float3 vn(vec);
-    vn.normalize();
+    //vn.normalize();
 
     Quaternion vecQuat, resQuat;
     vecQuat.x = vn.x;
@@ -92,10 +92,10 @@ float3 Quaternion::operator* (const float3 &vec) const
     vecQuat.z = vn.z;
     vecQuat.w = 0.0f;
 
-    resQuat = vecQuat * getConjugate();
-    resQuat = *this * resQuat;
-    //resQuat= *this*vecQuat;
-    //resQuat= resQuat*getConjugate();
+    //resQuat = vecQuat * getConjugate();
+    //resQuat = *this * resQuat;
+    resQuat= *this*vecQuat;
+    resQuat= resQuat*getConjugate();
 
     return (float3(resQuat.x, resQuat.y, resQuat.z));
 }

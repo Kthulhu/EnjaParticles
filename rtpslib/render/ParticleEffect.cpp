@@ -45,7 +45,7 @@ namespace rtps
         this->height=height;
         this->pointRadius=pointRadius;
         this->blending=blending;
-        this->renderAsSpheres=true;
+        //this->renderAsSpheres=true;
         m_writeFramebuffers = false;
     }
 
@@ -110,13 +110,15 @@ namespace rtps
         glEnable(GL_POINT_SMOOTH);
         glPointSize(pointRadius*scale);
 
-        if(renderAsSpheres)
-            renderPointsAsSpheres(posVBO,colVBO,num,light,material,scale);
-        else
-        {
+        //if(renderAsSpheres)
+        //{
+        //    renderPointsAsSpheres(posVBO,colVBO,num,light,material,scale);
+        //}
+        //else
+        //{
             glUseProgram(m_shaderLibrary->shaders["passThrough"].getProgram() );
             drawArrays(posVBO, colVBO, num);
-        }
+        //}
         glDepthMask(GL_TRUE);
 
         glDisable(GL_LIGHTING);
@@ -172,8 +174,7 @@ namespace rtps
 
         glUseProgram(m_shaderLibrary->shaders["vectorShader"].getProgram());
         glUniform1f(glGetUniformLocation(m_shaderLibrary->shaders["vectorShader"].getProgram(), "scale"),scale);
-        //Need to disable these for blender
-        glDisableClientState(GL_NORMAL_ARRAY);
+
         glDrawArrays(GL_POINTS, 0, num);
         glUseProgram(0);
 

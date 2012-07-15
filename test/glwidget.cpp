@@ -22,6 +22,7 @@
 ****************************************************************************************/
 #include <GL/glew.h>
 #include <QGLWidget>
+#include <QElapsedTimer>
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <QString>
@@ -52,27 +53,30 @@ namespace rtps
  GLWidget::GLWidget(QGLContext* ctx,std::string bPath,QWidget *parent)
      : QGLWidget(ctx,parent)
  {
-     	binaryPath=bPath;
-             //mass=100.0f;
-        mass=0.01f;
-        sizeScale=1.0f;
-        //string scenefile = path+"/demo_scene.obj";
+    binaryPath=bPath;
+         //mass=100.0f;
+    mass=0.01f;
+    sizeScale=1.0f;
+    //string scenefile = path+"/demo_scene.obj";
 
-        renderVelocity=false;
-        paused=false;
-        scene_list=0;
-        scene=new AIWrapper();
-        dynamicMeshScene=new AIWrapper();
-        renderMovie=false;
-        frameCounter=0;
-        cli=NULL;
-        view=NULL;
-        light=NULL;
-        lib=NULL;
+    renderVelocity=false;
+    paused=false;
+    scene_list=0;
+    scene=new AIWrapper();
+    dynamicMeshScene=new AIWrapper();
+    renderMovie=false;
+    frameCounter=0;
+    cli=NULL;
+    view=NULL;
+    light=NULL;
+    lib=NULL;
+    elapsedTimer = new QElapsedTimer();
 
-     QTimer* timer = new QTimer(this);
-     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-     timer->start(33);
+    //This will force updates every 33 seconds. The timer will cause the
+    //simulations to perform their updates.
+    QTimer* timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+    timer->start(33);
  }
 
  GLWidget::~GLWidget()
@@ -101,6 +105,7 @@ namespace rtps
     delete lib;
     delete view;
     delete light;
+    delete elapsedTimer;
  }
 
  void GLWidget::initializeGL()
@@ -113,20 +118,21 @@ namespace rtps
      //TODO: Add stereo camera
      if(!view)
      {
-        //view = new Camera(float3(5.0f,5.0f,5.0f),65.0,0.3,100.0,width(),height());
-        view = new Camera(float3(0.0f,0.0f,0.0f),65.0f,0.3f,100.0f,width(),height());
+        //view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,100.0,width(),height());
+         view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,100.0,width(),height());
+        //view = new Camera(float3(0.0f,0.0f,0.0f),65.0f,0.3f,100.0f,width(),height());
         //view = new Camera(float3(-105.0f,-105.0f,-105.0f),65.0f,0.3f,1000.0f,width(),height());
         //the models are all in different coordinate systems...
         //view->rotate(-90.f,0.0f);
-        view->setMoveSpeed(0.1f);
-        view->setRotateSpeed(0.1f);
+        view->setMoveSpeed(2.f);
+        view->setRotateSpeed(2.f);
      }
 
      //DEBUGGING===========
-     const float16& myProjectionMatrix = view->getProjectionMatrix();
-     const float16& myViewMatrix = view->getViewMatrix();
-     float16 projectionMatrix;
-     float16 viewMatrix;
+     //const float16& myProjectionMatrix = view->getProjectionMatrix();
+     //const float16& myViewMatrix = view->getViewMatrix();
+     //float16 projectionMatrix;
+     //float16 viewMatrix;
 
      // projection
      //glMatrixMode(GL_PROJECTION);
@@ -175,7 +181,7 @@ namespace rtps
         light->ambient.x=1.0;light->ambient.y=1.0;light->ambient.z=1.0;
         light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
         //light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
-        light->pos.x=5.0f; light->pos.y=5.0f; light->pos.z=-5.0f;
+        light->pos.x=5.0f; light->pos.y=5.0f; light->pos.z=5.0f;
 
     }
     environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
@@ -200,8 +206,8 @@ namespace rtps
         glUseProgram(i->second.getProgram());
         GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
-            //glUniformMatrix4fv(location,1,GL_FALSE,viewMatrix.m);
             glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
         //dout<<i->first<<" viewMatrixLocation = "<<location<<endl;
         location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
         if(location!=-1)
@@ -211,6 +217,7 @@ namespace rtps
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
         //dout<<i->first<<" inverseViewMatrixLocation = "<<location<<endl;
         location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
         if(location!=-1)
@@ -228,6 +235,7 @@ namespace rtps
     glUseProgram(program);
     glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);
     glUseProgram(0);
+    elapsedTimer->start();
  }
 
  void GLWidget::renderSkyBox()
@@ -326,15 +334,28 @@ namespace rtps
 
  void GLWidget::paintGL()
  {
+        float time = elapsedTimer->restart()/1000.f;
+        //send new view matrix to the shaders if the camera was actually updated
+        if(view->tick(time))
+        {
+            cameraChanged();
+        }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
 #if 1
-        //renderSkyBox();
+        renderSkyBox();
+        //display static opaque objects
         display(false);
 #if 1
-        //FIXME: Have a method to give renderType to each System. That way we can have different
-        //Systems with the different effects.
+#if 1
+        if(systems.find(QString("rb1"))!=systems.end())
+        {
+            //for debugging only!!
+            ParticleRigidBody* rbsys = (ParticleRigidBody*)systems[QString("rb1")];
+            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),light,NULL,0.1f);
+        }
+#endif
         for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
             if(renderVelocity)
@@ -343,7 +364,7 @@ namespace rtps
             }
             effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),light,NULL,i->second->getSpacing());
         }
-
+        //display static transparent objects
         display(true);
 #endif
 #else
@@ -362,18 +383,18 @@ namespace rtps
         }
  }
 
- void GLWidget::resizeGL(int width, int height)
- {
-     glViewport(0, 0, width, height);
-     for(map<QString,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
-        {
-            i->second->setWindowDimensions(width,height);
-        }
-     view->setWidth(width);
-     view->setHeight(height);
-     //set the projection and view matricies for all shaders.
-     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
-     {
+void GLWidget::resizeGL(int width, int height)
+{
+    glViewport(0, 0, width, height);
+    for(map<QString,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+    {
+        i->second->setWindowDimensions(width,height);
+    }
+    view->setWidth(width);
+    view->setHeight(height);
+    //set the projection and view matricies for all shaders.
+    for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+    {
          glUseProgram(i->second.getProgram());
          GLint location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
          if(location!=-1)
@@ -381,8 +402,8 @@ namespace rtps
          location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
          if(location!=-1)
              glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
-     }
- }
+    }
+}
 
  void GLWidget::mousePressEvent(QMouseEvent *event)
  {
@@ -412,7 +433,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
         //view->rotate(dx,0.0);
         //glRotatef(dx*.2f,1.0f,0.0f,0.0f);
         //glRotatef(dy*.2f,0.0f,0.0f,1.0f);
-        cameraChanged();
+        //cameraChanged();
     }
 
     mousePos.x = event->x();
@@ -434,16 +455,20 @@ void GLWidget::cameraChanged()
         GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+
     }
 }
 
 void GLWidget::keyPressEvent(QKeyEvent *event)
 {
-//should update this eventually.
-char key=event->text().at(0).toAscii();
+        //FIXME: Need to update key bindings.
+        if(event->text().isEmpty())
+            return;
+        char key=event->text().at(0).toAscii();
         unsigned int nn=0;
         switch (key)
         {
@@ -615,27 +640,27 @@ char key=event->text().at(0).toAscii();
             }
             case 'w':
                 view->move(0.0f,0.0f,1.0f);
-                cameraChanged();
+                //cameraChanged();
                 break;
             case 'a':
                 view->move(-1.0f,0.0f,0.0f);
-                cameraChanged();
+                //cameraChanged();
                 break;
             case 's':
                 view->move(0.0f,0.0f,-1.0f);
-                cameraChanged();
+                //cameraChanged();
                 break;
             case 'd':
                 view->move(1.0f,0.0f,0.0f);
-                cameraChanged();
+                //cameraChanged();
                 break;
             case 'z':
                 view->move(0.0f,1.0f,0.0f);
-                cameraChanged();
+                //cameraChanged();
                 break;
             case 'x':
                 view->move(0.0f,-1.0f,0.0f);
-                cameraChanged();
+                //cameraChanged();
                 break;
             case '+':
                 mass+=100.0f;
@@ -732,11 +757,11 @@ int GLWidget::writeMovieFrame(const char* filename, const char* dir)
 ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-        float* pos = new float[mesh->vboSize*3];
-        glGetBufferSubData(GL_ARRAY_BUFFER,0,mesh->vboSize*3*sizeof(float),pos);
-        float3 minCoord(FLT_MAX,FLT_MAX,FLT_MAX);
-        float3 maxCoord(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-        for(int i = 0; i < mesh->vboSize; i++)
+    float* pos = new float[mesh->vboSize*3];
+    glGetBufferSubData(GL_ARRAY_BUFFER,0,mesh->vboSize*3*sizeof(float),pos);
+    float3 minCoord(FLT_MAX,FLT_MAX,FLT_MAX);
+    float3 maxCoord(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+    for(int i = 0; i < mesh->vboSize; i++)
 	{
             float x=pos[(i*3)],y=pos[(i*3)+1],z=pos[(i*3)+2];
             if(x<minCoord.x)
@@ -752,29 +777,29 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
             if(z>maxCoord.z)
                 maxCoord.z=z;
     }
-        minCoord.print("minCoord");
-        maxCoord.print("maxCoord");
+    minCoord.print("minCoord");
+    maxCoord.print("maxCoord");
 	delete[] pos;
 	pos =0;
-            float space = systems[system]->getSpacing();
-            ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
+    float space = systems[system]->getSpacing();
+    ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
 
 
-            shape->voxelizeMesh(mesh->vbo,mesh->ibo,mesh->iboSize);
-            //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
-            //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
-            //s<<"surface";
-            //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
+    shape->voxelizeMesh(mesh->vbo,mesh->ibo,mesh->iboSize);
+    //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
+    //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
+    //s<<"surface";
+    //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
 
-            /*dout<<"mesh name = "<<s.str()<<endl;
-            dout<<"maxCoord dim = "<<shape->getMaxDim()<<endl;
-            dout<<"minCoord dim = "<<shape->getMinDim()<<endl;
-            dout<<"Trans = "<<trans<<endl;
-            dout<<"minCoord ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
-            dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
-            dout<<"spacing = "<<space<<endl;*/
+    /*dout<<"mesh name = "<<s.str()<<endl;
+    dout<<"maxCoord dim = "<<shape->getMaxDim()<<endl;
+    dout<<"minCoord dim = "<<shape->getMinDim()<<endl;
+    dout<<"Trans = "<<trans<<endl;
+    dout<<"minCoord ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
+    dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
+    dout<<"spacing = "<<space<<endl;*/
 
-            return shape;
+    return shape;
 
 }
     void GLWidget::display(bool blend)
@@ -815,12 +840,30 @@ void GLWidget::loadScene(const QString& filename)
           //i->second->modelMat.m[13]=-5.;
           //i->second->modelMat.m[14]=5.;
             float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+            //float16 mat=i->second->modelMat;
+            //FIXME: rotation should not be needed here. This is hackish
             float16 mat;
-            memcpy(&mat,&i->second->modelMat,sizeof(float16));
+            mat.loadIdentity();
+            mat[5]=-1.0f;
+            mat[10]=-1.0f;
+            //mat.transpose();
+            float16 mat2;
+            mat2.loadIdentity();
+            mat2[0]=0.0f;
+            mat2[1]=-1.f;
+            mat2[4]=1.f;
+            mat2[5]=0.0f;
+            mat.print("mat before");
+            mat2.print("mat2");
+            mat=mat2*mat;
+            mat.print("mat after");
+
+            //memcpy(&mat,&i->second->modelMat,sizeof(float16));
             //mat.print("mat before");
-            mat[12]=trans;
-            mat[13]=trans;
-            mat[14]=trans;
+            mat[3]+=trans;
+            mat[7]+=trans;
+            mat[11]+=trans;
+            //mat=mat2*mat;
             //mat = mat*view->getViewMatrix();
             //mat.print("mat after");
           systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);

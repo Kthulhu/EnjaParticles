@@ -19,6 +19,7 @@ unsigned int n = 0, t,i;
 
         float16 mat;
         memcpy(&mat,&m,sizeof(float16));
+        //mat.print("aiMatrix");
 
         for (; n < nd->mNumMeshes; ++n) {
             const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];

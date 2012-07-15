@@ -41,7 +41,7 @@ namespace rtps
     class RTPS_EXPORT SSEffect : public ParticleEffect
     {
     public:
-        SSEffect(ShaderLibrary* lib, SmoothingFilter filter = BILATERAL_GAUSSIAN_BLUR, GLuint width = 600, GLuint height = 800 ,GLfloat pointRadius = 0.5f,bool blending = false);
+        SSEffect(ShaderLibrary* lib, SmoothingFilter filter = NO_SMOOTHING, GLuint width = 600, GLuint height = 800 ,GLfloat pointRadius = 0.5f,bool blending = false);
         ~SSEffect();
         void smoothDepth();
         virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
