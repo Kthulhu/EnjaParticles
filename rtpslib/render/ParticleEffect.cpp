@@ -67,29 +67,22 @@ namespace rtps
     //----------------------------------------------------------------------
     void ParticleEffect::drawArrays(GLuint posVBO, GLuint colVBO, unsigned int num)
     {
-        glBindBuffer(GL_ARRAY_BUFFER, colVBO);
-        glColorPointer(4, GL_FLOAT, 0, 0);
-
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, posVBO);
-        glVertexPointer(4, GL_FLOAT, 0, 0);
+        glVertexAttribPointer(0,4,GL_FLOAT,GL_FALSE,0,0);
+        glBindBuffer(GL_ARRAY_BUFFER, colVBO);
+        glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
 
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_COLOR_ARRAY);
-
-        //Need to disable these for blender
-        glDisableClientState(GL_NORMAL_ARRAY);
         glDrawArrays(GL_POINTS, 0, num);
 
-        glDisableClientState(GL_COLOR_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
     }
 
     //----------------------------------------------------------------------
     void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale )
     {
-
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 
         glDepthMask(GL_TRUE);
         if(blending)
@@ -123,8 +116,6 @@ namespace rtps
 
         glDisable(GL_LIGHTING);
 
-        glPopClientAttrib();
-        glPopAttrib();
         //glDisable(GL_POINT_SMOOTH);
         if (blending)
         {
@@ -134,7 +125,7 @@ namespace rtps
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         //make sure rendering timing is accurate
-        glFinish();
+        //glFinish();
     }
 
     void ParticleEffect::writeBuffersToDisk()
@@ -163,23 +154,22 @@ namespace rtps
 
     void ParticleEffect::renderVector(GLuint posVBO, GLuint vecVBO,  unsigned int num, float scale)
     {
-        glBindBuffer(GL_ARRAY_BUFFER, vecVBO);
-        glColorPointer(4, GL_FLOAT, 0, 0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, posVBO);
-        glVertexPointer(4, GL_FLOAT, 0, 0);
-
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_COLOR_ARRAY);
 
         glUseProgram(m_shaderLibrary->shaders["vectorShader"].getProgram());
         glUniform1f(glGetUniformLocation(m_shaderLibrary->shaders["vectorShader"].getProgram(), "scale"),scale);
+        drawArrays(posVBO,vecVBO,num);
+        /*glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, posVBO);
+        glVertexAttribPointer(0,4,GL_FLOAT,GL_FALSE,0,0);
+        glBindBuffer(GL_ARRAY_BUFFER, vecVBO);
+        glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
 
         glDrawArrays(GL_POINTS, 0, num);
-        glUseProgram(0);
 
-        glDisableClientState(GL_COLOR_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);*/
+        glUseProgram(0);
     }
 }
 

@@ -1,3 +1,4 @@
+#version 330
 const float pi = 3.141592654;
 
 uniform sampler2D depthTex;
@@ -6,14 +7,14 @@ uniform float del_y;
 uniform float falloff;
 uniform float sig;
 const float maxDepth = 0.9999999;
-
+smooth in vec2 texCoord;
 void main(void)
 {
-        float depth=texture2D(depthTex, gl_TexCoord[0].st).x;
-        if(depth>maxDepth)
-        {
-                discard;
-        }
+    float depth=texture2D(depthTex, texCoord.st).x;
+    if(depth>maxDepth)
+    {
+            discard;
+    }
    float sum = 0.0;
    float denom = (2.*sig*sig);
    int width = int(2.*sig)+1;
@@ -21,7 +22,7 @@ void main(void)
    {
            for(int j=-width; j<width; j++ )
            {
-                        float d = texture2D(depthTex,gl_TexCoord[0].st+vec2(float(i)*del_x,float(j)*del_y)).x;
+                        float d = texture2D(depthTex,texCoord.st+vec2(float(i)*del_x,float(j)*del_y)).x;
             if(abs(depth-d)>falloff)
                 d =depth;
                         sum += d *exp(-float(i*i+j*j)/denom);

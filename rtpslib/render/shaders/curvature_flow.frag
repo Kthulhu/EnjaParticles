@@ -1,3 +1,4 @@
+#version 330
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
@@ -10,6 +11,7 @@ uniform float h_x;
 uniform float h_y;
 uniform float dt;
 uniform float distance_threshold;
+smooth in vec2 texCoord;
 
 float secondOrderCenterDifference(vec2 texCoord,float depth, vec2 dir, float h)
 {
@@ -32,17 +34,17 @@ float forwardDifference(float fxh, float fx, float h)
 
 void main()
 {
-    vec2 dx_texCoord = gl_TexCoord[0].st+vec2(del_x,0.0);
-    vec2 dy_texCoord = gl_TexCoord[0].st+vec2(0.0,del_y);
-    float Cx = gl_ProjectionMatrix[0].x;//2.0/(width*focal_x);
-    float Cy = gl_ProjectionMatrix[1].y;//2.0/(height*focal_y);
+    vec2 dx_texCoord = texCoord.st+vec2(del_x,0.0);
+    vec2 dy_texCoord = texCoord.st+vec2(0.0,del_y);
+    float Cx = projectionMatrix[0][0];//2.0/(width*focal_x);
+    float Cy = projectionMatrix[1][1];//2.0/(height*focal_y);
     float Cx2 = Cx*Cx;
     float Cy2 = Cy*Cy;
-    float depth=texture2D(depthTex, gl_TexCoord[0].st).x;	
-    float dx = centerDifference(gl_TexCoord[0].st,vec2(del_x,0.0),h_x);
-    float ddx = secondOrderCenterDifference(gl_TexCoord[0].st,depth,vec2(del_x,0.0),h_x);
-    float dy = centerDifference(gl_TexCoord[0].st,vec2(0.0,del_y),h_y);
-    float ddy = secondOrderCenterDifference(gl_TexCoord[0].st,depth,vec2(0.0,del_y),h_y);
+    float depth=texture2D(depthTex, texCoord.st).x;
+    float dx = centerDifference(texCoord.st,vec2(del_x,0.0),h_x);
+    float ddx = secondOrderCenterDifference(texCoord.st,depth,vec2(del_x,0.0),h_x);
+    float dy = centerDifference(texCoord.st,vec2(0.0,del_y),h_y);
+    float ddy = secondOrderCenterDifference(texCoord.st,depth,vec2(0.0,del_y),h_y);
     float D = (Cy2*dx*dx)+(Cx2*dy*dy)+(Cy2*Cx2*depth*depth);
     float depthX = texture2D(depthTex, dx_texCoord).x;
     float dxdx = centerDifference(dx_texCoord,vec2(del_x,0.0),h_x);

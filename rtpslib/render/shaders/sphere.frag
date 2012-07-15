@@ -1,11 +1,14 @@
-#version 120
+#version 330
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
 uniform float pointRadius;  // point size in world space
 //uniform float near;
 //uniform float far;
-varying in vec3 posEye;        // position of center in eye space
+smooth in vec3 posEye;        // position of center in eye space
+smooth in vec4 color;
+
+out vec4 colorOut;
 
 void main()
 {
@@ -28,7 +31,7 @@ void main()
 
     // Transform into window coordinates coordinates
     //(((far-near)/2.)*normDepth)+((far+near)/2.);
-    gl_FragDepth = normDepth;
 
-    gl_FragData[0] = gl_Color;
+    colorOut = color;
+    gl_FragDepth = normDepth;
 }

@@ -117,8 +117,8 @@ namespace rtps
             //frag = "";
             //readFile(shaderSrc+"/light_post_process.frag",frag);
             //addShader("lightPostProcess",vert,frag,geom,tessCont,tessEval);
-            vert = frag = "";
-            readFile(shaderSrc+"/normal.vert",vert);
+            frag = "";
+            //readFile(shaderSrc+"/normal.vert",vert);
             readFile(shaderSrc+"/normal.frag",frag);
             addShader("depth2NormalShader",vert,frag,geom,tessCont,tessEval);
             vert = frag = "";
