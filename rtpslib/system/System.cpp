@@ -548,4 +548,9 @@ namespace rtps
         acquiredGL=false;
     }
     RTPSSettings* System::getSettings() {return settings;}
+
+	void System::addInteractionSystem(System* interact)
+	{
+		interactionSystem.push_back(interact);
+	}
 }; //end namespace

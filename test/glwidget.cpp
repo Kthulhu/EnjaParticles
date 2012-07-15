@@ -22,12 +22,7 @@
 ****************************************************************************************/
 #include <GL/glew.h>
 #include <QGLWidget>
-<<<<<<< HEAD
-=======
 #include <QElapsedTimer>
-#include <QMouseEvent>
-#include <QKeyEvent>
->>>>>>> 3160daf59779a7b8c07dd9f5c8fa197a5393d6b1
 #include <QString>
 #include <QTimer>
 #include <QMouseEvent>
