@@ -24,7 +24,7 @@ smooth in vec3 lightDir;
 //smooth in vec3 halfLightDir;
 //in vec3 norm;
 //in vec3 lightDir;
-smooth out vec4 colorOut;
+out vec4 colorOut;
 void main(void) {
     vec3 ambientColor=material.ambient*light.ambient;
     //vec3 specularColor=material.specular*light.specular*pow(max(dot(nnorm, halfLightDir), 0.0) , material.shininess);

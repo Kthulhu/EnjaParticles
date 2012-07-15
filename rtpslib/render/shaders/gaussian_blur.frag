@@ -10,11 +10,11 @@ const float maxDepth = 0.9999999;
 smooth in vec2 texCoord;
 void main(void)
 {
-        float depth=texture2D(depthTex, texCoord.st).x;
-        if(depth>maxDepth)
-        {
-                discard;
-        }
+    float depth=texture2D(depthTex, texCoord.st).x;
+    if(depth>maxDepth)
+    {
+            discard;
+    }
    float sum = 0.0;
    float denom = (2.*sig*sig);
    int width = int(2.*sig)+1;

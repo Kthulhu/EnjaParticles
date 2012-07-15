@@ -76,7 +76,7 @@ namespace rtps
     //simulations to perform their updates.
     QTimer* timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    timer->start(33);
+    timer->start(30);
  }
 
  GLWidget::~GLWidget()
