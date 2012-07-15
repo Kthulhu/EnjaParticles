@@ -39,19 +39,23 @@ namespace rtps
 {
     void RenderUtils::fullscreenQuad(float width, float height)
     {
-        glBegin(GL_QUADS);
-        glTexCoord2f(0.f,0.f);
-        glVertex2f(0.f,0.f);
+        float vertices[] = {0.0f,0.0f,
+                            width,0.0f,
+                            width,height,
+                            0.0f,height};
+        float texCoord[] = {0.0f,0.0f,
+                            1.0f,0.0f,
+                            1.0f,1.0f,
+                            0.0f,1.0f};
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,vertices);
+        glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,texCoord);
 
-        glTexCoord2f(1.f,0.f);
-        glVertex2f(width,0.f);
+        glDrawArrays(GL_QUADS, 0, 1);
 
-        glTexCoord2f(1.f,1.f);
-        glVertex2f(width,height);
-
-        glTexCoord2f(0.f,1.f);
-        glVertex2f(0.f,height);
-        glEnd();
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
     }
     void RenderUtils::writeTextures(const map<string,GLuint>& texs)
     {
@@ -77,7 +81,7 @@ namespace rtps
             return -1;
         }
         GLubyte* image = new GLubyte[width*height*4];
-        dout<<"width = "<<width<<"height = "<<height<<endl;
+        //dout<<"width = "<<width<<"height = "<<height<<endl;
         if(depth)
         {
             dout<<"Here"<<endl;

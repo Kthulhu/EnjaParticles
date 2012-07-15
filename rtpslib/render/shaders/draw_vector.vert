@@ -1,15 +1,18 @@
-#version 120
+#version 330
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
-varying out vec4 vector;
-varying out vec4 color;
+layout(location = 0) in vec4 pos;
+layout(location = 1) in vec4 col;
+
+smooth out vec4 vector;
+smooth out vec4 color;
 
 void main() 
 {
-    gl_Position = projectionMatrix * viewMatrix * gl_Vertex;
-    vector = projectionMatrix * viewMatrix * gl_Color;
-    color = vec4(abs(normalize(gl_Color.rgb)),1.0);
+    gl_Position = projectionMatrix * viewMatrix * vec4(pos.xyz,1.0f);
+    vector = projectionMatrix * viewMatrix * vec4(col.xyz,1.0f);
+    color = vec4(abs(normalize(col.rgb)),1.0);
 }
 
 

@@ -1,3 +1,4 @@
+#version 330
 uniform mat4 inverseProjectionMatrix;
 struct Material
 {
@@ -24,10 +25,13 @@ uniform float del_x;
 uniform float del_y;
 const float maxDepth = 0.999999;
 
-vec3 uvToEye(vec2 texCoord,float z)
+smooth in vec2 texCoord;
+
+smooth out vec4 colorOut;
+vec3 uvToEye(vec2 texCoordinate,float z)
 {
 	// convert texture coordinate to homogeneous space
-	vec2 xyPos = (texCoord*2. -1.);
+        vec2 xyPos = (texCoordinate*2. -1.);
 	// construct clip-space position
 	vec4 clipPos = vec4( xyPos, z, 1.0 );
         vec4 viewPos =  (inverseProjectionMatrix * clipPos);
@@ -36,16 +40,16 @@ vec3 uvToEye(vec2 texCoord,float z)
 
 void main()
 {
-	float depth = texture2D(depthTex,gl_TexCoord[0].xy).x;
+        float depth = texture2D(depthTex,texCoord).x;
 	if(depth>maxDepth)
 	{
 		discard;
 		//return;
 	}
 
-	vec3 posEye = uvToEye(gl_TexCoord[0].xy,depth);
-	vec2 texCoord1 = vec2(gl_TexCoord[0].x+del_x,gl_TexCoord[0].y);
-	vec2 texCoord2 = vec2(gl_TexCoord[0].x-del_x,gl_TexCoord[0].y);
+        vec3 posEye = uvToEye(texCoord,depth);
+        vec2 texCoord1 = vec2(texCoord.x+del_x,texCoord.y);
+        vec2 texCoord2 = vec2(texCoord.x-del_x,texCoord.y);
 
 	vec3 ddx = uvToEye(texCoord1, texture2D(depthTex,texCoord1.xy).x)-posEye;
 	vec3 ddx2 = posEye-uvToEye(texCoord2, texture2D(depthTex,texCoord2.xy).x);
@@ -54,8 +58,8 @@ void main()
 		ddx = ddx2;
 	}
 
-	texCoord1 = vec2(gl_TexCoord[0].x,gl_TexCoord[0].y+del_y);
-	texCoord2 = vec2(gl_TexCoord[0].x,gl_TexCoord[0].y-del_y);
+        texCoord1 = vec2(texCoord.x,texCoord.y+del_y);
+        texCoord2 = vec2(texCoord.x,texCoord.y-del_y);
 
 	vec3 ddy = uvToEye(texCoord1, texture2D(depthTex,texCoord1.xy).x)-posEye;
 	vec3 ddy2 = posEye-uvToEye(texCoord2, texture2D(depthTex,texCoord2.xy).x);
@@ -73,6 +77,6 @@ void main()
         float spec = max(0.0,dot(n,ref));
         vec3 specularColor=material.specular*pow(spec,material.shininess);
         vec3 diffuseColor=material.diffuse*light.diffuse*max(dot(n,lightDir), 0.0);
-        gl_FragColor = vec4(ambientColor+specularColor+diffuseColor,material.opacity);
+        colorOut = vec4(ambientColor+specularColor+diffuseColor,material.opacity);
         //gl_FragColor = vec4(n,1.0f);
 }

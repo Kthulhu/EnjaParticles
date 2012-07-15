@@ -1,3 +1,4 @@
+#version 330
 uniform sampler2D depthTex; // the texture with the scene you want to blur
 uniform vec2 blurDir;
 uniform float sig_range;
@@ -5,9 +6,10 @@ uniform float sig;
 const float pi = 3.141592654f;
 const float maxDepth = 0.9999999f;
 
+smooth in vec2 texCoord;
 void main(void)
 {
-    float depth = texture2D(depthTex,gl_TexCoord[0].xy).x;
+    float depth = texture2D(depthTex,texCoord.xy).x;
     if(depth>maxDepth)
     {
             discard;
@@ -21,7 +23,7 @@ void main(void)
 
     for(int x=-width; x<=width; x++)
     {
-            float samp = texture2D(depthTex,gl_TexCoord[0].xy+x*blurDir).x;
+            float samp = texture2D(depthTex,texCoord.xy+x*blurDir).x;
 
             float w = exp(-float(x*x)/denom1);
 

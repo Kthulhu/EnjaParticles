@@ -18,7 +18,7 @@ struct Light
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 meshMatrix;
-uniform mat4 normalMatrix;
+//uniform mat4 normalMatrix;
 
 uniform Material material;
 uniform Light light;
@@ -36,9 +36,11 @@ void main()
 {
     vec4 viewPos;
     vec3 eyePos;
-    norm = normalize((normalMatrix*vec4(normal,0.0f)).xyz);
+    mat4 modelview =viewMatrix*meshMatrix;
+    //vec4 temp =(mat3(inverse(modelview))*vec4(normal,0.0f));
+    norm = normalize(mat3(inverse(modelview))*normal);
     //norm = normalize(normal);
-    viewPos = viewMatrix*meshMatrix*vec4(pos,1.0f);
+    viewPos = modelview*vec4(pos,1.0f);
     eyePos = viewPos.xyz/viewPos.w;
     
     //color=col;

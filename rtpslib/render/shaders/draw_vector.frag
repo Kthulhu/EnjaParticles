@@ -1,4 +1,6 @@
-
+#version 330
+smooth in vec4 col;
+smooth out vec4 colorOut;
 void main(void) {
-    gl_FragColor = gl_Color;
+    colorOut = col;
 }

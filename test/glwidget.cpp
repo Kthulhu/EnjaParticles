@@ -225,6 +225,7 @@ namespace rtps
         //dout<<i->first<<" inverseProjectionMatrixLocation = "<<location<<endl;
         location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
         if(location!=-1)
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
             glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
         glUseProgram(0);
     }
@@ -344,7 +345,7 @@ namespace rtps
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
 #if 1
-        renderSkyBox();
+        //renderSkyBox();
         //display static opaque objects
         display(false);
 #if 1
@@ -353,7 +354,7 @@ namespace rtps
         {
             //for debugging only!!
             ParticleRigidBody* rbsys = (ParticleRigidBody*)systems[QString("rb1")];
-            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),light,NULL,0.1f);
+            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),light,NULL,0.05f);
         }
 #endif
         for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
@@ -459,6 +460,10 @@ void GLWidget::cameraChanged()
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+        location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
+        if(location!=-1)
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+            glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
 
     }
 }
