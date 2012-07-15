@@ -48,13 +48,31 @@ namespace rtps
             this->x = x;
             this->y = y;
             this->z = z;
-	    this->w = 0.0f;
+            this->w = 0.0f;
+        }
+        float3(const float3 &rhs)
+        {
+            *this=rhs;
+        }
+        float3& operator=(const float3 &rhs)
+        {
+            x=rhs.x;
+            y=rhs.y;
+            z=rhs.z;
+            return *this;
         }
         float3& operator+=(const float3 &rhs)
         {
             x+=rhs.x;
             y+=rhs.y;
             z+=rhs.z;
+            return *this;
+        }
+        float3& operator-=(const float3 &rhs)
+        {
+            x-=rhs.x;
+            y-=rhs.y;
+            z-=rhs.z;
             return *this;
         }
         friend float3 operator+(const float3& a, const float3& b)
@@ -176,7 +194,8 @@ namespace rtps
 
         float16()
         {
-            loadIdentity();
+            for(int i = 0;i<16;i++)
+                m[i]=0.0f;
         }
         float16(float a, float b, float c, float d,
                 float e, float f, float g, float h,
@@ -333,11 +352,14 @@ namespace rtps
         friend float16 operator*(const float16& lhs,const float16& rhs)
         {
             float16 retval;
-            for(int i = 0; i<16;i++)
+            for(int i = 0; i<4;i++)
             {
                 for(int j = 0; j<4; j++)
                 {
-                    retval.m[i]+=lhs.m[(i/4)*4+j]*rhs.m[(i%4)+j*4];
+                    for(int k = 0; k<4; k++)
+                    {
+                        retval.m[i*4+j]+=lhs.m[i*4+k]*rhs.m[k*4+j];
+                    }
                 }
             }
             return retval;
@@ -599,6 +621,7 @@ namespace rtps
     //maybe these helper functions should go elsewhere?
     //or be functions of the structs
     RTPS_EXPORT float magnitude(float4 vec);
+    RTPS_EXPORT float magnitude(float3 vec);
     RTPS_EXPORT float dist_squared(float4 vec);
     RTPS_EXPORT float dot(float4 a, float4 b);
     RTPS_EXPORT float4 cross(float4 a, float4 b);

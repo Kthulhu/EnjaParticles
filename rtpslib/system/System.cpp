@@ -51,7 +51,6 @@ namespace rtps
         settings = set;
         cli = c;
         acquiredGL=false;
-
         max_num = settings->GetSettingAs<unsigned int>("max_num_particles");
         num = settings->GetSettingAs<unsigned int>("num_particles");
         maxGravSources=settings->GetSettingAs<unsigned int>("max_gravity_sources");

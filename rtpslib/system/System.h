@@ -52,6 +52,8 @@
 #include "../timer_eb.h"
 #include "../rtps_common.h"
 
+#include <vector>
+
 
 namespace rtps
 {

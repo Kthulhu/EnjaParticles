@@ -2,8 +2,11 @@
 #define CAMERA_H
 #include "../structs.h"
 #include "../rtps_common.h"
-#include "Quaternion.h"
-
+//#include "Quaternion.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
+#define PIOVER180 M_PI/180.0f
+#define PI2 2.f*M_PI
 // modified from http://content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation
 
 namespace rtps
@@ -29,20 +32,23 @@ public:
         aspectRatio=(double)width/(double)height;
         moveSpeed=1.0f;
         rotateSpeed=1.0f;
+        up=float3(0.0f,1.0f,0.0f);
+        forward=float3(0.0f,0.0f,-1.0f);
+        left=float3(-1.0f,0.0f,0.0f);
         currentProjection=PERSPECTIVE_PROJECTION;
         updateProjectionMatrix();
         updateViewMatrix();
     }
 
     void move(float delX,float delY,float delZ);
-    void moveX(float delX);
-    void moveY(float delY);
-    void moveZ(float delZ);
+    //void moveX(float delX);
+    //void moveY(float delY);
+    //void moveZ(float delZ);
 
 
     void rotate(float rotateDelX, float rotateDelY);
 
-    //void tick(float seconds);
+    bool tick(float seconds);
 
     void setFOV(double fov){this->fov=fov; updateProjectionMatrix();}
     double getFOV(){return fov;}
@@ -81,6 +87,9 @@ public:
     const float16& getInverseViewMatrix();
 
 protected:
+    void rotateX(float radiansX);
+    void rotateY(float radiansY);
+    void move(float3 delta);
     void updateProjectionMatrix();
     void updateViewMatrix();
     void setProjectionMatrixPerspective(double l, double r, double b, double t, double n,
@@ -89,12 +98,20 @@ protected:
                                   double f);
 
     float3 pos;
-    Quaternion rotation;
+    float3 rotationAngles;
+    //Quaternion rotation;
+    float3 up;
+    float3 forward;
+    float3 left;
+
+    float3 movement;
+    float3 rotation;
+
+
     float16 projectionMatrix;
     float16 invProjectionMatrix;
     float16 viewMatrix;
     float16 invViewMatrix;
-
 
     double nearClip;
     double farClip;

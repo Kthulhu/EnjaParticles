@@ -50,6 +50,8 @@ namespace rtps
         filterRadius=8.0f;
         falloff=0.001f;
         numberOfCurvatureIterations=50;
+        thickness=false;
+        //dout<<"width = "<<width<<"height = "<<height<<endl;
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness"],0);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT1_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColor"],0);
@@ -161,7 +163,7 @@ namespace rtps
 
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
-
+        //dout<<"Here"<<endl;
         //perserve original buffer
         GLint buffer;
         glGetIntegerv(GL_DRAW_BUFFER,&buffer);
@@ -185,14 +187,14 @@ namespace rtps
             glDepthMask(GL_TRUE);
             glDisable(GL_BLEND);
         }
-
+        //dout<<"Here"<<endl;
         //Render Color and depth buffer of spheres.
         glDrawBuffer(GL_COLOR_ATTACHMENT4_EXT);
         glClearColor(0.0f,0.0f,0.0f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderPointsAsSpheres(posVBO, colVBO, num, light,material,scale);
         //smoothDepth();
-
+        //dout<<"Here"<<endl;
 
         //Smooth the depth texture to emulate a surface.
         //glDrawBuffer(GL_COLOR_ATTACHMENT1);
@@ -202,9 +204,10 @@ namespace rtps
         currentDepthBuffer="depth2";
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
+        //dout<<"Here"<<endl;
 
         smoothDepth();
+        //dout<<"Here"<<endl;
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
         //If no shader was used to smooth then we need the original depth texture
 
@@ -276,7 +279,7 @@ namespace rtps
             glUniform3fv(glGetUniformLocation(normalProgram,"light.pos"),1,&defaultLight.pos.x);
         }
         RenderUtils::fullscreenQuad(width, height);
-
+        //dout<<"Here"<<endl;
         //TODO: should add another shader for performing compositing
 
         /*
@@ -302,7 +305,7 @@ namespace rtps
         glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);
         RenderUtils::fullscreenQuad(width,height);
 
-
+        //dout<<"Here"<<endl;
 
         glUseProgram(0);
         glBindTexture(GL_TEXTURE_2D,0);

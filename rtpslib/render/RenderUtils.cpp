@@ -66,16 +66,25 @@ namespace rtps
     }
     int RenderUtils::writeTexture( GLuint tex, const string& filename, bool depth)
     {
+        dout<<"Here"<<endl;
         glBindTexture(GL_TEXTURE_2D,tex);
-        GLint width,height;
-        glGetTexLevelParameteriv(tex , 0 , GL_TEXTURE_WIDTH , &width);
-        glGetTexLevelParameteriv(tex , 0 , GL_TEXTURE_HEIGHT , &height);
+        GLint width=0,height=0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D , 0 , GL_TEXTURE_WIDTH , &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D , 0 , GL_TEXTURE_HEIGHT , &height);
+        if(width==0||height==0)
+        {
+            cout<<"invalid height and width!"<<endl;
+            return -1;
+        }
         GLubyte* image = new GLubyte[width*height*4];
+        dout<<"width = "<<width<<"height = "<<height<<endl;
         if(depth)
         {
+            dout<<"Here"<<endl;
             GLfloat* fimg = new GLfloat[width*height];
             glGetTexImage(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT,GL_FLOAT,fimg);
             convertDepthToRGB(fimg,width*height,image);
+            dout<<"Here"<<endl;
             delete[] fimg;
         }
         else
@@ -87,10 +96,10 @@ namespace rtps
             cout<<"failed to write image "<<filename<<endl;
             return -1;
         }
-
+        dout<<"Here"<<endl;
         glBindTexture(GL_TEXTURE_2D,0);
         delete[] image;
-
+        dout<<"Here"<<endl;
         return 0;
     }
 
