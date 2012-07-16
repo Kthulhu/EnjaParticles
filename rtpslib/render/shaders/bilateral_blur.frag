@@ -6,7 +6,9 @@ uniform float sig;
 const float pi = 3.141592654f;
 const float maxDepth = 0.9999999f;
 
-smooth in vec2 texCoord;
+in vec2 texCoord;
+out vec4 colorOut;
+
 void main(void)
 {
     float depth = texture2D(depthTex,texCoord.xy).x;
@@ -37,6 +39,6 @@ void main(void)
             sum /= wsum;
     }
 
-    gl_FragData[0] = vec4(sum,sum,sum,1.0f);
+    colorOut = vec4(sum,sum,sum,1.0f);
     gl_FragDepth=sum;
 }

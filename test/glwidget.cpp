@@ -22,6 +22,7 @@
 ****************************************************************************************/
 #include <GL/glew.h>
 #include <QGLWidget>
+#include <QSizePolicy>
 #include <QElapsedTimer>
 #include <QMouseEvent>
 #include <QKeyEvent>
@@ -123,8 +124,8 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     sizeScale=1.0f;
     //string scenefile = path+"/demo_scene.obj";
 
-    renderVelocity=true;
-    //renderVelocity=false;
+    //renderVelocity=true;
+    renderVelocity=false;
     paused=false;
     scene=new AIWrapper();
     dynamicMeshScene=new AIWrapper();
@@ -185,7 +186,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
      if(!view)
      {
         //view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,100.0,width(),height());
-         view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,100.0,width(),height());
+         view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,500.0,width(),height());
         //view = new Camera(float3(0.0f,0.0f,0.0f),65.0f,0.3f,100.0f,width(),height());
         //view = new Camera(float3(-105.0f,-105.0f,-105.0f),65.0f,0.3f,1000.0f,width(),height());
         //the models are all in different coordinate systems...
@@ -207,48 +208,6 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
      glBufferData(GL_ARRAY_BUFFER,24*3*sizeof(float),skyBoxTex, GL_STATIC_DRAW);
      glBindBuffer(GL_ARRAY_BUFFER,0);
      }
-     //DEBUGGING===========
-     //const float16& myProjectionMatrix = view->getProjectionMatrix();
-     //const float16& myViewMatrix = view->getViewMatrix();
-     //float16 projectionMatrix;
-     //float16 viewMatrix;
-
-     // projection
-     //glMatrixMode(GL_PROJECTION);
-     //glLoadIdentity();
-     //gluPerspective(60.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 100.0);
-     //gluPerspective(65.0, (double)width() / (double)height(), 0.3, 100.0);
-     //gluPerspective(90.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 10000.0); //for lorentz
-
-     // set view matrix
-     //glClearColor(.9f, .9f, .9f, 1.0f);
-     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-     //glMatrixMode(GL_MODELVIEW);
-     //glLoadIdentity();
-     //glRotatef(-90, 1.0, 0.0, 0.0);
-
-     //glRotatef(0.0, 1.0, 0.0, 0.0);
-     //glRotatef(0.0, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-     //glTranslatef(-5., 5., -5.);
-
-     //glGetFloatv(GL_PROJECTION_MATRIX,projectionMatrix.m);
-     //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
-
-     //if(!(myProjectionMatrix==projectionMatrix))
-     //{
-     //    dout<<"I'm not correctly caclulating my projection matrix."<<endl;
-     //}
-     //myProjectionMatrix.print("myProjectionMatrix");
-     //projectionMatrix.print("projectionMatrix");
-     //if(!(viewMatrix==myViewMatrix))
-     //{
-     //    dout<<"I'm not correctly calculating my view Matrix."<<endl;
-     //}
-     //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
-     //myViewMatrix.print("viewMatrix");
-     //viewMatrix.print("viewMatrix");
-
-     //DEBUGGING===========
 
      if(!cli)
         cli = new CL();
@@ -270,9 +229,10 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     if(!lib){
         lib = new ShaderLibrary();
         lib->initializeShaders(binaryPath+"/shaders");
-        effects["Points"]=new ParticleEffect(lib,width(),height(),5.0f,false);
-        //effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),.75f,true);
-        effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),2.f,false);
+        //effects["Points"]=new ParticleEffect(lib,width(),height(),5.0f,false);
+        effects["Points"]=new ParticleEffect(lib,width(),height(),0.75f,false);
+        effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),.75f,true);
+        //effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),2.f,false);
         effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),.75f,false);
 
         //FIXME: Need to find an elegant solution to handling mesh effects
@@ -333,18 +293,14 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 
      // draw the skybox
 
-     //glVertexPointer(3, GL_FLOAT, 0, skyBox);
-     //glTexCoordPointer(3, GL_FLOAT, 0, skyBoxTex);
      glEnableVertexAttribArray(0);
      glEnableVertexAttribArray(1);
-     //glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,skyBox);
-     //glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,skyBoxTex);
      glBindBuffer(GL_ARRAY_BUFFER,skyboxVBO);
      glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
      glBindBuffer(GL_ARRAY_BUFFER,skyboxTexVBO);
      glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
 
-     //glDrawArrays(GL_QUADS, 0, 24);
+     glDrawArrays(GL_QUADS, 0, 24);
 
      glDisableVertexAttribArray(0);
      glDisableVertexAttribArray(1);

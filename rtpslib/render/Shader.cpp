@@ -77,7 +77,7 @@ namespace rtps
             compileShader(GL_TESS_EVALUATION_SHADER, "Tesselation Evaluation Shader",program);
         }
         #endif
-
+        glBindFragDataLocation(program, 0, "colorOut");
         glLinkProgram(program);
 
         // check if program linked

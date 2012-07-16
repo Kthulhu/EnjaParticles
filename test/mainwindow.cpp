@@ -12,8 +12,10 @@ namespace rtps
  {
      centralWidget = new QWidget;
      setCentralWidget(centralWidget);
-     QGLFormat fmt(QGL::AlphaChannel|QGL::DeprecatedFunctions|QGL::SampleBuffers);
-     fmt.setProfile(QGLFormat::CompatibilityProfile);
+     //QGLFormat fmt(QGL::AlphaChannel|QGL::DeprecatedFunctions|QGL::SampleBuffers);
+     //fmt.setProfile(QGLFormat::CompatibilityProfile);
+     QGLFormat fmt(QGL::AlphaChannel|QGL::SampleBuffers);
+     fmt.setProfile(QGLFormat::CoreProfile);
      QGLContext* ctx = new QGLContext(fmt);
 
      glWidget = new GLWidget(ctx,path,this);

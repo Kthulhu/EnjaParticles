@@ -54,12 +54,13 @@ namespace rtps
         //dout<<"width = "<<width<<"height = "<<height<<endl;
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT1_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColor"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT2_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT3_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["lightColor"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT4_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT5_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColorSmooth"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT1_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColor"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT2_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT3_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["lightColor"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT4_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT5_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColorSmooth"],0);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
+        dout<<"fbo[0] = "<<m_fbos[0]<<" status complete? "<<((glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE)?"yes":"no")<<" "<<glCheckFramebufferStatus(GL_FRAMEBUFFER)<<endl;
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
     }
     void SSEffect::smoothDepth()
@@ -77,7 +78,7 @@ namespace rtps
                 glUniform1f( glGetUniformLocation(smoothingProgram, "del_x"),1.0f/(float)width);
                 glUniform1f( glGetUniformLocation(smoothingProgram, "falloff"),falloff);
                 glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),filterRadius);
-                RenderUtils::fullscreenQuad(width,height);
+                RenderUtils::fullscreenQuad();
 
                 glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
                 currentDepthBuffer="depth";
@@ -111,7 +112,7 @@ namespace rtps
                 glUniform2fv( glGetUniformLocation(smoothingProgram, "blurDir"),1,xdir);
                 glUniform1f( glGetUniformLocation(smoothingProgram, "sig_range"),bilateralRange);
                 glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),filterRadius);
-                RenderUtils::fullscreenQuad(width,height);
+                RenderUtils::fullscreenQuad();
 
                 glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
                 glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
@@ -141,7 +142,7 @@ namespace rtps
 
                 for(unsigned int i = 0; i<numberOfCurvatureIterations; i++)
                 {
-                    RenderUtils::fullscreenQuad(width,height);
+                    RenderUtils::fullscreenQuad();
                     glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
                     if(i%2)
                         currentDepthBuffer="depth";
@@ -155,7 +156,7 @@ namespace rtps
             default:
                 break;
         }
-        RenderUtils::fullscreenQuad(width,height);
+        RenderUtils::fullscreenQuad();
     }
 
     void SSEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale)
@@ -168,10 +169,9 @@ namespace rtps
         //perserve original buffer
         GLint buffer;
         glGetIntegerv(GL_DRAW_BUFFER,&buffer);
-        glEnable(GL_TEXTURE_2D);
 
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
-
+        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         //Should probably conditionally create the thickness buffer as well.
         //Render Thickness buffer.
         if(thickness)
@@ -181,7 +181,7 @@ namespace rtps
             //glDrawBuffers(2,buffers);
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
-            glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+            //glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
             glClearColor(0.0f,0.0f,0.0f,0.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             renderPointsAsSpheres(posVBO, colVBO, num, light,material,scale);
@@ -192,17 +192,20 @@ namespace rtps
         glEnable(GL_DEPTH_TEST);
         //dout<<"Here"<<endl;
         //Render Color and depth buffer of spheres.
-        glDrawBuffer(GL_COLOR_ATTACHMENT4_EXT);
-        glClearColor(0.0f,0.0f,0.0f,1.0f);
+        //glDrawBuffer(GL_COLOR_ATTACHMENT4_EXT);
+        //glClearColor(0.0f,0.0f,0.0f,1.0f);
+        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderPointsAsSpheres(posVBO, colVBO, num, light,material,scale);
         //smoothDepth();
         //dout<<"Here"<<endl;
 
+        glEnable(GL_TEXTURE_2D);
         //Smooth the depth texture to emulate a surface.
         //glDrawBuffer(GL_COLOR_ATTACHMENT1);
         //glBindFramebuffer(GL_DRAW_FRAMEBUFFER,0);
-        glDrawBuffer(GL_COLOR_ATTACHMENT5_EXT);
+        //glDrawBuffer(GL_COLOR_ATTACHMENT5_EXT);
+        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColorSmooth"],0);
         glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
         currentDepthBuffer="depth2";
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
@@ -231,8 +234,9 @@ namespace rtps
         //glActiveTexture(GL_TEXTURE1);
         //glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["Color"]);
         //Render the normals for the new "surface".
-        glDrawBuffer(GL_COLOR_ATTACHMENT2_EXT);
-        glClearColor(0.0f,0.0f,0.0f,1.0f);
+        //glDrawBuffer(GL_COLOR_ATTACHMENT2_EXT);
+        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"],0);
+        //glClearColor(0.0f,0.0f,0.0f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         GLuint normalProgram = m_shaderLibrary->shaders["depth2NormalShader"].getProgram();
         glUseProgram(normalProgram);
@@ -281,7 +285,7 @@ namespace rtps
             glUniform3fv(glGetUniformLocation(normalProgram,"light.ambient"),1,&defaultLight.ambient.x);
             glUniform3fv(glGetUniformLocation(normalProgram,"light.position"),1,&defaultLight.pos.x);
         }
-        RenderUtils::fullscreenQuad(width, height);
+        RenderUtils::fullscreenQuad();
         //dout<<"Here"<<endl;
         //TODO: should add another shader for performing compositing
 
@@ -306,7 +310,7 @@ namespace rtps
         glUseProgram(copyProgram);
         glUniform1i( glGetUniformLocation(copyProgram, "normalTex"),0);
         glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);
-        RenderUtils::fullscreenQuad(width,height);
+        RenderUtils::fullscreenQuad();
 
         glUseProgram(0);
         glBindTexture(GL_TEXTURE_2D,0);
@@ -413,11 +417,11 @@ namespace rtps
         createFramebufferTextures();
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT1_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColor"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT2_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT3_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["lightColor"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT4_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
-        glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT5_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColorSmooth"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT1_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColor"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT2_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT3_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["lightColor"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT4_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
+        //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT5_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColorSmooth"],0);
         glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
     }

@@ -32,5 +32,6 @@ void main()
     //(((far-near)/2.)*normDepth)+((far+near)/2.);
 
     colorOut = color;
+    //colorOut=vec4(1.0f,0.0f,0.0f,1.0f);
     gl_FragDepth = normDepth;
 }

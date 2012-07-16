@@ -37,16 +37,16 @@ using namespace std;
 
 namespace rtps
 {
-    void RenderUtils::fullscreenQuad(float width, float height)
+    void RenderUtils::fullscreenQuad()
     {
-        float vertices[] = {0.0f,0.0f,
-                            0.0f,height,
-                            width,height,
-                            width,0.0f};
-        float texCoord[] = {0.0f,0.0f,
-                            0.0f,1.0f,
+        float vertices[] = {-1.0f,-1.0f,
+                            1.0f,-1.0f,
                             1.0f,1.0f,
-                            1.0f,0.0f};
+                            -1.0f,1.0f};
+        float texCoord[] = {0.0f,0.0f,
+                            1.0f,0.0f,
+                            1.0f,1.0f,
+                            0.0f,1.0f};
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,vertices);
@@ -70,7 +70,8 @@ namespace rtps
     }
     int RenderUtils::writeTexture( GLuint tex, const string& filename, bool depth)
     {
-        dout<<"Here"<<endl;
+        glEnable(GL_TEXTURE_2D);
+        //dout<<"Here"<<endl;
         glBindTexture(GL_TEXTURE_2D,tex);
         GLint width=0,height=0;
         glGetTexLevelParameteriv(GL_TEXTURE_2D , 0 , GL_TEXTURE_WIDTH , &width);
@@ -78,13 +79,14 @@ namespace rtps
         if(width==0||height==0)
         {
             cout<<"invalid height and width!"<<endl;
+            glDisable(GL_TEXTURE_2D);
             return -1;
         }
         GLubyte* image = new GLubyte[width*height*4];
         //dout<<"width = "<<width<<"height = "<<height<<endl;
         if(depth)
         {
-            dout<<"Here"<<endl;
+            //dout<<"Here"<<endl;
             GLfloat* fimg = new GLfloat[width*height];
             glGetTexImage(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT,GL_FLOAT,fimg);
             convertDepthToRGB(fimg,width*height,image);
@@ -98,12 +100,14 @@ namespace rtps
         if (!stbi_write_png(filename.c_str(),width,height,4,(void*)image,0))
         {
             cout<<"failed to write image "<<filename<<endl;
+            glDisable(GL_TEXTURE_2D);
             return -1;
         }
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
         glBindTexture(GL_TEXTURE_2D,0);
         delete[] image;
-        dout<<"Here"<<endl;
+        //dout<<"Here"<<endl;
+        glDisable(GL_TEXTURE_2D);
         return 0;
     }
 

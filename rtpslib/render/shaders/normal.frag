@@ -25,9 +25,9 @@ uniform float del_x;
 uniform float del_y;
 const float maxDepth = 0.999999;
 
-smooth in vec2 texCoord;
+in vec2 texCoord;
+out vec4 colorOut;
 
-smooth out vec4 colorOut;
 vec3 uvToEye(vec2 texCoordinate,float z)
 {
 	// convert texture coordinate to homogeneous space
@@ -78,5 +78,5 @@ void main()
         vec3 specularColor=material.specular*pow(spec,material.shininess);
         vec3 diffuseColor=material.diffuse*light.diffuse*max(dot(n,lightDir), 0.0);
         colorOut = vec4(ambientColor+specularColor+diffuseColor,material.opacity);
-        //gl_FragColor = vec4(n,1.0f);
+        //colorOut = vec4(n,1.0f);
 }

@@ -7,7 +7,9 @@ uniform float del_y;
 uniform float falloff;
 uniform float sig;
 const float maxDepth = 0.9999999;
-smooth in vec2 texCoord;
+in vec2 texCoord;
+out vec4 colorOut;
+
 void main(void)
 {
     float depth=texture2D(depthTex, texCoord.st).x;
@@ -29,6 +31,6 @@ void main(void)
                 }
    }
    sum*= (1./(2.*pi*sig*sig));
-   gl_FragData[0] = vec4(sum,sum,sum,1.0);
+   colorOut = vec4(sum,sum,sum,1.0);
    gl_FragDepth = sum;
 }

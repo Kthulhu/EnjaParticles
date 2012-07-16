@@ -108,12 +108,12 @@ namespace rtps
 
         //if(renderAsSpheres)
         //{
-        //    renderPointsAsSpheres(posVBO,colVBO,num,light,material,scale);
+            renderPointsAsSpheres(posVBO,colVBO,num,light,material,scale);
         //}
         //else
         //{
-            glUseProgram(m_shaderLibrary->shaders["passThrough"].getProgram() );
-            drawArrays(posVBO, colVBO, num);
+            //glUseProgram(m_shaderLibrary->shaders["passThrough"].getProgram() );
+            //drawArrays(posVBO, colVBO, num);
         //}
         glDepthMask(GL_TRUE);
 
@@ -141,7 +141,7 @@ namespace rtps
         if(num==0)
             return;
         glEnable(GL_POINT_SPRITE);
-        glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+        //glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
         GLuint program = m_shaderLibrary->shaders["sphereShader"].getProgram();
 
