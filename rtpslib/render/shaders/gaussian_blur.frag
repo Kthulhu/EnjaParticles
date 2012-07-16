@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 const float pi = 3.141592654;
 
 uniform sampler2D depthTex;

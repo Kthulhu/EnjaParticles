@@ -327,7 +327,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         glEnable(GL_DEPTH_TEST);
         renderSkyBox();
 
-        //glEnable(GL_MULTISAMPLE_ARB);
+        glEnable(GL_MULTISAMPLE_ARB);
         //display static opaque objects
         display(false);
 #if 1
@@ -359,7 +359,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
 #endif
         glDisable(GL_DEPTH_TEST);
-        //glDisable(GL_MULTISAMPLE_ARB);
+        glDisable(GL_MULTISAMPLE_ARB);
         if(renderMovie)
         {
             writeMovieFrame("image","./frames/");
@@ -821,44 +821,44 @@ void GLWidget::setParameterValue(const QString& system, const QString& parameter
 }
 void GLWidget::loadScene(const QString& filename)
 {
-     scene->loadScene(filename);
-     scene->loadMeshes(meshes,scene->getScene()->mRootNode);
-     for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
-     {
-          ParticleShape* shape = createParticleShape("rb1",i->second);
-          //i->second->modelMat.m[12]=-5.;
-          //i->second->modelMat.m[13]=-5.;
-          //i->second->modelMat.m[14]=5.;
-            float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
-            //float16 mat=i->second->modelMat;
-            //FIXME: rotation should not be needed here. This is hackish
-            float16 mat;
-            mat.loadIdentity();
-            mat[5]=-1.0f;
-            mat[10]=-1.0f;
-            //mat.transpose();
-            float16 mat2;
-            mat2.loadIdentity();
-            mat2[0]=0.0f;
-            mat2[1]=-1.f;
-            mat2[4]=1.f;
-            mat2[5]=0.0f;
-            mat.print("mat before");
-            mat2.print("mat2");
-            mat=mat2*mat;
-            mat.print("mat after");
+    scene->loadScene(filename);
+    scene->loadMeshes(meshes,scene->getScene()->mRootNode);
+    for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
+    {
+        ParticleShape* shape = createParticleShape("rb1",i->second);
+        //i->second->modelMat.m[12]=-5.;
+        //i->second->modelMat.m[13]=-5.;
+        //i->second->modelMat.m[14]=5.;
+        float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+        //float16 mat=i->second->modelMat;
+        //FIXME: rotation should not be needed here. This is hackish
+        float16 mat;
+        mat.loadIdentity();
+        mat[5]=-1.0f;
+        mat[10]=-1.0f;
+        //mat.transpose();
+        float16 mat2;
+        mat2.loadIdentity();
+        mat2[0]=0.0f;
+        mat2[1]=-1.f;
+        mat2[4]=1.f;
+        mat2[5]=0.0f;
+        mat.print("mat before");
+        mat2.print("mat2");
+        mat=mat2*mat;
+        mat.print("mat after");
 
-            //memcpy(&mat,&i->second->modelMat,sizeof(float16));
-            //mat.print("mat before");
-            mat[3]+=trans;
-            mat[7]+=trans;
-            mat[11]+=trans;
-            //mat=mat2*mat;
-            //mat = mat*view->getViewMatrix();
-            //mat.print("mat after");
-          systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
-          pShapes[i->first]=shape;
-     }
+        //memcpy(&mat,&i->second->modelMat,sizeof(float16));
+        //mat.print("mat before");
+        mat[3]+=trans;
+        mat[7]+=trans;
+        mat[11]+=trans;
+        //mat=mat2*mat;
+        //mat = mat*view->getViewMatrix();
+        //mat.print("mat after");
+        systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
+        pShapes[i->first]=shape;
+    }
 }
 void GLWidget::loadMeshScene(const QString& filename)
 {
@@ -883,23 +883,23 @@ void GLWidget::ResetSimulations()
 }
 void GLWidget::update()
 {
-        if(!paused)
+    if(!paused)
+    {
+        glFinish();
+        for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
-            glFinish();
-            for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-            {
-                i->second->acquireGLBuffers();
-                i->second->update();
-                i->second->interact();
-            }
-
-            for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-            {
-                i->second->integrate();
-                i->second->postProcess();
-                i->second->releaseGLBuffers();
-            }
+            i->second->acquireGLBuffers();
+            i->second->update();
+            i->second->interact();
         }
+
+        for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        {
+            i->second->integrate();
+            i->second->postProcess();
+            i->second->releaseGLBuffers();
+        }
+    }
 	updateGL();
 }
 void GLWidget::changeRenderer(const QString& system, const QString& renderer)
@@ -907,6 +907,6 @@ void GLWidget::changeRenderer(const QString& system, const QString& renderer)
      //dout<<"system = "<<(const char*)system.toAscii().data()<<"renderer = "<<(const char*)renderer.toAscii().data()<<endl;
      systemRenderType[system]=renderer;
      //FIXME: temporary Debugging hack!
-     effects[renderer]->writeBuffersToDisk();
+     //effects[renderer]->writeBuffersToDisk();
 }
 }

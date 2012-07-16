@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 uniform sampler2D depthTex; // the texture with the scene you want to blur
 uniform float del_y;
 uniform float falloff;

@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 uniform samplerCube skyboxCubeSampler;
 in vec3 texCoord;
 out vec4 colorOut;

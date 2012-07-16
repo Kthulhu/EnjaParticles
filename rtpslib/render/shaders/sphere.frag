@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 uniform mat4 projectionMatrix;
 
 uniform float pointRadius;  // point size in world space
