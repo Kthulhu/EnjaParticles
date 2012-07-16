@@ -382,6 +382,7 @@ namespace rtps
             writeMovieFrame("image","./frames/");
             frameCounter++;
         }
+		//swapBuffers();
  }
 
 void GLWidget::resizeGL(int width, int height)

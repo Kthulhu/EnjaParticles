@@ -264,7 +264,7 @@ namespace rtps
         GLuint RenderUtils::loadCubemapTexture(const string& texpath)
     {
         //Load an image with stb_image
-        int w,h,channels;
+        int w=0,h=0,channels=0;
         int force_channels = 0;
 
         unsigned char *imposx = stbi_load( string(texpath).append("posx.jpg").c_str(), &w, &h, &channels, force_channels );
@@ -273,6 +273,11 @@ namespace rtps
         unsigned char *imnegx = stbi_load( string(texpath).append("negx.jpg").c_str(), &w, &h, &channels, force_channels );
         unsigned char *imnegy = stbi_load( string(texpath).append("negy.jpg").c_str(), &w, &h, &channels, force_channels );
         unsigned char *imnegz = stbi_load( string(texpath).append("negz.jpg").c_str(), &w, &h, &channels, force_channels );
+		if(channels==0||w==0||h==0)
+		{
+			cout<<"couldn't read cubemap textures from "<<texpath<<"!"<<endl;
+			return 0;
+		}
 
         GLuint retTex=0;
         glEnable(GL_TEXTURE_CUBE_MAP);
