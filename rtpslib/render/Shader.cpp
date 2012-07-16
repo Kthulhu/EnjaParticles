@@ -55,7 +55,7 @@ namespace rtps
 
         compileShader(GL_VERTEX_SHADER, "Vertex Shader",  program);
         compileShader(GL_FRAGMENT_SHADER, "Fragment Shader",  program);
-		#ifdef GL_GEOMETRY_SHADER
+        #ifdef GL_GEOMETRY_SHADER
         if (shaderSrc[GL_GEOMETRY_SHADER].length())
         {
             compileShader(GL_GEOMETRY_SHADER, "Geometry Shader",program);
