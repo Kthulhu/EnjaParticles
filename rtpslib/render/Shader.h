@@ -58,9 +58,9 @@ namespace rtps
                 shaderSrc[GL_TESS_CONTROL_SHADER]="";
                 shaderSrc[GL_TESS_EVALUATION_SHADER]="";
             #endif
-			#ifdef GL_GEOMETRY_SHADER
+            #ifdef GL_GEOMETRY_SHADER
             shaderSrc[GL_GEOMETRY_SHADER]="";
-			#endif
+            #endif
             shaderSrc[GL_FRAGMENT_SHADER]="";
         }
         ~Shader();

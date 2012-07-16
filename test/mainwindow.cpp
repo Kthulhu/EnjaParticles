@@ -12,8 +12,10 @@ namespace rtps
  {
      centralWidget = new QWidget;
      setCentralWidget(centralWidget);
-     QGLFormat fmt(QGL::AlphaChannel|QGL::DeprecatedFunctions|QGL::SampleBuffers);
-     fmt.setProfile(QGLFormat::CompatibilityProfile);
+     //QGLFormat fmt(QGL::AlphaChannel|QGL::DeprecatedFunctions|QGL::SampleBuffers);
+     //fmt.setProfile(QGLFormat::CompatibilityProfile);
+     QGLFormat fmt(QGL::AlphaChannel|QGL::SampleBuffers);
+     fmt.setProfile(QGLFormat::CoreProfile);
      QGLContext* ctx = new QGLContext(fmt);
 
 	 ctx->makeCurrent();
@@ -135,10 +137,10 @@ namespace rtps
 void MainWindow::setSystemNames(const std::vector<std::string>& sysNames)
 {
     systemSelector->clear();
-for(int i = 0;i<sysNames.size(); i++)
-{
-    systemSelector->addItem(QString(sysNames[i].c_str()));
-}
+    for(int i = 0;i<sysNames.size(); i++)
+    {
+        systemSelector->addItem(QString(sysNames[i].c_str()));
+    }
 }
 
 /* QSlider *MainWindow::createSlider(const char *name)
@@ -169,5 +171,4 @@ void MainWindow::valueChanged(const QString& parameterName, const QString& value
     dout<<"----------"<<endl;*/
     emit parameterValueChanged(system,parameterName,value);
 }
-
 }

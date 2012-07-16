@@ -1,20 +1,21 @@
-#version 330
+#version 330 core
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
 uniform sampler2D normalTex;
 uniform sampler2D depthTex;
-smooth in vec2 texCoord;
+in vec2 texCoord;
+out vec4 colorOut;
 
 void main(void)
 {
     float fldepth = texture2D(depthTex, texCoord.xy).x;
-    if(fldepth > .999)
+    if(fldepth > .9999999f)
     {
         discard;
     }    
-    gl_FragColor = texture2D(normalTex, texCoord.xy);
+    colorOut = texture2D(normalTex, texCoord.xy);
     gl_FragDepth = fldepth;
 
 }

@@ -185,6 +185,7 @@ namespace rtps
         glDisable(GL_POINT_SMOOTH);
         glDisable(GL_LINE_SMOOTH);
         glDisable(GL_MULTISAMPLE_EXT);
+        glEnable(GL_DEPTH_TEST);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glDrawBuffer(GL_BACK);
         glClearColor(col[0],col[1],col[2],col[3]);
@@ -301,6 +302,7 @@ namespace rtps
         }*/
         glLogicOp(GL_COPY);
         glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
         glDisable(GL_COLOR_LOGIC_OP);
 		glDisableClientState( GL_VERTEX_ARRAY );
         glViewport(v[0],v[1],v[2],v[3]);

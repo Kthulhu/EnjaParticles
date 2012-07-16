@@ -90,7 +90,8 @@ namespace rtps
 
         AIWrapper* scene;
         AIWrapper* dynamicMeshScene;
-        GLuint scene_list;
+        //GLuint scene_list;
+        GLuint skyboxVBO,skyboxTexVBO;
 
         int frameCounter;
         bool renderMovie;

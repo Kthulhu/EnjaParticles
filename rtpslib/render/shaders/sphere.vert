@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
@@ -18,7 +18,7 @@ void main()
     gl_PointSize = pointRadius * (pointScale / dist);
 
     //gl_TexCoord[0] = gl_MultiTexCoord0;
-    gl_Position = projectionMatrix * viewMatrix * vec4(pos.xyz, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * vec4(pos.xyz, 1.0f);
 
     color = col;
 }

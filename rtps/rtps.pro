@@ -69,7 +69,8 @@ SOURCES += \
     ../rtpslib/system/ParticleRigidBody.cpp \
     ../rtpslib/system/FLOCKSettings.cpp \
     ../rtpslib/system/FLOCK.cpp \
-    ../rtpslib/system/boids.cpp
+    ../rtpslib/system/boids.cpp \
+    ../rtpslib/render/ShaderLibrary.cpp
 
 FORMS += \
     ../test/mainwindow.ui

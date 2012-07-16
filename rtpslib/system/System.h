@@ -86,7 +86,8 @@ namespace rtps
         virtual void setNum(int nn)
         {
             num = nn;
-        };//should this be public
+        }
+        //should this be public
         GLuint getPosVBO()
         {
             return pos_vbo;

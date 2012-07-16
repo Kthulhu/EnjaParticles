@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 struct Material
 {
     vec3 diffuse;
@@ -12,7 +12,7 @@ struct Light
     vec3 diffuse;
     vec3 specular;
     vec3 ambient;
-    vec3 pos;
+    vec3 position;
 };
 
 uniform mat4 projectionMatrix;
@@ -55,7 +55,7 @@ void main()
     viewPos = viewMatrix*vec4(localcoord.xyz+com_pos.xyz,1.0);
     eyePos = viewPos.xyz/viewPos.w;
 
-    lightDir = normalize(light.pos-eyePos);
+    lightDir = normalize(light.position-eyePos);
     //lightDir = normalize(light.pos);
 
     gl_Position= projectionMatrix*viewPos;

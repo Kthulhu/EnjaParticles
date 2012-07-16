@@ -67,6 +67,8 @@ namespace rtps
     //----------------------------------------------------------------------
     void ParticleEffect::drawArrays(GLuint posVBO, GLuint colVBO, unsigned int num)
     {
+        if(num==0)
+            return;
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, posVBO);
@@ -83,12 +85,13 @@ namespace rtps
     //----------------------------------------------------------------------
     void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale )
     {
-
-        glDepthMask(GL_TRUE);
+        if(num==0)
+            return;
+        //glDepthMask(GL_TRUE);
         if(blending)
         {
-            //glDisable(GL_DEPTH_TEST);
-            glDepthMask(GL_FALSE);
+            glDisable(GL_DEPTH_TEST);
+            //glDepthMask(GL_FALSE);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
@@ -105,20 +108,19 @@ namespace rtps
 
         //if(renderAsSpheres)
         //{
-        //    renderPointsAsSpheres(posVBO,colVBO,num,light,material,scale);
+        //   renderPointsAsSpheres(posVBO,colVBO,num,light,material,scale);
         //}
         //else
         //{
             glUseProgram(m_shaderLibrary->shaders["passThrough"].getProgram() );
             drawArrays(posVBO, colVBO, num);
         //}
-        glDepthMask(GL_TRUE);
+        //glDepthMask(GL_TRUE);
 
-        glDisable(GL_LIGHTING);
-
-        //glDisable(GL_POINT_SMOOTH);
+        glDisable(GL_POINT_SMOOTH);
         if (blending)
         {
+            glEnable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
         }
         //glEnable(GL_LIGHTING);
@@ -135,9 +137,11 @@ namespace rtps
 
     void ParticleEffect::renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale)
     {
-
+        if(num==0)
+            return;
+        glEnable(GL_POINT_SMOOTH);
         glEnable(GL_POINT_SPRITE);
-        glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+        //glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
         GLuint program = m_shaderLibrary->shaders["sphereShader"].getProgram();
 
@@ -150,25 +154,16 @@ namespace rtps
 
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
         glDisable(GL_POINT_SPRITE);
+        glDisable(GL_POINT_SMOOTH);
     }
 
     void ParticleEffect::renderVector(GLuint posVBO, GLuint vecVBO,  unsigned int num, float scale)
     {
-
+        if(num==0)
+            return;
         glUseProgram(m_shaderLibrary->shaders["vectorShader"].getProgram());
         glUniform1f(glGetUniformLocation(m_shaderLibrary->shaders["vectorShader"].getProgram(), "scale"),scale);
         drawArrays(posVBO,vecVBO,num);
-        /*glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, posVBO);
-        glVertexAttribPointer(0,4,GL_FLOAT,GL_FALSE,0,0);
-        glBindBuffer(GL_ARRAY_BUFFER, vecVBO);
-        glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
-
-        glDrawArrays(GL_POINTS, 0, num);
-
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);*/
         glUseProgram(0);
     }
 }

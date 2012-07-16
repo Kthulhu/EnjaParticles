@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
@@ -11,7 +11,8 @@ uniform float h_x;
 uniform float h_y;
 uniform float dt;
 uniform float distance_threshold;
-smooth in vec2 texCoord;
+in vec2 texCoord;
+//consider using textureGrad() for derivative information.
 
 float secondOrderCenterDifference(vec2 texCoord,float depth, vec2 dir, float h)
 {

@@ -61,5 +61,5 @@ void rendererChanged(const QString& system, const QString& renderer);
      QAction *aboutAct;
      QAction *aboutQtAct;
  };
-};
+}
  #endif

@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 struct Material
 {
 	vec3 diffuse;
@@ -24,6 +24,8 @@ uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 inverseViewMatrix; //ViewMatrixInverse or ViewMatrixTranspose
 smooth in vec3 normalVec, eyeVec, lightVec;
+
+out vec4 colorOut;
 
 //uniform sampler2D reflectionEquiSampler;
 uniform samplerCube reflectionCubeSampler;
@@ -130,5 +132,5 @@ void main(void)
 
 	//final color
 	vec3 final = mix(transmittance, reflection, fresnel+(reflectivity*(fresnel*0.1+0.9)));
-	gl_FragColor = vec4(final,material.opacity);
+        colorOut = vec4(final,material.opacity);
 }
