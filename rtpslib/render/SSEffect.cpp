@@ -160,13 +160,15 @@ namespace rtps
 
     void SSEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale)
     {
-
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+        if(num==0)
+            return;
+        //glPushAttrib(GL_ALL_ATTRIB_BITS);
+        //glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         //dout<<"Here"<<endl;
         //perserve original buffer
         GLint buffer;
         glGetIntegerv(GL_DRAW_BUFFER,&buffer);
+        glEnable(GL_TEXTURE_2D);
 
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
 
@@ -183,10 +185,11 @@ namespace rtps
             glClearColor(0.0f,0.0f,0.0f,0.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             renderPointsAsSpheres(posVBO, colVBO, num, light,material,scale);
-            glEnable(GL_DEPTH_TEST);
             glDepthMask(GL_TRUE);
             glDisable(GL_BLEND);
         }
+
+        glEnable(GL_DEPTH_TEST);
         //dout<<"Here"<<endl;
         //Render Color and depth buffer of spheres.
         glDrawBuffer(GL_COLOR_ATTACHMENT4_EXT);
@@ -264,7 +267,7 @@ namespace rtps
             glUniform3fv(glGetUniformLocation(normalProgram,"light.diffuse"),1,&light->diffuse.x);
             glUniform3fv(glGetUniformLocation(normalProgram,"light.specular"),1,&light->specular.x);
             glUniform3fv(glGetUniformLocation(normalProgram,"light.ambient"),1,&light->ambient.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.pos"),1,&light->pos.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.position"),1,&light->pos.x);
         }
         else
         {
@@ -276,7 +279,7 @@ namespace rtps
             glUniform3fv(glGetUniformLocation(normalProgram,"light.diffuse"),1,&defaultLight.diffuse.x);
             glUniform3fv(glGetUniformLocation(normalProgram,"light.specular"),1,&defaultLight.specular.x);
             glUniform3fv(glGetUniformLocation(normalProgram,"light.ambient"),1,&defaultLight.ambient.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.pos"),1,&defaultLight.pos.x);
+            glUniform3fv(glGetUniformLocation(normalProgram,"light.position"),1,&defaultLight.pos.x);
         }
         RenderUtils::fullscreenQuad(width, height);
         //dout<<"Here"<<endl;
@@ -305,33 +308,23 @@ namespace rtps
         glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);
         RenderUtils::fullscreenQuad(width,height);
 
-        //dout<<"Here"<<endl;
-
         glUseProgram(0);
         glBindTexture(GL_TEXTURE_2D,0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,0);
         //printf("done rendering, clean up\n");
 
-
-        //glDisable(GL_POINT_SMOOTH);
         if (blending)
         {
             glDisable(GL_BLEND);
         }
-
-        glPopClientAttrib();
-        glPopAttrib();
-
-        //glEnable(GL_LIGHTING);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        //make sure rendering timing is accurate
-        glFinish();
-
+        glDisable(GL_TEXTURE_2D);
         //printf("done rendering\n");
         if (m_writeFramebuffers)
         {
+            glFinish();
             writeFramebufferTextures();
             m_writeFramebuffers = false;
         }

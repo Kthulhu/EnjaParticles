@@ -67,6 +67,8 @@ namespace rtps
     //----------------------------------------------------------------------
     void ParticleEffect::drawArrays(GLuint posVBO, GLuint colVBO, unsigned int num)
     {
+        if(num==0)
+            return;
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, posVBO);
@@ -83,7 +85,8 @@ namespace rtps
     //----------------------------------------------------------------------
     void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale )
     {
-
+        if(num==0)
+            return;
         glDepthMask(GL_TRUE);
         if(blending)
         {
@@ -135,7 +138,8 @@ namespace rtps
 
     void ParticleEffect::renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale)
     {
-
+        if(num==0)
+            return;
         glEnable(GL_POINT_SPRITE);
         glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -154,7 +158,8 @@ namespace rtps
 
     void ParticleEffect::renderVector(GLuint posVBO, GLuint vecVBO,  unsigned int num, float scale)
     {
-
+        if(num==0)
+            return;
         glUseProgram(m_shaderLibrary->shaders["vectorShader"].getProgram());
         glUniform1f(glGetUniformLocation(m_shaderLibrary->shaders["vectorShader"].getProgram(), "scale"),scale);
         drawArrays(posVBO,vecVBO,num);

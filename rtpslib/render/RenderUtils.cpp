@@ -40,19 +40,19 @@ namespace rtps
     void RenderUtils::fullscreenQuad(float width, float height)
     {
         float vertices[] = {0.0f,0.0f,
-                            width,0.0f,
+                            0.0f,height,
                             width,height,
-                            0.0f,height};
+                            width,0.0f};
         float texCoord[] = {0.0f,0.0f,
-                            1.0f,0.0f,
+                            0.0f,1.0f,
                             1.0f,1.0f,
-                            0.0f,1.0f};
+                            1.0f,0.0f};
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,vertices);
         glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,texCoord);
 
-        glDrawArrays(GL_QUADS, 0, 1);
+        glDrawArrays(GL_QUADS, 0, 4);
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);

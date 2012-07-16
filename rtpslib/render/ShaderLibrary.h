@@ -129,8 +129,8 @@ namespace rtps
             readFile(shaderSrc+"/draw_vector.vert",vert);
             readFile(shaderSrc+"/draw_vector.frag",frag);
             readFile(shaderSrc+"/draw_vector.geom",geom);
-            shaders["vectorShader"].attachGeometryParam(GL_GEOMETRY_INPUT_TYPE_EXT,GL_POINTS);
-            shaders["vectorShader"].attachGeometryParam(GL_GEOMETRY_OUTPUT_TYPE_EXT,GL_LINE_STRIP);
+            //shaders["vectorShader"].attachGeometryParam(GL_GEOMETRY_INPUT_TYPE_EXT,GL_POINTS);
+            //shaders["vectorShader"].attachGeometryParam(GL_GEOMETRY_OUTPUT_TYPE_EXT,GL_LINE_STRIP);
             addShader("vectorShader",vert,frag,geom,tessCont,tessEval);
             vert = frag = geom="";
             readFile(shaderSrc+"/render_instanced.vert",vert);

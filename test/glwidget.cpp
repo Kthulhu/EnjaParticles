@@ -50,6 +50,70 @@
 using namespace std;
 namespace rtps
 {
+
+const GLfloat fSkyDist = 100.0;
+
+const GLfloat skyBox[] = { fSkyDist,-fSkyDist,-fSkyDist,
+                           -fSkyDist,-fSkyDist,-fSkyDist,
+                           -fSkyDist,fSkyDist,-fSkyDist,
+                           fSkyDist,fSkyDist,-fSkyDist,
+
+                           fSkyDist, -fSkyDist, fSkyDist,
+                           fSkyDist, -fSkyDist, -fSkyDist,
+                           fSkyDist, fSkyDist, -fSkyDist,
+                           fSkyDist, fSkyDist, fSkyDist,
+
+                           -fSkyDist,-fSkyDist,fSkyDist,
+                           fSkyDist,-fSkyDist,fSkyDist,
+                           fSkyDist,fSkyDist,fSkyDist,
+                           -fSkyDist,fSkyDist,fSkyDist,
+
+                           -fSkyDist,-fSkyDist,-fSkyDist,
+                           -fSkyDist,-fSkyDist,fSkyDist,
+                           -fSkyDist,fSkyDist,fSkyDist,
+                           -fSkyDist,fSkyDist,-fSkyDist,
+
+                           -fSkyDist,fSkyDist,-fSkyDist,
+                           -fSkyDist,fSkyDist,fSkyDist,
+                           fSkyDist,fSkyDist,fSkyDist,
+                           fSkyDist,fSkyDist,-fSkyDist,
+
+                           -fSkyDist,-fSkyDist, -fSkyDist,
+                           -fSkyDist,-fSkyDist,fSkyDist,
+                           fSkyDist,-fSkyDist,fSkyDist,
+                           fSkyDist,-fSkyDist,-fSkyDist};
+
+
+const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
+                           0.f,0.f,0.f,//0.f,0.f,0.f,
+                           0.f,1.f,0.f,//0.f,1.f,0.f,
+                           1.f,1.f,0.f,//1.f,1.f,0.f,
+
+                           1.f,0.f,1.f,//1.f, 0.f, 1.f,
+                           1.f,0.f,0.f,//1.f, 0.f, 0.f,
+                           1.f,1.f,0.f,//1.f, 1.f, 0.f,
+                           1.f, 1.f, 1.f,
+
+                           0.f,0.f,1.f,
+                           1.f,0.f,1.f,
+                           1.f,1.f,1.f,
+                           0.f,1.f,1.f,
+
+                           0.f,0.f,0.f,
+                           0.f,0.f,1.f,
+                           0.f,1.f,1.f,
+                           0.f,1.f,0.f,
+
+                           0.f,1.f,0.f,
+                           0.f,1.f,1.f,
+                           1.f,1.f,1.f,
+                           1.f,1.f,0.f,
+
+                           0.f,0.f, 0.f,
+                           0.f,0.f,1.f,
+                           1.f,0.f,1.f,
+                           1.f,0.f,0.f};
+
  GLWidget::GLWidget(QGLContext* ctx,std::string bPath,QWidget *parent)
      : QGLWidget(ctx,parent)
  {
@@ -59,9 +123,9 @@ namespace rtps
     sizeScale=1.0f;
     //string scenefile = path+"/demo_scene.obj";
 
-    renderVelocity=false;
+    renderVelocity=true;
+    //renderVelocity=false;
     paused=false;
-    scene_list=0;
     scene=new AIWrapper();
     dynamicMeshScene=new AIWrapper();
     renderMovie=false;
@@ -71,6 +135,8 @@ namespace rtps
     light=NULL;
     lib=NULL;
     elapsedTimer = new QElapsedTimer();
+    skyboxVBO=0;
+    skyboxTexVBO=0;
 
     //This will force updates every 33 seconds. The timer will cause the
     //simulations to perform their updates.
@@ -98,7 +164,7 @@ namespace rtps
     {
         delete i->second;
     }
-    delete meshRenderer;
+    //delete meshRenderer;
     delete dynamicMeshScene;
     delete scene;
     delete cli;
@@ -127,7 +193,20 @@ namespace rtps
         view->setMoveSpeed(2.f);
         view->setRotateSpeed(2.f);
      }
-
+     if(skyboxVBO==0)
+     {
+     glGenBuffers(1,&skyboxVBO);
+     glBindBuffer(GL_ARRAY_BUFFER,skyboxVBO);
+     glBufferData(GL_ARRAY_BUFFER,24*3*sizeof(float),skyBox, GL_STATIC_DRAW);
+     glBindBuffer(GL_ARRAY_BUFFER,0);
+     }
+     if(skyboxTexVBO==0)
+     {
+     glGenBuffers(1,&skyboxTexVBO);
+     glBindBuffer(GL_ARRAY_BUFFER,skyboxTexVBO);
+     glBufferData(GL_ARRAY_BUFFER,24*3*sizeof(float),skyBoxTex, GL_STATIC_DRAW);
+     glBindBuffer(GL_ARRAY_BUFFER,0);
+     }
      //DEBUGGING===========
      //const float16& myProjectionMatrix = view->getProjectionMatrix();
      //const float16& myViewMatrix = view->getViewMatrix();
@@ -191,12 +270,13 @@ namespace rtps
     if(!lib){
         lib = new ShaderLibrary();
         lib->initializeShaders(binaryPath+"/shaders");
-        effects["Points"]=new ParticleEffect(lib,width(),height(),.75f,false);
-        effects["Screen Space"]=new SSEffect(lib,GAUSSIAN_BLUR,width(),height(),.75f,true);
+        effects["Points"]=new ParticleEffect(lib,width(),height(),5.0f,false);
+        //effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),.75f,true);
+        effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),2.f,false);
         effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),.75f,false);
 
         //FIXME: Need to find an elegant solution to handling mesh effects
-        meshRenderer= new MeshEffect(lib,width(),height(),20.0f,false);
+        meshRenderer= (MeshEffect*)effects["Mesh Renderer"];//new MeshEffect(lib,width(),height(),20.0f,false);
     }
 
     glClearColor(0.9f,0.9f,0.9f,1.0f);
@@ -252,76 +332,19 @@ namespace rtps
      glBindTexture(GL_TEXTURE_CUBE_MAP,environTex);
 
      // draw the skybox
-     const GLfloat fSkyDist = 100.0;
-
-     const GLfloat skyBox[] = { fSkyDist,-fSkyDist,-fSkyDist,
-                                -fSkyDist,-fSkyDist,-fSkyDist,
-                                -fSkyDist,fSkyDist,-fSkyDist,
-                                fSkyDist,fSkyDist,-fSkyDist,
-
-                                fSkyDist, -fSkyDist, fSkyDist,
-                                fSkyDist, -fSkyDist, -fSkyDist,
-                                fSkyDist, fSkyDist, -fSkyDist,
-                                fSkyDist, fSkyDist, fSkyDist,
-
-                                -fSkyDist,-fSkyDist,fSkyDist,
-                                fSkyDist,-fSkyDist,fSkyDist,
-                                fSkyDist,fSkyDist,fSkyDist,
-                                -fSkyDist,fSkyDist,fSkyDist,
-
-                                -fSkyDist,-fSkyDist,-fSkyDist,
-                                -fSkyDist,-fSkyDist,fSkyDist,
-                                -fSkyDist,fSkyDist,fSkyDist,
-                                -fSkyDist,fSkyDist,-fSkyDist,
-
-                                -fSkyDist,fSkyDist,-fSkyDist,
-                                -fSkyDist,fSkyDist,fSkyDist,
-                                fSkyDist,fSkyDist,fSkyDist,
-                                fSkyDist,fSkyDist,-fSkyDist,
-
-                                -fSkyDist,-fSkyDist, -fSkyDist,
-                                -fSkyDist,-fSkyDist,fSkyDist,
-                                fSkyDist,-fSkyDist,fSkyDist,
-                                fSkyDist,-fSkyDist,-fSkyDist};
-
-     const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
-                                0.f,0.f,0.f,//0.f,0.f,0.f,
-                                0.f,1.f,0.f,//0.f,1.f,0.f,
-                                1.f,1.f,0.f,//1.f,1.f,0.f,
-
-                                1.f,0.f,1.f,//1.f, 0.f, 1.f,
-                                1.f,0.f,0.f,//1.f, 0.f, 0.f,
-                                1.f,1.f,0.f,//1.f, 1.f, 0.f,
-                                1.f, 1.f, 1.f,
-
-                                0.f,0.f,1.f,
-                                1.f,0.f,1.f,
-                                1.f,1.f,1.f,
-                                0.f,1.f,1.f,
-
-                                0.f,0.f,0.f,
-                                0.f,0.f,1.f,
-                                0.f,1.f,1.f,
-                                0.f,1.f,0.f,
-
-                                0.f,1.f,0.f,
-                                0.f,1.f,1.f,
-                                1.f,1.f,1.f,
-                                1.f,1.f,0.f,
-
-                                0.f,0.f, 0.f,
-                                0.f,0.f,1.f,
-                                1.f,0.f,1.f,
-                                1.f,0.f,0.f};
 
      //glVertexPointer(3, GL_FLOAT, 0, skyBox);
      //glTexCoordPointer(3, GL_FLOAT, 0, skyBoxTex);
      glEnableVertexAttribArray(0);
      glEnableVertexAttribArray(1);
-     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,skyBox);
-     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,skyBoxTex);
+     //glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,skyBox);
+     //glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,skyBoxTex);
+     glBindBuffer(GL_ARRAY_BUFFER,skyboxVBO);
+     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
+     glBindBuffer(GL_ARRAY_BUFFER,skyboxTexVBO);
+     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
 
-     glDrawArrays(GL_QUADS, 0, 6);
+     //glDrawArrays(GL_QUADS, 0, 24);
 
      glDisableVertexAttribArray(0);
      glDisableVertexAttribArray(1);
@@ -342,14 +365,17 @@ namespace rtps
             cameraChanged();
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_MULTISAMPLE_ARB);
+
+
 #if 1
-        //renderSkyBox();
+        glEnable(GL_DEPTH_TEST);
+        renderSkyBox();
+
+        //glEnable(GL_MULTISAMPLE_ARB);
         //display static opaque objects
         display(false);
 #if 1
-#if 1
+#if 0
         if(systems.find(QString("rb1"))!=systems.end())
         {
             //for debugging only!!
@@ -376,7 +402,8 @@ namespace rtps
         displayShape(pShapes["dynamicShape112"],float3(11.0f,3.f,1.0f),systems["water"]->getSpacing()/4.0f);
         displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
 #endif
-        glDisable(GL_MULTISAMPLE_ARB);
+        glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_MULTISAMPLE_ARB);
         if(renderMovie)
         {
             writeMovieFrame("image","./frames/");
@@ -540,12 +567,13 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
             {
                 //spray hose
                 cout<<"about to make hose"<<endl;
-                float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
+                //float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
+                float4 col1 = float4(0.05f, 0.4f, .8f, 1.0f);
                 float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-1.5f,1.0f);
                 float4 velocity(-1.25f, -1.25f, -3.0f, 0);
                 float radius= 2.0f;
                 //sph sets spacing and multiplies by radius value
-                systems["water"]->addHose(1000, center, velocity,radius, col1);
+                systems["water"]->addHose(10000, center, velocity,radius, col1);
                 return;
             }
             case 'H':
@@ -764,6 +792,7 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
     float* pos = new float[mesh->vboSize*3];
     glGetBufferSubData(GL_ARRAY_BUFFER,0,mesh->vboSize*3*sizeof(float),pos);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
     float3 minCoord(FLT_MAX,FLT_MAX,FLT_MAX);
     float3 maxCoord(-FLT_MAX,-FLT_MAX,-FLT_MAX);
     for(int i = 0; i < mesh->vboSize; i++)
@@ -809,7 +838,7 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
 }
     void GLWidget::display(bool blend)
     {
-        glEnable(GL_NORMALIZE);
+        //glEnable(GL_NORMALIZE);
         glEnable(GL_CULL_FACE);
         //glDisable(GL_LIGHTING);
         if(blend)
@@ -826,7 +855,7 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
         {
             glDisable(GL_BLEND);
         }
-        glDisable(GL_NORMALIZE);
+        //glDisable(GL_NORMALIZE);
         glDisable(GL_CULL_FACE);
     }
 

@@ -80,7 +80,7 @@ namespace rtps
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light.diffuse"),1,&light->diffuse.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light.specular"),1,&light->specular.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light.ambient"),1,&light->ambient.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light.pos"),1,&light->pos.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderFluidShader"].getProgram(),"light.position"),1,&light->pos.x);
 
         if(mesh->iboSize)
             glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
@@ -161,34 +161,13 @@ namespace rtps
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light.diffuse"),1,&(light->diffuse.x));
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light.specular"),1,&(light->specular.x));
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light.ambient"),1,&(light->ambient.x));
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light.pos"),1,&(light->pos.x));
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderLitShader"].getProgram(),"light.position"),1,&(light->pos.x));
 
-//        modelview.print("modelview");
-//        project.print("projection");
-//        dout<<"ibo "<<mesh->ibo<<endl;
-//        dout<<"ibosize "<<mesh->iboSize<<endl;
-//        dout<<"vbo "<<mesh->vbo<<endl;
-//        dout<<"vbosize "<<mesh->vboSize<<endl;
-//        dout<<"normals "<<mesh->normalbo<<endl;
-//        dout<<"texcoords "<<mesh->texCoordsbo<<endl;
         if(mesh->iboSize)
             glDrawElements(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0);
         else
         {
-        //glUseProgram(0);
-//            glUseProgram(0);
-            /*glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glVertexPointer(3, GL_FLOAT, 0,0);
-
-            glBindBuffer(GL_ARRAY_BUFFER, mesh->normalbo);
-            glEnableClientState(GL_NORMAL_ARRAY);
-            glNormalPointer(GL_FLOAT, 0,0 );*/
-
             glDrawArrays(GL_TRIANGLES,0,mesh->vboSize);
-            //glBindBuffer(GL_ARRAY_BUFFER,0);
-            //glDisableClientState(GL_VERTEX_ARRAY);
-            //glDisableClientState(GL_NORMAL_ARRAY);
         }
         glUseProgram(0);
         glDisableVertexAttribArray(0);
@@ -266,7 +245,7 @@ namespace rtps
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light.diffuse"),1,&light->diffuse.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light.specular"),1,&light->specular.x);
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light.ambient"),1,&light->ambient.x);
-        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light.pos"),1,&light->pos.x);
+        glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light.position"),1,&light->pos.x);
         glDrawElementsInstancedEXT(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0,size);
         glUseProgram(0);
         glDisableVertexAttribArray(0);

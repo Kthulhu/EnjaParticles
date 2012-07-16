@@ -12,7 +12,7 @@ struct Light
     vec3 diffuse;
     vec3 specular;
     vec3 ambient;
-    vec3 pos;
+    vec3 position;
 };
 
 uniform mat4 projectionMatrix;
@@ -44,7 +44,7 @@ void main()
     eyePos = viewPos.xyz/viewPos.w;
     
     //color=col;
-    lightDir = normalize(light.pos-eyePos);
+    lightDir = normalize(light.position-eyePos);
 
     gl_Position= projectionMatrix*viewPos;
     //gl_Position=vec4(pos,1.0f);

@@ -1,5 +1,4 @@
 #version 330
-uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
 uniform float pointRadius;  // point size in world space

@@ -12,7 +12,7 @@ struct Light
     vec3 diffuse;
     vec3 specular;
     vec3 ambient;
-    vec3 pos;
+    vec3 position;
 };
 
 uniform mat4 viewMatrix;
@@ -42,6 +42,6 @@ void main()
     //halfLightDir=normalize(light.pos+eyePos);
         normalVec = normalize(viewMatrix*vec4(normal,0.0f)).xyz;
 	eyeVec = -viewPos.xyz/viewPos.w;
-	lightVec = light.pos - viewPos.xyz;
+        lightVec = light.position - viewPos.xyz;
     gl_Position= projectionMatrix*viewPos;
 }

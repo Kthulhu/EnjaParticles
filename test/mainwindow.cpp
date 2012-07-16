@@ -132,10 +132,10 @@ namespace rtps
 void MainWindow::setSystemNames(const std::vector<std::string>& sysNames)
 {
     systemSelector->clear();
-for(int i = 0;i<sysNames.size(); i++)
-{
-    systemSelector->addItem(QString(sysNames[i].c_str()));
-}
+    for(int i = 0;i<sysNames.size(); i++)
+    {
+        systemSelector->addItem(QString(sysNames[i].c_str()));
+    }
 }
 
 /* QSlider *MainWindow::createSlider(const char *name)
@@ -166,27 +166,4 @@ void MainWindow::valueChanged(const QString& parameterName, const QString& value
     dout<<"----------"<<endl;*/
     emit parameterValueChanged(system,parameterName,value);
 }
-
- QSize MainWindow::getSize()
- {
-     bool ok;
-     QString text = QInputDialog::getText(this, tr("Grabber"),
-                                          tr("Enter pixmap size:"),
-                                          QLineEdit::Normal,
-                                          tr("%1 x %2").arg(glWidget->width())
-                                                       .arg(glWidget->height()),
-                                          &ok);
-     if (!ok)
-         return QSize();
-
-     QRegExp regExp(tr("([0-9]+) *x *([0-9]+)"));
-     if (regExp.exactMatch(text)) {
-         int width = regExp.cap(1).toInt();
-         int height = regExp.cap(2).toInt();
-         if (width > 0 && width < 2048 && height > 0 && height < 2048)
-             return QSize(width, height);
-     }
-
-     return glWidget->size();
- }
 }

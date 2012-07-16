@@ -1,11 +1,13 @@
 #version 330
-//#geometry shader
+#geometry shader
+
+uniform float scale;
 
 layout(points) in;
 layout(line_strip, max_vertices=2) out;
 in vec4 vector[1];
 in vec4 color[1];
-uniform float scale;
+
 smooth out vec4 col[2];
 
 void main() 
@@ -15,7 +17,9 @@ void main()
     col[0] = color[0];
     EmitVertex();
 
-    gl_Position = vec4(p.rgb+(scale*vector[0].rgb),p.a);
+    //fixme for some reson scale cannot be located using glGetuniformlocation
+    //gl_Position = vec4(p.rgb+(scale*vector[0].rgb),p.a);
+    gl_Position = vec4(p.rgb+(vector[0].rgb),p.a);
     col[0] = color[0];
     EmitVertex();
     EndPrimitive();

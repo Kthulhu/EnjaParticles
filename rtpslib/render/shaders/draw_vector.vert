@@ -2,6 +2,8 @@
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
+uniform float scale;
+
 layout(location = 0) in vec4 pos;
 layout(location = 1) in vec4 col;
 
