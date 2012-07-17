@@ -25,10 +25,13 @@
 #include "ParamParser.h"
 #include "../rtpslib/RTPS.h"
 #include "../rtpslib/render/SSEffect.h"
+#include "../rtpslib/render/ParticleEffect.h"
 #include "../rtpslib/render/MeshEffect.h"
-#include <../rtpslib/system/ParticleRigidBody.h>
-#include <../rtpslib/system/SPH.h>
-#include <../rtpslib/system/FLOCK.h>
+#include "../rtpslib/system/ParticleRigidBody.h"
+#include "../rtpslib/system/SPH.h"
+#include "../rtpslib/system/FLOCK.h"
+#include "aiwrapper.h"
+#include "../rtpslib/render/util/stb_image_write.h"
 
 #include <sstream>
 #include <float.h>
@@ -44,67 +47,138 @@ using namespace std;
 
 namespace rtps
 {
+
+const GLfloat fSkyDist = 100.0;
+
+const GLfloat skyBox[] = { fSkyDist,-fSkyDist,-fSkyDist,
+                           -fSkyDist,-fSkyDist,-fSkyDist,
+                           -fSkyDist,fSkyDist,-fSkyDist,
+                           fSkyDist,fSkyDist,-fSkyDist,
+
+                           fSkyDist, -fSkyDist, fSkyDist,
+                           fSkyDist, -fSkyDist, -fSkyDist,
+                           fSkyDist, fSkyDist, -fSkyDist,
+                           fSkyDist, fSkyDist, fSkyDist,
+
+                           -fSkyDist,-fSkyDist,fSkyDist,
+                           fSkyDist,-fSkyDist,fSkyDist,
+                           fSkyDist,fSkyDist,fSkyDist,
+                           -fSkyDist,fSkyDist,fSkyDist,
+
+                           -fSkyDist,-fSkyDist,-fSkyDist,
+                           -fSkyDist,-fSkyDist,fSkyDist,
+                           -fSkyDist,fSkyDist,fSkyDist,
+                           -fSkyDist,fSkyDist,-fSkyDist,
+
+                           -fSkyDist,fSkyDist,-fSkyDist,
+                           -fSkyDist,fSkyDist,fSkyDist,
+                           fSkyDist,fSkyDist,fSkyDist,
+                           fSkyDist,fSkyDist,-fSkyDist,
+
+                           -fSkyDist,-fSkyDist, -fSkyDist,
+                           -fSkyDist,-fSkyDist,fSkyDist,
+                           fSkyDist,-fSkyDist,fSkyDist,
+                           fSkyDist,-fSkyDist,-fSkyDist};
+
+
+const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
+                           0.f,0.f,0.f,//0.f,0.f,0.f,
+                           0.f,1.f,0.f,//0.f,1.f,0.f,
+                           1.f,1.f,0.f,//1.f,1.f,0.f,
+
+                           1.f,0.f,1.f,//1.f, 0.f, 1.f,
+                           1.f,0.f,0.f,//1.f, 0.f, 0.f,
+                           1.f,1.f,0.f,//1.f, 1.f, 0.f,
+                           1.f, 1.f, 1.f,
+
+                           0.f,0.f,1.f,
+                           1.f,0.f,1.f,
+                           1.f,1.f,1.f,
+                           0.f,1.f,1.f,
+
+                           0.f,0.f,0.f,
+                           0.f,0.f,1.f,
+                           0.f,1.f,1.f,
+                           0.f,1.f,0.f,
+
+                           0.f,1.f,0.f,
+                           0.f,1.f,1.f,
+                           1.f,1.f,1.f,
+                           1.f,1.f,0.f,
+
+                           0.f,0.f, 0.f,
+                           0.f,0.f,1.f,
+                           1.f,0.f,1.f,
+                           1.f,0.f,0.f};
     TestApplication::TestApplication(istream& is, string path)
     {
-        glewInit();
-        GLboolean bGLEW = glewIsSupported("GL_VERSION_2_0 GL_ARB_pixel_buffer_object");
-        windowHeight=800;
-        windowWidth=600;
-        cli = new CL();
+	binaryPath=path;
+	mass=0.01f;
+	sizeScale=1.0f;
 
-        renderType="default";
-        readParamFile(is,path);
-        initGL();
-        //Fixme: This is a bad way to make sure the directory is correct.
-        RenderSettings rs;
-        //rs.blending=false;
-        rs.blending=false;
-        float nf[2];
-        glGetFloatv(GL_DEPTH_RANGE,nf);
-        rs.m_near = nf[0];
-        rs.m_far = nf[1];
-        //dout<<"near = "<<rs.near<<endl;
-        //dout<<"far = "<<rs.far<<endl;
-        //dout<<"spacing = "<<systems["water"]->getSpacing()<<endl;
-        rs.particleRadius = systems["water"]->getSpacing()*20.f;
-        rs.windowWidth=windowWidth;
-        rs.windowHeight=windowHeight;
-        lib = new ShaderLibrary();
-		string shaderpath=path+"/shaders";
-        lib->initializeShaders(shaderpath);
-        effects["default"]=new ParticleEffect(rs,*lib);
-        //effects["sprite"]=new ParticleEffect();
-        rs.blending=true;
-        rs.particleRadius =systems["water"]->getSpacing()*.6f;
-        effects["ssfr"]=new SSEffect(rs, *lib);
-        meshRenderer=new MeshEffect(rs, *lib);
-        translation.x = -5.00f;
-        translation.y = -5.00f;//300.f;
-        translation.z = 5.00f;
-        rotation.x=0.0f;
-        rotation.y=0.0f;
-        light.diffuse.x=1.0;light.diffuse.y=1.0;light.diffuse.z=1.0;
-        //light.ambient.x=0.3;light.ambient.y=0.3;light.ambient.z=0.3;
-        light.ambient.x=1.0;light.ambient.y=1.0;light.ambient.z=1.0;
-        light.specular.x=1.0;light.specular.y=1.0;light.specular.z=1.0;
-        light.pos.x=-0.5f; light.pos.y=1.5f; light.pos.z=5.0f;
-        //mass=100.0f;
-        mass=0.01f;
-        sizeScale=1.0f;
-        string scenefile = path+"/demo_scene.obj";
+	//renderVelocity=true;
+	renderVelocity=false;
+	paused=false;
+	scene=new AIWrapper();
+	dynamicMeshScene=new AIWrapper();
+	renderMovie=false;
+	frameCounter=0;
+	view=NULL;
+	light=NULL;
+	lib=NULL;
+	skyboxVBO=0;
+	skyboxTexVBO=0;
+	glewInit();
+	cli = new CL();
 
-        renderVelocity=false;
-        paused=false;
-        scene=NULL;
-        scene_list=0;
-        loadScene(scenefile);
-        renderMovie=false;
-        frameCounter=0;
-        string meshesfile = path+"/demo_mesh_scene.obj";
-        loadMeshScene(meshesfile);
-        build_shapes(scene, scene->mRootNode);
-        build_dynamic_shapes(dynamicMeshScene, dynamicMeshScene->mRootNode);
-        environTex = RenderUtils::loadCubemapTexture(path+"/cubemaps/");
+	//view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,100.0,width(),height());
+	 view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,500.0,width(),height());
+	//view = new Camera(float3(0.0f,0.0f,0.0f),65.0f,0.3f,100.0f,width(),height());
+	//view = new Camera(float3(-105.0f,-105.0f,-105.0f),65.0f,0.3f,1000.0f,width(),height());
+	//the models are all in different coordinate systems...
+	//view->rotate(-90.f,0.0f);
+	view->setMoveSpeed(2.f);
+	view->setRotateSpeed(2.f);
+
+	glGenBuffers(1,&skyboxVBO);
+	glBindBuffer(GL_ARRAY_BUFFER,skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER,24*3*sizeof(float),skyBox, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER,0);
+
+
+	glGenBuffers(1,&skyboxTexVBO);
+	glBindBuffer(GL_ARRAY_BUFFER,skyboxTexVBO);
+	glBufferData(GL_ARRAY_BUFFER,24*3*sizeof(float),skyBoxTex, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER,0);
+
+
+	 light = new Light();
+	light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
+	light->ambient.x=1.0;light->ambient.y=1.0;light->ambient.z=1.0;
+	light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
+	//light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
+	light->pos.x=5.0f; light->pos.y=5.0f; light->pos.z=5.0f;
+
+	environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
+
+
+	glViewport(0, 0, width(), height());
+
+	lib = new ShaderLibrary();
+	lib->initializeShaders(binaryPath+"/shaders");
+	//effects["Points"]=new ParticleEffect(lib,width(),height(),5.0f,false);
+	effects["Points"]=new ParticleEffect(lib,width(),height(),0.75f,false);
+	effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),.75f,true);
+	//effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),2.f,false);
+	effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),.75f,false);
+
+	//FIXME: Need to find an elegant solution to handling mesh effects
+	meshRenderer= (MeshEffect*)effects["Mesh Renderer"];//new MeshEffect(lib,width(),height(),20.0f,false);
+
+
+	readParamFile(is,path);
+	loadScene(binaryPath+"/demo_scene1.obj");
+	loadMeshScene(binaryPath+"/demo_mesh_scene.obj");
     }
 
     void TestApplication::setWindowHeight(GLuint windowHeight) {
@@ -116,29 +190,33 @@ namespace rtps
     }
     TestApplication::~TestApplication()
     {
-        for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-        {
-            delete i->second;
-        }
-        for(map<string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
-        {
-            delete i->second;
-        }
-        for(map<string,ParticleShape*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
-        {
-            delete i->second;
-        }
-        for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
-        {
-            delete i->second;
-        }
-        delete meshRenderer;
-        delete cli;
-        delete lib;
+	    for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+	    {
+		delete i->second;
+	    }
+	    for(map<std::string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+	    {
+		delete i->second;
+	    }
+	    for(map<std::string,ParticleShape*>::iterator i = pShapes.begin(); i!=pShapes.end(); i++)
+	    {
+		delete i->second;
+	    }
+	    for(map<std::string,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
+	    {
+		delete i->second;
+	    }
+	    //delete meshRenderer;
+	    delete dynamicMeshScene;
+	    delete scene;
+	    delete cli;
+	    delete lib;
+	    delete view;
+	    delete light;
     }
     void TestApplication::KeyboardCallback(unsigned char key, int x, int y)
     {
-        unsigned int nn=0;
+              unsigned int nn=0;
         switch (key)
         {
             case ' ':
@@ -204,12 +282,13 @@ namespace rtps
             {
                 //spray hose
                 cout<<"about to make hose"<<endl;
-                float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
+                //float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
+                float4 col1 = float4(0.05f, 0.4f, .8f, 1.0f);
                 float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-1.5f,1.0f);
                 float4 velocity(-1.25f, -1.25f, -3.0f, 0);
                 float radius= 2.0f;
                 //sph sets spacing and multiplies by radius value
-                systems["water"]->addHose(1000, center, velocity,radius, col1);
+                systems["water"]->addHose(10000, center, velocity,radius, col1);
                 return;
             }
             case 'H':
@@ -275,27 +354,33 @@ namespace rtps
                     systems["rb1"]->addBox(1000, position, position+size, false, col1,mass);
                     return;
                 }
-
+	    case 'j':
+		if(systemRenderType["water"]=="Points")
+			systemRenderType["water"]="Screen Space";
+		else
+			systemRenderType["water"]="Points";
+		dout<<"system render type for water = "<<systemRenderType["water"]<<endl;
+		break;
             case 'r': //drop a ball
             {
-                ParticleShape* shape=pShapes["dynamicShape0"];
-                float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
-                trans +=7.0f;
-                float16 modelview;
-                glMatrixMode(GL_MODELVIEW);
-                glPushMatrix();
-                glLoadIdentity();
+                ParticleShape* shape=pShapes["rb1"];
+                //float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+                //trans +=7.0f;
+                //float16 modelview;
+                //glMatrixMode(GL_MODELVIEW);
+                //glPushMatrix();
+                //glLoadIdentity();
                 //glRotatef(rotation.x, 1.0, 0.0, 0.0);
-                glTranslatef(trans, trans, trans);
-                glRotatef(-180, 1.0f, 0.0f, 0.0f);
-                glRotatef(-90, 0.0f, 0.0f, 1.0f);
+                //glTranslatef(trans, trans, trans);
+                //glRotatef(-180, 1.0f, 0.0f, 0.0f);
+                //glRotatef(-90, 0.0f, 0.0f, 1.0f);
                 //glTranslatef(translation.x, translation.z, translation.y);
-                glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
-                glPopMatrix();
-                modelview.print("modelview");
-                modelview.transpose();
+                //glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
+                //glPopMatrix();
+                //modelview.print("modelview");
+                //modelview.transpose();
 
-                systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),modelview,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),mass);
+                //systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),modelview,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),mass);
 
                 /*    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
                     float size = 1.0f;
@@ -306,59 +391,36 @@ namespace rtps
 
                     systems["rb1"]->addBall(1000, mid, size,false, col1,mass);*/
                     return;
-                }
-            case 'v':
-                renderVelocity=!renderVelocity;
-                return;
-            case 'o':
-                renderType="default";
-                return;
-            case 'c':
-                renderType="ssfr";
-                return;
-            case 'C':
-                return;
-            case '2':
-                light.pos.z -= 0.1f;
-                break;
-            case '6':
-                light.pos.x += 0.1f;
-                break;
-            case '8':
-                light.pos.z += 0.1f;
-                break;
-            case '4':
-                light.pos.x -= 0.1f;
-                break;
-            case '3':
-                light.pos.y += 0.1f;
-                break;
-            case '1':
-                light.pos.y -= 0.1f;
-                break;
+            }
             case 'w':
-                translation.z -= 0.1f;
+                view->move(0.0f,0.0f,1.0f);
+                //cameraChanged();
                 break;
             case 'a':
-                translation.x += 0.1f;
+                view->move(-1.0f,0.0f,0.0f);
+                //cameraChanged();
                 break;
             case 's':
-                translation.z += 0.1f;
+                view->move(0.0f,0.0f,-1.0f);
+                //cameraChanged();
                 break;
             case 'd':
-                translation.x -= 0.1f;
+                view->move(1.0f,0.0f,0.0f);
+                //cameraChanged();
                 break;
             case 'z':
-                translation.y += 0.1f;
+                view->move(0.0f,1.0f,0.0f);
+                //cameraChanged();
                 break;
             case 'x':
-                translation.y -= 0.1f;
+                view->move(0.0f,-1.0f,0.0f);
+                //cameraChanged();
                 break;
             case '+':
-                mass+=100.0f;//0.1f;
+                mass+=100.0f;
                 break;
             case '-':
-                mass-=100.0f;//0.1f;
+                mass-=100.0f;
                 break;
             case '[':
                 //sizeScale+=0.5f;
@@ -379,222 +441,71 @@ namespace rtps
             default:
                 return;
         }
-
         glutPostRedisplay();
     }
     void TestApplication::RenderCallback()
     {
 
-        glClearColor(.9f, .9f, .9f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_MULTISAMPLE_ARB);
-#if 1
-        /*if (stereo_enabled)
+        //float time = elapsedTimer->restart()/1000.f;
+	float time = 0.033f;
+        //send new view matrix to the shaders if the camera was actually updated
+        if(view->tick(time))
         {
-            render_stereo();
+            cameraChanged();
         }
-        else
-        {*/
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            gluPerspective(65.0, windowWidth/(double)windowHeight, 0.3, 1000.0);
-                        // set view matrix
-
-
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-
-            glPushMatrix();
-            glRotatef(rotation.x, 1.0, 0.0, 0.0);
-            glRotatef(rotation.y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-            glTranslatef(translation.x, translation.z, translation.y);
-
-            glDisable(GL_TEXTURE_2D);
-            glEnable(GL_TEXTURE_GEN_S);
-            glEnable(GL_TEXTURE_GEN_T);
-            glEnable(GL_TEXTURE_GEN_R);
-            glEnable(GL_TEXTURE_CUBE_MAP);
-
-            glBindTexture(GL_TEXTURE_CUBE_MAP, environTex);
-            // draw the skybox
-            const GLfloat fSkyDist = 100.0;
-            const GLfloat fTex = 1.0f;
-
-            glBegin(GL_TRIANGLE_STRIP);
-
-            //west
-                glTexCoord3f(-fTex, -fTex , fTex);
-                glVertex3f(-fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f(-fTex, fTex, fTex);
-                glVertex3f(-fSkyDist, fSkyDist,  fSkyDist);
-                glTexCoord3f(-fTex, -fTex, -fTex);
-                glVertex3f(-fSkyDist, -fSkyDist, -fSkyDist);
-                glTexCoord3f(-fTex, fTex,-fTex);
-                glVertex3f(-fSkyDist, fSkyDist,  -fSkyDist);
-            //north
-                glTexCoord3f(fTex, -fTex,-fTex);
-                glVertex3f(fSkyDist, -fSkyDist, -fSkyDist);
-                glTexCoord3f(fTex, fTex,-fTex);
-                glVertex3f(fSkyDist, fSkyDist, -fSkyDist);
-            //east
-                glTexCoord3f( fTex, -fTex, fTex);
-                glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f( fTex, fTex, fTex);
-                glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
-            //south
-                glTexCoord3f( -fTex, -fTex, fTex);
-                glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f( -fTex, fTex, fTex);
-                glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
-            glEnd();
-            glBegin(GL_QUADS);
-            //up
-                glTexCoord3f( -fTex, fTex, -fTex);
-                glVertex3f( -fSkyDist, fSkyDist,  -fSkyDist);
-                glTexCoord3f( -fTex, fTex, fTex);
-                glVertex3f( -fSkyDist, fSkyDist,  fSkyDist);
-                glTexCoord3f( fTex, fTex, fTex);
-                glVertex3f( fSkyDist, fSkyDist,  fSkyDist);
-                glTexCoord3f( fTex, fTex, -fTex);
-                glVertex3f( fSkyDist, fSkyDist,  -fSkyDist);
-            //down
-                glTexCoord3f( fTex, -fTex, -fTex);
-                glVertex3f( fSkyDist, -fSkyDist,  -fSkyDist);
-                glTexCoord3f( fTex, -fTex, fTex);
-                glVertex3f( fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f( -fTex, -fTex, fTex);
-                glVertex3f( -fSkyDist, -fSkyDist,  fSkyDist);
-                glTexCoord3f( -fTex, -fTex, -fTex);
-                glVertex3f( -fSkyDist, -fSkyDist,  -fSkyDist);
-            glEnd();
-
-            glDisable(GL_TEXTURE_CUBE_MAP);
-
-            glDisable(GL_TEXTURE_GEN_R);
-
-
-            glPopMatrix();
-
-            glRotatef(-90, 1.0, 0.0, 0.0);
-
-            glRotatef(rotation.x, 1.0, 0.0, 0.0);
-            glRotatef(rotation.y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-            glTranslatef(translation.x, translation.z, translation.y);
-            //Draw Origin - Found code at http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=248059
-
-            float ORG[3] = {0,0,0};
-
-            float XP[3] = {1,0,0}, XN[3] = {-1,0,0},
-                  YP[3] = {0,1,0}, YN[3] = {0,-1,0},
-                  ZP[3] = {0,0,1}, ZN[3] = {0,0,-1};
-            glLineWidth (20.0);
-            glBegin (GL_LINES);
-            glColor3f (1,0,0); // X axis is red.
-            glVertex3fv (ORG);
-            glVertex3fv (XP );
-            glColor3f (0,1,0); // Y axis is green.
-            glVertex3fv (ORG);
-            glVertex3fv (YP );
-            glColor3f (0,0,1); // z axis is blue.
-            glVertex3fv (ORG);
-            glVertex3fv (ZP );
-            glEnd();
-            glLineWidth (1.0);
-
-
-            //RenderUtils::renderBox(float4(light.pos.x-.5,light.pos.y-.5,light.pos.z-.5,1.0f),float4(light.pos.x+.5,light.pos.y+.5,light.pos.z+.5,1.0f),float4(.7,.2,.3,1.0f));
-            ParticleRigidBody* rbsys = (ParticleRigidBody*)systems["rb1"];
-            meshRenderer->renderInstanced(dynamicMeshs["dynamicShape0"],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
-            if(systems.find("flock1")!=systems.end())
-            {
-                //dout<<"flock------------------"<<endl;
-                FLOCK* flock = (FLOCK*)systems["flock1"];
-                //effects[renderType]->render(flock->getPosVBO(),flock->getColVBO(),flock->getNum());
-                meshRenderer->renderInstanced(dynamicMeshs["dynamicShape1"],flock->getPosVBO(),flock->getRotationVBO(),flock->getNum(),light);
-            }
-            display(false);
-
-            //glDisable(GL_DEPTH_TEST);
-            //RenderUtils::renderBox(gridMin,gridMax,float4(0.0f,1.0,0.0f,1.0f));
-            //FIXME: Have a method to give renderType to each System. That way we can have different
-            //Systems with the different effects.
-            for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-            {
-                if(renderVelocity)
-                {
-                    effects[renderType]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
-                }
-                //effects[renderType]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum());
-                //FIXME:This is a horrible way of doing this!!
-                //if(i->first=="rb1")
-                //{
-                //    ParticleRigidBody* prb=((ParticleRigidBody*)i->second);
-                //    effects["default"]->render(prb->getStaticVBO(),prb->getColVBO(),prb->getStaticNum());
-                //}
-            }
-            //FIXME: Super hacky! I should figure out betterways to determine how to render based on some settings.
-            SPH* sph = (SPH*)systems["water"];
-            glEnable(GL_DEPTH_TEST);
-            //glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-            //glBlendFunc(GL_ONE,GL_ONE);
-            Mesh* mcMesh = sph->getMCMesh();
-            glEnable(GL_BLEND);
-            if(sph->getSettings()->GetSettingAs<bool>("use_color_field","0")&&mcMesh)
-            {
-		glEnable(GL_CULL_FACE);
-                //meshRenderer->render(mcMesh,light);
-                meshRenderer->renderFluid(mcMesh,environTex,0,light);
-		glDisable(GL_CULL_FACE);
-            }
-            else
-            {
-                effects[renderType]->render(systems["water"]->getPosVBO(),systems["water"]->getColVBO(),systems["water"]->getNum());
-            }
-            display(true);
-#else
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluPerspective(65.0, windowWidth/(double)windowHeight, 0.3, 100.0);
-
-        // set view matrix
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glRotatef(-90, 1.0, 0.0, 0.0);
 
-        glRotatef(rotation.x, 1.0, 0.0, 0.0);
-        glRotatef(rotation.y, 0.0, 0.0, 1.0); //we switched around the axis so make this rotate_z
-        glTranslatef(translation.x, translation.z, translation.y);
 
+#if 1
+        glEnable(GL_DEPTH_TEST);
+        renderSkyBox();
+
+        glEnable(GL_MULTISAMPLE_ARB);
+        //display static opaque objects
+        display(false);
+#if 1
+#if 0
+        if(systems.find(std::string("rb1"))!=systems.end())
+        {
+            //for debugging only!!
+            ParticleRigidBody* rbsys = (ParticleRigidBody*)systems[std::string("rb1")];
+            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),light,NULL,0.05f);
+        }
+#endif
+        for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        {
+            if(renderVelocity)
+            {
+                effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
+            }
+            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),light,NULL,i->second->getSpacing());
+        }
+        //display static transparent objects
+        display(true);
+#endif
+#else
         meshRenderer->render(dynamicMeshs["dynamicShape1"],light);
         glColor4f(0.1f,0.2f,0.4f,1.0f);
         displayShape(pShapes["dynamicShape1"],float3(5.0f,3.f,1.0f),systems["water"]->getSpacing());
         displayShape(pShapes["dynamicShape11"],float3(8.0f,3.f,1.0f),systems["water"]->getSpacing()/2.0f);
         displayShape(pShapes["dynamicShape112"],float3(11.0f,3.f,1.0f),systems["water"]->getSpacing()/4.0f);
         displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
-        //displayShape(pShapes["dynamicShape11234"],float3(10.0f,0.0f,0.0f),systems["water"]->getSpacing()/16.0f);
-        //}
-        //glDisable(GL_DEPTH_TEST);
-
 #endif
-
+        glDisable(GL_DEPTH_TEST);
         glDisable(GL_MULTISAMPLE_ARB);
         if(renderMovie)
         {
             writeMovieFrame("image","./frames/");
             frameCounter++;
         }
-        //showMass();
 
         glutSwapBuffers();
 
     }
     int TestApplication::writeMovieFrame(const char* filename, const char* dir)
     {
-        GLubyte* image = new GLubyte[windowWidth*windowHeight*3];
-	dout<<"width = "<<windowWidth<<" height = "<<windowHeight<<endl;
+	GLubyte* image = new GLubyte[width()*height()*3];
+	dout<<"width = "<<width()<<" height = "<<height()<<endl;
         stringstream s;
         s<<dir<<filename;
         s.fill('0');
@@ -602,8 +513,8 @@ namespace rtps
         s<<right<<frameCounter;
         s<<".png";
         //sprintf(filename,"%s%s_%08d.png",render_dir,filename,frameCounter);
-        glReadPixels(0, 0, windowWidth, windowHeight, GL_RGB, GL_UNSIGNED_BYTE, image);
-        if (!stbi_write_png(s.str().c_str() , windowWidth, windowHeight,3,(void*)image,0))
+        glReadPixels(0, 0, width(), height(), GL_RGB, GL_UNSIGNED_BYTE, image);
+        if (!stbi_write_png(s.str().c_str() , width(), height(),3,(void*)image,0))
         {
             delete[] image;
             cerr<<"failed to write image "<<filename<<endl;
@@ -612,6 +523,55 @@ namespace rtps
         delete[] image;
         return 0;
     }
+ParticleShape* TestApplication::createParticleShape(const std::string& system, Mesh* mesh)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+    float* pos = new float[mesh->vboSize*3];
+    glGetBufferSubData(GL_ARRAY_BUFFER,0,mesh->vboSize*3*sizeof(float),pos);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    float3 minCoord(FLT_MAX,FLT_MAX,FLT_MAX);
+    float3 maxCoord(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+    for(int i = 0; i < mesh->vboSize; i++)
+	{
+            float x=pos[(i*3)],y=pos[(i*3)+1],z=pos[(i*3)+2];
+            if(x<minCoord.x)
+                minCoord.x=x;
+            if(x>maxCoord.x)
+                maxCoord.x=x;
+            if(y<minCoord.y)
+                minCoord.y=y;
+            if(y>maxCoord.y)
+                maxCoord.y=y;
+            if(z<minCoord.z)
+                minCoord.z=z;
+            if(z>maxCoord.z)
+                maxCoord.z=z;
+    }
+    minCoord.print("minCoord");
+    maxCoord.print("maxCoord");
+	delete[] pos;
+	pos =0;
+    float space = systems[system]->getSpacing();
+    ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
+
+
+    shape->voxelizeMesh(mesh->vbo,mesh->ibo,mesh->iboSize);
+    //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
+    //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
+    //s<<"surface";
+    //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
+
+    /*dout<<"mesh name = "<<s.str()<<endl;
+    dout<<"maxCoord dim = "<<shape->getMaxDim()<<endl;
+    dout<<"minCoord dim = "<<shape->getMinDim()<<endl;
+    dout<<"Trans = "<<trans<<endl;
+    dout<<"minCoord ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
+    dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
+    dout<<"spacing = "<<space<<endl;*/
+
+    return shape;
+
+}
     void TestApplication::DestroyCallback()
     {
 
@@ -636,14 +596,9 @@ namespace rtps
         dx = x - mousePos.x;
         dy = y - mousePos.y;
 
-        if (mouseButtons & 1)
+        if (mouseButtons & 4)
         {
-            rotation.x += dy * 0.2f;
-            rotation.y += dx * 0.2f;
-        }
-        else if (mouseButtons & 4)
-        {
-            translation.z -= dy * 0.1f;
+            view->rotate(dy,dx);
         }
 
         mousePos.x = x;
@@ -652,62 +607,80 @@ namespace rtps
         // set view matrix
         glutPostRedisplay();
     }
-    void TestApplication::ResizeWindowCallback(int w, int h)
+void TestApplication::cameraChanged()
+{
+
+    //view->getViewMatrix().print("myViewMatrix");
+    //float16 viewMatrix;
+    //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
+    //viewMatrix.print("viewMatrix");
+    //update the view matricies for all shaders.
+    for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+    {
+        glUseProgram(i->second.getProgram());
+        GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+        location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+        location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
+        if(location!=-1)
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+            glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
+
+    }
+}
+    void TestApplication::ResizeWindowCallback(int width, int height)
     {
         //avoid height = 0 this will cause divide by zero when calculating aspect ratio
-        if (h==0)
+        if (height==0)
         {
-            h=1;
+            height=1;
         }
-        glViewport(0, 0, w, h);
-
-        for(map<string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
-        {
-            i->second->setWindowDimensions(w,h);
-        }
-
-        // projection
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        windowWidth = w;
-        windowHeight = h;
-        //setFrustum();
+	glViewport(0, 0, width, height);
+	for(map<std::string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+	{
+		i->second->setWindowDimensions(width,height);
+	}
+	view->setWidth(width);
+	view->setHeight(height);
+	windowWidth=width;
+	windowHeight=height;
+	//set the projection and view matricies for all shaders.
+	for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+	{
+	 glUseProgram(i->second.getProgram());
+	 GLint location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
+	 if(location!=-1)
+	     glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
+	 location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
+	 if(location!=-1)
+	     glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
+	}
         glutPostRedisplay();
     }
     void TestApplication::TimerCallback(int ms)
     {
-        if(!paused)
-        {
-            glFinish();
-            for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-            {
-                i->second->acquireGLBuffers();
-                i->second->update();
-                i->second->interact();
-            }
+            if(!paused)
+	    {
+		glFinish();
+		for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+		{
+		    i->second->acquireGLBuffers();
+		    i->second->update();
+		    i->second->interact();
+		}
 
-            for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-            {
-                i->second->integrate();
-                i->second->postProcess();
-                i->second->releaseGLBuffers();
-            }
-            /*systems["water"]->acquireGLBuffers();
-            systems["rb1"]->acquireGLBuffers();
-            systems["water"]->update();
-            systems["rb1"]->update();
-            systems["water"]->interact();
-            systems["rb1"]->interact();
-            systems["water"]->integrate();
-            systems["rb1"]->integrate();
-            systems["water"]->postProcess();
-            systems["rb1"]->postProcess();
-            //streamline->addStreamLine(systems["water"]->getPositionBufferUnsorted(),systems["water"]->getColorBufferUnsorted(),systems["water"]->getNum());
-            systems["water"]->releaseGLBuffers();
-            systems["rb1"]->releaseGLBuffers();*/
-        }
+		for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+		{
+		    i->second->integrate();
+		    i->second->postProcess();
+		    i->second->releaseGLBuffers();
+		}
+	    }
+	glutPostRedisplay();
     }
     void TestApplication::ResetSimulations()
     {
@@ -733,26 +706,80 @@ namespace rtps
     }
     void TestApplication::initGL()
     {
-        // viewport
-        glViewport(0, 0, windowWidth, windowHeight);
-
-        // projection
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        //gluPerspective(60.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 100.0);
-        //gluPerspective(fov, (GLfloat)window_width / (GLfloat) window_height, 0.3, 100.0);
-        //gluPerspective(90.0, (GLfloat)window_width / (GLfloat) window_height, 0.1, 10000.0); //for lorentz
-
-        // set view matrix
-        glClearColor(.9f, .9f, .9f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+	
+	glClearColor(0.9f,0.9f,0.9f,1.0f);
+	//set the projection and view matricies for all shaders.
+	for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+	{
+	glUseProgram(i->second.getProgram());
+	GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
+	if(location!=-1)
+	    glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+	//dout<<i->first<<" viewMatrixLocation = "<<location<<endl;
+	location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
+	if(location!=-1)
+	    //glUniformMatrix4fv(location,1,GL_FALSE,projectionMatrix.m);
+	    glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
+	//dout<<i->first<<" projectionMatrixLocation = "<<location<<endl;
+	location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
+	if(location!=-1)
+	    glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+	//dout<<i->first<<" inverseViewMatrixLocation = "<<location<<endl;
+	location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
+	if(location!=-1)
+	    glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
+	//dout<<i->first<<" inverseProjectionMatrixLocation = "<<location<<endl;
+	location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
+	if(location!=-1)
+	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+	    glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
+	glUseProgram(0);
+	}
+	GLuint program = lib->shaders["sphereShader"].getProgram();
+	glUseProgram(program);
+	glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+	program = lib->shaders["skybox"].getProgram();
+	glUseProgram(program);
+	glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);
+	glUseProgram(0);
     }
+void TestApplication::renderSkyBox()
+ {
+     glDisable(GL_TEXTURE_2D);
+     glEnable(GL_TEXTURE_GEN_S);
+     glEnable(GL_TEXTURE_GEN_T);
+     glEnable(GL_TEXTURE_GEN_R);
+     glEnable(GL_TEXTURE_CUBE_MAP);
 
+     glUseProgram(lib->shaders["skybox"].getProgram());
+     glActiveTexture(GL_TEXTURE0);
+     glBindTexture(GL_TEXTURE_CUBE_MAP,environTex);
+
+     // draw the skybox
+
+     glEnableVertexAttribArray(0);
+     glEnableVertexAttribArray(1);
+     glBindBuffer(GL_ARRAY_BUFFER,skyboxVBO);
+     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
+     glBindBuffer(GL_ARRAY_BUFFER,skyboxTexVBO);
+     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
+
+     glDrawArrays(GL_QUADS, 0, 24);
+
+     glDisableVertexAttribArray(0);
+     glDisableVertexAttribArray(1);
+
+     glDisable(GL_TEXTURE_CUBE_MAP);
+
+     glDisable(GL_TEXTURE_GEN_R);
+     glUseProgram(0);
+
+ }
     void TestApplication::readParamFile(istream& is, string path)
     {
-        ParamParser p;
+	ParamParser p;
         vector<RTPSSettings*> sysSettings;
         vector<string> names;
         p.readParameterFile(is,sysSettings ,names );
@@ -763,7 +790,7 @@ namespace rtps
             //#else
             //    sysSettings[i]->SetSetting("rtps_path","./bin");
             //#endif
-			sysSettings[i]->SetSetting("rtps_path",path);
+			sysSettings[i]->SetSetting("rtps_path",binaryPath);
             //Fixme::This is hacky. I need to determine an efficient way to do simulation scaling
             //for rigid bodies to work well with sph.
             if(sysSettings[i]->GetSettingAs<string>("system")!="sph")
@@ -772,14 +799,15 @@ namespace rtps
                 sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
             }
             systems[names[i]]=RTPS::generateSystemInstance(sysSettings[i],cli);
+            systemRenderType[names[i]] = "Points";
             dout<<"names[i] \'"<<names[i]<<"\'"<<endl;
 
         }
         gridMin = systems["water"]->getSettings()->GetSettingAs<float4>("domain_min");
         gridMax = systems["water"]->getSettings()->GetSettingAs<float4>("domain_max");
-        for(map<string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
-            for(map<string,System*>::iterator j = systems.begin(); j!=systems.end(); j++)
+            for(map<std::string,System*>::iterator j = systems.begin(); j!=systems.end(); j++)
             {
                 if(i==j)
                     continue;
@@ -800,308 +828,8 @@ namespace rtps
     GLuint TestApplication::getWindowWidth() const {
         return windowWidth;
     }
-    void TestApplication::get_bounding_box_for_node (const struct aiNode* nd,
-        struct aiVector3D* minBB,
-        struct aiVector3D* maxBB,
-        struct aiMatrix4x4* trafo
-    ){
-        struct aiMatrix4x4 prev;
-        unsigned int n = 0, t;
-
-        prev = *trafo;
-        aiMultiplyMatrix4(trafo,&nd->mTransformation);
-
-        for (; n < nd->mNumMeshes; ++n) {
-            const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
-            for (t = 0; t < mesh->mNumVertices; ++t) {
-
-                struct aiVector3D tmp = mesh->mVertices[t];
-                aiTransformVecByMatrix4(&tmp,trafo);
-
-                minBB->x = aisgl_min(minBB->x,tmp.x);
-                minBB->y = aisgl_min(minBB->y,tmp.y);
-                minBB->z = aisgl_min(minBB->z,tmp.z);
-
-                maxBB->x = aisgl_max(maxBB->x,tmp.x);
-                maxBB->y = aisgl_max(maxBB->y,tmp.y);
-                maxBB->z = aisgl_max(maxBB->z,tmp.z);
-            }
-        }
-
-        for (n = 0; n < nd->mNumChildren; ++n) {
-            get_bounding_box_for_node(nd->mChildren[n],minBB,maxBB,trafo);
-        }
-        *trafo = prev;
-    }
-
-    // ----------------------------------------------------------------------------
-    void TestApplication::get_bounding_box (struct aiVector3D* minBB, struct aiVector3D* maxBB)
-    {
-        struct aiMatrix4x4 trafo;
-        aiIdentityMatrix4(&trafo);
-
-        minBB->x = minBB->y = minBB->z =  1e10f;
-        maxBB->x = maxBB->y = maxBB->z = -1e10f;
-        get_bounding_box_for_node(scene->mRootNode,minBB,maxBB,&trafo);
-    }
-
-    // ----------------------------------------------------------------------------
-    void TestApplication::color4_to_float4(const struct aiColor4D *c, float f[4])
-    {
-        f[0] = c->r;
-        f[1] = c->g;
-        f[2] = c->b;
-        f[3] = c->a;
-    }
-
-    // ----------------------------------------------------------------------------
-    void TestApplication::set_float4(float f[4], float a, float b, float c, float d)
-    {
-        f[0] = a;
-        f[1] = b;
-        f[2] = c;
-        f[3] = d;
-    }
-
-    // ----------------------------------------------------------------------------
-    void TestApplication::apply_material(const struct aiMaterial *mtl,Mesh* mesh)
-    {
-        float c[4];
-
-        GLenum fill_mode;
-        int ret1, ret2;
-        struct aiColor4D diffuse;
-        struct aiColor4D specular;
-        struct aiColor4D ambient;
-        struct aiColor4D emission;
-        float shininess, strength, opacity;
-        int two_sided;
-        int wireframe;
-        unsigned int maxVal;
-	if(!mtl)
-		cerr<<"No Material Found"<<endl;
-
-        maxVal = 1;
-        aiGetMaterialFloatArray(mtl,AI_MATKEY_OPACITY,&opacity,&maxVal);
-        mesh->material.opacity = opacity;
-        dout<<"Opacity: "<< opacity<<" Max "<<maxVal<<std::endl;
-        set_float4(c, 0.8f, 0.8f, 0.8f, 1.0f);
-        if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
-            color4_to_float4(&diffuse, c);
-        c[3]=opacity;
-        memcpy(&mesh->material.diffuse.x,c,sizeof(float3));
-        //glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, c);
-
-        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
-        set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
-        if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_SPECULAR, &specular))
-            color4_to_float4(&specular, c);
-        c[3]=opacity;
-        memcpy(&mesh->material.specular.x,c,sizeof(float3));
-        //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
-
-        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
-        set_float4(c, 0.2f, 0.2f, 0.2f, 1.0f);
-        if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_AMBIENT, &ambient))
-            color4_to_float4(&ambient, c);
-        c[3]=opacity;
-        memcpy(&mesh->material.ambient.x,c,sizeof(float3));
-        //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, c);
-
-        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
-        set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
-        if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_EMISSIVE, &emission))
-            color4_to_float4(&emission, c);
-        c[3]=opacity;
-        //glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, c);
-
-        dout<<"red "<<c[0]<<" green  "<<c[1]<<" blue  "<<c[2]<<"  alpha  "<<c[3]<<std::endl;
-        maxVal = 1;
-        ret1 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS, &shininess, &maxVal);
-        if(ret1 == AI_SUCCESS) {
-            maxVal = 1;
-            ret2 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS_STRENGTH, &strength, &maxVal);
-            if(ret2 == AI_SUCCESS)
-            {
-                //glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess * strength);
-                mesh->material.shininess=shininess*strength;
-            }
-            else
-            {
-                //glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
-                mesh->material.shininess=shininess;
-            }
-        }
-        else {
-            mesh->material.shininess=0.0f;
-           // glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
-            //set_float4(c, 0.0f, 0.0f, 0.0f, 0.0f);
-            //c[3]=opacity;
-            //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, c);
-        }
-
-        maxVal = 1;
-        if(AI_SUCCESS == aiGetMaterialIntegerArray(mtl, AI_MATKEY_ENABLE_WIREFRAME, &wireframe, &maxVal))
-            fill_mode = wireframe ? GL_LINE : GL_FILL;
-        else
-            fill_mode = GL_FILL;
-        //glPolygonMode(GL_FRONT_AND_BACK, fill_mode);
-    }
-    void TestApplication::build_dynamic_shapes (const struct aiScene *sc, const struct aiNode* nd)
-    {
-        static unsigned int numshapes=0;
-        unsigned int n = 0, t, i;
-
-        float16 mat;
-            aiMatrix4x4 m(1.0f,0.0f,0.0f,0.0f,
-                          0.0f,1.0f,0.0f,0.0f,
-                          0.0f,0.0f,1.0f,0.0f,
-                          0.0f,0.0f,0.0f,1.0f);
-
-        for (; n < nd->mNumMeshes; ++n) {
-            const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
-            float3 minCoord(FLT_MAX,FLT_MAX,FLT_MAX);
-            float3 maxCoord(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-            Mesh* me=new Mesh();
-            //dout<<"material index = "<<mesh->mMaterialIndex<<endl;
-            apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
-            unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
-            float* vbo = new float[mesh->mNumVertices*3];
-            float* normals=NULL;
-            if(mesh->HasNormals())
-            {
-                normals = new float[mesh->mNumVertices*3];
-                me->hasNormals=true;
-            }
-            float* texcoords=NULL;
-            if(mesh->HasTextureCoords(0))
-            {
-                texcoords = new float[mesh->mNumVertices*2];
-                me->hasTexture=true;
-            }
-            for (t = 0; t < mesh->mNumFaces; ++t) {
-                const struct aiFace* face = &mesh->mFaces[t];
-                for(i = 0; i < face->mNumIndices; i++) {
-                    unsigned int index = face->mIndices[i];
-                    ibo[t*3+i]=index;
-                    float x=mesh->mVertices[index].x;
-                    float y=mesh->mVertices[index].y;
-                    float z=mesh->mVertices[index].z;
-                    vbo[index*3]=x;
-                    vbo[index*3+1]=y;
-                    vbo[index*3+2]=z;
-                    if(normals)
-                    {
-                        normals[index*3]=mesh->mNormals[index].x;
-                        normals[index*3+1]=mesh->mNormals[index].y;
-                        normals[index*3+2]=mesh->mNormals[index].z;
-                    }
-                    if(texcoords)
-                    {
-                        texcoords[index*2]=mesh->mTextureCoords[0][index].x;
-                        texcoords[index*2+1]=mesh->mTextureCoords[0][index].y;
-                    }
-            //        dout<<"index = "<<index<<"x = "<<x<<" "<<"y = "<<y<<" "<<"z = "<<z<<endl;
-                    if(x<minCoord.x)
-                        minCoord.x=x;
-                    if(x>maxCoord.x)
-                        maxCoord.x=x;
-                    if(y<minCoord.y)
-                        minCoord.y=y;
-                    if(y>maxCoord.y)
-                        maxCoord.y=y;
-                    if(z<minCoord.z)
-                        minCoord.z=z;
-                    if(z>maxCoord.z)
-                        maxCoord.z=z;
-                }
-            }
-
-            me->modelMat=m;
-            me->vbo=createVBO(vbo,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
-            me->vboSize=mesh->mNumVertices;
-            delete[] vbo;
-            me->ibo=createVBO(ibo, mesh->mNumFaces*3*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
-            me->iboSize=mesh->mNumFaces*3;
-            delete[] ibo;
-            if(normals)
-            {
-                me->normalbo=createVBO(normals,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
-            }
-            if(texcoords)
-            {
-                me->texCoordsbo=createVBO(texcoords,mesh->mNumVertices*2*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
-            }
-
-            stringstream s;
-	    //I need too have a better way to handle more than 1 shape.
-	    s<<"dynamicShape"<<numshapes++;
-            dynamicMeshs[s.str()]=me;
-            //dout<<"minCoord ("<<minCoord.x<<","<<minCoord.y<<","<<minCoord.z<<")"<<endl;
-            //dout<<"maxCoord ("<<maxCoord.x<<","<<maxCoord.y<<","<<maxCoord.z<<")"<<endl;
-            //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
-            float space = systems["rb1"]->getSpacing();
-            ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
-            //NOTE: For Illustration use only.
-            /*ParticleShape* shape1 = new ParticleShape(minCoord,maxCoord,space/2.0f);
-            ParticleShape* shape2 = new ParticleShape(minCoord,maxCoord,space/4.0f);
-            ParticleShape* shape3 = new ParticleShape(minCoord,maxCoord,space/8.0f);
-            //ParticleShape* shape4 = new ParticleShape(minCoord,maxCoord,space/16.0f);
-*/
-            shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            /*shape1->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            shape2->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            shape3->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            //shape4->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            */
-            //RenderUtils::write3DTextureToDisc(shape2->getVoxelTexture(),shape2->getVoxelResolution(),s.str().c_str());
-            //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
-
-            pShapes[s.str()]=shape;
-            /*s<<1;
-            pShapes[s.str()]=shape1;
-            s<<2;
-            pShapes[s.str()]=shape2;
-            s<<3;
-            pShapes[s.str()]=shape3;
-            //s<<4;
-            //pShapes[s.str()]=shape4;*/
-            /*float3 dim = maxCoord-minCoord;
-            float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
-
-            float16 modelview;
-            glMatrixMode(GL_MODELVIEW);
-            glPushMatrix();
-            glLoadIdentity();
-            //glRotatef(rotation.x, 1.0, 0.0, 0.0);
-            glTranslatef(trans, trans, trans);
-            glRotatef(-180, 1.0, 0.0, 0.0);
-            glRotatef(-90, 0.0, 0.0, 1.0);
-            //glTranslatef(translation.x, translation.z, translation.y);
-            glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
-            glPopMatrix();
-            modelview.print("modelview");
-            modelview.transpose();
-            mat.print("mat before");
-            mat = mat*modelview;
-            mat.print("mat after");
-
-            pShapes[s.str()]=shape;
-            s<<1;
-            pShapes[s.str()]=shape1;
-            s<<2;
-            pShapes[s.str()]=shape2;
-
-            systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);*/
-                //systems["rb1"]->addParticleShape(shape->getSurfaceTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
-        }
-
-        // draw all children
-        for (n = 0; n < nd->mNumChildren; ++n) {
-            build_dynamic_shapes(sc, nd->mChildren[n]);
-        }
-
-    }
+   
+#if 0
 
     void TestApplication::displayShape(ParticleShape* shape,float3 translation,float spacing)
     {
@@ -1188,235 +916,21 @@ namespace rtps
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
         glDisable(GL_POINT_SPRITE);
     }
+#endif
 
-    void TestApplication::build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
-    {
-        unsigned int n = 0, t,i;
+  
 
-        struct aiMatrix4x4 m = nd->mTransformation;
-        aiMultiplyMatrix4(&m,&parentTransform);
-
-        // update transform
-        aiTransposeMatrix4(&m);
-
-        float16 mat;
-        memcpy(&mat,&m,sizeof(float16));
-
-        for (; n < nd->mNumMeshes; ++n) {
-            const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
-
-            //dout<<"num faces "<<mesh->mNumFaces<<endl;
-            float3 minCoord(FLT_MAX,FLT_MAX,FLT_MAX);
-            float3 maxCoord(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-            Mesh* me=new Mesh();
-            //dout<<"material index = "<<mesh->mMaterialIndex<<endl;
-            apply_material(sc->mMaterials[mesh->mMaterialIndex],me);
-            unsigned int* ibo = new unsigned int[mesh->mNumFaces*3];
-            float* vbo = new float[mesh->mNumVertices*3];
-            float* normals=NULL;
-            if(mesh->HasNormals())
-            {
-                normals = new float[mesh->mNumVertices*3];
-                me->hasNormals=true;
-            }
-            float* texcoords=NULL;
-            if(mesh->HasTextureCoords(0))
-            {
-                texcoords = new float[mesh->mNumVertices*2];
-                me->hasTexture=true;
-            }
-            for (t = 0; t < mesh->mNumFaces; ++t) {
-                const struct aiFace* face = &mesh->mFaces[t];
-                for(i = 0; i < face->mNumIndices; i++) {
-                    unsigned int index = face->mIndices[i];
-                    ibo[t*3+i]=index;
-                    float x=mesh->mVertices[index].x;
-                    float y=mesh->mVertices[index].y;
-                    float z=mesh->mVertices[index].z;
-                    vbo[index*3]=x;
-                    vbo[index*3+1]=y;
-                    vbo[index*3+2]=z;
-                    if(normals)
-                    {
-                        normals[index*3]=mesh->mNormals[index].x;
-                        normals[index*3+1]=mesh->mNormals[index].y;
-                        normals[index*3+2]=mesh->mNormals[index].z;
-                    }
-                    if(texcoords)
-                    {
-                        texcoords[index*2]=mesh->mTextureCoords[0][index].x;
-                        texcoords[index*2+1]=mesh->mTextureCoords[0][index].y;
-                    }
-            //        dout<<"index = "<<index<<"x = "<<x<<" "<<"y = "<<y<<" "<<"z = "<<z<<endl;
-                    if(x<minCoord.x)
-                        minCoord.x=x;
-                    if(x>maxCoord.x)
-                        maxCoord.x=x;
-                    if(y<minCoord.y)
-                        minCoord.y=y;
-                    if(y>maxCoord.y)
-                        maxCoord.y=y;
-                    if(z<minCoord.z)
-                        minCoord.z=z;
-                    if(z>maxCoord.z)
-                        maxCoord.z=z;
-                }
-            }
-            me->modelMat=m;
-            me->vbo=createVBO(vbo,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
-            me->vboSize=mesh->mNumVertices;
-            delete[] vbo;
-            me->ibo=createVBO(ibo, mesh->mNumFaces*3*sizeof(int),GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW );
-            me->iboSize=mesh->mNumFaces*3;
-            delete[] ibo;
-            if(normals)
-            {
-                me->normalbo=createVBO(normals,mesh->mNumVertices*3*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
-            }
-            if(texcoords)
-            {
-                me->texCoordsbo=createVBO(texcoords,mesh->mNumVertices*2*sizeof(float),GL_ARRAY_BUFFER,GL_STATIC_DRAW );
-            }
-
-            stringstream s;
-            s<<"test"<<mesh->mNumFaces;
-            meshs[s.str()]=me;
-            //dout<<"minCoord ("<<minCoord.x<<","<<minCoord.y<<","<<minCoord.z<<")"<<endl;
-            //dout<<"maxCoord ("<<maxCoord.x<<","<<maxCoord.y<<","<<maxCoord.z<<")"<<endl;
-            //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
-            /*float space = systems["rb1"]->getSpacing()/2.f;
-            float3 adjminCoord=float3(minCoord.x-space,minCoord.y-space,minCoord.z-space);
-            float3 adjmaxCoord=float3(maxCoord.x+space,maxCoord.y+space,maxCoord.z+space);
-            space = systems["rb1"]->getSpacing();
-            ParticleShape* shape = new ParticleShape(adjminCoord,adjmaxCoord,space);*/
-            float space = systems["rb1"]->getSpacing();
-            ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
-
-
-            shape->voxelizeMesh(me->vbo,me->ibo,me->iboSize);
-            //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
-            //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
-            s<<"surface";
-            //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
-            float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
-            /*dout<<"mesh name = "<<s.str()<<endl;
-            dout<<"maxCoord dim = "<<shape->getMaxDim()<<endl;
-            dout<<"minCoord dim = "<<shape->getMinDim()<<endl;
-            dout<<"Trans = "<<trans<<endl;
-            dout<<"minCoord ("<<shape->getMin().x<<","<<shape->getMin().y<<","<<shape->getMin().z<<")"<<endl;
-            dout<<"voxel res = "<<shape->getVoxelResolution()<<endl;
-            dout<<"spacing = "<<space<<endl;*/
-            float3 dim = maxCoord-minCoord;
-
-
-
-            float16 modelview;
-            glMatrixMode(GL_MODELVIEW);
-            glPushMatrix();
-            glLoadIdentity();
-            //glRotatef(rotation.x, 1.0, 0.0, 0.0);
-            glTranslatef(trans, trans, trans);
-            glRotatef(-180, 1.0, 0.0, 0.0);
-            glRotatef(-90, 0.0, 0.0, 1.0);
-            //glTranslatef(translation.x, translation.z, translation.y);
-            glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
-            glPopMatrix();
-            modelview.print("modelview");
-            modelview.transpose();
-            mat.print("mat before");
-            mat = mat*modelview;
-            mat.print("mat after");
-            pShapes[s.str()]=shape;
-           //Debug!!****
-            //if(mesh->mNumFaces<50)
-
-
-                systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
-                //systems["rb1"]->addParticleShape(shape->getSurfaceTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
-        }
-
-        // draw all children
-        for (n = 0; n < nd->mNumChildren; ++n) {
-            build_shapes(sc, nd->mChildren[n],m);
-        }
-
-    }
-
-    // ----------------------------------------------------------------------------
-    void TestApplication::recursive_render (const struct aiScene *sc, const struct aiNode* nd)
-	{
-        unsigned int n = 0, t,i=0;
-        struct aiMatrix4x4 m = nd->mTransformation;
-
-        // update transform
-        aiTransposeMatrix4(&m);
-        glPushMatrix();
-        glMultMatrixf((float*)&m);
-
-        // draw all meshes assigned to this node
-        for (; n < nd->mNumMeshes; ++n) {
-            const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
-
-            //apply_material(sc->mMaterials[mesh->mMaterialIndex]);
-
-            if(mesh->mNormals == NULL) {
-                glDisable(GL_LIGHTING);
-            } else {
-                glEnable(GL_LIGHTING);
-            }
-
-
-            for (t = 0; t < mesh->mNumFaces; ++t) {
-                const struct aiFace* face = &mesh->mFaces[t];
-                GLenum face_mode;
-
-                switch(face->mNumIndices) {
-                    case 1: face_mode = GL_POINTS; break;
-                    case 2: face_mode = GL_LINES; break;
-                    case 3: face_mode = GL_TRIANGLES; break;
-                    default: face_mode = GL_POLYGON; break;
-                }
-
-                //dout<<"Face mode = "<<face_mode<<" GL_TRIANGLES = "<<GL_TRIANGLES<<endl;
-                glBegin(face_mode);
-
-
-                for(i = 0; i < face->mNumIndices; i++) {
-                    int index = face->mIndices[i];
-                    if(mesh->mColors[0] != NULL)
-                    {
-                        glColor4fv((GLfloat*)&mesh->mColors[0][index]);
-                    }
-                    if(mesh->mNormals != NULL)
-                        glNormal3fv(&mesh->mNormals[index].x);
-                    glVertex3fv(&mesh->mVertices[index].x);
-                    //dout<<"index = "<<index<<"x = "<<mesh->mVertices[index].x<<" "<<"y = "<<mesh->mVertices[index].y<<" "<<"z = "<<mesh->mVertices[index].z<<endl;
-                }
-
-                glEnd();
-            }
-
-        }
-
-        // draw all children
-        for (n = 0; n < nd->mNumChildren; ++n) {
-            recursive_render(sc, nd->mChildren[n]);
-        }
-
-        glPopMatrix();
-    }
     void TestApplication::display(bool blend)
     {
-        float tmp;
-        glEnable(GL_NORMALIZE);
+        //glEnable(GL_NORMALIZE);
         glEnable(GL_CULL_FACE);
-        glDisable(GL_LIGHTING);
+        //glDisable(GL_LIGHTING);
         if(blend)
         {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         }
-        for(map<string,Mesh*>::iterator i = meshs.begin(); i!=meshs.end(); i++)
+        for(map<std::string,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
         {
             if((!blend&&i->second->material.opacity==1.0f) || (blend &&i->second->material.opacity<1.0f))
                 meshRenderer->render(i->second,light);
@@ -1425,31 +939,58 @@ namespace rtps
         {
             glDisable(GL_BLEND);
         }
-        glDisable(GL_NORMALIZE);
+        //glDisable(GL_NORMALIZE);
         glDisable(GL_CULL_FACE);
     }
-    void TestApplication::loadMeshScene(string& filename)
+    void TestApplication::loadMeshScene(const string& filename)
     {
-        dynamicMeshScene = aiImportFile(filename.c_str(),aiProcessPreset_TargetRealtime_MaxQuality);
-	if(!dynamicMeshScene)
-            cerr<<"Scene file couldn't be imported from: "<<filename<<endl;
+	dynamicMeshScene->loadScene(filename);
+	dynamicMeshScene->loadMeshes(dynamicMeshes,dynamicMeshScene->getScene()->mRootNode);
+	for(map<std::string,Mesh*>::iterator i = dynamicMeshes.begin(); i!=dynamicMeshes.end(); i++)
+	{
+	  ParticleShape* shape = createParticleShape("rb1",i->second);
+	  pShapes[i->first]=shape;
+	}
     }
-    void TestApplication::loadScene(string& filename)
+    void TestApplication::loadScene(const string& filename)
     {
-        // we are taking one of the postprocessing presets to avoid
-        // spelling out 20+ single postprocessing flags here.
-        scene = aiImportFile(filename.c_str(),aiProcessPreset_TargetRealtime_MaxQuality);
+	scene->loadScene(filename);
+	scene->loadMeshes(meshes,scene->getScene()->mRootNode);
+	for(map<std::string,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
+	{
+		ParticleShape* shape = createParticleShape("rb1",i->second);
+		//i->second->modelMat.m[12]=-5.;
+		//i->second->modelMat.m[13]=-5.;
+		//i->second->modelMat.m[14]=5.;
+		float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+		//float16 mat=i->second->modelMat;
+		//FIXME: rotation should not be needed here. This is hackish
+		float16 mat;
+		mat.loadIdentity();
+		mat[5]=-1.0f;
+		mat[10]=-1.0f;
+		//mat.transpose();
+		float16 mat2;
+		mat2.loadIdentity();
+		mat2[0]=0.0f;
+		mat2[1]=-1.f;
+		mat2[4]=1.f;
+		mat2[5]=0.0f;
+		mat.print("mat before");
+		mat2.print("mat2");
+		mat=mat2*mat;
+		mat.print("mat after");
 
-        if (scene) {
-            get_bounding_box(&scene_min,&scene_max);
-            scene_center.x = (scene_min.x + scene_max.x) / 2.0f;
-            scene_center.y = (scene_min.y + scene_max.y) / 2.0f;
-            scene_center.z = (scene_min.z + scene_max.z) / 2.0f;
-        }
-        else
-        {
-            cerr<<"Scene file couldn't be imported from: "<<filename<<endl;
-        }
-
+		//memcpy(&mat,&i->second->modelMat,sizeof(float16));
+		//mat.print("mat before");
+		mat[3]+=trans;
+		mat[7]+=trans;
+		mat[11]+=trans;
+		//mat=mat2*mat;
+		//mat = mat*view->getViewMatrix();
+		//mat.print("mat after");
+		systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
+		pShapes[i->first]=shape;
+	}
     }
 };

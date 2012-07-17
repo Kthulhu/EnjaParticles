@@ -9,7 +9,9 @@ const struct aiScene* AIWrapper::getScene()
 {
 	return sc;
 }
-void AIWrapper::loadMeshes (std::map<QString,Mesh*>& meshes, const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
+
+void AIWrapper::loadMeshes (std::map<std::string,Mesh* >& meshes,
+				 const struct aiNode* nd, struct aiMatrix4x4 parentTransform)
 {
 unsigned int n = 0, t,i;
 
@@ -101,7 +103,7 @@ unsigned int n = 0, t,i;
             stringstream s;
             s<<mesh->mName.data<<mesh->mNumFaces;
             dout<<"Mesh name = "<<s.str()<<endl;
-            meshes[QString(s.str().c_str())]=me;
+            meshes[s.str()]=me;
             //dout<<"minCoord ("<<minCoord.x<<","<<minCoord.y<<","<<minCoord.z<<")"<<endl;
             //dout<<"maxCoord ("<<maxCoord.x<<","<<maxCoord.y<<","<<maxCoord.z<<")"<<endl;
             //Add padding equalt to spacing to ensure that all of the mesh is voxelized.
@@ -319,11 +321,11 @@ void AIWrapper::get_bounding_box_for_node (const struct aiNode* nd,
         }
         *trafo = prev;
 }
-void AIWrapper::loadScene(const QString& filename)
+void AIWrapper::loadScene(const std::string& filename)
 {
         // we are taking one of the postprocessing presets to avoid
         // spelling out 20+ single postprocessing flags here.
-        sc = aiImportFile(filename.toAscii().data(),aiProcessPreset_TargetRealtime_MaxQuality);
+        sc = aiImportFile(filename.c_str(),aiProcessPreset_TargetRealtime_MaxQuality);
 
         if (sc) {
             get_bounding_box(&scene_min,&scene_max);
@@ -333,7 +335,7 @@ void AIWrapper::loadScene(const QString& filename)
         }
         else
         {
-            cerr<<"Scene file couldn't be imported from: "<<filename.toAscii().data()<<endl;
+            cerr<<"Scene file couldn't be imported from: "<<filename<<endl;
         }
 
 }

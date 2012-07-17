@@ -79,8 +79,8 @@ namespace rtps
         std::map<QString,ParticleEffect*> effects;
         MeshEffect* meshRenderer;
         std::map<QString,ParticleShape*> pShapes;
-        std::map<QString,Mesh*> meshes;
-        std::map<QString,Mesh*> dynamicMeshes;
+        std::map<std::string,Mesh* > meshes;
+        std::map<std::string,Mesh* > dynamicMeshes;
         ShaderLibrary* lib;
 
         Camera* view;
