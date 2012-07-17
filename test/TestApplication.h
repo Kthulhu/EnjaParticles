@@ -4,21 +4,25 @@
 #include <string>
 #include <iostream>
 
+#include "../rtpslib/RTPS.h"
 #include "../rtpslib/render/MeshEffect.h"
 #include "../rtpslib/system/System.h"
 #include "../rtpslib/system/ParticleShape.h"
 #include "../rtpslib/render/ParticleEffect.h"
-#include <assimp/assimp.h>
-#include <assimp/aiPostProcess.h>
-#include <assimp/aiScene.h>
 
-#include "../rtpslib/render/util/stb_image_write.h"
-#define aisgl_min(x,y) (x<y?x:y)
-#define aisgl_max(x,y) (y>x?y:x)
 namespace rtps
 {
-   class TestApplication
+
+	//class System;
+	class AIWrapper;
+	//class MeshEffect;
+	//class ParticleEffect;
+	//class ShaderLibrary;
+	//class CL;
+    class TestApplication
     {
+
+
         public:
             TestApplication(std::istream& is, std::string path);
             ~TestApplication();
@@ -37,58 +41,50 @@ namespace rtps
             GLuint getWindowWidth() const;
             void setWindowHeight(GLuint windowHeight);
             void setWindowWidth(GLuint windowWidth);
-            void loadScene(std::string& filename);
-            void loadMeshScene(std::string& filename);
+            void loadScene(const std::string& filename);
+            void loadMeshScene(const std::string& filename);
+	    void renderSkyBox();
+	    void cameraChanged();
+	    ParticleShape* createParticleShape(const std::string& system, Mesh* mesh);
             //FIXME: These following methods are used for assimp to import modules. They should
             //probably be better. Currently they are almost verbatim from a loading example.
             void display(bool blend);
-            void build_dynamic_shapes (const struct aiScene *sc, const struct aiNode* nd);
-            void displayShape(ParticleShape* shape,float3 translation,float spacing);
-            void build_shapes (const struct aiScene *sc, const struct aiNode* nd, struct aiMatrix4x4 parentTransform=aiMatrix4x4(1.0f,0.0f,0.0f,0.0f,
-                                                                                                                            0.0f,1.0f,0.0f,0.0f,
-                                                                                                                            0.0f,0.0f,1.0f,0.0f,
-                                                                                                                            0.0f,0.0f,0.0f,1.0f) );
+
             int writeMovieFrame(const char* filename, const char* dir);
-            void recursive_render (const struct aiScene *sc, const struct aiNode* nd);
-            void apply_material(const struct aiMaterial *mtl, Mesh* mesh);
-            void set_float4(float f[4], float a, float b, float c, float d);
-            void color4_to_float4(const struct aiColor4D *c, float f[4]);
-            void get_bounding_box (struct aiVector3D* min, struct aiVector3D* max);
-            void get_bounding_box_for_node (const struct aiNode* nd,
-                    struct aiVector3D* min,
-                    struct aiVector3D* max,
-                    struct aiMatrix4x4* trafo
-                );
+	GLuint width(){return windowWidth;}
+	GLuint height(){return windowHeight;}
 
         private:
             GLuint windowWidth,windowHeight, environTex;
-            std::map<std::string,System*> systems;
-            std::map<std::string,ParticleEffect*> effects;
-            MeshEffect* meshRenderer;
-            std::map<std::string,ParticleShape*> pShapes;
-            std::map<std::string,Mesh*> meshs;
-            std::map<std::string,Mesh*> dynamicMeshs;
-            ShaderLibrary* lib;
-            std::string renderType;
-            float3 rotation; //may want to consider quaternions for this at some point.
-            float3 translation;
-            Light light;
-            int2 mousePos;
-            int mouseButtons;
-            // the global Assimp scene object
-            const struct aiScene* scene;
-            const struct aiScene* dynamicMeshScene;
-            GLuint scene_list;
-            struct aiVector3D scene_min, scene_max, scene_center;
-            int frameCounter;
-            bool renderMovie;
 
+        std::map<std::string,System*> systems;
+        std::map<std::string,std::string> systemRenderType;
+        std::map<std::string,ParticleEffect*> effects;
+        MeshEffect* meshRenderer;
+        std::map<std::string,ParticleShape*> pShapes;
+        std::map<std::string,Mesh* > meshes;
+        std::map<std::string,Mesh* > dynamicMeshes;
+        ShaderLibrary* lib;
 
-            float4 gridMax,gridMin;
-            float sizeScale;
-            float mass;
-            CL* cli;
-            bool paused,renderVelocity;
+        Camera* view;
+        Light* light;
+        int2 mousePos;
+        int mouseButtons;
+
+        AIWrapper* scene;
+        AIWrapper* dynamicMeshScene;
+        //GLuint scene_list;
+        GLuint skyboxVBO,skyboxTexVBO;
+
+        int frameCounter;
+        bool renderMovie;
+
+        float4 gridMax,gridMin;
+        float sizeScale;
+        float mass;
+        CL* cli;
+        bool paused,renderVelocity;
+        std::string binaryPath;
     };
 };
 #endif

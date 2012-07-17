@@ -161,7 +161,11 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     {
         delete i->second;
     }
-    for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
+    for(map<std::string,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
+    {
+        delete i->second;
+    }
+    for(map<std::string,Mesh*>::iterator i = dynamicMeshes.begin(); i!=dynamicMeshes.end(); i++)
     {
         delete i->second;
     }
@@ -802,7 +806,7 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         }
-        for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
+        for(map<std::string,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
         {
             if((!blend&&i->second->material.opacity==1.0f) || (blend &&i->second->material.opacity<1.0f))
                 meshRenderer->render(i->second,light);
@@ -821,9 +825,9 @@ void GLWidget::setParameterValue(const QString& system, const QString& parameter
 }
 void GLWidget::loadScene(const QString& filename)
 {
-    scene->loadScene(filename);
+    scene->loadScene(filename.toAscii().data());
     scene->loadMeshes(meshes,scene->getScene()->mRootNode);
-    for(map<QString,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
+    for(map<std::string,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
     {
         ParticleShape* shape = createParticleShape("rb1",i->second);
         //i->second->modelMat.m[12]=-5.;
@@ -857,17 +861,17 @@ void GLWidget::loadScene(const QString& filename)
         //mat = mat*view->getViewMatrix();
         //mat.print("mat after");
         systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
-        pShapes[i->first]=shape;
+        pShapes[QString(i->first.c_str())]=shape;
     }
 }
 void GLWidget::loadMeshScene(const QString& filename)
 {
-     dynamicMeshScene->loadScene(filename);
+     dynamicMeshScene->loadScene(filename.toAscii().data());
      dynamicMeshScene->loadMeshes(dynamicMeshes,dynamicMeshScene->getScene()->mRootNode);
-     for(map<QString,Mesh*>::iterator i = dynamicMeshes.begin(); i!=dynamicMeshes.end(); i++)
+     for(map<std::string,Mesh*>::iterator i = dynamicMeshes.begin(); i!=dynamicMeshes.end(); i++)
      {
           ParticleShape* shape = createParticleShape("rb1",i->second);
-          pShapes[i->first]=shape;
+          pShapes[QString(i->first.c_str())]=shape;
      }
 }
 
