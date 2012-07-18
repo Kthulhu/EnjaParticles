@@ -14,11 +14,12 @@ namespace rtps
      setCentralWidget(centralWidget);
      //QGLFormat fmt(QGL::AlphaChannel|QGL::DeprecatedFunctions|QGL::SampleBuffers);
      //fmt.setProfile(QGLFormat::CompatibilityProfile);
-     QGLFormat fmt(QGL::AlphaChannel|QGL::SampleBuffers);
+     //QGLFormat fmt(QGL::AlphaChannel|QGL::SampleBuffers);
+     QGLFormat fmt(QGL::AlphaChannel);
      fmt.setProfile(QGLFormat::CoreProfile);
      QGLContext* ctx = new QGLContext(fmt);
 
-	 ctx->makeCurrent();
+	 //ctx->makeCurrent();
      glWidget = new GLWidget(ctx,path,this);
      glWidget->setFocus();
      glWidget->setFocusPolicy(Qt::WheelFocus);

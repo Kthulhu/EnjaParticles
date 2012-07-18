@@ -169,7 +169,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 	lib->initializeShaders(binaryPath+"/shaders");
 	//effects["Points"]=new ParticleEffect(lib,width(),height(),5.0f,false);
 	effects["Points"]=new ParticleEffect(lib,width(),height(),0.75f,false);
-	effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),.75f,true);
+	effects["Screen Space"]=new SSEffect(lib,GAUSSIAN_BLUR,width(),height(),.75f,true);
 	//effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),2.f,false);
 	effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),.75f,false);
 

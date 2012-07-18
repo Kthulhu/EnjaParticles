@@ -48,7 +48,7 @@ namespace rtps
         currentDepthBuffer="depth";
         bilateralRange=0.01f;
         filterRadius=8.0f;
-        falloff=0.001f;
+        falloff=0.0001f;
         numberOfCurvatureIterations=50;
         thickness=false;
         //dout<<"width = "<<width<<"height = "<<height<<endl;
@@ -353,6 +353,7 @@ namespace rtps
 
         //glDisable(GL_TEXTURE_2D);
         glPopAttrib();
+		currentDepthBuffer="depth";
         //printf("done rendering\n");
         if (m_writeFramebuffers)
         {
