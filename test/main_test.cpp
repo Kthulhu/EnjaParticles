@@ -115,7 +115,7 @@ int main(int argc, char** argv)
     dout<<paramFile<<endl;
     //ifstream is(paramFile.c_str(),ifstream::in);
 	ifstream is(paramFile.c_str(),ifstream::in);
-    app=new TestApplication(is,filepath);
+    app=new TestApplication(is,filepath,800,600);
     atexit(cleanUp);
     glutMainLoop();
     return 0;

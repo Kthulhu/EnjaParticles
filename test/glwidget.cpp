@@ -243,7 +243,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         meshRenderer= (MeshEffect*)effects["Mesh Renderer"];//new MeshEffect(lib,width(),height(),20.0f,false);
     }
 
-    glClearColor(0.9f,0.9f,0.9f,1.0f);
+    glClearColor(0.8f,0.8f,0.8f,1.0f);
     //set the projection and view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
@@ -285,6 +285,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 
  void GLWidget::renderSkyBox()
  {
+     glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
      glDisable(GL_TEXTURE_2D);
      glEnable(GL_TEXTURE_GEN_S);
      glEnable(GL_TEXTURE_GEN_T);
@@ -305,13 +306,14 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
      glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
 
      glDrawArrays(GL_QUADS, 0, 24);
+     glPopAttrib();
 
-     glDisableVertexAttribArray(0);
-     glDisableVertexAttribArray(1);
+     //glDisableVertexAttribArray(0);
+     //glDisableVertexAttribArray(1);
 
-     glDisable(GL_TEXTURE_CUBE_MAP);
+     //glDisable(GL_TEXTURE_CUBE_MAP);
 
-     glDisable(GL_TEXTURE_GEN_R);
+     //glDisable(GL_TEXTURE_GEN_R);
      glUseProgram(0);
 
  }
@@ -325,12 +327,13 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
             cameraChanged();
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 
 
 #if 1
-        glEnable(GL_DEPTH_TEST);
         renderSkyBox();
-
+        glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
         //display static opaque objects
         display(false);
@@ -362,8 +365,10 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         displayShape(pShapes["dynamicShape112"],float3(11.0f,3.f,1.0f),systems["water"]->getSpacing()/4.0f);
         displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
 #endif
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_MULTISAMPLE_ARB);
+        //glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_MULTISAMPLE_ARB);
+        glPopAttrib();
+        glPopClientAttrib();
         if(renderMovie)
         {
             writeMovieFrame("image","./frames/");

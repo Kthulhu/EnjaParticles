@@ -35,9 +35,13 @@ namespace rtps
     MeshEffect::~MeshEffect(){}
     void MeshEffect::renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light* light)
     {
+        if(!mesh)
+            return;
         //glMatrixMode(GL_MODELVIEW);
         //glPushMatrix();
         //glMultMatrixf((float*)&mesh->modelMat);
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
         glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
@@ -63,7 +67,7 @@ namespace rtps
         }
         if(mesh->ibo)
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
-
+        glEnable(GL_TEXTURE_CUBE_MAP);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
 
@@ -89,6 +93,7 @@ namespace rtps
             glDrawArrays(GL_TRIANGLES,0,mesh->vboSize);
         }
         glUseProgram(0);
+#if 0
         glDisableVertexAttribArray(0);
         if(mesh->colbo)
         {
@@ -104,10 +109,17 @@ namespace rtps
             glDisable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D,0);
         }
+#endif
+        glPopAttrib();
+        glPopClientAttrib();
         //glPopMatrix();
     }
-        void MeshEffect::render(Mesh* mesh,Light* light)
+    void MeshEffect::render(Mesh* mesh,Light* light)
     {
+        if(!mesh)
+            return;
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         //glMatrixMode(GL_MODELVIEW);
         //glPushMatrix();
         //glMultMatrixf((float*)&mesh->modelMat);
@@ -170,6 +182,7 @@ namespace rtps
             glDrawArrays(GL_TRIANGLES,0,mesh->vboSize);
         }
         glUseProgram(0);
+#if 0
         glDisableVertexAttribArray(0);
         if(mesh->colbo)
         {
@@ -185,12 +198,17 @@ namespace rtps
             glDisable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D,0);
         }
+#endif
+        glPopAttrib();
+        glPopClientAttrib();
         //glPopMatrix();
     }
     void MeshEffect::renderInstanced(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size,Light* light)
     {
 		if(size<=0)
 			return;
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         glEnableVertexAttribArray(0);
         glVertexAttribDivisorARB(0,0);
         //glEnableVertexAttribArray(1);
@@ -248,6 +266,7 @@ namespace rtps
         glUniform3fv(glGetUniformLocation(m_shaderLibrary->shaders["renderInstancedShader"].getProgram(),"light.position"),1,&light->pos.x);
         glDrawElementsInstancedEXT(GL_TRIANGLES,mesh->iboSize,GL_UNSIGNED_INT,0,size);
         glUseProgram(0);
+#if 0
         glDisableVertexAttribArray(0);
         glVertexAttribDivisorARB(0,0);
         //glDisableVertexAttribArray(1);
@@ -268,5 +287,8 @@ namespace rtps
             glDisable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D,0);
         }
+#endif
+        glPopAttrib();
+        glPopClientAttrib();
     }
 }

@@ -177,36 +177,34 @@ namespace rtps
     {
         if(num==0)
             return;
+        glPushAttrib(GL_COLOR_BUFFER_BIT|GL_ENABLE_BIT);
         //dout<<"Here"<<endl;
         //perserve original buffer
         GLint buffer;
         glGetIntegerv(GL_DRAW_BUFFER,&buffer);
-
+        glClearColor(0.0f,0.0f,0.0f,0.0f);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,m_fbos[0]);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+
         //glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,m_fbos[0]);
 
-        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D,0);
         //Should probably conditionally create the thickness buffer as well.
         //Render Thickness buffer.
         if(thickness)
         {
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
-            //glDrawBuffers(2,buffers);
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness"],0);
             //glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-            glClearColor(0.0f,0.0f,0.0f,0.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             renderPointsAsSpheres(posVBO, colVBO, num, light,material,scale);
             glDepthMask(GL_TRUE);
             glDisable(GL_BLEND);
         }
 
-        glEnable(GL_DEPTH_TEST);
+        //glEnable(GL_DEPTH_TEST);
         //dout<<"Here"<<endl;
         //Render Color and depth buffer of spheres.
         //glDrawBuffer(GL_COLOR_ATTACHMENT4_EXT);
@@ -225,7 +223,7 @@ namespace rtps
         //glBindFramebuffer(GL_DRAW_FRAMEBUFFER,0);
         //glDrawBuffer(GL_COLOR_ATTACHMENT5_EXT);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColorSmooth"],0);
-
+        glEnable(GL_TEXTURE_2D);
         //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depthColorSmooth"],0);
         glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
         currentDepthBuffer="depth2";
@@ -353,7 +351,8 @@ namespace rtps
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glDisable(GL_TEXTURE_2D);
+        //glDisable(GL_TEXTURE_2D);
+        glPopAttrib();
         //printf("done rendering\n");
         if (m_writeFramebuffers)
         {
@@ -377,6 +376,7 @@ namespace rtps
 
     void SSEffect::createFramebufferTextures()
     {
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         glEnable(GL_TEXTURE_2D);
         glGenTextures(1, &m_glFramebufferTexs["depth"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["depth"]);
@@ -437,9 +437,9 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
         //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,width,height,0,GL_RGBA,GL_FLOAT,NULL);
-        glBindTexture(GL_TEXTURE_2D,0);
-        glDisable(GL_TEXTURE_2D);
-
+        //glBindTexture(GL_TEXTURE_2D,0);
+        //glDisable(GL_TEXTURE_2D);
+        glPopAttrib();
     }
 
     void SSEffect::setWindowDimensions(GLuint width, GLuint height)
