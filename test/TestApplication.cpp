@@ -659,6 +659,10 @@ void TestApplication::cameraChanged()
 	 if(location!=-1)
 	     glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
 	}
+	GLuint program = lib->shaders["sphereShader"].getProgram();
+	glUseProgram(program);
+	glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+	dout<<"Pointscale = "<<((float)width) / tanf(view->getFOV()* (0.5f * PIOVER180))<<endl;
         glutPostRedisplay();
     }
     void TestApplication::TimerCallback(int ms)
@@ -740,6 +744,7 @@ void TestApplication::cameraChanged()
 	GLuint program = lib->shaders["sphereShader"].getProgram();
 	glUseProgram(program);
 	glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+	dout<<"Pointscale = "<<((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180))<<endl;
 	program = lib->shaders["skybox"].getProgram();
 	glUseProgram(program);
 	glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);
