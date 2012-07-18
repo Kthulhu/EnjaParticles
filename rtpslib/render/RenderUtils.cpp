@@ -47,6 +47,7 @@ namespace rtps
                             1.0f,0.0f,
                             1.0f,1.0f,
                             0.0f,1.0f};
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,vertices);
@@ -54,8 +55,9 @@ namespace rtps
 
         glDrawArrays(GL_QUADS, 0, 4);
 
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
+        //glDisableVertexAttribArray(0);
+        //glDisableVertexAttribArray(1);
+        glPopClientAttrib();
     }
     void RenderUtils::writeTextures(const map<string,GLuint>& texs)
     {
@@ -70,6 +72,7 @@ namespace rtps
     }
     int RenderUtils::writeTexture( GLuint tex, const string& filename, bool depth)
     {
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         glEnable(GL_TEXTURE_2D);
         //dout<<"Here"<<endl;
         glBindTexture(GL_TEXTURE_2D,tex);
@@ -79,7 +82,8 @@ namespace rtps
         if(width==0||height==0)
         {
             cout<<"invalid height and width!"<<endl;
-            glDisable(GL_TEXTURE_2D);
+            //glDisable(GL_TEXTURE_2D);
+            glPopAttrib();
             return -1;
         }
         GLubyte* image = new GLubyte[width*height*4];
@@ -100,20 +104,24 @@ namespace rtps
         if (!stbi_write_png(filename.c_str(),width,height,4,(void*)image,0))
         {
             cout<<"failed to write image "<<filename<<endl;
-            glDisable(GL_TEXTURE_2D);
+            //glDisable(GL_TEXTURE_2D);
+            glPopAttrib();
             return -1;
         }
         //dout<<"Here"<<endl;
-        glBindTexture(GL_TEXTURE_2D,0);
+        //glBindTexture(GL_TEXTURE_2D,0);
         delete[] image;
         //dout<<"Here"<<endl;
-        glDisable(GL_TEXTURE_2D);
+        //glDisable(GL_TEXTURE_2D);
+        glPopAttrib();
         return 0;
     }
 
 
     void RenderUtils::write3DTextureToDisc(GLuint tex,int voxelResolution, const char* filename)
     {
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
+        glEnable(GL_TEXTURE_3D_EXT);
         printf("writing %s texture to disc.\n",filename);
         glBindTexture(GL_TEXTURE_3D_EXT,tex);
         GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
@@ -134,8 +142,9 @@ namespace rtps
                 printf("failed to write image %s",filename);
             }
         }
-        glBindTexture(GL_TEXTURE_3D_EXT,0);
+        //glBindTexture(GL_TEXTURE_3D_EXT,0);
         delete[] image;
+        glPopAttrib();
     }
 
     void RenderUtils::convertDepthToRGB(const GLfloat* depth, GLuint size, GLubyte* rgba)
@@ -161,8 +170,8 @@ namespace rtps
 
     void RenderUtils::renderBox(float4 min, float4 max, float4 color)
     {
-
-        glEnable(GL_DEPTH_TEST);
+        //glPushAttrib(GL_ENABLE_BIT);
+        //glEnable(GL_DEPTH_TEST);
         glColor4f(color.x, color.y, color.z, color.w);
         //draw grid
         glBegin(GL_LINES);
@@ -204,12 +213,14 @@ namespace rtps
         glVertex3f(max.x, max.y, max.z);
 
         glEnd();
+        //glPopAttrib();
     }
 
     void RenderUtils::renderQuad(float4 min, float4 max, GLuint tex)
     {
-
-        glColor4f(0.0f, 0.4f, 0.0f, 1.0f);
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
+        glEnable(GL_TEXTURE_2D);
+        //glColor4f(0.0f, 0.4f, 0.0f, 1.0f);
         glBindTexture(GL_TEXTURE_2D,tex);
         glBegin(GL_QUADS);
         glTexCoord2f(0.f,0.f);
@@ -222,7 +233,7 @@ namespace rtps
         glVertex3f(min.x, max.y, min.z);
         glEnd();
         glBindTexture(GL_TEXTURE_2D,0);
-        //glDisable(GL_DEPTH_TEST);
+        glPopAttrib();
     }
 
     GLuint RenderUtils::loadTexture(const string& texFile, const string& texName)
@@ -252,6 +263,7 @@ namespace rtps
         //better way to do this?
         if(channels == 3)
         {
+            //glDisable(GL_DEPTH_TEST);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
                      GL_RGB, GL_UNSIGNED_BYTE, &im[0]);
         }
@@ -267,8 +279,9 @@ namespace rtps
     }
         GLuint RenderUtils::loadCubemapTexture(const string& texpath)
     {
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         //Load an image with stb_image
-        int w,h,channels;
+        int w=0,h=0,channels=0;
         int force_channels = 0;
 
         unsigned char *imposx = stbi_load( string(texpath).append("posx.jpg").c_str(), &w, &h, &channels, force_channels );
@@ -277,7 +290,8 @@ namespace rtps
         unsigned char *imnegx = stbi_load( string(texpath).append("negx.jpg").c_str(), &w, &h, &channels, force_channels );
         unsigned char *imnegy = stbi_load( string(texpath).append("negy.jpg").c_str(), &w, &h, &channels, force_channels );
         unsigned char *imnegz = stbi_load( string(texpath).append("negz.jpg").c_str(), &w, &h, &channels, force_channels );
-
+        if(w==0||h==0||channels==0)
+            return -1;
         GLuint retTex=0;
         glEnable(GL_TEXTURE_CUBE_MAP);
         glGenTextures(1, &retTex);
@@ -300,8 +314,9 @@ namespace rtps
         glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imnegy);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imposz);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, imnegz);
-        glBindTexture(GL_TEXTURE_CUBE_MAP,0);
-        glDisable(GL_TEXTURE_CUBE_MAP);
+        //glBindTexture(GL_TEXTURE_CUBE_MAP,0);
+        //glDisable(GL_TEXTURE_CUBE_MAP);
+        glPopAttrib();
         free(imposx);
         free(imposy);
         free(imposz);

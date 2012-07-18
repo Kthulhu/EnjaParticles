@@ -107,6 +107,8 @@ namespace rtps
     }
     void ParticleShape::voxelizeSurface(GLuint vbo, GLuint ibo, int length)
     {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         glBindTexture(GL_TEXTURE_3D_EXT, surfaceTexture);
         GLuint fboId = 0;
         glGenFramebuffersEXT(1, &fboId);
@@ -120,11 +122,9 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,voxelResolution,voxelResolution,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
-        float col[4];
-        glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
-        glClearColor(0.0f,0.0f,0.0f,1.0f);
-        //FIXME: Code should check and preserve the current state so that
-        //It correctly restores previous state.
+        //float col[4];
+        //glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
+        //glClearColor(0.0f,0.0f,0.0f,1.0f);
         glEnable(GL_POINT_SMOOTH);
         glEnable(GL_LINE_SMOOTH);
         glEnable(GL_MULTISAMPLE_EXT);
@@ -132,9 +132,9 @@ namespace rtps
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
-        int v[4];
-        glGetIntegerv(GL_VIEWPORT,v);
-        glViewport(0,0,voxelResolution,voxelResolution);
+        //int v[4];
+        //glGetIntegerv(GL_VIEWPORT,v);
+        //glViewport(0,0,voxelResolution,voxelResolution);
         glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , surfaceTexture, 0, 0 );
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -180,6 +180,8 @@ namespace rtps
         }
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+#if 0
         glDisableClientState( GL_VERTEX_ARRAY );
         glViewport(v[0],v[1],v[2],v[3]);
         glDisable(GL_POINT_SMOOTH);
@@ -189,13 +191,17 @@ namespace rtps
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glDrawBuffer(GL_BACK);
         glClearColor(col[0],col[1],col[2],col[3]);
-        glMatrixMode(GL_MODELVIEW);
         glBindTexture(GL_TEXTURE_3D_EXT, 0);
         glDisable(GL_TEXTURE_3D_EXT);
+#endif
+        glPopAttrib();
+        glPopClientAttrib();
     }
     void ParticleShape::voxelizeMesh(GLuint vbo, GLuint ibo, int length)
     {
 
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         glBindTexture(GL_TEXTURE_3D_EXT, volumeTexture);
         GLuint fboId = 0;
         glGenFramebuffersEXT(1, &fboId);
@@ -209,11 +215,9 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,voxelResolution,voxelResolution,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
-        float col[4];
-        glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
-        glClearColor(0.0f,0.0f,0.0f,1.0f);
-        //FIXME: Code should check and preserve the current state so that
-        //It correctly restores previous state.
+        //float col[4];
+        //glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
+        //glClearColor(0.0f,0.0f,0.0f,1.0f);
         glEnable(GL_COLOR_LOGIC_OP);
         glLogicOp(GL_XOR);
         glDisable(GL_BLEND);//GL_DRAW_BUFFER0);
@@ -224,9 +228,9 @@ namespace rtps
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
         glShadeModel(GL_FLAT);
-        int v[4];
-        glGetIntegerv(GL_VIEWPORT,v);
-        glViewport(0,0,voxelResolution,voxelResolution);
+        //int v[4];
+        //glGetIntegerv(GL_VIEWPORT,v);
+        //glViewport(0,0,voxelResolution,voxelResolution);
         glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , volumeTexture, 0, 0 );
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
@@ -285,10 +289,14 @@ namespace rtps
         }
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+
+        glPopAttrib();
+        glPopClientAttrib();
         voxelizeSurface(vbo,ibo,length);
-        glEnable(GL_COLOR_LOGIC_OP);
-        glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
-        glLogicOp(GL_OR);
+        //glEnable(GL_COLOR_LOGIC_OP);
+        //glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
+        //glLogicOp(GL_OR);
 
         //FIXME: I Need to render a full screen quad in order to have blending work correctly.
         /*for(int i = 0;i<voxelResolution; i++)
@@ -300,6 +308,7 @@ namespace rtps
                                 0,0,voxelResolution,voxelResolution,
                                 GL_COLOR_BUFFER_BIT,GL_NEAREST);
         }*/
+#if 0
         glLogicOp(GL_COPY);
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
@@ -309,9 +318,9 @@ namespace rtps
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glDrawBuffer(GL_BACK);
         glClearColor(col[0],col[1],col[2],col[3]);
-        glMatrixMode(GL_MODELVIEW);
         glBindTexture(GL_TEXTURE_3D_EXT, 0);
         glShadeModel(GL_SMOOTH);
         glDisable(GL_TEXTURE_3D_EXT);
+#endif
     }
 }; //end namespace

@@ -458,9 +458,9 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 
 #if 1
         glEnable(GL_DEPTH_TEST);
-        renderSkyBox();
+        //renderSkyBox();
 
-        glEnable(GL_MULTISAMPLE_ARB);
+        glEnable(GL_MULTISAMPLE_EXT);
         //display static opaque objects
         display(false);
 #if 1
@@ -492,7 +492,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
 #endif
         glDisable(GL_DEPTH_TEST);
-        glDisable(GL_MULTISAMPLE_ARB);
+        glDisable(GL_MULTISAMPLE_EXT);
         if(renderMovie)
         {
             writeMovieFrame("image","./frames/");
@@ -706,7 +706,7 @@ void TestApplication::cameraChanged()
     }
     void TestApplication::initGL()
     {
-	
+
 	glClearColor(0.9f,0.9f,0.9f,1.0f);
 	//set the projection and view matricies for all shaders.
 	for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
@@ -747,6 +747,7 @@ void TestApplication::cameraChanged()
     }
 void TestApplication::renderSkyBox()
  {
+     glPushAttrib(GL_ALL_ATTRIB_BITS);
      glDisable(GL_TEXTURE_2D);
      glEnable(GL_TEXTURE_GEN_S);
      glEnable(GL_TEXTURE_GEN_T);
@@ -774,6 +775,9 @@ void TestApplication::renderSkyBox()
      glDisable(GL_TEXTURE_CUBE_MAP);
 
      glDisable(GL_TEXTURE_GEN_R);
+
+     glPushAttrib(GL_ALL_ATTRIB_BITS);
+
      glUseProgram(0);
 
  }
@@ -828,7 +832,7 @@ void TestApplication::renderSkyBox()
     GLuint TestApplication::getWindowWidth() const {
         return windowWidth;
     }
-   
+
 #if 0
 
     void TestApplication::displayShape(ParticleShape* shape,float3 translation,float spacing)
@@ -918,11 +922,11 @@ void TestApplication::renderSkyBox()
     }
 #endif
 
-  
+
 
     void TestApplication::display(bool blend)
     {
-        //glEnable(GL_NORMALIZE);
+        glEnable(GL_NORMALIZE);
         glEnable(GL_CULL_FACE);
         //glDisable(GL_LIGHTING);
         if(blend)
@@ -939,7 +943,7 @@ void TestApplication::renderSkyBox()
         {
             glDisable(GL_BLEND);
         }
-        //glDisable(GL_NORMALIZE);
+        glEnable(GL_NORMALIZE);
         glDisable(GL_CULL_FACE);
     }
     void TestApplication::loadMeshScene(const string& filename)
