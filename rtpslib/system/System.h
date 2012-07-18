@@ -52,6 +52,8 @@
 #include "../timer_eb.h"
 #include "../rtps_common.h"
 
+#include <vector>
+
 
 namespace rtps
 {
@@ -162,10 +164,7 @@ namespace rtps
         virtual void prepareSorted();
         virtual int setupTimers();
         void addPointSource(float4& pointSource, float massSource);
-        void addInteractionSystem(System* interact)
-        {
-            interactionSystem.push_back(interact);
-        }
+        void addInteractionSystem(System* interact);
         Buffer<float4>& getVelocityBuffer() {return cl_velocity_s;}
         Buffer<float4>& getColorBuffer() {return cl_color_s;}
         Buffer<float4>& getPositionBuffer() {return cl_position_s;}
@@ -262,7 +261,7 @@ namespace rtps
         Gravity gravity;
         MeshToParticles m2p;
         MarchingCubes marchingcubes;
-        vector<System*> interactionSystem;
+        std::vector<System*> interactionSystem;
 
         void hash_and_sort();
         void bitonic_sort();

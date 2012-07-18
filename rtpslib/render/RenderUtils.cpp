@@ -290,8 +290,12 @@ namespace rtps
         unsigned char *imnegx = stbi_load( string(texpath).append("negx.jpg").c_str(), &w, &h, &channels, force_channels );
         unsigned char *imnegy = stbi_load( string(texpath).append("negy.jpg").c_str(), &w, &h, &channels, force_channels );
         unsigned char *imnegz = stbi_load( string(texpath).append("negz.jpg").c_str(), &w, &h, &channels, force_channels );
-        if(w==0||h==0||channels==0)
+
+		if(channels==0||w==0||h==0)
+		{
+			cout<<"couldn't read cubemap textures from "<<texpath<<"!"<<endl;
             return -1;
+		}
         GLuint retTex=0;
         glEnable(GL_TEXTURE_CUBE_MAP);
         glGenTextures(1, &retTex);

@@ -1,9 +1,9 @@
-#include <QtGui>
-#include <QtOpenGL>
-#include <QComboBox>
-#include <QFileDialog>
+#include <GL/glew.h>
 #include "glwidget.h"
 #include "mainwindow.h"
+#include <QtGui>
+#include <QComboBox>
+#include <QFileDialog>
 #include "sphparametergroup.h"
 
 namespace rtps
@@ -18,9 +18,11 @@ namespace rtps
      fmt.setProfile(QGLFormat::CoreProfile);
      QGLContext* ctx = new QGLContext(fmt);
 
+	 ctx->makeCurrent();
      glWidget = new GLWidget(ctx,path,this);
      glWidget->setFocus();
      glWidget->setFocusPolicy(Qt::WheelFocus);
+
 
      systemSelector = new QComboBox(this);
      systemSelector->addItem(QString("Please Load Parameter File"));
@@ -61,6 +63,7 @@ namespace rtps
      this->setStyleSheet("QMainWindow {background: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0, stop: 0 #777777, stop: 0.65 #777777, stop: 1 #F9F9F9);}");
 
      setWindowTitle(tr("RTPS Library Test"));
+	 glWidget->makeCurrent();
      resize(1250, 700);
  }
 

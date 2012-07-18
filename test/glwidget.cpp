@@ -24,13 +24,13 @@
 #include <QGLWidget>
 #include <QSizePolicy>
 #include <QElapsedTimer>
-#include <QMouseEvent>
-#include <QKeyEvent>
 #include <QString>
 #include <QTimer>
+#include <QMouseEvent>
+#include <QKeyEvent>
 
 #include "ParamParser.h"
-
+#include "../rtpslib/system/ParticleShape.h"
 #include "../rtpslib/RTPS.h"
 #include "../rtpslib/render/ParticleEffect.h"
 #include "../rtpslib/render/SSEffect.h"
@@ -43,8 +43,8 @@
 #include <sstream>
 #include <float.h>
 
-#include "aiwrapper.h"
 #include "glwidget.h"
+#include "aiwrapper.h"
 
 #include "../rtpslib/render/util/stb_image_write.h"
 
@@ -375,6 +375,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
             writeMovieFrame("image","./frames/");
             frameCounter++;
         }
+		//swapBuffers();
  }
 
 void GLWidget::resizeGL(int width, int height)

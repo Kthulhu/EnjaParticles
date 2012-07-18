@@ -11,7 +11,7 @@
 
 //Mesh is defined in mesh effect
 #include "../rtpslib/render/MeshEffect.h"
-
+#include "../rtpslib/structs.h"
 #define aisgl_min(x,y) (x<y?x:y)
 #define aisgl_max(x,y) (y>x?y:x)
 

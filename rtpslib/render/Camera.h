@@ -20,13 +20,13 @@ class RTPS_EXPORT Camera
 {
 public:
     Camera(float3 pos = float3(0.0f, 0.0f, 0.0f), float fov=65.0f,
-           float near = 0.3f, float far = 1000.0f, unsigned int width=600,
+           float n = 0.3f, float f = 1000.0f, unsigned int width=600,
            unsigned int height=800)
     {
         this->pos=pos;
         this->fov=fov;
-        this->nearClip=near;
-        this->farClip=far;
+        this->nearClip=n;
+        this->farClip=f;
         this->width=width;
         this->height=height;
         aspectRatio=(double)width/(double)height;
@@ -53,10 +53,10 @@ public:
     void setFOV(double fov){this->fov=fov; updateProjectionMatrix();}
     double getFOV(){return fov;}
 
-    void setNearClip(double near){this->nearClip=near; updateProjectionMatrix();}
+    void setNearClip(double n){this->nearClip=n; updateProjectionMatrix();}
     double getNearClip(){return nearClip;}
 
-    void setFarClip(double far){this->farClip=far; updateProjectionMatrix();}
+    void setFarClip(double f){this->farClip=f; updateProjectionMatrix();}
     double getFarClip(){return farClip;}
 
     void setWidth(unsigned int width){this->width = width; aspectRatio=width/((double)height); updateProjectionMatrix();}

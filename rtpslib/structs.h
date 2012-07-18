@@ -347,7 +347,7 @@ namespace rtps
             det = 1.0 / det;
 
             for (i = 0; i < 16; i++)
-                m[i] = inv[i] * det;
+                m[i] = (float)(inv[i] * det);
         }
         friend float16 operator*(const float16& lhs,const float16& rhs)
         {

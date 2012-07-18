@@ -1,6 +1,7 @@
-
+#include <GL/glew.h>
 #include "aiwrapper.h"
-#include "../rtpslib/RTPS.h"
+#include <sstream>
+//#include "../rtpslib/RTPS.h"
 using namespace std;
 namespace rtps
 {
