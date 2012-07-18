@@ -110,12 +110,15 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
                            0.f,0.f,1.f,
                            1.f,0.f,1.f,
                            1.f,0.f,0.f};
-    TestApplication::TestApplication(istream& is, string path)
+    TestApplication::TestApplication(istream& is, string path,GLuint w,GLuint h)
     {
 	binaryPath=path;
 	mass=0.01f;
 	sizeScale=1.0f;
 
+    windowWidth=w;
+    windowHeight=h;
+    cout<<"width = "<<w<<" height = "<<h<<endl;
 	//renderVelocity=true;
 	renderVelocity=false;
 	paused=false;
@@ -130,9 +133,10 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 	skyboxTexVBO=0;
 	glewInit();
 	cli = new CL();
+	glViewport(0, 0, w, h);
 
 	//view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,100.0,width(),height());
-	 view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,500.0,width(),height());
+	 view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,500.0,w,h);
 	//view = new Camera(float3(0.0f,0.0f,0.0f),65.0f,0.3f,100.0f,width(),height());
 	//view = new Camera(float3(-105.0f,-105.0f,-105.0f),65.0f,0.3f,1000.0f,width(),height());
 	//the models are all in different coordinate systems...
@@ -160,9 +164,6 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 	light->pos.x=5.0f; light->pos.y=5.0f; light->pos.z=5.0f;
 
 	environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
-
-
-	glViewport(0, 0, width(), height());
 
 	lib = new ShaderLibrary();
 	lib->initializeShaders(binaryPath+"/shaders");
@@ -453,6 +454,8 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         {
             cameraChanged();
         }
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -491,8 +494,10 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         displayShape(pShapes["dynamicShape112"],float3(11.0f,3.f,1.0f),systems["water"]->getSpacing()/4.0f);
         displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
 #endif
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_MULTISAMPLE_EXT);
+        //glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_MULTISAMPLE_EXT);
+        glPopAttrib();
+        glPopClientAttrib();
         if(renderMovie)
         {
             writeMovieFrame("image","./frames/");
@@ -701,7 +706,7 @@ void TestApplication::cameraChanged()
             ++str;
         }
 
-        glEnable(GL_LIGHTING);
+        //glEnable(GL_LIGHTING);
         glPopAttrib();
     }
     void TestApplication::initGL()
@@ -747,7 +752,7 @@ void TestApplication::cameraChanged()
     }
 void TestApplication::renderSkyBox()
  {
-     glPushAttrib(GL_ALL_ATTRIB_BITS);
+     glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
      glDisable(GL_TEXTURE_2D);
      glEnable(GL_TEXTURE_GEN_S);
      glEnable(GL_TEXTURE_GEN_T);
@@ -768,16 +773,14 @@ void TestApplication::renderSkyBox()
      glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
 
      glDrawArrays(GL_QUADS, 0, 24);
+     glPopAttrib();
 
-     glDisableVertexAttribArray(0);
-     glDisableVertexAttribArray(1);
+     //glDisableVertexAttribArray(0);
+     //glDisableVertexAttribArray(1);
 
-     glDisable(GL_TEXTURE_CUBE_MAP);
+     //glDisable(GL_TEXTURE_CUBE_MAP);
 
-     glDisable(GL_TEXTURE_GEN_R);
-
-     glPushAttrib(GL_ALL_ATTRIB_BITS);
-
+     //glDisable(GL_TEXTURE_GEN_R);
      glUseProgram(0);
 
  }
@@ -823,14 +826,6 @@ void TestApplication::renderSkyBox()
                 i->second->addInteractionSystem(j->second);
             }
         }
-    }
-
-    GLuint TestApplication::getWindowHeight() const {
-        return windowHeight;
-    }
-
-    GLuint TestApplication::getWindowWidth() const {
-        return windowWidth;
     }
 
 #if 0

@@ -24,7 +24,7 @@ namespace rtps
 
 
         public:
-            TestApplication(std::istream& is, std::string path);
+            TestApplication(std::istream& is, std::string path,GLuint w, GLuint h);
             ~TestApplication();
             void KeyboardCallback(unsigned char key, int x, int y);
             void RenderCallback();
@@ -37,8 +37,6 @@ namespace rtps
             void drawString(const char *str, int x, int y, float color[4], void *font);
             void initGL();
             void readParamFile(std::istream& is, std::string path);
-            GLuint getWindowHeight() const;
-            GLuint getWindowWidth() const;
             void setWindowHeight(GLuint windowHeight);
             void setWindowWidth(GLuint windowWidth);
             void loadScene(const std::string& filename);

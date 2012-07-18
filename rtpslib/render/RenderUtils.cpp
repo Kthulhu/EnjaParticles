@@ -238,6 +238,7 @@ namespace rtps
 
     GLuint RenderUtils::loadTexture(const string& texFile, const string& texName)
     {
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         //Load an image with stb_image
         int w,h,channels;
         int force_channels = 0;
@@ -273,8 +274,9 @@ namespace rtps
                   GL_RGBA, GL_UNSIGNED_BYTE, &im[0]);
         }
 
-        glBindTexture(GL_TEXTURE_2D,0);
+        //glBindTexture(GL_TEXTURE_2D,0);
         free(im);
+        glPopAttrib();
         return retTex;
     }
         GLuint RenderUtils::loadCubemapTexture(const string& texpath)

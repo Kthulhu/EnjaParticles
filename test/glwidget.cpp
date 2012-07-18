@@ -285,7 +285,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 
  void GLWidget::renderSkyBox()
  {
-     glPushAttrib(GL_ENABLE_BIT,GL_TEXTURE_BIT);
+     glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
      glDisable(GL_TEXTURE_2D);
      glEnable(GL_TEXTURE_GEN_S);
      glEnable(GL_TEXTURE_GEN_T);
@@ -332,9 +332,8 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 
 
 #if 1
-        glEnable(GL_DEPTH_TEST);
         renderSkyBox();
-
+        glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
         //display static opaque objects
         display(false);

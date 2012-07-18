@@ -376,6 +376,7 @@ namespace rtps
 
     void SSEffect::createFramebufferTextures()
     {
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         glEnable(GL_TEXTURE_2D);
         glGenTextures(1, &m_glFramebufferTexs["depth"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["depth"]);
@@ -436,9 +437,9 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
         //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,width,height,0,GL_RGBA,GL_FLOAT,NULL);
-        glBindTexture(GL_TEXTURE_2D,0);
-        glDisable(GL_TEXTURE_2D);
-
+        //glBindTexture(GL_TEXTURE_2D,0);
+        //glDisable(GL_TEXTURE_2D);
+        glPopAttrib();
     }
 
     void SSEffect::setWindowDimensions(GLuint width, GLuint height)

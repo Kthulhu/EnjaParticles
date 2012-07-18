@@ -52,7 +52,7 @@ namespace rtps
 
         delz=diameter;
         voxelResolution = ceil((maxDim-minDim)/diameter);
-
+        glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         printf("3d texture supported? %d\n",glewIsSupported("GL_EXT_texture3D"));
         glEnable(GL_TEXTURE_3D_EXT);
         glGenTextures(1, &volumeTexture);
@@ -74,8 +74,9 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T, mode);
         glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R, mode);*/
         glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0, GL_RGBA, voxelResolution, voxelResolution, voxelResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-        glBindTexture(GL_TEXTURE_3D_EXT, 0);
-        glDisable(GL_TEXTURE_3D_EXT);
+        //glBindTexture(GL_TEXTURE_3D_EXT, 0);
+        //glDisable(GL_TEXTURE_3D_EXT);
+        glPopAttrib();
     }
 
     float3 ParticleShape::getMax() const {
@@ -124,7 +125,7 @@ namespace rtps
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
         //float col[4];
         //glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
-        //glClearColor(0.0f,0.0f,0.0f,1.0f);
+        glClearColor(0.0f,0.0f,0.0f,1.0f);
         glEnable(GL_POINT_SMOOTH);
         glEnable(GL_LINE_SMOOTH);
         glEnable(GL_MULTISAMPLE_EXT);
@@ -134,7 +135,7 @@ namespace rtps
         glDisable(GL_LIGHTING);
         //int v[4];
         //glGetIntegerv(GL_VIEWPORT,v);
-        //glViewport(0,0,voxelResolution,voxelResolution);
+        glViewport(0,0,voxelResolution,voxelResolution);
         glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , surfaceTexture, 0, 0 );
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -181,6 +182,7 @@ namespace rtps
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
 #if 0
         glDisableClientState( GL_VERTEX_ARRAY );
         glViewport(v[0],v[1],v[2],v[3]);
@@ -217,7 +219,7 @@ namespace rtps
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,depth,0);
         //float col[4];
         //glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
-        //glClearColor(0.0f,0.0f,0.0f,1.0f);
+        glClearColor(0.0f,0.0f,0.0f,1.0f);
         glEnable(GL_COLOR_LOGIC_OP);
         glLogicOp(GL_XOR);
         glDisable(GL_BLEND);//GL_DRAW_BUFFER0);
@@ -230,7 +232,7 @@ namespace rtps
         glShadeModel(GL_FLAT);
         //int v[4];
         //glGetIntegerv(GL_VIEWPORT,v);
-        //glViewport(0,0,voxelResolution,voxelResolution);
+        glViewport(0,0,voxelResolution,voxelResolution);
         glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , volumeTexture, 0, 0 );
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
@@ -290,7 +292,7 @@ namespace rtps
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
-
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glPopAttrib();
         glPopClientAttrib();
         voxelizeSurface(vbo,ibo,length);
