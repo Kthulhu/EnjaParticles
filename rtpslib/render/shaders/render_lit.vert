@@ -38,7 +38,7 @@ void main()
     vec3 eyePos;
     mat4 modelview =viewMatrix*meshMatrix;
     //vec4 temp =(mat3(inverse(modelview))*vec4(normal,0.0f));
-    norm = normalize(mat3(inverse(modelview))*normal);
+    norm = normalize(transpose(mat3(inverse(modelview)))*normal);
     //norm = normalize(normal);
     viewPos = modelview*vec4(pos,1.0f);
     eyePos = viewPos.xyz/viewPos.w;

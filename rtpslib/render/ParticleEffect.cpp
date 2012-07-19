@@ -78,6 +78,7 @@ namespace rtps
         glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
 
         glDrawArrays(GL_POINTS, 0, num);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glPopClientAttrib();
         //glDisableVertexAttribArray(0);
         //glDisableVertexAttribArray(1);
@@ -102,6 +103,7 @@ namespace rtps
 
         glUseProgram(m_shaderLibrary->shaders["passThrough"].getProgram() );
         drawArrays(posVBO, colVBO, num);
+        glUseProgram(0);
 
         if (blending)
         {

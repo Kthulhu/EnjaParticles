@@ -235,7 +235,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         lib->initializeShaders(binaryPath+"/shaders");
         //effects["Points"]=new ParticleEffect(lib,width(),height(),5.0f,false);
         effects["Points"]=new ParticleEffect(lib,width(),height(),0.75f,false);
-        effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),.75f,true);
+        effects["Screen Space"]=new SSEffect(lib,GAUSSIAN_BLUR,width(),height(),.75f,true);
         //effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),2.f,false);
         effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),.75f,false);
 
@@ -271,7 +271,6 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         if(location!=-1)
             //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
             glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
-        glUseProgram(0);
     }
     GLuint program = lib->shaders["sphereShader"].getProgram();
     glUseProgram(program);
@@ -309,6 +308,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
      glDrawArrays(GL_QUADS, 0, 24);
      glPopAttrib();
      glPopClientAttrib();
+     glBindBuffer(GL_ARRAY_BUFFER,0);
 
      //glDisableVertexAttribArray(0);
      //glDisableVertexAttribArray(1);
@@ -334,7 +334,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 
 
 #if 1
-        renderSkyBox();
+        //renderSkyBox();
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
         //display static opaque objects
@@ -399,6 +399,7 @@ void GLWidget::resizeGL(int width, int height)
          if(location!=-1)
              glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
     }
+    glUseProgram(0);
 }
 
  void GLWidget::mousePressEvent(QMouseEvent *event)
@@ -461,6 +462,7 @@ void GLWidget::cameraChanged()
             glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
 
     }
+    glUseProgram(0);
 }
 
 void GLWidget::keyPressEvent(QKeyEvent *event)
