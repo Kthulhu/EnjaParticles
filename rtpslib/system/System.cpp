@@ -94,31 +94,26 @@ namespace rtps
         //dout<<"System destructor"<<endl;
         if (pos_vbo)//&& managed)
         {
-            //glBindBuffer(1, pos_vbo);
             glDeleteBuffers(1, (GLuint*)&pos_vbo);
             pos_vbo = 0;
         }
         if (col_vbo)// && managed)
         {
-            //glBindBuffer(1, col_vbo);
             glDeleteBuffers(1, (GLuint*)&col_vbo);
             col_vbo = 0;
         }
         if (velocity_vbo)// && managed)
         {
-            //glBindBuffer(1, velocity_vbo);
             glDeleteBuffers(1, (GLuint*)&velocity_vbo);
             velocity_vbo = 0;
         }
         if (force_vbo)// && managed)
         {
-            //glBindBuffer(1, force_vbo);
             glDeleteBuffers(1, (GLuint*)&force_vbo);
             force_vbo = 0;
         }
         if (active_cells_vbo)// && managed)
         {
-            //glBindBuffer(1, active_cells_vbo);
             glDeleteBuffers(1, (GLuint*)&active_cells_vbo);
             active_cells_vbo = 0;
         }

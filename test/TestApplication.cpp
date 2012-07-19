@@ -33,6 +33,7 @@
 #include "aiwrapper.h"
 #include "../rtpslib/render/util/stb_image_write.h"
 
+#include <math.h>
 #include <sstream>
 #include <float.h>
 
@@ -181,13 +182,144 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 	loadScene(binaryPath+"/demo_scene1.obj");
 	loadMeshScene(binaryPath+"/demo_mesh_scene.obj");
     }
+void TestApplication::initGL()
+    {
 
-    void TestApplication::setWindowHeight(GLuint windowHeight) {
-        this->windowHeight = windowHeight;
+	glClearColor(0.9f,0.9f,0.9f,1.0f);
+	//set the projection and view matricies for all shaders.
+	for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+	{
+	glUseProgram(i->second.getProgram());
+	GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
+	if(location!=-1)
+	    glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+	//dout<<i->first<<" viewMatrixLocation = "<<location<<endl;
+	location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
+	if(location!=-1)
+	    //glUniformMatrix4fv(location,1,GL_FALSE,projectionMatrix.m);
+	    glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
+	//dout<<i->first<<" projectionMatrixLocation = "<<location<<endl;
+	location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
+	if(location!=-1)
+	    glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+	//dout<<i->first<<" inverseViewMatrixLocation = "<<location<<endl;
+	location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
+	if(location!=-1)
+	    glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
+	//dout<<i->first<<" inverseProjectionMatrixLocation = "<<location<<endl;
+	location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
+	if(location!=-1)
+	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+	    glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
+	glUseProgram(0);
+	}
+	GLuint program = lib->shaders["sphereShader"].getProgram();
+	glUseProgram(program);
+	glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+	dout<<"Pointscale = "<<((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180))<<endl;
+	program = lib->shaders["skybox"].getProgram();
+	glUseProgram(program);
+	glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);
+	glUseProgram(0);
     }
 
-    void TestApplication::setWindowWidth(GLuint windowWidth) {
-        this->windowWidth = windowWidth;
+void TestApplication::ResizeWindowCallback(int width, int height)
+    {
+        //avoid height = 0 this will cause divide by zero when calculating aspect ratio
+        if (height==0)
+        {
+            height=1;
+        }
+	glViewport(0, 0, width, height);
+	for(map<std::string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+	{
+		i->second->setWindowDimensions(width,height);
+	}
+	view->setWidth(width);
+	view->setHeight(height);
+	windowWidth=width;
+	windowHeight=height;
+	//set the projection and view matricies for all shaders.
+	for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+	{
+	 glUseProgram(i->second.getProgram());
+	 GLint location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
+	 if(location!=-1)
+	     glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
+	 location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
+	 if(location!=-1)
+	     glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
+	}
+	GLuint program = lib->shaders["sphereShader"].getProgram();
+	glUseProgram(program);
+	glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+	dout<<"Pointscale = "<<((float)width) / tanf(view->getFOV()* (0.5f * PIOVER180))<<endl;
+        glutPostRedisplay();
+    }
+   void TestApplication::RenderCallback()
+    {
+
+        //float time = elapsedTimer->restart()/1000.f;
+	float time = 0.033f;
+        //send new view matrix to the shaders if the camera was actually updated
+        if(view->tick(time))
+        {
+            cameraChanged();
+        }
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+#if 1
+        renderSkyBox();
+        glEnable(GL_DEPTH_TEST);
+
+        glEnable(GL_MULTISAMPLE_EXT);
+        //display static opaque objects
+        display(false);
+#if 1
+#if 0
+        if(systems.find(std::string("rb1"))!=systems.end())
+        {
+            //for debugging only!!
+            ParticleRigidBody* rbsys = (ParticleRigidBody*)systems[std::string("rb1")];
+            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),light,NULL,0.05f);
+        }
+#endif
+        for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        {
+            if(renderVelocity)
+            {
+                effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
+            }
+            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),light,NULL,i->second->getSpacing());
+        }
+        //display static transparent objects
+        display(true);
+#endif
+#else
+        meshRenderer->render(dynamicMeshs["dynamicShape1"],light);
+        glColor4f(0.1f,0.2f,0.4f,1.0f);
+        displayShape(pShapes["dynamicShape1"],float3(5.0f,3.f,1.0f),systems["water"]->getSpacing());
+        displayShape(pShapes["dynamicShape11"],float3(8.0f,3.f,1.0f),systems["water"]->getSpacing()/2.0f);
+        displayShape(pShapes["dynamicShape112"],float3(11.0f,3.f,1.0f),systems["water"]->getSpacing()/4.0f);
+        displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
+#endif
+        //glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_MULTISAMPLE_EXT);
+        glPopAttrib();
+        glPopClientAttrib();
+        if(renderMovie)
+        {
+            writeMovieFrame("image","./frames/");
+            frameCounter++;
+        }
+
+        glutSwapBuffers();
+
     }
     TestApplication::~TestApplication()
     {
@@ -215,11 +347,46 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 	    delete view;
 	    delete light;
     }
+
+   void TestApplication::MouseCallback(int button, int state, int x, int y)
+    {
+        if (state == GLUT_DOWN)
+        {
+            mouseButtons |= 1<<button;
+        }
+        else if (state == GLUT_UP)
+        {
+            mouseButtons = 0;
+        }
+
+        mousePos.x = x;
+        mousePos.y = y;
+    }
+    void TestApplication::MouseMotionCallback(int x, int y)
+    {
+        float dx, dy;
+        dx = x - mousePos.x;
+        dy = y - mousePos.y;
+
+        if (mouseButtons & 4)
+        {
+            view->rotate(dy,dx);
+        }
+
+        mousePos.x = x;
+        mousePos.y = y;
+
+        // set view matrix
+        glutPostRedisplay();
+    }
     void TestApplication::KeyboardCallback(unsigned char key, int x, int y)
     {
               unsigned int nn=0;
         switch (key)
         {
+            case 'm':
+                effects["Screen Space"]->writeBuffersToDisk();
+                return;
             case ' ':
                 paused=!paused;
                 return;
@@ -444,69 +611,50 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         }
         glutPostRedisplay();
     }
-    void TestApplication::RenderCallback()
+void TestApplication::readParamFile(istream& is, string path)
+{
+ParamParser p;
+    vector<RTPSSettings*> sysSettings;
+    vector<string> names;
+    p.readParameterFile(is,sysSettings ,names );
+    for(unsigned int i = 0; i<sysSettings.size(); i++)
     {
-
-        //float time = elapsedTimer->restart()/1000.f;
-	float time = 0.033f;
-        //send new view matrix to the shaders if the camera was actually updated
-        if(view->tick(time))
+        //#ifdef WIN32
+        //    sysSettings[i]->SetSetting("rtps_path",".");
+        //#else
+        //    sysSettings[i]->SetSetting("rtps_path","./bin");
+        //#endif
+		sysSettings[i]->SetSetting("rtps_path",binaryPath);
+        //Fixme::This is hacky. I need to determine an efficient way to do simulation scaling
+        //for rigid bodies to work well with sph.
+        if(sysSettings[i]->GetSettingAs<string>("system")!="sph")
         {
-            cameraChanged();
+            sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
+            sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
         }
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-#if 1
-        glEnable(GL_DEPTH_TEST);
-        //renderSkyBox();
-
-        glEnable(GL_MULTISAMPLE_EXT);
-        //display static opaque objects
-        display(false);
-#if 1
-#if 0
-        if(systems.find(std::string("rb1"))!=systems.end())
-        {
-            //for debugging only!!
-            ParticleRigidBody* rbsys = (ParticleRigidBody*)systems[std::string("rb1")];
-            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),light,NULL,0.05f);
-        }
-#endif
-        for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-        {
-            if(renderVelocity)
-            {
-                effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
-            }
-            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),light,NULL,i->second->getSpacing());
-        }
-        //display static transparent objects
-        display(true);
-#endif
-#else
-        meshRenderer->render(dynamicMeshs["dynamicShape1"],light);
-        glColor4f(0.1f,0.2f,0.4f,1.0f);
-        displayShape(pShapes["dynamicShape1"],float3(5.0f,3.f,1.0f),systems["water"]->getSpacing());
-        displayShape(pShapes["dynamicShape11"],float3(8.0f,3.f,1.0f),systems["water"]->getSpacing()/2.0f);
-        displayShape(pShapes["dynamicShape112"],float3(11.0f,3.f,1.0f),systems["water"]->getSpacing()/4.0f);
-        displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
-#endif
-        //glDisable(GL_DEPTH_TEST);
-        //glDisable(GL_MULTISAMPLE_EXT);
-        glPopAttrib();
-        glPopClientAttrib();
-        if(renderMovie)
-        {
-            writeMovieFrame("image","./frames/");
-            frameCounter++;
-        }
-
-        glutSwapBuffers();
+        systems[names[i]]=RTPS::generateSystemInstance(sysSettings[i],cli);
+        systemRenderType[names[i]] = "Points";
+        dout<<"names[i] \'"<<names[i]<<"\'"<<endl;
 
     }
+    gridMin = systems["water"]->getSettings()->GetSettingAs<float4>("domain_min");
+    gridMax = systems["water"]->getSettings()->GetSettingAs<float4>("domain_max");
+    for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+    {
+        for(map<std::string,System*>::iterator j = systems.begin(); j!=systems.end(); j++)
+        {
+            if(i==j)
+                continue;
+            //FIXME: More hacking. Don't add flocks to interaction systems yet!
+            //The framework isn't defined for systems interacting with flocks yet.
+            if(i->second->getSettings()->GetSettingAs<string>("system")=="flock"||
+                    j->second->getSettings()->GetSettingAs<string>("system")=="flock")
+                continue;
+            i->second->addInteractionSystem(j->second);
+        }
+    }
+}
+
     int TestApplication::writeMovieFrame(const char* filename, const char* dir)
     {
 	GLubyte* image = new GLubyte[width()*height()*3];
@@ -581,37 +729,7 @@ ParticleShape* TestApplication::createParticleShape(const std::string& system, M
     {
 
     }
-    void TestApplication::MouseCallback(int button, int state, int x, int y)
-    {
-        if (state == GLUT_DOWN)
-        {
-            mouseButtons |= 1<<button;
-        }
-        else if (state == GLUT_UP)
-        {
-            mouseButtons = 0;
-        }
 
-        mousePos.x = x;
-        mousePos.y = y;
-    }
-    void TestApplication::MouseMotionCallback(int x, int y)
-    {
-        float dx, dy;
-        dx = x - mousePos.x;
-        dy = y - mousePos.y;
-
-        if (mouseButtons & 4)
-        {
-            view->rotate(dy,dx);
-        }
-
-        mousePos.x = x;
-        mousePos.y = y;
-
-        // set view matrix
-        glutPostRedisplay();
-    }
 void TestApplication::cameraChanged()
 {
 
@@ -637,39 +755,7 @@ void TestApplication::cameraChanged()
 
     }
 }
-    void TestApplication::ResizeWindowCallback(int width, int height)
-    {
-        //avoid height = 0 this will cause divide by zero when calculating aspect ratio
-        if (height==0)
-        {
-            height=1;
-        }
-	glViewport(0, 0, width, height);
-	for(map<std::string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
-	{
-		i->second->setWindowDimensions(width,height);
-	}
-	view->setWidth(width);
-	view->setHeight(height);
-	windowWidth=width;
-	windowHeight=height;
-	//set the projection and view matricies for all shaders.
-	for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
-	{
-	 glUseProgram(i->second.getProgram());
-	 GLint location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
-	 if(location!=-1)
-	     glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
-	 location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
-	 if(location!=-1)
-	     glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
-	}
-	GLuint program = lib->shaders["sphereShader"].getProgram();
-	glUseProgram(program);
-	glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width) / tanf(view->getFOV()* (0.5f * PIOVER180)));
-	dout<<"Pointscale = "<<((float)width) / tanf(view->getFOV()* (0.5f * PIOVER180))<<endl;
-        glutPostRedisplay();
-    }
+
     void TestApplication::TimerCallback(int ms)
     {
             if(!paused)
@@ -713,51 +799,12 @@ void TestApplication::cameraChanged()
         //glEnable(GL_LIGHTING);
         glPopAttrib();
     }
-    void TestApplication::initGL()
-    {
 
-	glClearColor(0.9f,0.9f,0.9f,1.0f);
-	//set the projection and view matricies for all shaders.
-	for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
-	{
-	glUseProgram(i->second.getProgram());
-	GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
-	if(location!=-1)
-	    glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
-	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
-	//dout<<i->first<<" viewMatrixLocation = "<<location<<endl;
-	location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
-	if(location!=-1)
-	    //glUniformMatrix4fv(location,1,GL_FALSE,projectionMatrix.m);
-	    glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
-	//dout<<i->first<<" projectionMatrixLocation = "<<location<<endl;
-	location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
-	if(location!=-1)
-	    glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
-	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
-	//dout<<i->first<<" inverseViewMatrixLocation = "<<location<<endl;
-	location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
-	if(location!=-1)
-	    glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
-	//dout<<i->first<<" inverseProjectionMatrixLocation = "<<location<<endl;
-	location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
-	if(location!=-1)
-	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
-	    glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
-	glUseProgram(0);
-	}
-	GLuint program = lib->shaders["sphereShader"].getProgram();
-	glUseProgram(program);
-	glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
-	dout<<"Pointscale = "<<((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180))<<endl;
-	program = lib->shaders["skybox"].getProgram();
-	glUseProgram(program);
-	glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);
-	glUseProgram(0);
-    }
 void TestApplication::renderSkyBox()
  {
      glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
+     glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+     glDisable(GL_DEPTH_TEST);
      glDisable(GL_TEXTURE_2D);
      glEnable(GL_TEXTURE_GEN_S);
      glEnable(GL_TEXTURE_GEN_T);
@@ -779,9 +826,10 @@ void TestApplication::renderSkyBox()
 
      glDrawArrays(GL_QUADS, 0, 24);
      glPopAttrib();
+     glPopClientAttrib();
 
-     //glDisableVertexAttribArray(0);
-     //glDisableVertexAttribArray(1);
+     glDisableVertexAttribArray(0);
+     glDisableVertexAttribArray(1);
 
      //glDisable(GL_TEXTURE_CUBE_MAP);
 
@@ -789,49 +837,7 @@ void TestApplication::renderSkyBox()
      glUseProgram(0);
 
  }
-    void TestApplication::readParamFile(istream& is, string path)
-    {
-	ParamParser p;
-        vector<RTPSSettings*> sysSettings;
-        vector<string> names;
-        p.readParameterFile(is,sysSettings ,names );
-        for(unsigned int i = 0; i<sysSettings.size(); i++)
-        {
-            //#ifdef WIN32
-            //    sysSettings[i]->SetSetting("rtps_path",".");
-            //#else
-            //    sysSettings[i]->SetSetting("rtps_path","./bin");
-            //#endif
-			sysSettings[i]->SetSetting("rtps_path",binaryPath);
-            //Fixme::This is hacky. I need to determine an efficient way to do simulation scaling
-            //for rigid bodies to work well with sph.
-            if(sysSettings[i]->GetSettingAs<string>("system")!="sph")
-            {
-                sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
-                sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
-            }
-            systems[names[i]]=RTPS::generateSystemInstance(sysSettings[i],cli);
-            systemRenderType[names[i]] = "Points";
-            dout<<"names[i] \'"<<names[i]<<"\'"<<endl;
 
-        }
-        gridMin = systems["water"]->getSettings()->GetSettingAs<float4>("domain_min");
-        gridMax = systems["water"]->getSettings()->GetSettingAs<float4>("domain_max");
-        for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-        {
-            for(map<std::string,System*>::iterator j = systems.begin(); j!=systems.end(); j++)
-            {
-                if(i==j)
-                    continue;
-                //FIXME: More hacking. Don't add flocks to interaction systems yet!
-                //The framework isn't defined for systems interacting with flocks yet.
-                if(i->second->getSettings()->GetSettingAs<string>("system")=="flock"||
-                        j->second->getSettings()->GetSettingAs<string>("system")=="flock")
-                    continue;
-                i->second->addInteractionSystem(j->second);
-            }
-        }
-    }
 
 #if 0
 
@@ -943,7 +949,7 @@ void TestApplication::renderSkyBox()
         {
             glDisable(GL_BLEND);
         }
-        glEnable(GL_NORMALIZE);
+        glDisable(GL_NORMALIZE);
         glDisable(GL_CULL_FACE);
     }
     void TestApplication::loadMeshScene(const string& filename)
@@ -996,5 +1002,13 @@ void TestApplication::renderSkyBox()
 		systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
 		pShapes[i->first]=shape;
 	}
+    }
+
+    void TestApplication::setWindowHeight(GLuint windowHeight) {
+        this->windowHeight = windowHeight;
+    }
+
+    void TestApplication::setWindowWidth(GLuint windowWidth) {
+        this->windowWidth = windowWidth;
     }
 };

@@ -38,17 +38,17 @@
 #include "../rtpslib/system/ParticleRigidBody.h"
 #include "../rtpslib/system/SPH.h"
 #include "../rtpslib/system/FLOCK.h"
+#include "glwidget.h"
+#include "aiwrapper.h"
+#include "../rtpslib/render/util/stb_image_write.h"
 
 #include <math.h>
 #include <sstream>
 #include <float.h>
 
-#include "glwidget.h"
-#include "aiwrapper.h"
-
-#include "../rtpslib/render/util/stb_image_write.h"
 
 using namespace std;
+
 namespace rtps
 {
 
@@ -286,6 +286,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
  void GLWidget::renderSkyBox()
  {
      glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
+     glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
      glDisable(GL_TEXTURE_2D);
      glEnable(GL_TEXTURE_GEN_S);
      glEnable(GL_TEXTURE_GEN_T);
@@ -307,6 +308,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 
      glDrawArrays(GL_QUADS, 0, 24);
      glPopAttrib();
+     glPopClientAttrib();
 
      //glDisableVertexAttribArray(0);
      //glDisableVertexAttribArray(1);
@@ -470,6 +472,9 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
         unsigned int nn=0;
         switch (key)
         {
+            case 'm':
+                 effects["Screen Space"]->writeBuffersToDisk();
+                break;
             case ' ':
                 paused=!paused;
                 return;
@@ -802,6 +807,27 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
     return shape;
 
 }
+void GLWidget::update()
+{
+    if(!paused)
+    {
+        glFinish();
+        for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        {
+            i->second->acquireGLBuffers();
+            i->second->update();
+            i->second->interact();
+        }
+
+        for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        {
+            i->second->integrate();
+            i->second->postProcess();
+            i->second->releaseGLBuffers();
+        }
+    }
+	updateGL();
+}
     void GLWidget::display(bool blend)
     {
         //glEnable(GL_NORMALIZE);
@@ -891,27 +917,7 @@ void GLWidget::ResetSimulations()
 {
 
 }
-void GLWidget::update()
-{
-    if(!paused)
-    {
-        glFinish();
-        for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-        {
-            i->second->acquireGLBuffers();
-            i->second->update();
-            i->second->interact();
-        }
 
-        for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-        {
-            i->second->integrate();
-            i->second->postProcess();
-            i->second->releaseGLBuffers();
-        }
-    }
-	updateGL();
-}
 void GLWidget::changeRenderer(const QString& system, const QString& renderer)
 {
      //dout<<"system = "<<(const char*)system.toAscii().data()<<"renderer = "<<(const char*)renderer.toAscii().data()<<endl;

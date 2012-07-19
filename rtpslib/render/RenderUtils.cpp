@@ -67,18 +67,19 @@ namespace rtps
             s+=".png";
             //Fixme: This is a hacky way to find out if the texture is Depth.
             //I should probably query GL for info about the texture.
-            writeTexture(i->second, s, i->first.find("depth"));
+            writeTexture(i->second, s);// , i->first.find("depth"));
         }
     }
-    int RenderUtils::writeTexture( GLuint tex, const string& filename, bool depth)
+    int RenderUtils::writeTexture( GLuint tex, const string& filename)
     {
         glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         glEnable(GL_TEXTURE_2D);
         //dout<<"Here"<<endl;
         glBindTexture(GL_TEXTURE_2D,tex);
-        GLint width=0,height=0;
+        GLint width=0,height=0,fmt=0;
         glGetTexLevelParameteriv(GL_TEXTURE_2D , 0 , GL_TEXTURE_WIDTH , &width);
         glGetTexLevelParameteriv(GL_TEXTURE_2D , 0 , GL_TEXTURE_HEIGHT , &height);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D , 0 , GL_TEXTURE_INTERNAL_FORMAT, &fmt);
         if(width==0||height==0)
         {
             cout<<"invalid height and width!"<<endl;
@@ -88,7 +89,7 @@ namespace rtps
         }
         GLubyte* image = new GLubyte[width*height*4];
         //dout<<"width = "<<width<<"height = "<<height<<endl;
-        if(depth)
+        if(fmt==GL_DEPTH_COMPONENT32||fmt==GL_DEPTH_COMPONENT24 ||fmt==GL_DEPTH_COMPONENT)
         {
             //dout<<"Here"<<endl;
             GLfloat* fimg = new GLfloat[width*height];

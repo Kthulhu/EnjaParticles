@@ -89,47 +89,26 @@ namespace rtps
         if(num==0)
             return;
         glPushAttrib(GL_POINT_BIT|GL_ENABLE_BIT);
-        //glDepthMask(GL_TRUE);
         if(blending)
         {
             glDisable(GL_DEPTH_TEST);
-            //glDepthMask(GL_FALSE);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
-        //else
-        //{
-           //glEnable(GL_DEPTH_TEST);
-        //}
-
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
         // draws circles instead of squares
         glEnable(GL_POINT_SMOOTH);
         glPointSize(pointRadius*scale);
 
-        //if(renderAsSpheres)
-        //{
-           renderPointsAsSpheres(posVBO,colVBO,num,light,material,scale);
-        //}
-        //else
-        //{
-        //    glUseProgram(m_shaderLibrary->shaders["passThrough"].getProgram() );
-        //    drawArrays(posVBO, colVBO, num);
-        //}
-        //glDepthMask(GL_TRUE);
+        glUseProgram(m_shaderLibrary->shaders["passThrough"].getProgram() );
+        drawArrays(posVBO, colVBO, num);
 
-        //glDisable(GL_POINT_SMOOTH);
         if (blending)
         {
             glEnable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
         }
-        //glEnable(GL_LIGHTING);
-        //glBindBuffer(GL_ARRAY_BUFFER, 0);
         glPopAttrib();
-        //make sure rendering timing is accurate
-        //glFinish();
     }
 
     void ParticleEffect::writeBuffersToDisk()
@@ -155,9 +134,6 @@ namespace rtps
 
         glUseProgram(0);
         glPopAttrib();
-        //glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        //glDisable(GL_POINT_SPRITE);
-        //glDisable(GL_POINT_SMOOTH);
     }
 
     void ParticleEffect::renderVector(GLuint posVBO, GLuint vecVBO,  unsigned int num, float scale)

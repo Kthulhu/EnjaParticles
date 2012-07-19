@@ -1,17 +1,17 @@
 /****************************************************************************************
 * Real-Time Particle System - An OpenCL based Particle system developed to run on modern GPUs. Includes SPH fluid simulations.
 * version 1.0, September 14th 2011
-* 
+*
 * Copyright (C) 2011 Ian Johnson, Andrew Young, Gordon Erlebacher, Myrna Merced, Evan Bollig
-* 
+*
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
 * arising from the use of this software.
-* 
+*
 * Permission is granted to anyone to use this software for any purpose,
 * including commercial applications, and to alter it and redistribute it
 * freely, subject to the following restrictions:
-* 
+*
 * 1. The origin of this software must not be misrepresented; you must not
 * claim that you wrote the original software. If you use this software
 * in a product, an acknowledgment in the product documentation would be
@@ -141,7 +141,6 @@ void Utils::printDevArray(Buffer<float4>& cl_array, char* msg, int nb_el, int nb
 	//----------------------------------------------------------------------
     int deleteVBO(GLuint id)
     {
-        glBindBuffer(1, id);
         glDeleteBuffers(1, (GLuint*)&id);
         return 1; //success
     }
@@ -162,7 +161,6 @@ void Utils::printDevArray(Buffer<float4>& cl_array, char* msg, int nb_el, int nb
         {
             glDeleteBuffers(1, &id);
             id = 0;
-            //cout << "[createVBO()] Data size is mismatch with input array\n";
             printf("[createVB()] Data size is mismatch with input array\n");
         }
         //this was important for working inside blender!
@@ -176,8 +174,8 @@ void Utils::printDevArray(Buffer<float4>& cl_array, char* msg, int nb_el, int nb
     {
         // Written by G. Erlebacher Aug. 5, 2010
         /*
-        
-                7-----------6 
+
+                7-----------6
                /           /|
               /           / |           Z
              4-----------5  |           |
@@ -185,7 +183,7 @@ void Utils::printDevArray(Buffer<float4>& cl_array, char* msg, int nb_el, int nb
              |           | /            | /
              |           |/             |/
              0-----------1              x------- X
-                          
+
         */
         printf("inside make_cube\n");
         // vertices
