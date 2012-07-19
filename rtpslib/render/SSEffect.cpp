@@ -48,7 +48,7 @@ namespace rtps
         currentDepthBuffer="depth";
         bilateralRange=0.01f;
         //filterRadius=15.0f;
-        filterRadius=20.0f;
+        filterRadius=10.0f;
         falloff=0.01f;
         numberOfCurvatureIterations=50;
         thickness=false;
@@ -232,6 +232,8 @@ namespace rtps
         }
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"],0);
 
+        //Now we use the depth to normal shader which converts screenspace depth into
+        //world coordinates and then computes lighting.
         glClear(GL_COLOR_BUFFER_BIT);
         GLuint normalProgram = m_shaderLibrary->shaders["depth2NormalShader"].getProgram();
         glUseProgram(normalProgram);
@@ -250,11 +252,11 @@ namespace rtps
         else
         {
             Material defaultMat;
-            defaultMat.ambient=float3(0.0f,0.2f,0.6f);
-            defaultMat.diffuse=float3(0.0f,0.2f,0.6f);
+            defaultMat.ambient=float3(0.2f,0.3f,0.9f);
+            defaultMat.diffuse=float3(0.2f,0.3f,0.9f);
             defaultMat.specular=float3(1.0f,1.f,1.0f);
             defaultMat.opacity=0.6;
-            defaultMat.shininess=10;
+            defaultMat.shininess=100;
             glUniform3fv(glGetUniformLocation(normalProgram,"material.diffuse"),1,&defaultMat.diffuse.x);
             glUniform3fv(glGetUniformLocation(normalProgram,"material.specular"),1,&defaultMat.specular.x);
             glUniform3fv(glGetUniformLocation(normalProgram,"material.ambient"),1,&defaultMat.ambient.x);
@@ -274,7 +276,7 @@ namespace rtps
             defaultLight.ambient = float3(0.2f,0.2f,0.2f);
             defaultLight.diffuse = float3(1.0f,1.0f,1.0f);
             defaultLight.specular = float3(1.0f,1.0f,1.0f);
-            defaultLight.pos = float3(5.0f,5.0f,5.0f);
+            defaultLight.pos = float3(5.0f,10.0f,-5.0f);
             glUniform3fv(glGetUniformLocation(normalProgram,"light.diffuse"),1,&defaultLight.diffuse.x);
             glUniform3fv(glGetUniformLocation(normalProgram,"light.specular"),1,&defaultLight.specular.x);
             glUniform3fv(glGetUniformLocation(normalProgram,"light.ambient"),1,&defaultLight.ambient.x);

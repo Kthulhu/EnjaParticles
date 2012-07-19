@@ -220,10 +220,10 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
      {
          light = new Light();
         light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
-        light->ambient.x=1.0;light->ambient.y=1.0;light->ambient.z=1.0;
+        light->ambient.x=0.2;light->ambient.y=0.2;light->ambient.z=0.2;
         light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
         //light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
-        light->pos.x=5.0f; light->pos.y=5.0f; light->pos.z=5.0f;
+        light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
 
     }
     environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
@@ -235,7 +235,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         lib->initializeShaders(binaryPath+"/shaders");
         //effects["Points"]=new ParticleEffect(lib,width(),height(),5.0f,false);
         effects["Points"]=new ParticleEffect(lib,width(),height(),0.75f,false);
-        effects["Screen Space"]=new SSEffect(lib,GAUSSIAN_BLUR,width(),height(),.75f,true);
+        effects["Screen Space"]=new SSEffect(lib,GAUSSIAN_BLUR,width(),height(),.5f,true);
         //effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),2.f,false);
         effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),.75f,false);
 
@@ -833,10 +833,10 @@ void GLWidget::update()
     void GLWidget::display(bool blend)
     {
         //glEnable(GL_NORMALIZE);
-        glEnable(GL_CULL_FACE);
         //glDisable(GL_LIGHTING);
         if(blend)
         {
+            //glEnable(GL_CULL_FACE);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         }
@@ -847,10 +847,10 @@ void GLWidget::update()
         }
         if(blend)
         {
+            //glDisable(GL_CULL_FACE);
             glDisable(GL_BLEND);
         }
         //glDisable(GL_NORMALIZE);
-        glDisable(GL_CULL_FACE);
     }
 
 void GLWidget::setParameterValue(const QString& system, const QString& parameter, const QString& value)
