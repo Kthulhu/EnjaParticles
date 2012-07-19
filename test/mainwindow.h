@@ -13,6 +13,8 @@
  class QString;
  class GLWidget;
  class SPHParameterGroup;
+ class ParticleEffectParameterGroup;
+
 namespace rtps
 {
  class MainWindow : public QMainWindow
@@ -51,6 +53,7 @@ void rendererChanged(const QString& system, const QString& renderer);
      QComboBox *rendererSelector;
 
      SPHParameterGroup *sphParams;
+     ParticleEffectParameterGroup *ssEffectParams;
 
      QMenu *fileMenu;
      QMenu *helpMenu;

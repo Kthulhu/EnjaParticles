@@ -5,6 +5,7 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include "sphparametergroup.h"
+#include "particleeffectparametergroup.h"
 
 namespace rtps
 {
@@ -40,6 +41,7 @@ namespace rtps
 
      sphParams = new SPHParameterGroup(Qt::Horizontal, "SPH Parameters",this);
      connect(sphParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
+     ssEffectParams = new ParticleEffectParameterGroup(Qt::Horizontal, "Screen Space Parameters",this);
 
      connect(this, SIGNAL(parameterValueChanged(const QString&,const QString&,const QString&)),
              glWidget,SLOT(setParameterValue(const QString&,const QString&,const QString&)));
@@ -57,8 +59,9 @@ namespace rtps
      centralLayout->addWidget(slider1, 1, 1 );
      centralLayout->addWidget(slider2Label, 2, 0);
      centralLayout->addWidget(slider2, 2, 1);*/
-     centralLayout->addWidget(sphParams,2,0,14,2);
-     centralLayout->addWidget(glWidget, 0, 2,15,6);
+     centralLayout->addWidget(sphParams,2,0,7,2);
+     centralLayout->addWidget(ssEffectParams,9,0,8,2);
+     centralLayout->addWidget(glWidget, 0, 2,16,6);
 
      centralWidget->setLayout(centralLayout);
      this->setStyleSheet("QMainWindow {background: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0, stop: 0 #777777, stop: 0.65 #777777, stop: 1 #F9F9F9);}");

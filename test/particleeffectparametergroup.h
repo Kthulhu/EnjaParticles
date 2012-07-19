@@ -6,7 +6,10 @@
  class QSlider;
  class FloatSlider;
  class QLineEdit;
-
+ class QComboBox;
+ class QCheckBox;
+ class QRadioButton;
+ class QButtonGroup;
  class ParticleEffectParameterGroup : public QGroupBox
  {
      Q_OBJECT
@@ -25,6 +28,7 @@
      void setValue(const QString& value);
 
  protected slots:
+     void triggerValue(bool value);
      void triggerValue(int value);
      void triggerValue(float value);
      void triggerValue(const QString& value);
@@ -32,8 +36,19 @@
  protected:
      QGroupBox* createVectorInput(const QString& title, QLineEdit* x,QLineEdit* y,QLineEdit* z);
  private:
+     QComboBox* filterType;
+     QCheckBox* thicknessCheck;
+     QRadioButton* renderNormal;
+     QRadioButton* renderDepth;
+     QRadioButton* renderDepthSmoothed;
+     QRadioButton* renderThickness;
+     QRadioButton* renderComposite;
+     QGroupBox* renderButtonGroup;
      FloatSlider* pointScaleSlider;
-     QLineEdit *gravityX,*gravityY,*gravityZ;
+     FloatSlider* blurRadius;
+     FloatSlider* bilateralRange;
+     QSlider* curvatureFlowIterations;
+
  };
 
  #endif
