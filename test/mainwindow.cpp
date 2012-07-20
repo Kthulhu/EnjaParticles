@@ -42,6 +42,7 @@ namespace rtps
      sphParams = new SPHParameterGroup(Qt::Horizontal, "SPH Parameters",this);
      connect(sphParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
      ssEffectParams = new ParticleEffectParameterGroup(Qt::Horizontal, "Screen Space Parameters",this);
+     connect(ssEffectParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
 
      connect(this, SIGNAL(parameterValueChanged(const QString&,const QString&,const QString&)),
              glWidget,SLOT(setParameterValue(const QString&,const QString&,const QString&)));

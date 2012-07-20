@@ -27,7 +27,12 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 
+//FIXME: temporary work around. My windows installation has AMD which includes cl.hpp
+#ifdef WIN32
 #include <CL/cl.hpp>
+#else
+#include "../../opencl10/CL/cl.hpp"
+#endif
 #include "../rtps_common.h"
 
 namespace rtps

@@ -29,8 +29,8 @@
 using namespace std;
 namespace rtps
 {
-    MeshEffect::MeshEffect(ShaderLibrary* lib, GLuint width, GLuint height, GLfloat pointRadius,bool blending):
-        ParticleEffect(lib,width,height,pointRadius,blending)
+    MeshEffect::MeshEffect(ShaderLibrary* lib, GLuint width, GLuint height):
+        ParticleEffect(lib,width,height)
     {}
     MeshEffect::~MeshEffect(){}
     void MeshEffect::renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light* light)
@@ -114,7 +114,7 @@ namespace rtps
         glPopClientAttrib();
         //glPopMatrix();
     }
-    void MeshEffect::render(Mesh* mesh,Light* light)
+    void MeshEffect::render(Mesh* mesh, Light* light)
     {
         if(!mesh)
             return;

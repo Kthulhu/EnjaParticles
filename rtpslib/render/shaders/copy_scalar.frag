@@ -1,7 +1,10 @@
 #version 330 core
 
-uniform sampler2D colorTex;
+
+uniform sampler2D scalarTex;
 uniform sampler2D depthTex;
+uniform float near;
+uniform float far;
 const float maxDepth = 0.9999999;
 
 in vec2 texCoord;
@@ -14,6 +17,6 @@ void main(void)
     {
         discard;
     }
-    colorOut = texture2D(colorTex, texCoord.xy);
+    colorOut = vec4(vec3(texture2D(scalarTex, texCoord.xy).x),1.0f);
     gl_FragDepth = fldepth;
 }

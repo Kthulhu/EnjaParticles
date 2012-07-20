@@ -38,13 +38,13 @@ using namespace std;
 namespace rtps
 {
 
-    ParticleEffect::ParticleEffect(ShaderLibrary* lib, GLuint width, GLuint height, GLfloat pointRadius ,bool blending)
+    ParticleEffect::ParticleEffect(ShaderLibrary* lib, GLuint width, GLuint height)
     {
         m_shaderLibrary = lib;
         this->width=width;
         this->height=height;
-        this->pointRadius=pointRadius;
-        this->blending=blending;
+        //this->blending=blending;
+        //this->settings=settings;
         //this->renderAsSpheres=true;
         m_writeFramebuffers = false;
     }
@@ -85,11 +85,12 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale )
+    void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light,const Material* material, float scale)
     {
         if(num==0)
             return;
         glPushAttrib(GL_POINT_BIT|GL_ENABLE_BIT);
+        bool blending=settings->GetSettingAs<bool>("blending","0");
         if(blending)
         {
             glDisable(GL_DEPTH_TEST);
@@ -99,7 +100,7 @@ namespace rtps
 
         // draws circles instead of squares
         glEnable(GL_POINT_SMOOTH);
-        glPointSize(pointRadius*scale);
+        glPointSize(settings->GetSettingAs<float>("point_radius","0.75")*scale);
 
         glUseProgram(m_shaderLibrary->shaders["passThrough"].getProgram() );
         drawArrays(posVBO, colVBO, num);
@@ -118,7 +119,7 @@ namespace rtps
         m_writeFramebuffers=true;
     }
 
-    void ParticleEffect::renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light,const Material* material, float scale)
+    void ParticleEffect::renderPointsAsSpheres(GLuint program, GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light,const Material* material, float scale)
     {
         if(num==0)
             return;
@@ -127,10 +128,10 @@ namespace rtps
         glEnable(GL_POINT_SPRITE);
         //glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        GLuint program = m_shaderLibrary->shaders["sphereShader"].getProgram();
+        //GLuint program = m_shaderLibrary->shaders["sphereShader"].getProgram();
 
         glUseProgram(program);
-        glUniform1f( glGetUniformLocation(program, "pointRadius"), pointRadius*scale);
+        glUniform1f( glGetUniformLocation(program, "pointRadius"), settings->GetSettingAs<float>("point_radius","0.75")*scale);
 
         drawArrays(posVBO, colVBO, num);
 

@@ -49,6 +49,7 @@
 #include "ShaderLibrary.h"
 #include "RenderUtils.h"
 #include "Camera.h"
+#include "../RTPSSettings.h"
 
 #include "../rtps_common.h"
 
@@ -76,22 +77,22 @@ namespace rtps
     class RTPS_EXPORT ParticleEffect
     {
     public:
-        ParticleEffect(ShaderLibrary* lib, GLuint width = 600, GLuint height = 800, GLfloat pointRadius = 0.5f,bool blending = false);
+        ParticleEffect(ShaderLibrary* lib, GLuint width = 800, GLuint height = 600);//, GLfloat pointRadius = 0.5f,bool blending = false);
         ~ParticleEffect();
 
-        void renderPointsAsSpheres(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
         void renderVector(GLuint posVBO, GLuint vecVBO, unsigned int num, float scale=1.0f);
-        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light = NULL,const Material* material = NULL, float scale = 1.0f);
+        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light = NULL,const Material* material = NULL, float scale = 1.0f);
         virtual void setWindowDimensions(GLuint width, GLuint height){this->width=width;this->height=height;}
-        virtual void setPointRadius(GLfloat radius){pointRadius=radius;}
-        virtual GLfloat getPointRadius(){ return pointRadius;}
-        virtual void setRenderAsSpheres(bool renderAsSpheres){this->renderAsSpheres=renderAsSpheres;}
-        virtual bool getRenderAsSpheres(){return renderAsSpheres;}
-        virtual void setBlending(bool blending){this->blending=blending;}
-        virtual bool getBlending(){return blending;}
+        //virtual void setPointRadius(GLfloat radius){pointRadius=radius;}
+        //virtual GLfloat getPointRadius(){ return pointRadius;}
+        //virtual void setRenderAsSpheres(bool renderAsSpheres){this->renderAsSpheres=renderAsSpheres;}
+        //virtual bool getRenderAsSpheres(){return renderAsSpheres;}
+        //virtual void setBlending(bool blending){this->blending=blending;}
+        //virtual bool getBlending(){return blending;}
         virtual void writeBuffersToDisk();
 
     protected:
+        void renderPointsAsSpheres(GLuint program, GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
         void drawArrays(GLuint posVBO, GLuint colVBO, unsigned int num);
         virtual void deleteFramebufferTextures(){}
         virtual void createFramebufferTextures(){}
@@ -105,8 +106,6 @@ namespace rtps
         std::vector<GLuint> m_fbos;
 
         GLuint width, height;
-        GLfloat pointRadius;
-        bool renderAsSpheres,blending;
         bool m_writeFramebuffers;
         EB::TimerList m_timers;
     };

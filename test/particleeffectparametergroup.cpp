@@ -11,7 +11,7 @@
      : QGroupBox(title, parent)
  {
      pointScaleSlider = new FloatSlider(orientation,this);
-     pointScaleSlider->setObjectName("point_scale");
+     pointScaleSlider->setObjectName("point_radius");
      pointScaleSlider->setTickPosition(QSlider::TicksBelow);
      pointScaleSlider->setTickInterval(10);
      pointScaleSlider->setSingleStep(5);
@@ -47,14 +47,26 @@
 
 
      filterType = new QComboBox(this);
+     filterType->setObjectName("filter_type");
+     filterType->addItem("No Smoothing");
+     filterType->addItem("Gaussian Blur");
+     filterType->addItem("Seperable Gaussian Blur");
+     filterType->addItem("Bilateral Gaussian Blur");
+     filterType->addItem("Curvature Flow");
      thicknessCheck = new QCheckBox("Enable Thickness:",this);
-     renderButtonGroup = new QGroupBox("Render Buffer:",this);
+     thicknessCheck->setObjectName("thickness");
+     renderButtonGroup = new QGroupBox("Render Buffer",this);
      renderNormal=new QRadioButton("Normal");//,renderButtonGroup);
+     renderNormal->setObjectName("render_normal");
      renderDepth=new QRadioButton("Depth");//,renderButtonGroup);
+     renderDepth->setObjectName("render_depth");
      renderDepthSmoothed=new QRadioButton("Smoothed Depth");//,renderButtonGroup);
+     renderDepthSmoothed->setObjectName("render_depth_smoothed");
      renderThickness=new QRadioButton("Thickness");//,renderButtonGroup);
+     renderThickness->setObjectName("render_thickness");
      renderComposite=new QRadioButton("Composite");//-,renderButtonGroup);
-     renderComposite->setEnabled(true);
+     renderComposite->setObjectName("render_composite");
+     renderComposite->setChecked(true);
      //TODO: Make enum for buffer types to render...
      //renderButtonGroup->addButton(renderNormal,0);
      //renderButtonGroup->addButton(renderDepth,1);
@@ -62,6 +74,7 @@
      //renderButtonGroup->addButton(renderThickness,3);
      //renderButtonGroup->addButton(renderComposite,4);
 
+     connect(filterType,SIGNAL(currentIndexChanged(int)),this,SLOT(triggerValue(int)));
      connect(pointScaleSlider,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(blurRadius,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(bilateralRange,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
@@ -119,25 +132,24 @@ void ParticleEffectParameterGroup::setValue(float value)
 void ParticleEffectParameterGroup::setValue(const QString& value)
 {
     const QString& parameter = this->sender()->objectName();
-
 }
 void ParticleEffectParameterGroup::triggerValue(bool value)
 {
-    std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<(value?"enabled":"disabled")<<std::endl;
+    //std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<(value?"enabled":"disabled")<<std::endl;
+    emit valueChanged(this->sender()->objectName(),QString(value?"1":"0"));
+}
+void ParticleEffectParameterGroup::triggerValue(int value)
+{
+    //std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<value<<std::endl;
     emit valueChanged(this->sender()->objectName(),QString::number(value));
 }
- void ParticleEffectParameterGroup::triggerValue(int value)
- {
-     std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<value<<std::endl;
-     emit valueChanged(this->sender()->objectName(),QString::number(value));
- }
- void ParticleEffectParameterGroup::triggerValue(float value)
- {
-     std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<value<<std::endl;
-     emit valueChanged(this->sender()->objectName(),QString::number(value));
- }
- void ParticleEffectParameterGroup::triggerValue(const QString& value)
- {
-     std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<value.toAscii().data()<<std::endl;
-     emit valueChanged(this->sender()->objectName(),value);
- }
+void ParticleEffectParameterGroup::triggerValue(float value)
+{
+    //std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<value<<std::endl;
+    emit valueChanged(this->sender()->objectName(),QString::number(value));
+}
+void ParticleEffectParameterGroup::triggerValue(const QString& value)
+{
+    //std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<value.toAscii().data()<<std::endl;
+    emit valueChanged(this->sender()->objectName(),value);
+}

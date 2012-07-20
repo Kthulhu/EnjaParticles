@@ -41,27 +41,27 @@ namespace rtps
     class RTPS_EXPORT SSEffect : public ParticleEffect
     {
     public:
-        SSEffect(ShaderLibrary* lib, SmoothingFilter filter = NO_SMOOTHING, GLuint width = 600, GLuint height = 800 ,GLfloat pointRadius = 0.5f,bool blending = false);
+        SSEffect(ShaderLibrary* lib, GLuint width = 800, GLuint height = 600);// ,GLfloat pointRadius = 0.5f,bool blending = false);
         ~SSEffect();
-        void smoothDepth();
-        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
+        void smoothDepth(RTPSSettings* settings);
+        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
         virtual void setWindowDimensions(GLuint width, GLuint height);
-        virtual void setSmoothingFilter(SmoothingFilter filter){this->smoothing=filter;}
-        virtual SmoothingFilter getSmoothingFilter(){return smoothing;}
-        virtual void setRenderThickness(bool thickness){this->thickness = thickness;}
-        virtual bool getRenderThickness(){return thickness;}
-        virtual void setNumberOfCurvatureIterations(unsigned int num){numberOfCurvatureIterations=num;}
-        virtual unsigned int getNumberOfCurvatureIterations(){return numberOfCurvatureIterations;}
-        virtual void setFilterRadius(unsigned int filterRadius){this->filterRadius=filterRadius;}
-        virtual unsigned int getFilterRadius(){return this->filterRadius;}
+        //virtual void setSmoothingFilter(SmoothingFilter filter){this->smoothing=filter;}
+        //virtual SmoothingFilter getSmoothingFilter(){return smoothing;}
+        //virtual void setRenderThickness(bool thickness){this->thickness = thickness;}
+        //virtual bool getRenderThickness(){return thickness;}
+        //virtual void setNumberOfCurvatureIterations(unsigned int num){numberOfCurvatureIterations=num;}
+        //virtual unsigned int getNumberOfCurvatureIterations(){return numberOfCurvatureIterations;}
+        //virtual void setFilterRadius(unsigned int filterRadius){this->filterRadius=filterRadius;}
+        //virtual unsigned int getFilterRadius(){return this->filterRadius;}
     protected:
         virtual void deleteFramebufferTextures();
         virtual void createFramebufferTextures();
-        bool thickness;
-        float filterRadius,falloff,bilateralRange;
-        unsigned int numberOfCurvatureIterations;
+        //bool thickness;
+        //float filterRadius,falloff,bilateralRange;
+        //unsigned int numberOfCurvatureIterations;
         std::string currentDepthBuffer;
-        SmoothingFilter smoothing;
+        //SmoothingFilter smoothing;
     };
 };
 

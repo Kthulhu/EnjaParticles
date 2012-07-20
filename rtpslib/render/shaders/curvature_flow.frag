@@ -10,21 +10,21 @@ uniform float del_y;
 uniform float h_x;
 uniform float h_y;
 uniform float dt;
-uniform float distance_threshold;
+//uniform float distance_threshold;
 in vec2 texCoord;
 //consider using textureGrad() for derivative information.
 
 float secondOrderCenterDifference(vec2 texCoord,float depth, vec2 dir, float h)
 {
-    if(abs(texture2D(depthTex, texCoord+dir).x- 2.0*depth +texture2D(depthTex, texCoord-dir).x)>distance_threshold)
-        return 0.0;
+    //if(abs(texture2D(depthTex, texCoord+dir).x- 2.0*depth +texture2D(depthTex, texCoord-dir).x)>distance_threshold)
+    //    return 0.0;
     return (texture2D(depthTex, texCoord+dir).x- 2.0*depth +texture2D(depthTex, texCoord-dir).x)/(h*h);
 }
 
 float centerDifference(vec2 texCoord, vec2 dir, float h)
 {
-    if(abs(texture2D(depthTex, texCoord+dir).x-texture2D(depthTex, texCoord-dir).x)>distance_threshold)
-        return 0.0;
+    //if(abs(texture2D(depthTex, texCoord+dir).x-texture2D(depthTex, texCoord-dir).x)>distance_threshold)
+    //    return 0.0;
     return (texture2D(depthTex, texCoord+dir).x-texture2D(depthTex, texCoord-dir).x)/(2.0*h);
 }
 

@@ -58,12 +58,12 @@ set (test_INCLUDES
 #    torusRBTest.cpp
 #    )
 
-set (test_SOURCES
-    ParamParser
-    aiwrapper
-    TestApplication
-    main_test.cpp
-    )
+#set (test_SOURCES
+#    ParamParser
+#    aiwrapper
+#    TestApplication
+#    main_test.cpp
+#    )
 set (test_mc_SOURCES
     test_marching_cubes.cpp
     )
@@ -92,8 +92,8 @@ set (test_qt_SOURCES
 #INCLUDE_DIRECTORIES(${test_INCLUDES})
 #ADD_EXECUTABLE(torusRBTest.x ${torusRBTest_SOURCES})
 
-INCLUDE_DIRECTORIES(${test_INCLUDES})
-ADD_EXECUTABLE(test.x ${test_SOURCES})
+#INCLUDE_DIRECTORIES(${test_INCLUDES})
+#ADD_EXECUTABLE(test.x ${test_SOURCES})
 
 INCLUDE_DIRECTORIES(${test_mc_INCLUDES})
 ADD_EXECUTABLE(test_marching_cubes.x ${test_mc_SOURCES})
@@ -130,9 +130,9 @@ message(RTPS_EXPORTS "${rtps_EXPORTS}")
 #TARGET_LINK_LIBRARIES (torusRBTest.x
 #    ${LINK_LIBS}
 #)
-TARGET_LINK_LIBRARIES (test.x
-    ${LINK_LIBS}
-)
+#TARGET_LINK_LIBRARIES (test.x
+#    ${LINK_LIBS}
+#)
 TARGET_LINK_LIBRARIES (test_marching_cubes.x
     ${LINK_LIBS}
 )
@@ -145,7 +145,7 @@ TARGET_LINK_LIBRARIES (test_qt.x
 #install (TARGETS test_render.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (TARGETS torusTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (TARGETS torusRBTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS test.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+#install (TARGETS test.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS test_marching_cubes.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS test_qt.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES MathFunctions.h DESTINATION include)

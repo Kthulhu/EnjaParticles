@@ -134,4 +134,8 @@ OTHER_FILES += \
     ../rtpslib/render/shaders/skybox.vert \
     ../rtpslib/README \
     ../rtpslib/CMakeLists.txt \
-    ../rtpslib/system/README
+    ../rtpslib/system/README \
+    ../rtpslib/render/shaders/copy_scalar.frag \
+    ../rtpslib/render/shaders/fixed_width_gaussian.frag \
+    ../rtpslib/render/shaders/copy_depth_color.frag \
+    ../rtpslib/render/shaders/sphere_thickness.frag

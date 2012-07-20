@@ -100,7 +100,7 @@ namespace rtps
         }
         else
         {
-            glGetTexImage(GL_TEXTURE_2D,0,GL_RGBA,GL_UNSIGNED_BYTE,image);
+            glGetTexImage(GL_TEXTURE_2D,0,fmt,GL_UNSIGNED_BYTE,image);
         }
         if (!stbi_write_png(filename.c_str(),width,height,4,(void*)image,0))
         {

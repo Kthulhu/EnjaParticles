@@ -233,14 +233,12 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     if(!lib){
         lib = new ShaderLibrary();
         lib->initializeShaders(binaryPath+"/shaders");
-        //effects["Points"]=new ParticleEffect(lib,width(),height(),5.0f,false);
-        effects["Points"]=new ParticleEffect(lib,width(),height(),0.75f,false);
-        effects["Screen Space"]=new SSEffect(lib,GAUSSIAN_BLUR,width(),height(),.5f,true);
-        //effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),2.f,false);
-        effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),.75f,false);
+        effects["Points"]=new ParticleEffect(lib,width(),height());
+        effects["Screen Space"]=new SSEffect(lib,width(),height());
+        effects["Mesh Renderer"]= new MeshEffect(lib,width(),height());
 
         //FIXME: Need to find an elegant solution to handling mesh effects
-        meshRenderer= (MeshEffect*)effects["Mesh Renderer"];//new MeshEffect(lib,width(),height(),20.0f,false);
+        meshRenderer= (MeshEffect*)effects["Mesh Renderer"];
     }
 
     glClearColor(0.8f,0.8f,0.8f,1.0f);
@@ -271,7 +269,14 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         if(location!=-1)
             //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
             glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
+        location = glGetUniformLocation(i->second.getProgram(),"near");
+        if(location!=-1)
+            glUniform1f(location,view->getNearClip());
+        location = glGetUniformLocation(i->second.getProgram(),"far");
+        if(location!=-1)
+            glUniform1f(location,view->getFarClip());
     }
+    //cout<<"near clip = "<<view->getNearClip()<<" far clip = "<<view->getFarClip()<<endl;
     GLuint program = lib->shaders["sphereShader"].getProgram();
     glUseProgram(program);
     glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
@@ -309,13 +314,6 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
      glPopAttrib();
      glPopClientAttrib();
      glBindBuffer(GL_ARRAY_BUFFER,0);
-
-     //glDisableVertexAttribArray(0);
-     //glDisableVertexAttribArray(1);
-
-     //glDisable(GL_TEXTURE_CUBE_MAP);
-
-     //glDisable(GL_TEXTURE_GEN_R);
      glUseProgram(0);
 
  }
@@ -354,7 +352,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
             {
                 effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
             }
-            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),light,NULL,i->second->getSpacing());
+            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),i->second->getSettings(),light,NULL,i->second->getSpacing());
         }
         //display static transparent objects
         display(true);
@@ -716,8 +714,9 @@ void GLWidget::readParamFile(std::istream& is)
                 sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
                 sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
             }
-            systems[QString(names[i].c_str())]=RTPS::generateSystemInstance(sysSettings[i],cli);
-            systemRenderType[QString(names[i].c_str())] = "Points";
+            QString sysname = names[i].c_str();
+            systems[sysname]=RTPS::generateSystemInstance(sysSettings[i],cli);
+            systemRenderType[sysname] = "Points";
             dout<<"names[i] \'"<<names[i]<<"\'"<<endl;
 
         }
@@ -922,9 +921,7 @@ void GLWidget::ResetSimulations()
 
 void GLWidget::changeRenderer(const QString& system, const QString& renderer)
 {
-     //dout<<"system = "<<(const char*)system.toAscii().data()<<"renderer = "<<(const char*)renderer.toAscii().data()<<endl;
      systemRenderType[system]=renderer;
-     //FIXME: temporary Debugging hack!
-     //effects[renderer]->writeBuffersToDisk();
 }
+
 }

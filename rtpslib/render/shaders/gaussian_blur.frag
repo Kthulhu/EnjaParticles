@@ -24,11 +24,11 @@ void main(void)
    {
            for(int j=-width; j<width; j++ )
            {
-                        float d = texture2D(depthTex,texCoord.st+vec2(float(i)*del_x,float(j)*del_y)).x;
-            if(abs(depth-d)>falloff)
-                d =depth;
-                        sum += d *exp(-float(i*i+j*j)/denom);
-                }
+                float d = texture2D(depthTex,texCoord.st+vec2(float(i)*del_x,float(j)*del_y)).x;
+                if(abs(depth-d)>falloff)
+                    d =depth;
+                sum += d *exp(-float(i*i+j*j)/denom);
+            }
    }
    sum*= (1./(2.*pi*sig*sig));
    colorOut = vec4(sum,sum,sum,1.0);
