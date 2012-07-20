@@ -30,7 +30,7 @@ void main()
     // Transform into window coordinates coordinates
     //normDepth=0.5*normDepth+.5;
 
-    colorOut = vec4(.05f,0.0f,0.0f,1.0f);
+    colorOut = vec4(1.0f,0.0f,0.0f,0.01f);
     //colorOut=vec4(1.0f,0.0f,0.0f,1.0f);
     //gl_FragDepth = normDepth;
 }

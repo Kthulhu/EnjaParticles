@@ -179,7 +179,7 @@ namespace rtps
         //perserve original buffer
         GLint buffer;
         glGetIntegerv(GL_DRAW_BUFFER,&buffer);
-        glClearColor(0.0f,0.0f,0.0f,0.0f);
+        glClearColor(0.0f,0.0f,0.0f,1.0f);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,m_fbos[0]);
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 
@@ -193,9 +193,11 @@ namespace rtps
             glDepthMask(GL_FALSE);
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness1"],0);
             //glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
             renderPointsAsSpheres( m_shaderLibrary->shaders["sphereThicknessShader"].getProgram(),posVBO, colVBO, num,settings, light,material,scale);
-
+            glDisable(GL_BLEND);
+            glEnable(GL_DEPTH_TEST);
+            glDepthMask(GL_TRUE);
  #if 0
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness2"],0);
             GLuint program= m_shaderLibrary->shaders["fixedWidthGaussianShader"].getProgram();
@@ -206,16 +208,15 @@ namespace rtps
             glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["thickness1"]);
             glUniform1i( glGetUniformLocation(program, "imgTex"),0);
             glUniform2fv( glGetUniformLocation(program, "dTex"),1,xdir);
+            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
             RenderUtils::fullscreenQuad();
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness1"],0);
             glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["thickness2"]);
             glUniform2fv( glGetUniformLocation(program, "dTex"),1,ydir);
+            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
             RenderUtils::fullscreenQuad();
 #endif
             glDisable(GL_TEXTURE_2D);
-            glDisable(GL_BLEND);
-            glEnable(GL_DEPTH_TEST);
-            glDepthMask(GL_TRUE);
         }
 
         //Render Color and depth buffer of spheres.
@@ -423,14 +424,14 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RED,width,height,0,GL_RED,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
         glGenTextures(1,&m_glFramebufferTexs["thickness2"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["thickness2"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RED,width,height,0,GL_RED,GL_FLOAT,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
 
         glGenTextures(1,&m_glFramebufferTexs["normalColor"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["normalColor"]);
