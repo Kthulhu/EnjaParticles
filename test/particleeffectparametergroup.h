@@ -47,6 +47,7 @@
      FloatSlider* pointScaleSlider;
      FloatSlider* blurRadius;
      FloatSlider* bilateralRange;
+     FloatSlider* thicknessGamma;
      QSlider* curvatureFlowIterations;
 
  };

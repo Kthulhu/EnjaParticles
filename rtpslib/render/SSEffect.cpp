@@ -44,15 +44,7 @@ namespace rtps
         m_fbos.resize(1);
         glGenFramebuffersEXT(1,&m_fbos[0]);
         createFramebufferTextures();
-        //smoothing=filter;
         currentDepthBuffer="depth";
-        //bilateralRange=0.01f;
-        //filterRadius=15.0f;
-        //filterRadius=10.0f;
-        //falloff=0.01f;
-        //numberOfCurvatureIterations=50;
-        //thickness=false;
-        //dout<<"width = "<<width<<"height = "<<height<<endl;
         glEnable(GL_TEXTURE_2D);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,m_fbos[0]);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness1"],0);
@@ -80,9 +72,9 @@ namespace rtps
                 glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),settings->GetSettingAs<float>("blur_radius","8.0"));
                 RenderUtils::fullscreenQuad();
 
-                glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
-                currentDepthBuffer="depth";
-                glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
+
+                glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
+                glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["depth2"]);
 
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                 smoothingProgram= m_shaderLibrary->shaders["gaussianBlurYShader"].getProgram();
@@ -114,11 +106,10 @@ namespace rtps
                 glUniform1f( glGetUniformLocation(smoothingProgram, "sig_range"),settings->GetSettingAs<float>("bilateral_range","0.01"));
                 glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),settings->GetSettingAs<float>("blur_radius","8.0"));
                 RenderUtils::fullscreenQuad();
-                glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
+                glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
 
                 //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
-                glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
-                currentDepthBuffer="depth";
+                glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["depth2"]);
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
                 glUniform2fv( glGetUniformLocation(smoothingProgram, "blurDir"),1,ydir);
@@ -167,19 +158,20 @@ namespace rtps
         glUseProgram(0);
     }
 
-    void SSEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light,const Material* material, float scale)
+    void SSEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light,const Material* material, float scale, GLuint sceneTex, GLuint framebuffer)
     {
         if(num==0)
             return;
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+        currentDepthBuffer="depth";
 
         bool blending = settings->GetSettingAs<bool>("blending","1");
-        bool thickness = settings->GetSettingAs<bool>("thickness","0");
+        bool thickness = settings->GetSettingAs<bool>("thickness","1");
         //perserve original buffer
         GLint buffer;
         glGetIntegerv(GL_DRAW_BUFFER,&buffer);
-        glClearColor(0.0f,0.0f,0.0f,1.0f);
+        glClearColor(0.0f,0.0f,0.0f,0.0f);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,m_fbos[0]);
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 
@@ -195,10 +187,8 @@ namespace rtps
             //glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
             renderPointsAsSpheres( m_shaderLibrary->shaders["sphereThicknessShader"].getProgram(),posVBO, colVBO, num,settings, light,material,scale);
-            glDisable(GL_BLEND);
-            glEnable(GL_DEPTH_TEST);
-            glDepthMask(GL_TRUE);
- #if 0
+            //renderPointsAsSpheres( m_shaderLibrary->shaders["sphereShader"].getProgram(),posVBO, colVBO, num,settings, light,material,scale);
+
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness2"],0);
             GLuint program= m_shaderLibrary->shaders["fixedWidthGaussianShader"].getProgram();
             glEnable(GL_TEXTURE_2D);
@@ -215,7 +205,10 @@ namespace rtps
             glUniform2fv( glGetUniformLocation(program, "dTex"),1,ydir);
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
             RenderUtils::fullscreenQuad();
-#endif
+
+            glDisable(GL_BLEND);
+            glEnable(GL_DEPTH_TEST);
+            glDepthMask(GL_TRUE);
             glDisable(GL_TEXTURE_2D);
         }
 
@@ -226,10 +219,10 @@ namespace rtps
 
         glEnable(GL_TEXTURE_2D);
         //Smooth the depth texture to emulate a surface.
-        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
-        glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
+        //glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth2"],0);
+        glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["depth"]);
         currentDepthBuffer="depth2";
-        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         smoothDepth(settings);
 
@@ -247,12 +240,12 @@ namespace rtps
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
 
-        if (blending)
-        {
+        //if (blending)
+        //{
             //glDepthMask(GL_FALSE);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        }
+        //    glEnable(GL_BLEND);
+        //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //}
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"],0);
 
         //Now we use the depth to normal shader which converts screenspace depth into
@@ -261,37 +254,59 @@ namespace rtps
         GLuint normalProgram = m_shaderLibrary->shaders["depth2NormalShader"].getProgram();
         glUseProgram(normalProgram);
         glUniform1i( glGetUniformLocation(normalProgram, "depthTex"),0);
-        //glUniform1i( glGetUniformLocation(normalProgram, "colorTex"),1);
         glUniform1f( glGetUniformLocation(normalProgram, "del_x"),1.0/((float)width));
         glUniform1f( glGetUniformLocation(normalProgram, "del_y"),1.0/((float)height));
+        RenderUtils::fullscreenQuad();
+
+
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
+        GLuint compositeProgram = m_shaderLibrary->shaders["compositeFluidShader"].getProgram();
+        glUseProgram(compositeProgram);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"]);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["thickness1"]);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D,sceneTex);
+        glUniform1i( glGetUniformLocation(compositeProgram, "depthTex"),0);
+        glUniform1i( glGetUniformLocation(compositeProgram, "normalTex"),1);
+        glUniform1i( glGetUniformLocation(compositeProgram, "thicknessTex"),2);
+        glUniform1i( glGetUniformLocation(compositeProgram, "sceneTex"),3);
+        glUniform1f( glGetUniformLocation(compositeProgram, "gamma"),settings->GetSettingAs<float>("thickness_gamma","0.1"));
+
+
+        //dout<<"Here"<<endl;
+        //TODO: should add another shader for performing compositing
         if(material)
         {
-            glUniform3fv(glGetUniformLocation(normalProgram,"material.diffuse"),1,&material->diffuse.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"material.specular"),1,&material->specular.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"material.ambient"),1,&material->ambient.x);
-            glUniform1fv(glGetUniformLocation(normalProgram,"material.shininess"),1,&material->shininess);
-            glUniform1fv(glGetUniformLocation(normalProgram,"material.opacity"),1,&material->opacity);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"material.diffuse"),1,&material->diffuse.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"material.specular"),1,&material->specular.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"material.ambient"),1,&material->ambient.x);
+            glUniform1fv(glGetUniformLocation(compositeProgram,"material.shininess"),1,&material->shininess);
+            glUniform1fv(glGetUniformLocation(compositeProgram,"material.opacity"),1,&material->opacity);
         }
         else
         {
             Material defaultMat;
-            defaultMat.ambient=float3(0.2f,0.3f,0.9f);
-            defaultMat.diffuse=float3(0.2f,0.3f,0.9f);
+            defaultMat.ambient=float3(0.1f,0.1f,0.4f);
+            defaultMat.diffuse=float3(0.1f,0.1f,0.4f);
             defaultMat.specular=float3(1.0f,1.f,1.0f);
-            defaultMat.opacity=0.4;
+            defaultMat.opacity=0.5;
             defaultMat.shininess=100;
-            glUniform3fv(glGetUniformLocation(normalProgram,"material.diffuse"),1,&defaultMat.diffuse.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"material.specular"),1,&defaultMat.specular.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"material.ambient"),1,&defaultMat.ambient.x);
-            glUniform1fv(glGetUniformLocation(normalProgram,"material.shininess"),1,&defaultMat.shininess);
-            glUniform1fv(glGetUniformLocation(normalProgram,"material.opacity"),1,&defaultMat.opacity);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"material.diffuse"),1,&defaultMat.diffuse.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"material.specular"),1,&defaultMat.specular.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"material.ambient"),1,&defaultMat.ambient.x);
+            glUniform1fv(glGetUniformLocation(compositeProgram,"material.shininess"),1,&defaultMat.shininess);
+            glUniform1fv(glGetUniformLocation(compositeProgram,"material.opacity"),1,&defaultMat.opacity);
         }
         if(light)
         {
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.diffuse"),1,&light->diffuse.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.specular"),1,&light->specular.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.ambient"),1,&light->ambient.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.position"),1,&light->pos.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"light.diffuse"),1,&light->diffuse.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"light.specular"),1,&light->specular.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"light.ambient"),1,&light->ambient.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"light.position"),1,&light->pos.x);
         }
         else
         {
@@ -300,19 +315,21 @@ namespace rtps
             defaultLight.diffuse = float3(1.0f,1.0f,1.0f);
             defaultLight.specular = float3(1.0f,1.0f,1.0f);
             defaultLight.pos = float3(5.0f,10.0f,-5.0f);
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.diffuse"),1,&defaultLight.diffuse.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.specular"),1,&defaultLight.specular.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.ambient"),1,&defaultLight.ambient.x);
-            glUniform3fv(glGetUniformLocation(normalProgram,"light.position"),1,&defaultLight.pos.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"light.diffuse"),1,&defaultLight.diffuse.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"light.specular"),1,&defaultLight.specular.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"light.ambient"),1,&defaultLight.ambient.x);
+            glUniform3fv(glGetUniformLocation(compositeProgram,"light.position"),1,&defaultLight.pos.x);
         }
         RenderUtils::fullscreenQuad();
-        //dout<<"Here"<<endl;
-        //TODO: should add another shader for performing compositing
-
         glDepthMask(GL_TRUE);
         glEnable(GL_DEPTH_TEST);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D,0);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D,0);
+        //glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,framebuffer);
 
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
 
         glDrawBuffer(buffer);
         glActiveTexture(GL_TEXTURE0);
@@ -320,11 +337,13 @@ namespace rtps
         glUniform1i( glGetUniformLocation(copyProgram, "colorTex"),0);
         if(settings->GetSettingAs<bool>("render_composite","1"))
         {
-            glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"]);
+            glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["Color"]);
         }
         else if(settings->GetSettingAs<bool>("render_normal","0"))
         {
             glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"]);
+            copyProgram = m_shaderLibrary->shaders["copyInverseShader"].getProgram();
+            glUniform1i( glGetUniformLocation(copyProgram, "colorTex"),0);
         }
         else if(settings->GetSettingAs<bool>("render_depth","0"))
         {
@@ -349,7 +368,7 @@ namespace rtps
         }
         else
         {
-            glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"]);
+            glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["Color"]);
         }
         //need to copy the contents to the back buffer. It's important that we copy the
         //depth as well. Otherwise anything drawn afterwards may incorrecly occlude the fluid.
@@ -367,14 +386,13 @@ namespace rtps
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,0);
 
-        if (blending)
-        {
-            glDisable(GL_BLEND);
-        }
+        //if (blending)
+        //{
+            //glDisable(GL_BLEND);
+        //}
 
         glPopAttrib();
         glPopClientAttrib();
-        currentDepthBuffer="depth";
         if (m_writeFramebuffers)
         {
             glFinish();
@@ -439,7 +457,7 @@ namespace rtps
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB32F,width,height,0,GL_RGBA,GL_FLOAT,NULL);
         glGenTextures(1,&m_glFramebufferTexs["composite"]);
         glBindTexture(GL_TEXTURE_2D, m_glFramebufferTexs["composite"]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

@@ -14,6 +14,6 @@ void main(void)
     {
         discard;
     }
-    colorOut = texture2D(colorTex, texCoord.xy);
+    colorOut = vec4(vec3(1.0f)-texture2D(colorTex, texCoord.xy).xyz,1.0f);
     gl_FragDepth = fldepth;
 }

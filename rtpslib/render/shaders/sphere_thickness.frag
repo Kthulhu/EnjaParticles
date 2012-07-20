@@ -1,10 +1,11 @@
 #version 330 core
+uniform mat4 projectionMatrix;
 
-//uniform float pointRadius;  // point size in world space
+uniform float pointRadius;  // point size in world space
 //uniform float near;
 //uniform float far;
-//smooth in vec3 posEye;        // position of center in eye space
-//smooth in vec4 color;
+smooth in vec3 posEye;        // position of center in eye space
+smooth in vec4 color;
 
 out vec4 colorOut;
 
@@ -19,7 +20,8 @@ void main()
     n.xy = gl_PointCoord.st*vec2(2.0, -2.0) + vec2(-1.0, 1.0);
     float mag = dot(n.xy, n.xy);
     if (mag > 1.0) discard;   // kill pixels outside circle
-    //n.z = sqrt(1.0-mag);
+    n.z = sqrt(1.0-mag);
+    float opacity =0.01f+ (n.z)*0.01f;
 
     // point on surface of sphere in eye space
     //vec4 spherePosEye =vec4(posEye+n*pointRadius,1.0);
@@ -30,7 +32,8 @@ void main()
     // Transform into window coordinates coordinates
     //normDepth=0.5*normDepth+.5;
 
-    colorOut = vec4(1.0f,0.0f,0.0f,0.01f);
+    colorOut = vec4(opacity,opacity,opacity,1.0f);
+    //colorOut = vec4(1.0f,1.0f,1.0f,.6f);
     //colorOut=vec4(1.0f,0.0f,0.0f,1.0f);
     //gl_FragDepth = normDepth;
 }

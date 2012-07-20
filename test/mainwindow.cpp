@@ -70,6 +70,7 @@ namespace rtps
      setWindowTitle(tr("RTPS Library Test"));
 	 glWidget->makeCurrent();
      resize(1250, 700);
+     showMaximized();
  }
 
  void MainWindow::about()

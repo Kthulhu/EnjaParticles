@@ -100,11 +100,17 @@ namespace rtps
             readFile(shaderSrc+"/normal.frag",frag);
             addShader("depth2NormalShader",vert,frag,geom,tessCont,tessEval);
             frag = "";
+            readFile(shaderSrc+"/composite_fluid.frag",frag);
+            addShader("compositeFluidShader",vert,frag,geom,tessCont,tessEval);
+            frag = "";
             readFile(shaderSrc+"/copy.frag",frag);
             addShader("copyShader",vert,frag,geom,tessCont,tessEval);
             frag = "";
             readFile(shaderSrc+"/copy_scalar.frag",frag);
             addShader("copyScalarShader",vert,frag,geom,tessCont,tessEval);
+            frag = "";
+            readFile(shaderSrc+"/copy_inverse.frag",frag);
+            addShader("copyInverseShader",vert,frag,geom,tessCont,tessEval);
             frag = "";
             readFile(shaderSrc+"/copy_depth_color.frag",frag);
             addShader("copyDepthColorShader",vert,frag,geom,tessCont,tessEval);

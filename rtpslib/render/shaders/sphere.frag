@@ -2,8 +2,8 @@
 uniform mat4 projectionMatrix;
 
 uniform float pointRadius;  // point size in world space
-uniform float near;
-uniform float far;
+//uniform float near;
+//uniform float far;
 smooth in vec3 posEye;        // position of center in eye space
 smooth in vec4 color;
 
@@ -17,7 +17,8 @@ void main()
     // calculate normal from texture coordinates
     vec3 n;
     //we should find a better way of doing this...
-    n.xy = gl_PointCoord.st*vec2(2.0, -2.0) + vec2(-1.0, 1.0);
+    //n.xy = gl_PointCoord.st*vec2(2.0, -2.0) + vec2(-1.0, 1.0);
+    n.xy= gl_PointCoord.st*2.0f-1.0f;
     float mag = dot(n.xy, n.xy);
     if (mag > 1.0) discard;   // kill pixels outside circle
     n.z = sqrt(1.0-mag);

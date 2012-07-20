@@ -3,7 +3,7 @@
 
 uniform sampler2D scalarTex;
 uniform sampler2D depthTex;
-const float maxDepth = 0.9999999;
+const float maxDepth = 0.9999999f;
 
 in vec2 texCoord;
 out vec4 colorOut;

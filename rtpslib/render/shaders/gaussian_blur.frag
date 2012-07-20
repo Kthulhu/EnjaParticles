@@ -6,7 +6,7 @@ uniform float del_x;
 uniform float del_y;
 uniform float falloff;
 uniform float sig;
-const float maxDepth = 0.9999999;
+const float maxDepth = 0.9999999f;
 in vec2 texCoord;
 out vec4 colorOut;
 

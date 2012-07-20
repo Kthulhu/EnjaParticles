@@ -85,7 +85,7 @@ namespace rtps
     }
 
     //----------------------------------------------------------------------
-    void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light,const Material* material, float scale)
+    void ParticleEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light,const Material* material, float scale, GLuint sceneTex, GLuint framebuffer)
     {
         if(num==0)
             return;

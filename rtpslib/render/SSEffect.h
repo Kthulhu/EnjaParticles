@@ -44,7 +44,7 @@ namespace rtps
         SSEffect(ShaderLibrary* lib, GLuint width = 800, GLuint height = 600);// ,GLfloat pointRadius = 0.5f,bool blending = false);
         ~SSEffect();
         void smoothDepth(RTPSSettings* settings);
-        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
+        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light = NULL,const Material* material = NULL, float scale =1.0f, GLuint sceneTex=0, GLuint framebuffer= 0);
         virtual void setWindowDimensions(GLuint width, GLuint height);
         //virtual void setSmoothingFilter(SmoothingFilter filter){this->smoothing=filter;}
         //virtual SmoothingFilter getSmoothingFilter(){return smoothing;}

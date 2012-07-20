@@ -67,6 +67,7 @@ namespace rtps
         void readParamFile(std::istream& is);
         int writeMovieFrame(const char* filename, const char* dir);
         void display(bool transparent);
+        void createSceneTextures();
         ParticleShape* createParticleShape(const QString& system, Mesh* mesh);
 
     protected slots:
@@ -74,6 +75,8 @@ namespace rtps
     private:
         QElapsedTimer* elapsedTimer;
         GLuint environTex;
+        GLuint sceneFBO;
+        GLuint sceneTex[4]; ///store scene color buffer and scene depth buffer need quad buffer for stereo
         std::map<QString,System*> systems;
         std::map<QString,QString> systemRenderType;
         std::map<QString,ParticleEffect*> effects;
@@ -87,6 +90,7 @@ namespace rtps
         Light* light;
         int2 mousePos;
         int mouseButtons;
+        bool stereoscopic;
 
         AIWrapper* scene;
         AIWrapper* dynamicMeshScene;

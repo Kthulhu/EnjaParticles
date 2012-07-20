@@ -81,7 +81,7 @@ namespace rtps
         ~ParticleEffect();
 
         void renderVector(GLuint posVBO, GLuint vecVBO, unsigned int num, float scale=1.0f);
-        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light = NULL,const Material* material = NULL, float scale = 1.0f);
+        virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light = NULL,const Material* material = NULL, float scale = 1.0f, GLuint sceneTex=0, GLuint framebuffer= 0);
         virtual void setWindowDimensions(GLuint width, GLuint height){this->width=width;this->height=height;}
         //virtual void setPointRadius(GLfloat radius){pointRadius=radius;}
         //virtual GLfloat getPointRadius(){ return pointRadius;}

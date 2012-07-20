@@ -1,29 +1,10 @@
 #version 330 core
 uniform mat4 inverseProjectionMatrix;
-struct Material
-{
-    vec3 diffuse;
-    vec3 specular;
-    vec3 ambient;
-    float shininess;
-    float opacity;
-};
-struct Light
-{
-    vec3 diffuse;
-    vec3 specular;
-    vec3 ambient;
-    vec3 position;
-};
-
-
-uniform Material material;
-uniform Light light;
 
 uniform sampler2D depthTex;
 uniform float del_x;
 uniform float del_y;
-const float maxDepth = 0.999999;
+const float maxDepth = 0.9999999f;
 
 in vec2 texCoord;
 out vec4 colorOut;
@@ -70,13 +51,9 @@ void main()
 
 	vec3 n = cross(ddx,ddy);
         n = normalize(n);
-        vec3 ambientColor=material.ambient*light.ambient;
-        //vec3 specularColor=material.specular*light.specular*pow(max(dot(nnorm, halfLightDir), 0.0) , material.shininess);
-        vec3 lightDir = normalize(light.position-posEye);
-        vec3 ref = normalize(reflect(-lightDir,n));
-        float spec = max(0.0,dot(n,ref));
-        vec3 specularColor=material.specular*pow(spec,material.shininess);
-        vec3 diffuseColor=material.diffuse*light.diffuse*max(dot(n,lightDir), 0.0);
-        colorOut = vec4(ambientColor+specularColor+diffuseColor,material.opacity);
-        //colorOut = vec4(n,1.0f);
+        n = 0.5f*n+0.5f;
+        //n = normalize(n);
+
+
+        colorOut = vec4(n,1.0f);
 }

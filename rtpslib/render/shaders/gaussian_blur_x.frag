@@ -4,7 +4,7 @@ uniform float del_x;
 uniform float falloff;
 uniform float sig;
 const float pi = 3.141592654;
-const float maxDepth=0.9999999;
+const float maxDepth = 0.9999999f;
 in vec2 texCoord;
 out vec4 colorOut;
 

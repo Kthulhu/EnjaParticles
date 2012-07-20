@@ -1,6 +1,6 @@
 #version 330 core
 uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
+uniform mat4 inverseProjectionMatrix;
 
 uniform sampler2D depthTex; 
 //uniform float width;
@@ -12,6 +12,16 @@ uniform float h_y;
 uniform float dt;
 //uniform float distance_threshold;
 in vec2 texCoord;
+const float maxDepth = 0.9999999f;
+vec3 uvToEye(vec2 texCoordinate,float z)
+{
+        // convert texture coordinate to homogeneous space
+        vec2 xyPos = (texCoordinate*2. -1.);
+        // construct clip-space position
+        vec4 clipPos = vec4( xyPos, z, 1.0 );
+        vec4 viewPos =  (inverseProjectionMatrix * clipPos);
+        return(viewPos.xyz/viewPos.w);
+}
 //consider using textureGrad() for derivative information.
 
 float secondOrderCenterDifference(vec2 texCoord,float depth, vec2 dir, float h)

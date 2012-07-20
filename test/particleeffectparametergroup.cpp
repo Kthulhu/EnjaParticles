@@ -37,6 +37,15 @@
      bilateralRange->setValue(15);
      bilateralRange->setScale(0.01);
 
+     thicknessGamma = new FloatSlider(orientation,this);
+     thicknessGamma->setObjectName("thickness_gamma");
+     thicknessGamma->setTickPosition(QSlider::TicksBelow);
+     thicknessGamma->setTickInterval(10);
+     thicknessGamma->setSingleStep(1);
+     thicknessGamma->setRange(1,100);
+     thicknessGamma->setValue(10);
+     thicknessGamma->setScale(0.01);
+
      curvatureFlowIterations = new QSlider(orientation,this);
      curvatureFlowIterations->setObjectName("curvature_flow_iterations");
      curvatureFlowIterations->setTickPosition(QSlider::TicksBelow);
@@ -44,6 +53,7 @@
      curvatureFlowIterations->setSingleStep(1);
      curvatureFlowIterations->setRange(1,100);
      curvatureFlowIterations->setValue(15);
+
 
 
      filterType = new QComboBox(this);
@@ -104,8 +114,10 @@
      slidersLayout->addWidget(bilateralRange,3,1);
      slidersLayout->addWidget(new QLabel("Curvature Flow Iterations:"),4,0);
      slidersLayout->addWidget(curvatureFlowIterations,4,1);
+     slidersLayout->addWidget(new QLabel("ThicknessGamma:"),5,0);
+     slidersLayout->addWidget(thicknessGamma,5,1);
      //slidersLayout->addWidget(new QLabel("Curvature Flow Iterations:"),4,0);
-     slidersLayout->addWidget(thicknessCheck,5,1,1,2);
+     slidersLayout->addWidget(thicknessCheck,6,1,1,2);
      //slidersLayout->addWidget(new QLabel("Render Buffer:"),6,0);
      QGridLayout *buttonGroupLayout = new QGridLayout();
      buttonGroupLayout->addWidget(renderNormal,0,0);

@@ -122,7 +122,6 @@ OTHER_FILES += \
     ../rtpslib/render/shaders/draw_vector.geom \
     ../rtpslib/render/shaders/draw_vector.frag \
     ../rtpslib/render/shaders/curvature_flow.frag \
-    ../rtpslib/render/shaders/copy.vert \
     ../rtpslib/render/shaders/copy.frag \
     ../rtpslib/render/shaders/bilateral_blur.frag \
     ../rtpslib/render/shaders/sphere.frag \
@@ -138,4 +137,6 @@ OTHER_FILES += \
     ../rtpslib/render/shaders/copy_scalar.frag \
     ../rtpslib/render/shaders/fixed_width_gaussian.frag \
     ../rtpslib/render/shaders/copy_depth_color.frag \
-    ../rtpslib/render/shaders/sphere_thickness.frag
+    ../rtpslib/render/shaders/sphere_thickness.frag \
+    ../rtpslib/render/shaders/composite_fluid.frag \
+    ../rtpslib/render/shaders/copy_inverse.frag

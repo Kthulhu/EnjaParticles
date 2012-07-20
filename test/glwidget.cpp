@@ -138,6 +138,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     elapsedTimer = new QElapsedTimer();
     skyboxVBO=0;
     skyboxTexVBO=0;
+    stereoscopic=false;
 
     //This will force updates every 33 seconds. The timer will cause the
     //simulations to perform their updates.
@@ -240,7 +241,18 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         //FIXME: Need to find an elegant solution to handling mesh effects
         meshRenderer= (MeshEffect*)effects["Mesh Renderer"];
     }
+    glGenFramebuffersEXT(1,&sceneFBO);
+    glEnable(GL_TEXTURE_2D);
+    createSceneTextures();
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,sceneFBO);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,sceneTex[0],0);
 
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,sceneTex[1],0);
+
+    dout<<"sceneFBO = "<<sceneFBO<<" status complete? "<<((glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE)?"yes":"no")<<" "<<glCheckFramebufferStatus(GL_FRAMEBUFFER)<<endl;
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
+
+    glDisable(GL_TEXTURE_2D);
     glClearColor(0.8f,0.8f,0.8f,1.0f);
     //set the projection and view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
@@ -278,6 +290,9 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     }
     //cout<<"near clip = "<<view->getNearClip()<<" far clip = "<<view->getFarClip()<<endl;
     GLuint program = lib->shaders["sphereShader"].getProgram();
+    glUseProgram(program);
+    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+    program = lib->shaders["sphereThicknessShader"].getProgram();
     glUseProgram(program);
     glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
     program = lib->shaders["skybox"].getProgram();
@@ -326,15 +341,21 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         {
             cameraChanged();
         }
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,sceneFBO);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,sceneTex[0],0);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,sceneTex[1],0);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #if 1
         //renderSkyBox();
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
+
         //display static opaque objects
         display(false);
 #if 1
@@ -352,7 +373,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
             {
                 effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
             }
-            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),i->second->getSettings(),light,NULL,i->second->getSpacing());
+            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),i->second->getSettings(),light,NULL,i->second->getSpacing(),sceneTex[0], sceneFBO);
         }
         //display static transparent objects
         display(true);
@@ -367,6 +388,31 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 #endif
         //glDisable(GL_DEPTH_TEST);
         //glDisable(GL_MULTISAMPLE_ARB);
+        glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,sceneFBO);
+        glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
+        glDrawBuffer(GL_BACK_LEFT);
+
+#if 1
+        glBlitFramebufferEXT( 0, 0, width() , height(),
+                                          0, 0, width() , height(),
+                                          GL_COLOR_BUFFER_BIT, GL_LINEAR );
+#else
+        GLuint copyProgram = lib->shaders["copyShader"].getProgram();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,sceneTex[0]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D,sceneTex[1]);
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glUseProgram(copyProgram);
+        glUniform1i( glGetUniformLocation(copyProgram, "colorTex"),0);
+        glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);
+        RenderUtils::fullscreenQuad();
+
+        glUseProgram(0);
+        glBindTexture(GL_TEXTURE_2D,0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,0);
+#endif
         glPopAttrib();
         glPopClientAttrib();
         if(renderMovie)
@@ -397,6 +443,7 @@ void GLWidget::resizeGL(int width, int height)
          if(location!=-1)
              glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
     }
+    createSceneTextures();
     glUseProgram(0);
 }
 
@@ -916,6 +963,47 @@ void GLWidget::loadParameterFile(const QString& filename)
 }
 void GLWidget::ResetSimulations()
 {
+
+}
+void GLWidget::createSceneTextures()
+{
+    int num = 2;
+    if(stereoscopic)
+        num=4;
+    if(sceneTex[0])
+        glDeleteTextures(num,sceneTex);
+    glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(num, sceneTex);
+    glBindTexture(GL_TEXTURE_2D, sceneTex[1]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,width(),height(),0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+    glBindTexture(GL_TEXTURE_2D, sceneTex[0]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width(),height(),0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+    if(stereoscopic)
+    {
+        glBindTexture(GL_TEXTURE_2D, sceneTex[3]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,width(),height(),0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+        glBindTexture(GL_TEXTURE_2D, sceneTex[2]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width(),height(),0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+    }
+    glDisable(GL_TEXTURE_2D);
+    glPopAttrib();
 
 }
 
