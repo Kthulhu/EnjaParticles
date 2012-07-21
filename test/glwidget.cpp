@@ -124,8 +124,8 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     sizeScale=1.0f;
     //string scenefile = path+"/demo_scene.obj";
 
-    //renderVelocity=true;
-    renderVelocity=false;
+    renderVelocity=true;
+    //renderVelocity=false;
     paused=false;
     scene=new AIWrapper();
     dynamicMeshScene=new AIWrapper();

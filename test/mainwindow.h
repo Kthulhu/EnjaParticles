@@ -11,12 +11,12 @@
  class QSlider;
  class QComboBox;
  class QString;
- class GLWidget;
- class SPHParameterGroup;
- class ParticleEffectParameterGroup;
 
 namespace rtps
 {
+class GLWidget;
+class SPHParameterGroup;
+class ParticleEffectParameterGroup;
  class MainWindow : public QMainWindow
  {
      Q_OBJECT
@@ -53,7 +53,9 @@ void rendererChanged(const QString& system, const QString& renderer);
      QComboBox *rendererSelector;
 
      SPHParameterGroup *sphParams;
+     //std::map<QString, QGroupBox*> systemParams;
      ParticleEffectParameterGroup *ssEffectParams;
+     //std::map<QString, QGroupBox*> effectParams;
 
      QMenu *fileMenu;
      QMenu *helpMenu;

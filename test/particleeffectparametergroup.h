@@ -2,6 +2,7 @@
  #define PARTICLEEFFECTPARAMETERGROUP_H
 
  #include <QGroupBox>
+#include "rtpsparametergroup.h"
 
  class QSlider;
  class FloatSlider;
@@ -10,7 +11,9 @@
  class QCheckBox;
  class QRadioButton;
  class QButtonGroup;
- class ParticleEffectParameterGroup : public QGroupBox
+ namespace rtps
+ {
+ class ParticleEffectParameterGroup : public RTPSParameterGroup
  {
      Q_OBJECT
 
@@ -19,22 +22,8 @@
                   const QString &title,
                   QWidget *parent = 0);
 
- signals:
-     void valueChanged(const QString& parameterName, const QString& value);
-
  public slots:
-     void setValue(int value);
-     void setValue(float value);
-     void setValue(const QString& value);
-
- protected slots:
-     void triggerValue(bool value);
-     void triggerValue(int value);
-     void triggerValue(float value);
-     void triggerValue(const QString& value);
-
- protected:
-     QGroupBox* createVectorInput(const QString& title, QLineEdit* x,QLineEdit* y,QLineEdit* z);
+    virtual void setValues(RTPSSettings* settings);
  private:
      QComboBox* filterType;
      QCheckBox* thicknessCheck;
@@ -51,5 +40,5 @@
      QSlider* curvatureFlowIterations;
 
  };
-
+}
  #endif

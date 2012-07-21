@@ -14,7 +14,7 @@ void main()
 {
     mat4 viewProj = projectionMatrix * viewMatrix;
     gl_Position = viewProj * vec4(pos.xyz,1.0f);
-    vector = viewProj * vec4(col.xyz,1.0f);
+    vector = viewProj * vec4(pos.xyz+(scale*col.xyz),1.0f);
     color = vec4(abs(normalize(col.xyz)),1.0);
 }
 

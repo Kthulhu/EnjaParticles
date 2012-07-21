@@ -1,14 +1,15 @@
- #include <QtGui>
- #include "floatslider.h"
- #include "particleeffectparametergroup.h"
+#include <QtGui>
 #include <QRadioButton>
 #include <QButtonGroup>
 #include <iostream>
-
+#include "floatslider.h"
+#include "particleeffectparametergroup.h"
+namespace rtps
+{
  ParticleEffectParameterGroup::ParticleEffectParameterGroup(Qt::Orientation orientation,
                             const QString &title,
                             QWidget *parent)
-     : QGroupBox(title, parent)
+     : RTPSParameterGroup(title, parent)
  {
      pointScaleSlider = new FloatSlider(orientation,this);
      pointScaleSlider->setObjectName("point_radius");
@@ -126,42 +127,15 @@
      buttonGroupLayout->addWidget(renderThickness,0,1);
      buttonGroupLayout->addWidget(renderComposite,1,1);
      renderButtonGroup->setLayout(buttonGroupLayout);
-     slidersLayout->addWidget(renderButtonGroup,6,0,1,2);
+     slidersLayout->addWidget(renderButtonGroup,7,0,1,2);
 
      setLayout(slidersLayout);
 
 
  }
+ void ParticleEffectParameterGroup::setValues(RTPSSettings* settings)
+ {
+     //TODO: implement this function for particle effects panel.
+ }
 
-void ParticleEffectParameterGroup::setValue(int value)
-{
-    const QString& parameter = this->sender()->objectName();
-}
-void ParticleEffectParameterGroup::setValue(float value)
-{
-    const QString& parameter = this->sender()->objectName();
-}
-void ParticleEffectParameterGroup::setValue(const QString& value)
-{
-    const QString& parameter = this->sender()->objectName();
-}
-void ParticleEffectParameterGroup::triggerValue(bool value)
-{
-    //std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<(value?"enabled":"disabled")<<std::endl;
-    emit valueChanged(this->sender()->objectName(),QString(value?"1":"0"));
-}
-void ParticleEffectParameterGroup::triggerValue(int value)
-{
-    //std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<value<<std::endl;
-    emit valueChanged(this->sender()->objectName(),QString::number(value));
-}
-void ParticleEffectParameterGroup::triggerValue(float value)
-{
-    //std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<value<<std::endl;
-    emit valueChanged(this->sender()->objectName(),QString::number(value));
-}
-void ParticleEffectParameterGroup::triggerValue(const QString& value)
-{
-    //std::cout<<"name = "<<(const char*)this->sender()->objectName().toAscii().data() <<" value = "<<value.toAscii().data()<<std::endl;
-    emit valueChanged(this->sender()->objectName(),value);
 }

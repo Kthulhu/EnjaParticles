@@ -4,6 +4,7 @@
 #include <QtGui>
 #include <QComboBox>
 #include <QFileDialog>
+#include "rtpsparametergroup.h"
 #include "sphparametergroup.h"
 #include "particleeffectparametergroup.h"
 
@@ -49,20 +50,46 @@ namespace rtps
 
      createActions();
      createMenus();
+     QScrollArea* scrollArea = new QScrollArea(this);
+     scrollArea->setWidgetResizable(true);
+     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+     QWidget* paramWidget = new QWidget;
+     paramWidget->setObjectName("paramWidget");
+#if 0
+     QGridLayout *scrollLayout = new QGridLayout;
+     scrollLayout->addWidget(systemSelectorLabel, 0, 0);
+     scrollLayout->addWidget(systemSelector, 0, 1,1,1);
+     scrollLayout->addWidget(new QLabel("Renderer:"), 1, 0);
+     scrollLayout->addWidget(rendererSelector, 1, 1,1,1);
+     scrollLayout->addWidget(sphParams,2,0,7,2);
+     scrollLayout->addWidget(ssEffectParams,9,0,10,2);
+#else
+     QVBoxLayout *scrollLayout=new QVBoxLayout;
+     scrollLayout->addWidget(systemSelectorLabel);
+     scrollLayout->addWidget(systemSelector);
+     scrollLayout->addWidget(new QLabel("Renderer:"));
+     scrollLayout->addWidget(rendererSelector);
+     scrollLayout->addWidget(sphParams);
+     scrollLayout->addWidget(ssEffectParams);
+#endif
+     paramWidget->setLayout(scrollLayout);
+     paramWidget->setStyleSheet("QWidget#paramWidget {background: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0, stop: 0 #777777, stop: 1 #F9F9F9);}");
+     scrollArea->setWidget(paramWidget);
 
      QGridLayout *centralLayout = new QGridLayout;
-     //centralLayout->addWidget(glWidgetArea, 0, 0);
+#if 0
      centralLayout->addWidget(systemSelectorLabel, 0, 0);
      centralLayout->addWidget(systemSelector, 0, 1,1,1);
      centralLayout->addWidget(new QLabel("Renderer:"), 1, 0);
      centralLayout->addWidget(rendererSelector, 1, 1,1,1);
-     /*centralLayout->addWidget(slider1Label, 1, 0);
-     centralLayout->addWidget(slider1, 1, 1 );
-     centralLayout->addWidget(slider2Label, 2, 0);
-     centralLayout->addWidget(slider2, 2, 1);*/
      centralLayout->addWidget(sphParams,2,0,7,2);
      centralLayout->addWidget(ssEffectParams,9,0,8,2);
      centralLayout->addWidget(glWidget, 0, 2,16,6);
+#else
+     centralLayout->addWidget(scrollArea,0,0,1,1,Qt::AlignLeft);
+     centralLayout->addWidget(glWidget, 0, 1,1,6);
+#endif
+
 
      centralWidget->setLayout(centralLayout);
      this->setStyleSheet("QMainWindow {background: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0, stop: 0 #777777, stop: 0.65 #777777, stop: 1 #F9F9F9);}");

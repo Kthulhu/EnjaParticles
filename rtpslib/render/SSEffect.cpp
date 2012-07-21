@@ -167,6 +167,10 @@ namespace rtps
         currentDepthBuffer="depth";
 
         bool blending = settings->GetSettingAs<bool>("blending","1");
+        //QT send 2 for check boxes when enable(due to the possiblity of adding a tristate option.
+        //Apparently the default string-to-bool conversion is true for 1 and false otherwise
+        //I need it to be false for 0 and true otherwise.
+        //bool thickness = !settings->GetSettingAs<int>("thickness","1");
         bool thickness = settings->GetSettingAs<bool>("thickness","1");
         //perserve original buffer
         GLint buffer;
@@ -183,6 +187,8 @@ namespace rtps
             glBlendFunc(GL_ONE, GL_ONE);
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
+            //give the fluid some thickness everywhere
+            glClearColor(0.1f,0.1f,0.1f,1.0f);
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness1"],0);
             //glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);

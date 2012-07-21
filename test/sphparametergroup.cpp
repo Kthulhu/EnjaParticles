@@ -1,12 +1,17 @@
- #include <QtGui>
- #include "floatslider.h"
- #include "sphparametergroup.h"
-#include <iostream>
+#include <QtGui>
+#include <QLineEdit>
+#include <QBoxLayout>
+#include <QGridLayout>
+#include "floatslider.h"
+#include "sphparametergroup.h"
 
+#include <iostream>
+namespace rtps
+{
  SPHParameterGroup::SPHParameterGroup(Qt::Orientation orientation,
                             const QString &title,
                             QWidget *parent)
-     : QGroupBox(title, parent)
+     : RTPSParameterGroup(title, parent)
  {
      xSPHSlider = new FloatSlider(orientation,this);
      xSPHSlider->setObjectName("xsph_factor");
@@ -51,15 +56,15 @@
      viscosityLineEdit->setFixedWidth(50);
 
      gravityX = new QLineEdit("0.0",this);
-     gravityX->setObjectName("gravityx");
+     gravityX->setObjectName("gravity_x");
      gravityX->setMaxLength(5);
      gravityX->setFixedWidth(50);
      gravityY = new QLineEdit("0.0",this);
-     gravityY->setObjectName("gravityy");
+     gravityY->setObjectName("gravity_y");
      gravityY->setMaxLength(5);
      gravityY->setFixedWidth(50);
      gravityZ = new QLineEdit("-9.8",this);
-     gravityZ->setObjectName("gravityz");
+     gravityZ->setObjectName("gravity_z");
      gravityZ->setMaxLength(5);
      gravityZ->setFixedWidth(50);
 
@@ -72,17 +77,9 @@
      connect(viscositySlider,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(viscositySlider,SIGNAL(valueChanged(float)),this,SLOT(setViscosityValue(float)));
      connect(viscosityLineEdit,SIGNAL(textChanged(const QString&)),this,SLOT(setViscosityValue(const QString&)));
-     connect(gravityX,SIGNAL(textChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
-     connect(gravityY,SIGNAL(textChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
-     connect(gravityZ,SIGNAL(textChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
-
-
-     QBoxLayout::Direction direction;
-
-     if (orientation == Qt::Horizontal)
-         direction = QBoxLayout::TopToBottom;
-     else
-         direction = QBoxLayout::LeftToRight;
+     connect(gravityX,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
+     connect(gravityY,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
+     connect(gravityZ,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
 
      QGridLayout *slidersLayout = new QGridLayout();
      slidersLayout->addWidget(new QLabel("XSPH:"),0,0);
@@ -98,19 +95,7 @@
      setLayout(slidersLayout);
 
  }
-QGroupBox* SPHParameterGroup::createVectorInput(const QString& title, QLineEdit* x,QLineEdit* y,QLineEdit* z)
-{
-     QGroupBox* box = new QGroupBox(title);
-     QBoxLayout* boxLayout = new QBoxLayout(QBoxLayout::LeftToRight);
-     boxLayout->addWidget(new QLabel("X:"));
-     boxLayout->addWidget(x);
-     boxLayout->addWidget(new QLabel("Y:"));
-     boxLayout->addWidget(y);
-     boxLayout->addWidget(new QLabel("Z:"));
-     boxLayout->addWidget(z);
-     box->setLayout(boxLayout);
-     return box;
-}
+
 void SPHParameterGroup::setXSPHValue(float value)
 {
     xSPHLineEdit->blockSignals(true);
@@ -153,15 +138,35 @@ void SPHParameterGroup::setViscosityValue(const QString& value)
     viscositySlider->blockSignals(false);
 }
 
- void SPHParameterGroup::triggerValue(int value)
- {
-     emit valueChanged(this->sender()->objectName(),QString::number(value));
- }
- void SPHParameterGroup::triggerValue(float value)
- {
-     emit valueChanged(this->sender()->objectName(),QString::number(value));
- }
- void SPHParameterGroup::triggerValue(const QString& value)
- {
-     emit valueChanged(this->sender()->objectName(),value);
- }
+void SPHParameterGroup::setValues(RTPSSettings *settings)
+{
+    xSPHLineEdit->blockSignals(true);
+    xSPHLineEdit->setText(QString(settings->GetSettingAs<std::string>("xsph_factor","0.15").c_str()));
+    xSPHLineEdit->blockSignals(false);
+    gasConstantLineEdit->blockSignals(true);
+    gasConstantLineEdit->setText(QString(settings->GetSettingAs<std::string>("gas_constant","3.5").c_str()));
+    gasConstantLineEdit->blockSignals(false);
+    viscosityLineEdit->blockSignals(true);
+    viscosityLineEdit->setText(QString(settings->GetSettingAs<std::string>("viscosity","0.001").c_str()));
+    viscosityLineEdit->blockSignals(false);
+    xSPHSlider->blockSignals(true);
+    xSPHSlider->setValue(settings->GetSettingAs<float>("xsph_factor","0.15"));
+    xSPHSlider->blockSignals(false);
+    gasConstantSlider->blockSignals(true);
+    gasConstantSlider->setValue(settings->GetSettingAs<float>("gas_constant","3.5"));
+    gasConstantSlider->blockSignals(false);
+    viscositySlider->blockSignals(true);
+    viscositySlider->setValue(settings->GetSettingAs<float>("viscosity","0.001"));
+    viscositySlider->blockSignals(false);
+    QString gravity = settings->GetSettingAs<std::string>("gravity","0.0 -9.8 0.0 0.0").c_str();
+    gravityX-blockSignals(true);
+    gravityY-blockSignals(true);
+    gravityZ-blockSignals(true);
+    gravityX->setText(gravity.section(' ',0,0));
+    gravityY->setText(gravity.section(' ',1,1));
+    gravityZ->setText(gravity.section(' ',2,2));
+    gravityX-blockSignals(false);
+    gravityY-blockSignals(false);
+    gravityZ-blockSignals(false);
+}
+}

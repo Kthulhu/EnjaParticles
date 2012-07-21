@@ -35,7 +35,8 @@ HEADERS += \
     ../rtpslib/system/ForceField.h \
     ../rtpslib/system/FLOCKSettings.h \
     ../rtpslib/system/FLOCK.h \
-    ../rtpslib/system/boids.h
+    ../rtpslib/system/boids.h \
+    ../test/rtpsparametergroup.h
 
 SOURCES += \
     ../test/sphparametergroup.cpp \
@@ -70,7 +71,8 @@ SOURCES += \
     ../rtpslib/system/FLOCKSettings.cpp \
     ../rtpslib/system/FLOCK.cpp \
     ../rtpslib/system/boids.cpp \
-    ../rtpslib/render/ShaderLibrary.cpp
+    ../rtpslib/render/ShaderLibrary.cpp \
+    ../test/rtpsparametergroup.cpp
 
 FORMS += \
     ../test/mainwindow.ui
