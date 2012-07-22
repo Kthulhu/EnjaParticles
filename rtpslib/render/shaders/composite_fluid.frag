@@ -43,25 +43,6 @@ vec3 uvToEye(vec2 texCoordinate,float z)
         return(viewPos.xyz/viewPos.w);
 }
 
-float IOR = 1.333; //refractive indice for water = 1.333
-float eta = max(IOR, 0.00001);
-float fresnel_dielectric(vec3 incoming, vec3 normal, float eta)
-{
-        float c = abs(dot(incoming, normal));
-        float g = eta * eta - 1.0 + c * c;
-        float result;
-
-        if(g > 0.0) {
-                g = sqrt(g);
-                float A =(g - c)/(g + c);
-                float B =(c *(g + c)- 1.0)/(c *(g - c)+ 1.0);
-                result = 0.5 * A * A *(1.0 + B * B);
-        }
-        else
-                result = 1.0;
-        return result;
-}
-
 void main(void)
 {
     float depth = texture2D(depthTex,texCoord).x;
@@ -71,19 +52,15 @@ void main(void)
             //return;
     }
     vec3 posEye = uvToEye(texCoord,depth);
-    vec3 n = normalize(2.0f*(texture2D(normalTex,texCoord).xyz-0.5f));
     float thickness = texture2D(thicknessTex,texCoord).x;
+    vec3 n = normalize((2.0f*(texture2D(normalTex,texCoord).xyz-0.5f)));//+noise3(thickness));
     vec3 ambientColor=material.ambient*light.ambient;
 
     vec3 lightDir = normalize(light.position-posEye);
     //vec3 halfLightDir = normalize(lightDir+posEye);//normalize((lightDir+posEye)*0.5f);
     //float fresnel = fresnel_dielectric(normalize(posEye),n,eta);
 
-
-    //thickness=300.f*gamma;
-    //thickness+=0.1f;
-    //thickness=0.75f;
-    float beta = thickness*0.1f;
+    float beta = thickness*gamma;
     float lerpFact =exp(-thickness);
     //vec3 a = mix(material.diffuse,texture2D(sceneTex,texCoord.xy).xyz,lerpFact);
     vec3 a = mix(material.diffuse,texture2D(sceneTex,texCoord.xy+vec2(n.x*beta,n.y*beta)).xyz,lerpFact);

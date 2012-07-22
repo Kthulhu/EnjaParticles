@@ -1,5 +1,6 @@
 #version 330 core
 uniform mat4 inverseProjectionMatrix;
+//uniform mat4 normalMatrix;
 
 uniform sampler2D depthTex;
 uniform float del_x;
@@ -49,9 +50,10 @@ void main()
 		ddy = ddy2;
 	}
 
-	vec3 n = cross(ddx,ddy);
+        vec3 n = cross(ddx,ddy);
         n = normalize(n);
-        n = 0.5f*n+0.5f;
+        //n = normalize(mat3(normalMatrix)*n);
+        n = 0.5f*(n+1.0f);
         //n = normalize(n);
 
 

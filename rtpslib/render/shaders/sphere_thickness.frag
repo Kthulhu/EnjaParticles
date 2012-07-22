@@ -21,7 +21,7 @@ void main()
     float mag = dot(n.xy, n.xy);
     if (mag > 1.0) discard;   // kill pixels outside circle
     n.z = sqrt(1.0-mag);
-    float opacity =0.01f+ (n.z)*0.01f;
+    float opacity =0.001f+ n.z*pointRadius*0.001f;
 
     // point on surface of sphere in eye space
     //vec4 spherePosEye =vec4(posEye+n*pointRadius,1.0);

@@ -124,8 +124,6 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     sizeScale=1.0f;
     //string scenefile = path+"/demo_scene.obj";
 
-    renderVelocity=true;
-    //renderVelocity=false;
     paused=false;
     scene=new AIWrapper();
     dynamicMeshScene=new AIWrapper();
@@ -369,11 +367,12 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 #endif
         for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
-            if(renderVelocity)
+            RTPSSettings* settings = i->second->getSettings();
+            if(settings->GetSettingAs<bool>("render_velocity","0"))
             {
-                effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
+                effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum(),settings->GetSettingAs<float>("velocity_scale","1.0"));
             }
-            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),i->second->getSettings(),light,NULL,i->second->getSpacing(),sceneTex[0], sceneFBO);
+            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[0], sceneFBO);
         }
         //display static transparent objects
         display(true);

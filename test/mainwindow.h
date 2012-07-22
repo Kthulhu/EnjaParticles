@@ -11,6 +11,7 @@
  class QSlider;
  class QComboBox;
  class QString;
+ class QStackedWidget;
 
 namespace rtps
 {
@@ -54,7 +55,9 @@ void rendererChanged(const QString& system, const QString& renderer);
 
      SPHParameterGroup *sphParams;
      //std::map<QString, QGroupBox*> systemParams;
+     QStackedWidget *systemParamPanels;
      ParticleEffectParameterGroup *ssEffectParams;
+     QStackedWidget *effectParamPanels;
      //std::map<QString, QGroupBox*> effectParams;
 
      QMenu *fileMenu;

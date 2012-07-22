@@ -103,7 +103,7 @@ namespace rtps
                 glUseProgram(smoothingProgram);
                 glUniform1i( glGetUniformLocation(smoothingProgram, "depthTex"),0);
                 glUniform2fv( glGetUniformLocation(smoothingProgram, "blurDir"),1,xdir);
-                glUniform1f( glGetUniformLocation(smoothingProgram, "sig_range"),settings->GetSettingAs<float>("bilateral_range","0.01"));
+                glUniform1f( glGetUniformLocation(smoothingProgram, "sig_range"),settings->GetSettingAs<float>("bilateral_range","0.001"));
                 glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),settings->GetSettingAs<float>("blur_radius","8.0"));
                 RenderUtils::fullscreenQuad();
                 glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
@@ -120,34 +120,42 @@ namespace rtps
             }
             case CURVATURE_FLOW:
             {
-                int numberIterations=settings->GetSettingAs<float>("curvature_flow_iterations","20");
+                int numberIterations=settings->GetSettingAs<int>("curvature_flow_iterations","20");
                 smoothingProgram= m_shaderLibrary->shaders["curvatureFlowShader"].getProgram();
                 glUniform1i(glGetUniformLocation(smoothingProgram,"depthTex"),0);
                 //glUniform1f(glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER],"width"),(float)window_width);
                 //glUniform1f(glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER],"height"),(float)window_height);
                 glUniform1f( glGetUniformLocation(smoothingProgram, "del_x"),1.0/((float)width));
                 glUniform1f( glGetUniformLocation(smoothingProgram, "del_y"),1.0/((float)height));
-                glUniform1f( glGetUniformLocation(smoothingProgram, "h_x"),1.0/((float)width-1));
-                glUniform1f( glGetUniformLocation(smoothingProgram, "h_y"),1.0/((float)height-1));
+                //glUniform1f( glGetUniformLocation(smoothingProgram, "h_x"),1.0/((float)width-1));
+                //glUniform1f( glGetUniformLocation(smoothingProgram, "h_y"),1.0/((float)height-1));
                 //glUniform1f( glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER], "focal_x"),focal_x);
                 //glUniform1f( glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER], "focal_y"),focal_y);
-                glUniform1f( glGetUniformLocation(smoothingProgram, "dt"),1.0f/numberIterations);
+                //glUniform1f( glGetUniformLocation(smoothingProgram, "dt"),1.0f/numberIterations);
+                glUniform1f( glGetUniformLocation(smoothingProgram, "dt"),settings->GetSettingAs<float>("curvature_flow_dt","0.005"));
                 //glUniform1f( glGetUniformLocation(smoothingProgram, "distance_threshold"), falloff);
                 glUseProgram(smoothingProgram);
-
+                string curReadBuffer;
                 for(unsigned int i = 0; i<numberIterations; i++)
                 {
-                    RenderUtils::fullscreenQuad();
-                    glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer]);
-                    if(i%2)
-                        currentDepthBuffer="depth";
-                    else
-                        currentDepthBuffer="depth2";
-                    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
-
-                    //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
                     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+                    RenderUtils::fullscreenQuad();
+
+                    if(i%2==0)
+                    {
+                        curReadBuffer = "depth2";
+                        currentDepthBuffer="depth";
+                    }
+                    else
+                    {
+                        curReadBuffer = "depth";
+                        currentDepthBuffer="depth2";
+                    }
+                    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
+                    glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[curReadBuffer]);
+                    //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
                 }
+                currentDepthBuffer=curReadBuffer;
                 glUseProgram(0);
                 return;
             }
@@ -217,9 +225,12 @@ namespace rtps
             glDepthMask(GL_TRUE);
             glDisable(GL_TEXTURE_2D);
         }
+        //glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,framebuffer);
+
 
         //Render Color and depth buffer of spheres.
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderPointsAsSpheres( m_shaderLibrary->shaders["sphereShader"].getProgram(),posVBO, colVBO, num,settings, light,material,scale);
 

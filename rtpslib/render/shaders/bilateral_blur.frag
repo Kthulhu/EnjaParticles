@@ -20,17 +20,18 @@ void main(void)
     float sum = 0.0f;
     float denom1 = (1.f/(2.f*sig*sig));
     float denom2 = (1.f/(2.f*sig_range*sig_range));
-    //float gauss =(1./(sqrt(2.*pi)*sig));
+    float gauss_s =(1./(sqrt(2.*pi)*sig));
+    float gauss_r =(1./(sqrt(2.*pi)*sig_range));
     int width = int(2.f*sig)+1;
 
     for(int x=-width; x<=width; x++)
     {
             float samp = texture2D(depthTex,texCoord.xy+x*blurDir).x;
 
-            float w = exp(-float(x*x)/denom1);
+            float w = exp(-float(x*x)*denom1);
 
             float r2 = (samp - depth);
-            float g = exp(-(r2*r2)/denom2);
+            float g = exp(-(r2*r2)*denom2);
             sum += samp * w * g;
             wsum += w * g;
     }
@@ -38,6 +39,7 @@ void main(void)
     {
             sum /= wsum;
     }
+    sum*=gauss_r*gauss_s;
 
     colorOut = vec4(sum,sum,sum,1.0f);
     gl_FragDepth=sum;

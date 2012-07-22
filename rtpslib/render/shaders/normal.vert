@@ -11,5 +11,5 @@ out vec2 texCoord;
 void main()
 {
         texCoord = texCoordIn;
-        gl_Position = gl_Vertex;
+        gl_Position = pos;
 }

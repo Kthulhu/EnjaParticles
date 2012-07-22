@@ -27,6 +27,7 @@
  private:
      QComboBox* filterType;
      QCheckBox* thicknessCheck;
+     QCheckBox* velocityCheck;
      QRadioButton* renderNormal;
      QRadioButton* renderDepth;
      QRadioButton* renderDepthSmoothed;
@@ -37,6 +38,8 @@
      FloatSlider* blurRadius;
      FloatSlider* bilateralRange;
      FloatSlider* thicknessGamma;
+     FloatSlider* curvatureFlowDT;
+     FloatSlider* velocityScale;
      QSlider* curvatureFlowIterations;
 
  };

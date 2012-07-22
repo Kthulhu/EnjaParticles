@@ -2,7 +2,7 @@
 <main>
     <system type="sph" name="water">
         <parameters type="system">
-            <param name="sub_intervals">12</param>
+            <param name="sub_intervals">1</param>
             <param name="domain_min" >0.0 0.0 0.0 0.0</param>
             <param name="domain_max" >10.0 10.0 10.0 0.0</param>
             <param name="rest_density" >1000.0</param>

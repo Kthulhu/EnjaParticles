@@ -4,6 +4,7 @@
 #include <QtGui>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QStackedWidget>
 #include "rtpsparametergroup.h"
 #include "sphparametergroup.h"
 #include "particleeffectparametergroup.h"
@@ -55,23 +56,15 @@ namespace rtps
      scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
      QWidget* paramWidget = new QWidget;
      paramWidget->setObjectName("paramWidget");
-#if 0
-     QGridLayout *scrollLayout = new QGridLayout;
-     scrollLayout->addWidget(systemSelectorLabel, 0, 0);
-     scrollLayout->addWidget(systemSelector, 0, 1,1,1);
-     scrollLayout->addWidget(new QLabel("Renderer:"), 1, 0);
-     scrollLayout->addWidget(rendererSelector, 1, 1,1,1);
-     scrollLayout->addWidget(sphParams,2,0,7,2);
-     scrollLayout->addWidget(ssEffectParams,9,0,10,2);
-#else
+
      QVBoxLayout *scrollLayout=new QVBoxLayout;
      scrollLayout->addWidget(systemSelectorLabel);
      scrollLayout->addWidget(systemSelector);
+     scrollLayout->addWidget(sphParams);
      scrollLayout->addWidget(new QLabel("Renderer:"));
      scrollLayout->addWidget(rendererSelector);
-     scrollLayout->addWidget(sphParams);
      scrollLayout->addWidget(ssEffectParams);
-#endif
+
      paramWidget->setLayout(scrollLayout);
      paramWidget->setStyleSheet("QWidget#paramWidget {background: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0, stop: 0 #777777, stop: 1 #F9F9F9);}");
      scrollArea->setWidget(paramWidget);
