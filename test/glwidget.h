@@ -30,6 +30,7 @@ namespace rtps
     class ParticleEffect;
     class ParticleShape;
     class ShaderLibrary;
+    class RTPSSettings;
     class CL;
 
 
@@ -47,11 +48,14 @@ namespace rtps
         void loadScene(const QString& filename);
         void loadMeshScene(const QString& filename);
         void loadParameterFile(const QString& filename);
+        void getSystemSettings(const QString& system);
         void ResetSimulations();
         void changeRenderer(const QString& system, const QString& renderer);
 
     signals:
         void systemMapChanged(const std::vector<std::string>& sysNames);
+        void initRendererPanel(const QString& renderer, RTPSSettings* settings);
+        void initSystemPanel(const QString& systemType, RTPSSettings* settings);
         //void parameterValueChanged(const QString& parameter, const QString& value);
 
     protected:

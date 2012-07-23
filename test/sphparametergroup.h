@@ -6,6 +6,7 @@
 #include "../rtpslib/RTPSSettings.h"
  class QSlider;
  class FloatSlider;
+ class QComboBox;
  class QLineEdit;
 
  namespace rtps
@@ -28,12 +29,15 @@
      void setValues(RTPSSettings *settings);
 
  private:
+     QSlider* subIntervals;
      FloatSlider* xSPHSlider;
      QLineEdit* xSPHLineEdit;
      FloatSlider* gasConstantSlider;
      QLineEdit* gasConstantLineEdit;
      FloatSlider* viscositySlider;
      QLineEdit* viscosityLineEdit;
+     FloatSlider* timeStep;
+     QComboBox* integrator;
      QLineEdit *gravityX,*gravityY,*gravityZ;
  };
  }

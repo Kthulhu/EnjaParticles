@@ -7,6 +7,8 @@
 #include <QStackedWidget>
 #include "rtpsparametergroup.h"
 #include "sphparametergroup.h"
+#include "rigidbodyparametergroup.h"
+#include "flockingparametergroup.h"
 #include "particleeffectparametergroup.h"
 
 namespace rtps
@@ -30,6 +32,7 @@ namespace rtps
 
      systemSelector = new QComboBox(this);
      systemSelector->addItem(QString("Please Load Parameter File"));
+     connect(systemSelector, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(setSystem(const QString&)));
      systemSelectorLabel = new QLabel("System:",this);
      connect(glWidget,SIGNAL(systemMapChanged(const std::vector<std::string>&)),this,SLOT(setSystemNames(const std::vector<std::string>&)));
 
@@ -41,10 +44,35 @@ namespace rtps
 
      connect(this,SIGNAL(rendererChanged(const QString&, const QString&)),glWidget, SLOT(changeRenderer(const QString&, const QString&)));
 
+     connect(this,SIGNAL(getSystemSettings(const QString&)),glWidget,SLOT(getSystemSettings(const QString&)));
+
+     connect(glWidget,SIGNAL(initRendererPanel(const QString&, RTPSSettings*)),
+             this,SLOT(initRendererPanel(const QString&, RTPSSettings*)));
+     connect(glWidget,SIGNAL(initSystemPanel(const QString&, RTPSSettings*)),
+             this,SLOT(initSystemPanel(const QString&, RTPSSettings*)));
+
      sphParams = new SPHParameterGroup(Qt::Horizontal, "SPH Parameters",this);
+     rbParams = new RigidbodyParameterGroup(Qt::Horizontal, "Rigidbody Parameters",this);
+     flockingParams = new FlockingParameterGroup(Qt::Horizontal, "Flocking Parameters",this);
      connect(sphParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
+     connect(rbParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
+     connect(flockingParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
      ssEffectParams = new ParticleEffectParameterGroup(Qt::Horizontal, "Screen Space Parameters",this);
      connect(ssEffectParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
+
+     systemParamPanels = new QStackedWidget(this);
+     systemParamPanels->addWidget(sphParams);
+     systemParamPanels->addWidget(rbParams);
+     systemParamPanels->addWidget(flockingParams);
+     effectParamPanels = new QStackedWidget(this);
+     effectParamPanels->addWidget(ssEffectParams);
+
+     effectParamPanelID["Points"]=0;
+     effectParamPanelID["Screen Space"]=0;
+     effectParamPanelID["Mesh Renderer"]=0;
+     systemParamPanelID["sph"]=0;
+     systemParamPanelID["rigidbody"]=1;
+     systemParamPanelID["flock"]=2;
 
      connect(this, SIGNAL(parameterValueChanged(const QString&,const QString&,const QString&)),
              glWidget,SLOT(setParameterValue(const QString&,const QString&,const QString&)));
@@ -60,10 +88,11 @@ namespace rtps
      QVBoxLayout *scrollLayout=new QVBoxLayout;
      scrollLayout->addWidget(systemSelectorLabel);
      scrollLayout->addWidget(systemSelector);
-     scrollLayout->addWidget(sphParams);
+     //scrollLayout->addWidget(sphParams);
+     scrollLayout->addWidget(systemParamPanels);
      scrollLayout->addWidget(new QLabel("Renderer:"));
      scrollLayout->addWidget(rendererSelector);
-     scrollLayout->addWidget(ssEffectParams);
+     scrollLayout->addWidget(effectParamPanels);
 
      paramWidget->setLayout(scrollLayout);
      paramWidget->setStyleSheet("QWidget#paramWidget {background: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0, stop: 0 #777777, stop: 1 #F9F9F9);}");
@@ -162,39 +191,43 @@ namespace rtps
  }
 void MainWindow::setSystemNames(const std::vector<std::string>& sysNames)
 {
+    systemSelector->blockSignals(true);
     systemSelector->clear();
     for(int i = 0;i<sysNames.size(); i++)
     {
         systemSelector->addItem(QString(sysNames[i].c_str()));
     }
+    systemSelector->blockSignals(false);
 }
 
-/* QSlider *MainWindow::createSlider(const char *name)
- {
-     QSlider *slider = new QSlider(Qt::Horizontal,this);
-     slider->setObjectName(name);
-     slider->setRange(0, 100);
-     slider->setSingleStep(10);
-     slider->setPageStep(10);
-     slider->setTickInterval(10);
-     slider->setTickPosition(QSlider::TicksRight);
-     connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sliderChanged(int)));
-     return slider;
- }*/
 void MainWindow::setRenderer(const QString& renderer)
 {
-    QString system = systemSelector->currentText();
+    const QString& system = systemSelector->currentText();
     emit rendererChanged(system,renderer);
+}
+
+void MainWindow::setSystem(const QString& system)
+{
+    emit getSystemSettings(system);
+}
+
+void MainWindow::initRendererPanel(const QString& renderer, RTPSSettings* settings)
+{
+    effectParamPanels->setCurrentIndex(effectParamPanelID[renderer]);
+    RTPSParameterGroup* panel = reinterpret_cast<RTPSParameterGroup*>(effectParamPanels->currentWidget());
+    panel->setValues(settings);
+}
+
+void MainWindow::initSystemPanel(const QString& systemType, RTPSSettings* settings)
+{
+    systemParamPanels->setCurrentIndex(systemParamPanelID[systemType]);
+    RTPSParameterGroup* panel = reinterpret_cast<RTPSParameterGroup*>(systemParamPanels->currentWidget());
+    panel->setValues(settings);
 }
 
 void MainWindow::valueChanged(const QString& parameterName, const QString& value)
 {
-    QString system = systemSelector->currentText();
-    /*dout<<"----------"<<endl;
-    dout<<"sys = "<<(const char*)system.toAscii().data()<<endl;
-    dout<<"parameter = "<<(const char*)parameterName.toAscii().data()<<endl;
-    dout<<"value = "<<(const char*)value.toAscii().data()<<endl;
-    dout<<"----------"<<endl;*/
+    const QString& system = systemSelector->currentText();
     emit parameterValueChanged(system,parameterName,value);
 }
 }

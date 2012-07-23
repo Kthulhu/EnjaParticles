@@ -222,7 +222,8 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         light->ambient.x=0.2;light->ambient.y=0.2;light->ambient.z=0.2;
         light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
         //light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
-        light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
+        //light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
+        light->pos.x=0.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
 
     }
     environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
@@ -251,7 +252,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
 
     glDisable(GL_TEXTURE_2D);
-    glClearColor(0.8f,0.8f,0.8f,1.0f);
+    glClearColor(0.6f,0.6f,0.6f,1.0f);
     //set the projection and view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
@@ -1009,6 +1010,12 @@ void GLWidget::createSceneTextures()
 void GLWidget::changeRenderer(const QString& system, const QString& renderer)
 {
      systemRenderType[system]=renderer;
+     RTPSSettings* settings = systems[system]->getSettings();
+     emit initRendererPanel(renderer,settings);
 }
-
+void GLWidget::getSystemSettings(const QString& system)
+{
+    RTPSSettings* settings = systems[system]->getSettings();
+    emit initSystemPanel(QString(settings->GetSettingAs<std::string>("system").c_str()),settings);
+}
 }

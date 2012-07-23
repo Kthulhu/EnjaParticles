@@ -1,5 +1,6 @@
 #include <QtGui>
 #include <QLineEdit>
+#include <QComboBox>
 #include <QBoxLayout>
 #include <QGridLayout>
 #include "floatslider.h"

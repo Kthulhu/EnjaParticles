@@ -2,6 +2,7 @@
 #include <QLineEdit>
 #include <QBoxLayout>
 #include <QGridLayout>
+#include <QComboBox>
 #include "floatslider.h"
 #include "rigidbodyparametergroup.h"
 

@@ -13,6 +13,28 @@ namespace rtps
                             QWidget *parent)
      : RTPSParameterGroup(title, parent)
  {
+     //integrator = new QComboBox(this);
+     //integrator->setObjectName("integrator");
+     //integrator->addItem("Euler");
+     //integrator->addItem("Leapfrog");
+
+     subIntervals = new QSlider(orientation,this);
+     subIntervals->setObjectName("sub_intervals");
+     subIntervals->setTickPosition(QSlider::TicksBelow);
+     subIntervals->setTickInterval(10);
+     subIntervals->setSingleStep(5);
+     subIntervals->setRange(1,50);
+     subIntervals->setValue(1);
+
+     timeStep = new FloatSlider(orientation,this);
+     timeStep->setObjectName("time_step");
+     timeStep->setTickPosition(QSlider::TicksBelow);
+     timeStep->setTickInterval(1);
+     timeStep->setSingleStep(1);
+     timeStep->setRange(50,150);
+     timeStep->setValue(100);
+     timeStep->setScale(0.00003);
+
      xSPHSlider = new FloatSlider(orientation,this);
      xSPHSlider->setObjectName("xsph_factor");
      xSPHSlider->setTickPosition(QSlider::TicksBelow);
@@ -77,6 +99,8 @@ namespace rtps
      connect(viscositySlider,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(viscositySlider,SIGNAL(valueChanged(float)),this,SLOT(setViscosityValue(float)));
      connect(viscosityLineEdit,SIGNAL(textChanged(const QString&)),this,SLOT(setViscosityValue(const QString&)));
+     connect(timeStep,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
+     connect(subIntervals,SIGNAL(valueChanged(int)),this,SLOT(triggerValue(int)));
      connect(gravityX,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
      connect(gravityY,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
      connect(gravityZ,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
@@ -91,7 +115,11 @@ namespace rtps
      slidersLayout->addWidget(new QLabel("Viscosity:"),2,0);
      slidersLayout->addWidget(viscosityLineEdit,2,1);
      slidersLayout->addWidget(viscositySlider,2,2);
-     slidersLayout->addWidget(createVectorInput("Gravity",gravityX,gravityY,gravityZ),3,0,1,3);
+     slidersLayout->addWidget(new QLabel("Time Step:"),3,0);
+     slidersLayout->addWidget(timeStep,3,1,1,2);
+     slidersLayout->addWidget(new QLabel("Sub-intervals:"),4,0);
+     slidersLayout->addWidget(subIntervals,4,1,1,2);
+     slidersLayout->addWidget(createVectorInput("Gravity",gravityX,gravityY,gravityZ),5,0,1,3);
      setLayout(slidersLayout);
 
  }
@@ -158,13 +186,23 @@ void SPHParameterGroup::setValues(RTPSSettings *settings)
     viscositySlider->blockSignals(true);
     viscositySlider->setValue(settings->GetSettingAs<float>("viscosity","0.001"));
     viscositySlider->blockSignals(false);
-    QString gravity = settings->GetSettingAs<std::string>("gravity","0.0 -9.8 0.0 0.0").c_str();
+    timeStep->blockSignals(true);
+    timeStep->setValue(settings->GetSettingAs<float>("time_step","0.003"));
+    timeStep->blockSignals(false);
+    subIntervals->blockSignals(true);
+    subIntervals->setValue(settings->GetSettingAs<int>("sub_intervals","1"));
+    subIntervals->blockSignals(false);
+    //QString gravity = settings->GetSettingAs<std::string>("gravity","0.0 -9.8 0.0 0.0").c_str();
+    float4 gravity = settings->GetSettingAs<float4>("gravity","0.0 -9.8 0.0 0.0");
+    //std::cout<<"Here!"<<endl;
+    //std::cout<<"gravity "<<gravity.toAscii().data()<<"!"<<endl;
+    //std::cout<<"gravity "<<gravity.section(' ',0,0).toAscii().data()<<","<<gravity.section(' ',1,1).toAscii().data()<<","<<gravity.section(' ',2,2).toAscii().data()<<std::endl;
     gravityX->blockSignals(true);
     gravityY->blockSignals(true);
     gravityZ->blockSignals(true);
-    gravityX->setText(gravity.section(' ',0,0));
-    gravityY->setText(gravity.section(' ',1,1));
-    gravityZ->setText(gravity.section(' ',2,2));
+    gravityX->setText(QString::number(gravity.x));
+    gravityY->setText(QString::number(gravity.y));
+    gravityZ->setText(QString::number(gravity.z));
     gravityX->blockSignals(false);
     gravityY->blockSignals(false);
     gravityZ->blockSignals(false);

@@ -3,6 +3,7 @@
 
  #include <QMainWindow>
 #include <string.h>
+#include <map>
 
  class QAction;
  class QLabel;
@@ -17,7 +18,10 @@ namespace rtps
 {
 class GLWidget;
 class SPHParameterGroup;
+class RigidbodyParameterGroup;
+class FlockingParameterGroup;
 class ParticleEffectParameterGroup;
+class RTPSSettings;
  class MainWindow : public QMainWindow
  {
      Q_OBJECT
@@ -28,7 +32,11 @@ class ParticleEffectParameterGroup;
 signals:
 void parameterValueChanged(const QString& system, const QString& parameterName, const QString& value);
 void rendererChanged(const QString& system, const QString& renderer);
+void getSystemSettings(const QString& system);
 
+ public slots:
+void initRendererPanel(const QString& renderer, RTPSSettings* settings);
+void initSystemPanel(const QString& systemType, RTPSSettings* settings);
 
  private slots:
      void about();
@@ -37,6 +45,7 @@ void rendererChanged(const QString& system, const QString& renderer);
      void loadDynamicMeshes();
      void setSystemNames(const std::vector<std::string>& sysNames);
      void setRenderer(const QString& value);
+     void setSystem(const QString& system);
      void valueChanged(const QString& parameterName, const QString& value);
 
  private:
@@ -54,11 +63,13 @@ void rendererChanged(const QString& system, const QString& renderer);
      QComboBox *rendererSelector;
 
      SPHParameterGroup *sphParams;
-     //std::map<QString, QGroupBox*> systemParams;
+     RigidbodyParameterGroup *rbParams;
+     FlockingParameterGroup *flockingParams;
      QStackedWidget *systemParamPanels;
+     std::map<QString, unsigned int> systemParamPanelID;
      ParticleEffectParameterGroup *ssEffectParams;
      QStackedWidget *effectParamPanels;
-     //std::map<QString, QGroupBox*> effectParams;
+     std::map<QString, unsigned int> effectParamPanelID;
 
      QMenu *fileMenu;
      QMenu *helpMenu;

@@ -6,6 +6,7 @@
 #include "../rtpslib/RTPSSettings.h"
 class QSlider;
 class FloatSlider;
+class QComboBox;
 class QLineEdit;
 
 namespace rtps
