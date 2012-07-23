@@ -36,7 +36,7 @@ namespace rtps
              FloatSlider* slowingDistance;
              //FloatSlider* leaderIndex;
              //FloatSlider* target;
-             FloatSlider* time_step;
+             FloatSlider* timeStep;
              QComboBox* integrator;
 
     };
