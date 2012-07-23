@@ -372,7 +372,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
             {
                 effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum(),settings->GetSettingAs<float>("velocity_scale","1.0"));
             }
-            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[0], sceneFBO);
+            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[0],sceneTex[1], sceneFBO);
         }
         //display static transparent objects
         display(true);

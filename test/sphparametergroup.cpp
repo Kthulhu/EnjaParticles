@@ -44,10 +44,10 @@ namespace rtps
      viscositySlider = new FloatSlider(orientation,this);
      viscositySlider->setObjectName("viscosity");
      viscositySlider->setTickPosition(QSlider::TicksBelow);
-     viscositySlider->setTickInterval(1000);
-     viscositySlider->setSingleStep(1000);
-     viscositySlider->setRange(1,100000);
-     viscositySlider->setValue(10000);
+     viscositySlider->setTickInterval(1);
+     viscositySlider->setSingleStep(1);
+     viscositySlider->setRange(1,100);
+     viscositySlider->setValue(10);
      viscositySlider->setScale(0.0001);
 
      viscosityLineEdit = new QLineEdit("0.001",this);
@@ -59,11 +59,11 @@ namespace rtps
      gravityX->setObjectName("gravity_x");
      gravityX->setMaxLength(5);
      gravityX->setFixedWidth(50);
-     gravityY = new QLineEdit("0.0",this);
+     gravityY = new QLineEdit("-9.8",this);
      gravityY->setObjectName("gravity_y");
      gravityY->setMaxLength(5);
      gravityY->setFixedWidth(50);
-     gravityZ = new QLineEdit("-9.8",this);
+     gravityZ = new QLineEdit("0.0",this);
      gravityZ->setObjectName("gravity_z");
      gravityZ->setMaxLength(5);
      gravityZ->setFixedWidth(50);
@@ -159,14 +159,14 @@ void SPHParameterGroup::setValues(RTPSSettings *settings)
     viscositySlider->setValue(settings->GetSettingAs<float>("viscosity","0.001"));
     viscositySlider->blockSignals(false);
     QString gravity = settings->GetSettingAs<std::string>("gravity","0.0 -9.8 0.0 0.0").c_str();
-    gravityX-blockSignals(true);
-    gravityY-blockSignals(true);
-    gravityZ-blockSignals(true);
+    gravityX->blockSignals(true);
+    gravityY->blockSignals(true);
+    gravityZ->blockSignals(true);
     gravityX->setText(gravity.section(' ',0,0));
     gravityY->setText(gravity.section(' ',1,1));
     gravityZ->setText(gravity.section(' ',2,2));
-    gravityX-blockSignals(false);
-    gravityY-blockSignals(false);
-    gravityZ-blockSignals(false);
+    gravityX->blockSignals(false);
+    gravityY->blockSignals(false);
+    gravityZ->blockSignals(false);
 }
 }

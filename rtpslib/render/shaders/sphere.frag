@@ -6,6 +6,7 @@ uniform float pointRadius;  // point size in world space
 //uniform float far;
 smooth in vec3 posEye;        // position of center in eye space
 smooth in vec4 color;
+uniform sampler2D sceneDepth;
 
 out vec4 colorOut;
 
@@ -33,6 +34,9 @@ void main()
     normDepth=0.5*normDepth+.5;
 
     colorOut = color;
-    //colorOut=vec4(1.0f,0.0f,0.0f,1.0f);
-    gl_FragDepth = normDepth;
+    //compare against depth of scene geometry.
+    if(normDepth>=texture2D(sceneDepth,gl_FragCoord.xy*0.5+0.5).x)
+        discard;
+    else
+        gl_FragDepth = normDepth;
 }

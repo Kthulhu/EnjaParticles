@@ -103,7 +103,7 @@ namespace rtps
                 glUseProgram(smoothingProgram);
                 glUniform1i( glGetUniformLocation(smoothingProgram, "depthTex"),0);
                 glUniform2fv( glGetUniformLocation(smoothingProgram, "blurDir"),1,xdir);
-                glUniform1f( glGetUniformLocation(smoothingProgram, "sig_range"),settings->GetSettingAs<float>("bilateral_range","0.001"));
+                glUniform1f( glGetUniformLocation(smoothingProgram, "sig_range"),settings->GetSettingAs<float>("bilateral_range","0.01"));
                 glUniform1f( glGetUniformLocation(smoothingProgram, "sig"),settings->GetSettingAs<float>("blur_radius","8.0"));
                 RenderUtils::fullscreenQuad();
                 glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
@@ -166,7 +166,7 @@ namespace rtps
         glUseProgram(0);
     }
 
-    void SSEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light,const Material* material, float scale, GLuint sceneTex, GLuint framebuffer)
+    void SSEffect::render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light,const Material* material, float scale, GLuint sceneTex, GLuint sceneDepthTex, GLuint framebuffer)
     {
         if(num==0)
             return;
@@ -186,7 +186,8 @@ namespace rtps
         glClearColor(0.0f,0.0f,0.0f,0.0f);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,m_fbos[0]);
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-
+        glActiveTexture(GL_TEXTURE0);
+        glDisable(GL_TEXTURE_2D);
         //Should probably conditionally create the thickness buffer as well.
         //Render Thickness buffer.
         if(thickness)
@@ -199,7 +200,7 @@ namespace rtps
             glClearColor(0.1f,0.1f,0.1f,1.0f);
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness1"],0);
             //glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT);
             renderPointsAsSpheres( m_shaderLibrary->shaders["sphereThicknessShader"].getProgram(),posVBO, colVBO, num,settings, light,material,scale);
             //renderPointsAsSpheres( m_shaderLibrary->shaders["sphereShader"].getProgram(),posVBO, colVBO, num,settings, light,material,scale);
 
@@ -231,10 +232,14 @@ namespace rtps
         //Render Color and depth buffer of spheres.
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderPointsAsSpheres( m_shaderLibrary->shaders["sphereShader"].getProgram(),posVBO, colVBO, num,settings, light,material,scale);
-
         glEnable(GL_TEXTURE_2D);
+        GLuint sphereProgram = m_shaderLibrary->shaders["sphereShader"].getProgram();
+        glBindTexture(GL_TEXTURE_2D,sceneDepthTex);
+        glUseProgram(sphereProgram);
+        glUniform1i(glGetUniformLocation(sphereProgram,"sceneDepth"),0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        renderPointsAsSpheres(sphereProgram,posVBO, colVBO, num,settings, light,material,scale);
+
         //Smooth the depth texture to emulate a surface.
         //glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth2"],0);
@@ -307,8 +312,8 @@ namespace rtps
         else
         {
             Material defaultMat;
-            defaultMat.ambient=float3(0.1f,0.1f,0.4f);
-            defaultMat.diffuse=float3(0.1f,0.1f,0.4f);
+            defaultMat.ambient=float3(0.05f,0.075f,0.25f);
+            defaultMat.diffuse=float3(0.05f,0.075f,0.25f);
             defaultMat.specular=float3(1.0f,1.f,1.0f);
             defaultMat.opacity=0.5;
             defaultMat.shininess=100;
