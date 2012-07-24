@@ -585,9 +585,6 @@ namespace rtps
         settings->SetSetting("spacing", spacing);
         //constants
         settings->SetSetting("epsilon", 1E-6);
-        settings->SetSetting("spring",(settings->GetSettingAs<float>("penetration_factor")*settings->GetSettingAs<float>("velocity_limit"))/(settings->GetSettingAs<float>("smoothing_distance")*settings->GetSettingAs<float>("smoothing_distance")));
-        float ln_res =log(settings->GetSettingAs<float>("restitution"));
-        settings->SetSetting("dampening",(2*-(ln_res))/sqrt((ln_res*ln_res)+(M_PI*M_PI)));
 
         //CL parameters
         settings->SetSetting("num_particles", 0);
@@ -601,6 +598,9 @@ namespace rtps
         //update all the members of the prbp struct
         prbp.smoothing_distance = settings->GetSettingAs<float>("smoothing_distance");
         prbp.simulation_scale = settings->GetSettingAs<float>("simulation_scale");
+        settings->SetSetting("spring",(settings->GetSettingAs<float>("penetration_factor")*settings->GetSettingAs<float>("velocity_limit"))/(settings->GetSettingAs<float>("smoothing_distance")*settings->GetSettingAs<float>("smoothing_distance")));
+        float ln_res =log(settings->GetSettingAs<float>("restitution"));
+        settings->SetSetting("dampening",(2*-(ln_res))/sqrt((ln_res*ln_res)+(M_PI*M_PI)));
 
         //dynamic params
         prbp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2

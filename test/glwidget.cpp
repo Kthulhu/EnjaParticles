@@ -392,27 +392,9 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
         glDrawBuffer(GL_BACK_LEFT);
 
-#if 1
         glBlitFramebufferEXT( 0, 0, width() , height(),
                                           0, 0, width() , height(),
                                           GL_COLOR_BUFFER_BIT, GL_LINEAR );
-#else
-        GLuint copyProgram = lib->shaders["copyShader"].getProgram();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,sceneTex[0]);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D,sceneTex[1]);
-        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glUseProgram(copyProgram);
-        glUniform1i( glGetUniformLocation(copyProgram, "colorTex"),0);
-        glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);
-        RenderUtils::fullscreenQuad();
-
-        glUseProgram(0);
-        glBindTexture(GL_TEXTURE_2D,0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,0);
-#endif
         glPopAttrib();
         glPopClientAttrib();
         if(renderMovie)
@@ -470,12 +452,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
     if (mouseButtons & Qt::RightButton)
     {
-        //view->rotate(dx,dy);
         view->rotate(dy,dx);
-        //view->rotate(dx,0.0);
-        //glRotatef(dx*.2f,1.0f,0.0f,0.0f);
-        //glRotatef(dy*.2f,0.0f,0.0f,1.0f);
-        //cameraChanged();
     }
 
     mousePos.x = event->x();
@@ -485,11 +462,6 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
 void GLWidget::cameraChanged()
 {
-
-    //view->getViewMatrix().print("myViewMatrix");
-    //float16 viewMatrix;
-    //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
-    //viewMatrix.print("viewMatrix");
     //update the view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
@@ -497,13 +469,11 @@ void GLWidget::cameraChanged()
         GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
-            //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
         location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
         if(location!=-1)
-            //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
             glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
 
     }

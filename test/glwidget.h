@@ -56,6 +56,7 @@ namespace rtps
         void systemMapChanged(const std::vector<std::string>& sysNames);
         void initRendererPanel(const QString& renderer, RTPSSettings* settings);
         void initSystemPanel(const QString& systemType, RTPSSettings* settings);
+        void dynamicMeshesChanged(const std::map<std::string, Mesh*> dynamicMeshes);
         //void parameterValueChanged(const QString& parameter, const QString& value);
 
     protected:
