@@ -117,6 +117,10 @@ namespace rtps
             frag = "";
             readFile(shaderSrc+"/fixed_width_gaussian.frag",frag);
             addShader("fixedWidthGaussianShader",vert,frag,geom,tessCont,tessEval);
+            vert = frag ="";
+            readFile(shaderSrc+"/draw_streamline.vert",vert);
+            readFile(shaderSrc+"/draw_streamline.frag",frag);
+            addShader("streamlineShader",vert,frag,geom,tessCont,tessEval);
             vert = frag = geom="";
             readFile(shaderSrc+"/draw_vector.vert",vert);
             readFile(shaderSrc+"/draw_vector.frag",frag);

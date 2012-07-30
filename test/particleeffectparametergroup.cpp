@@ -85,6 +85,8 @@ namespace rtps
      thicknessCheck->setObjectName("thickness");
      velocityCheck = new QCheckBox("Enable Velocity",this);
      velocityCheck->setObjectName("render_velocity");
+     //streamlinesCheck = new QCheckBox("Enable Streamlines",this);
+     //streamlinesCheck->setObjectName("render_streamlines");
      renderButtonGroup = new QGroupBox("Render Buffer",this);
      renderNormal=new QRadioButton("Normal");//,renderButtonGroup);
      renderNormal->setObjectName("render_normal");
@@ -114,6 +116,7 @@ namespace rtps
      connect(velocityScale,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(thicknessCheck,SIGNAL(stateChanged(int)),this,SLOT(triggerValue(int)));
      connect(velocityCheck,SIGNAL(stateChanged(int)),this,SLOT(triggerValue(int)));
+     //connect(streamlinesCheck,SIGNAL(stateChanged(int)),this,SLOT(triggerValue(int)));
      connect(renderNormal,SIGNAL(toggled(bool)),this,SLOT(triggerValue(bool)));
      connect(renderDepth,SIGNAL(toggled(bool)),this,SLOT(triggerValue(bool)));
      connect(renderDepthSmoothed,SIGNAL(toggled(bool)),this,SLOT(triggerValue(bool)));
@@ -147,6 +150,7 @@ namespace rtps
      //slidersLayout->addWidget(new QLabel("Curvature Flow Iterations:"),4,0);
      slidersLayout->addWidget(velocityCheck,8,0);
      slidersLayout->addWidget(thicknessCheck,8,1);
+     //slidersLayout->addWidget(streamlinesCheck,9,0);
      //slidersLayout->addWidget(new QLabel("Render Buffer:"),6,0);
      QGridLayout *buttonGroupLayout = new QGridLayout();
      buttonGroupLayout->addWidget(renderNormal,0,0);
@@ -155,7 +159,7 @@ namespace rtps
      buttonGroupLayout->addWidget(renderThickness,0,1);
      buttonGroupLayout->addWidget(renderComposite,1,1);
      renderButtonGroup->setLayout(buttonGroupLayout);
-     slidersLayout->addWidget(renderButtonGroup,9,0,1,2);
+     slidersLayout->addWidget(renderButtonGroup,10,0,1,2);
 
      setLayout(slidersLayout);
 

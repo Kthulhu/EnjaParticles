@@ -15,10 +15,10 @@ namespace rtps
      : RTPSParameterGroup(title, parent)
  {
 
-     integrator = new QComboBox(this);
-     integrator->setObjectName("integrator");
-     integrator->addItem("Euler");
-     integrator->addItem("Leapfrog");
+     //integrator = new QComboBox(this);
+     //integrator->setObjectName("integrator");
+     //integrator->addItem("Euler");
+     //integrator->addItem("Leapfrog");
 
      subIntervals = new QSlider(orientation,this);
      subIntervals->setObjectName("sub_intervals");
@@ -67,11 +67,11 @@ namespace rtps
      penetrationFactor = new FloatSlider(orientation,this);
      penetrationFactor->setObjectName("penetration_factor");
      penetrationFactor->setTickPosition(QSlider::TicksBelow);
-     penetrationFactor->setTickInterval(5);
-     penetrationFactor->setSingleStep(5);
-     penetrationFactor->setRange(1,1000);
-     penetrationFactor->setValue(600);
-     penetrationFactor->setScale(0.001);
+     penetrationFactor->setTickInterval(1);
+     penetrationFactor->setSingleStep(1);
+     penetrationFactor->setRange(100,200);
+     penetrationFactor->setValue(20);
+     penetrationFactor->setScale(0.00001);
 
      restitution = new FloatSlider(orientation,this);
      restitution->setObjectName("restitution");
@@ -79,7 +79,7 @@ namespace rtps
      restitution->setTickInterval(5);
      restitution->setSingleStep(5);
      restitution->setRange(1,1000);
-     restitution->setValue(20);
+     restitution->setValue(600);
      restitution->setScale(0.001);
 
      timeStep = new FloatSlider(orientation,this);
@@ -117,8 +117,8 @@ namespace rtps
      connect(gravityZ,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
 
      QGridLayout *slidersLayout = new QGridLayout();
-     slidersLayout->addWidget(new QLabel("Time Step:"),0,0);
-     slidersLayout->addWidget(timeStep,0,1,1,2);
+     slidersLayout->addWidget(new QLabel("Velcoity Limit:"),0,0);
+     slidersLayout->addWidget(velocityLimit,0,1,1,2);
      slidersLayout->addWidget(new QLabel("Restitution:"),1,0);
      slidersLayout->addWidget(restitution,1,1,1,2);
      slidersLayout->addWidget(new QLabel("Penetration Factor:"),2,0);
@@ -129,10 +129,10 @@ namespace rtps
      slidersLayout->addWidget(frictionStatic,4,1,1,2);
      slidersLayout->addWidget(new QLabel("Friction Static Threshold:"),5,0);
      slidersLayout->addWidget(frictionStaticThreshold,5,1,1,2);
-     slidersLayout->addWidget(new QLabel("Velcoity Limit:"),6,0);
-     slidersLayout->addWidget(velocityLimit,6,1,1,2);
+     slidersLayout->addWidget(new QLabel("Time Step:"),6,0);
+     slidersLayout->addWidget(timeStep,6,1,1,2);
      slidersLayout->addWidget(new QLabel("Sub-intervals:"),7,0);
-     slidersLayout->addWidget(velocityLimit,7,1,1,2);
+     slidersLayout->addWidget(subIntervals,7,1,1,2);
      slidersLayout->addWidget(createVectorInput("Gravity",gravityX,gravityY,gravityZ),8,0,1,3);
      setLayout(slidersLayout);
 

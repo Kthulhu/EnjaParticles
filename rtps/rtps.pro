@@ -145,4 +145,6 @@ OTHER_FILES += \
     ../rtpslib/render/shaders/copy_depth_color.frag \
     ../rtpslib/render/shaders/sphere_thickness.frag \
     ../rtpslib/render/shaders/composite_fluid.frag \
-    ../rtpslib/render/shaders/copy_inverse.frag
+    ../rtpslib/render/shaders/copy_inverse.frag \
+    ../rtpslib/render/shaders/draw_streamline.vert \
+    ../rtpslib/render/shaders/draw_streamline.frag

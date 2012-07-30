@@ -66,11 +66,11 @@ namespace rtps
      viscositySlider = new FloatSlider(orientation,this);
      viscositySlider->setObjectName("viscosity");
      viscositySlider->setTickPosition(QSlider::TicksBelow);
-     viscositySlider->setTickInterval(1);
-     viscositySlider->setSingleStep(1);
-     viscositySlider->setRange(1,100);
+     viscositySlider->setTickInterval(100);
+     viscositySlider->setSingleStep(10);
+     viscositySlider->setRange(1,10000);
      viscositySlider->setValue(10);
-     viscositySlider->setScale(0.0001);
+     viscositySlider->setScale(0.00001);
 
      viscosityLineEdit = new QLineEdit("0.001",this);
      viscosityLineEdit->setObjectName("viscosity");

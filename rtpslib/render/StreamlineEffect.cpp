@@ -40,7 +40,9 @@ using namespace std;
 namespace rtps
 {
 
-    StreamlineEffect::StreamlineEffect(RenderSettings rs, ShaderLibrary& lib, unsigned int maxLength, unsigned int num, vector<unsigned int>& indices, CL* cli):ParticleEffect(rs,lib)
+    StreamlineEffect::StreamlineEffect(ShaderLibrary* lib, GLuint width, GLuint height, unsigned int maxLength
+                                       , unsigned int num, vector<unsigned int>& indices, CL* cli, RTPSSettings* settings):
+                                        ParticleEffect( lib, width, height)
     {
         m_maxSLLength=maxLength;
         m_numSL = num;
@@ -52,8 +54,7 @@ namespace rtps
         m_clStreamLineCP=Buffer<float4>(cli,m_streamLineCP);
         m_clStreamLineColor=Buffer<float4>(cli,m_streamLineColor);
         m_clSampleIndices=Buffer<unsigned int>(cli,indices);
-
-        sample = Sample("./bin/"+std::string(COMMON_CL_SOURCE_DIR), cli);
+        sample = Sample(settings->GetSettingAs<string>("rtps_path") + "/" + std::string(COMMON_CL_SOURCE_DIR), cli);
     }
 
 
@@ -69,24 +70,30 @@ namespace rtps
 
     void StreamlineEffect::render()
     {
-        glBindBuffer(GL_ARRAY_BUFFER, m_streamLineCP);
-        glVertexPointer(4, GL_FLOAT, 0, (char *) NULL);
-        glBindBuffer(GL_ARRAY_BUFFER, m_streamLineColor);
-        glColorPointer(4, GL_FLOAT, 0, (char *) NULL);
-
         if(m_curSLIndex>2)
         {
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glEnableClientState(GL_COLOR_ARRAY);
+            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+
+            GLuint program = m_shaderLibrary->shaders["streamlineShader"].getProgram();
+            glUseProgram(program);
+
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, m_streamLineCP);
+            glVertexAttribPointer(0,4,GL_FLOAT,GL_FALSE,0,0);
+            glBindBuffer(GL_ARRAY_BUFFER, m_streamLineColor);
+            glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
+
             for(unsigned int i = 0; i<m_numSL; i++)
                 glDrawArrays(GL_LINE_STRIP, (i*m_maxSLLength)+1, m_curSLIndex);
+            glUseProgram(0);
+            glBindBuffer(GL_ARRAY_BUFFER,0);
+            glPopClientAttrib();
             //glDrawArrays(GL_LINE_STRIP, 0, m_curSLIndex);
-            glDisableClientState(GL_COLOR_ARRAY);
-            glDisableClientState(GL_VERTEX_ARRAY);
         }
-        glBindBuffer(GL_ARRAY_BUFFER,0);
+
         //make sure rendering timing is accurate
-        glFinish();
+        //glFinish();
     }
 
     void StreamlineEffect::addStreamLine(Buffer<float4>& pos, Buffer<float4>& col, unsigned int num)

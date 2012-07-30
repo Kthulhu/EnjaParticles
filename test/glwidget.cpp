@@ -33,6 +33,7 @@
 #include "../rtpslib/system/ParticleShape.h"
 #include "../rtpslib/RTPS.h"
 #include "../rtpslib/render/ParticleEffect.h"
+#include "../rtpslib/render/StreamlineEffect.h"
 #include "../rtpslib/render/SSEffect.h"
 #include "../rtpslib/render/MeshEffect.h"
 #include "../rtpslib/system/ParticleRigidBody.h"
@@ -235,10 +236,12 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         lib->initializeShaders(binaryPath+"/shaders");
         effects["Points"]=new ParticleEffect(lib,width(),height());
         effects["Screen Space"]=new SSEffect(lib,width(),height());
-        effects["Mesh Renderer"]= new MeshEffect(lib,width(),height());
-
         //FIXME: Need to find an elegant solution to handling mesh effects
-        meshRenderer= (MeshEffect*)effects["Mesh Renderer"];
+        meshRenderer= new MeshEffect(lib,width(),height());
+        effects["Mesh Renderer"]= meshRenderer;
+        streamlineRenderer = NULL;
+        //effects["Streamlines"]=streamlineRenderer;
+
     }
     glGenFramebuffersEXT(1,&sceneFBO);
     glEnable(GL_TEXTURE_2D);
@@ -363,12 +366,16 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         {
             //for debugging only!!
             ParticleRigidBody* rbsys = (ParticleRigidBody*)systems[QString("rb1")];
-            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),light,NULL,0.05f);
+            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),rbsys->getSettings(),light,NULL,rbsys->getSpacing());
         }
 #endif
         for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
             RTPSSettings* settings = i->second->getSettings();
+            if(i->second->getSettings()->GetSettingAs<bool>("render_streamlines","0"))
+            {
+                streamlineRenderer->render();
+            }
             if(settings->GetSettingAs<bool>("render_velocity","0"))
             {
                 effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum(),settings->GetSettingAs<float>("velocity_scale","1.0"));
@@ -564,6 +571,21 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
                 systems["water"]->addHose(10000, center, velocity,radius, col1);
                 return;
             }
+        case 'j':
+            {
+                //spray hose
+                cout<<"about to make hose"<<endl;
+                //float4 col1 = float4(0.05f, 0.1f, .2f, 0.1f);
+                float4 col1 = float4(0.05f, 0.4f, .8f, 1.0f);
+                //float4 center = float4(gridMax.x-2.0f, gridMax.y-2.0f,gridMax.z-1.5f,1.0f);
+                float4 center = float4(1.25f, 4.5f,5.f,1.0f);
+                //float4 velocity(-1.25f, -1.25f, -3.0f, 0);
+                float4 velocity(3.0f, 0.0f, 3.0f, 0);
+                float radius= 1.f;
+                //sph sets spacing and multiplies by radius value
+                systems["water"]->addHose(10000, center, velocity,radius, col1);
+                return;
+            }
             case 'H':
             {
                 //spray hose
@@ -753,6 +775,16 @@ void GLWidget::readParamFile(std::istream& is)
                 i->second->addInteractionSystem(j->second);
             }
         }
+        //FIXME: Really hacky!!!
+        //FIXME: need a more elegant way of handling this.
+        int tmp = 65500/1000;
+        vector<unsigned int> indices(1000);
+        for(int i = 0;i<1000;i++)
+        {
+            indices[i]=tmp*i;
+        }
+
+        streamlineRenderer=new StreamlineEffect(lib,width(),height(),1000,1000,indices,cli,systems["water"]->getSettings());
         emit systemMapChanged(names);
 }
 int GLWidget::writeMovieFrame(const char* filename, const char* dir)
@@ -841,6 +873,10 @@ void GLWidget::update()
         {
             i->second->integrate();
             i->second->postProcess();
+            if(i->second->getSettings()->GetSettingAs<bool>("render_streamlines","0"))
+            {
+                streamlineRenderer->addStreamLine(i->second->getPositionBuffer(),i->second->getVelocityBuffer(),i->second->getNum());
+            }
             i->second->releaseGLBuffers();
         }
     }
@@ -852,7 +888,7 @@ void GLWidget::update()
         //glDisable(GL_LIGHTING);
         if(blend)
         {
-            //glEnable(GL_CULL_FACE);
+            glEnable(GL_CULL_FACE);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         }
@@ -863,7 +899,7 @@ void GLWidget::update()
         }
         if(blend)
         {
-            //glDisable(GL_CULL_FACE);
+            glDisable(GL_CULL_FACE);
             glDisable(GL_BLEND);
         }
         //glDisable(GL_NORMALIZE);

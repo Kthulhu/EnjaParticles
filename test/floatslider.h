@@ -6,7 +6,8 @@ class FloatSlider : public QSlider
 {
     Q_OBJECT
 public:
-    FloatSlider(Qt::Orientation orientation, QWidget* parent = 0);
+    //FloatSlider(Qt::Orientation orientation, QWidget* parent = 0);
+    FloatSlider(Qt::Orientation orientation, QWidget* parent=0, float scale=1.0f);
     void setScale(float scale);
 public slots:
     void sliderChange(SliderChange change);

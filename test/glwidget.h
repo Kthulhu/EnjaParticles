@@ -28,6 +28,7 @@ namespace rtps
     class AIWrapper;
     class MeshEffect;
     class ParticleEffect;
+    class StreamlineEffect;
     class ParticleShape;
     class ShaderLibrary;
     class RTPSSettings;
@@ -86,6 +87,7 @@ namespace rtps
         std::map<QString,QString> systemRenderType;
         std::map<QString,ParticleEffect*> effects;
         MeshEffect* meshRenderer;
+        StreamlineEffect* streamlineRenderer;
         std::map<QString,ParticleShape*> pShapes;
         std::map<std::string,Mesh* > meshes;
         std::map<std::string,Mesh* > dynamicMeshes;

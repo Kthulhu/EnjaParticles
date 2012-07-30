@@ -14,10 +14,10 @@ namespace rtps
                             QWidget *parent)
      : RTPSParameterGroup(title, parent)
  {
-     integrator = new QComboBox(this);
-     integrator->setObjectName("integrator");
-     integrator->addItem("Euler");
-     integrator->addItem("Leapfrog");
+     //integrator = new QComboBox(this);
+     //integrator->setObjectName("integrator");
+     //integrator->addItem("Euler");
+     //integrator->addItem("Leapfrog");
 
      minSeparationDistance = new FloatSlider(orientation,this);
      minSeparationDistance->setObjectName("min_separation_distance");

@@ -1,10 +1,15 @@
 #include "floatslider.h"
 #include <iostream>
 
-FloatSlider::FloatSlider(Qt::Orientation orientation, QWidget* parent)
+//FloatSlider::FloatSlider(Qt::Orientation orientation, QWidget* parent)
+//:QSlider(orientation, parent)
+//{
+//    scale =1.0f;
+//}
+FloatSlider::FloatSlider(Qt::Orientation orientation, QWidget* parent, float scale)
 :QSlider(orientation, parent)
 {
-    scale =1.0f;
+    this->scale = scale;
 }
 void FloatSlider::setValue(float value)
 {

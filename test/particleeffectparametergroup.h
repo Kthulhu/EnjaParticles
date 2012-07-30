@@ -28,6 +28,7 @@
      QComboBox* filterType;
      QCheckBox* thicknessCheck;
      QCheckBox* velocityCheck;
+     QCheckBox* streamlinesCheck;
      QRadioButton* renderNormal;
      QRadioButton* renderDepth;
      QRadioButton* renderDepthSmoothed;

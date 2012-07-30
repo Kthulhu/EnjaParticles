@@ -189,6 +189,7 @@ namespace rtps
         sphp.max_num = settings->GetSettingAs<int>("max_num_particles");
 		//sphp.gravity.print("Gravity sph");
 	//	dout<<"cl mem size of sphp="<<cl_sphp.getBuffer().getInfo<CL_MEM_SIZE>()<<endl;
+        //dout<<"viscosity ="<<sphp.viscosity<<endl;
         //update the OpenCL buffer
         //std::vector<SPHParams> vparams();
         //vparams.push_back(sphp);
