@@ -52,12 +52,14 @@ namespace rtps
         void getSystemSettings(const QString& system);
         void ResetSimulations();
         void changeRenderer(const QString& system, const QString& renderer);
+        void addRigidBody(const QString& system, const QString& mesh, float4 pos, float4 vel, float mass);
 
     signals:
         void systemMapChanged(const std::vector<std::string>& sysNames);
         void initRendererPanel(const QString& renderer, RTPSSettings* settings);
         void initSystemPanel(const QString& systemType, RTPSSettings* settings);
-        void dynamicMeshesChanged(const std::map<std::string, Mesh*> dynamicMeshes);
+        void meshListUpdated(const std::vector<QString>& meshNames);
+
         //void parameterValueChanged(const QString& parameter, const QString& value);
 
     protected:
@@ -103,6 +105,7 @@ namespace rtps
         AIWrapper* dynamicMeshScene;
         //GLuint scene_list;
         GLuint skyboxVBO,skyboxTexVBO;
+        std::string currentMesh;
 
         int frameCounter;
         bool renderMovie;

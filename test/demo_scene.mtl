@@ -1,5 +1,5 @@
 # Blender MTL File: 'demo_scene.blend'
-# Material Count: 2
+# Material Count: 1
 newmtl Material.001
 Ns 194.117647
 Ka 0.000000 0.000000 0.000000
@@ -7,16 +7,6 @@ Kd 0.465953 0.607192 0.640000
 Ks 0.500000 0.500000 0.500000
 Ni 1.000000
 d 0.137618
-illum 2
-
-
-newmtl Material.003
-Ns 882.352941
-Ka 0.000000 0.000000 0.000000
-Kd 0.224445 0.459895 0.024139
-Ks 0.008870 0.010471 0.007804
-Ni 1.000000
-d 1.000000
 illum 2
 
 

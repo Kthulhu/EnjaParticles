@@ -224,7 +224,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
         //light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
         //light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
-        light->pos.x=0.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
+        light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
 
     }
     environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
@@ -380,7 +380,18 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
             {
                 effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum(),settings->GetSettingAs<float>("velocity_scale","1.0"));
             }
-            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[0],sceneTex[1], sceneFBO);
+            if(systemRenderType[i->first]!="Mesh Renderer")
+            {
+                effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[0],sceneTex[1], sceneFBO);
+            }
+            else
+            {
+                ParticleRigidBody* rbsys = reinterpret_cast<ParticleRigidBody*>(systems[i->first]);
+                if(rbsys)
+                {
+                    meshRenderer->renderInstanced(dynamicMeshes[currentMesh],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
+                }
+            }
         }
         //display static transparent objects
         display(true);
@@ -649,38 +660,6 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
                     systems["rb1"]->addBox(1000, position, position+size, false, col1,mass);
                     return;
                 }
-
-            case 'r': //drop a ball
-            {
-                ParticleShape* shape=pShapes["rb1"];
-                //float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
-                //trans +=7.0f;
-                //float16 modelview;
-                //glMatrixMode(GL_MODELVIEW);
-                //glPushMatrix();
-                //glLoadIdentity();
-                //glRotatef(rotation.x, 1.0, 0.0, 0.0);
-                //glTranslatef(trans, trans, trans);
-                //glRotatef(-180, 1.0f, 0.0f, 0.0f);
-                //glRotatef(-90, 0.0f, 0.0f, 1.0f);
-                //glTranslatef(translation.x, translation.z, translation.y);
-                //glGetFloatv(GL_MODELVIEW_MATRIX,modelview.m);
-                //glPopMatrix();
-                //modelview.print("modelview");
-                //modelview.transpose();
-
-                //systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),modelview,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),mass);
-
-                /*    float4 col1 = float4(0.5, 0.9, 0.0, 1.);
-                    float size = 1.0f;
-                    size=size*sizeScale;
-                    float4 mid = (gridMax-gridMin);
-                    mid = mid/2.0f;
-                    mid.w = 0.0f;
-
-                    systems["rb1"]->addBall(1000, mid, size,false, col1,mass);*/
-                    return;
-            }
             case 'w':
                 view->move(0.0f,0.0f,1.0f);
                 //cameraChanged();
@@ -732,6 +711,35 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
         }
 updateGL();
 }
+void GLWidget::addRigidBody(const QString& system, const QString& mesh, float4 pos, float4 vel, float mass)
+{
+    currentMesh=mesh.toAscii().data();
+    ParticleShape* shape = pShapes[mesh];
+    //float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+    //float16 mat=i->second->modelMat;
+    //FIXME: rotation should not be needed here. This is hackish
+    float16 mat;
+    mat.loadIdentity();
+    mat[5]=-1.0f;
+    mat[10]=-1.0f;
+    //mat.transpose();
+    float16 mat2;
+    mat2.loadIdentity();
+    mat2[0]=0.0f;
+    mat2[1]=-1.f;
+    mat2[4]=1.f;
+    mat2[5]=0.0f;
+    mat=mat2*mat;
+
+    //memcpy(&mat,&i->second->modelMat,sizeof(float16));
+    //mat.print("mat before");
+    mat[3]+=pos.x;
+    mat[7]+=pos.y;
+    mat[11]+=pos.z;
+    systems[system]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),vel,float4(0.0f,0.0f,0.0f,1.0f),mass);
+
+}
+
 void GLWidget::readParamFile(std::istream& is)
 {
 	ParamParser p;
@@ -933,10 +941,7 @@ void GLWidget::loadScene(const QString& filename)
         mat2[1]=-1.f;
         mat2[4]=1.f;
         mat2[5]=0.0f;
-        mat.print("mat before");
-        mat2.print("mat2");
         mat=mat2*mat;
-        mat.print("mat after");
 
         //memcpy(&mat,&i->second->modelMat,sizeof(float16));
         //mat.print("mat before");
@@ -954,11 +959,14 @@ void GLWidget::loadMeshScene(const QString& filename)
 {
      dynamicMeshScene->loadScene(filename.toAscii().data());
      dynamicMeshScene->loadMeshes(dynamicMeshes,dynamicMeshScene->getScene()->mRootNode);
+     std::vector<QString> meshNames;
      for(map<std::string,Mesh*>::iterator i = dynamicMeshes.begin(); i!=dynamicMeshes.end(); i++)
      {
           ParticleShape* shape = createParticleShape("rb1",i->second);
           pShapes[QString(i->first.c_str())]=shape;
+          meshNames.push_back(QString(i->first.c_str()));
      }
+     emit meshListUpdated(meshNames);
 }
 
 

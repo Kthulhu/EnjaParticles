@@ -58,11 +58,11 @@ namespace rtps
      curvatureFlowDT = new FloatSlider(orientation,this);
      curvatureFlowDT->setObjectName("curvature_flow_dt");
      curvatureFlowDT->setTickPosition(QSlider::TicksBelow);
-     curvatureFlowDT->setTickInterval(10);
+     curvatureFlowDT->setTickInterval(1000);
      curvatureFlowDT->setSingleStep(1);
-     curvatureFlowDT->setRange(1,1000);
-     curvatureFlowDT->setValue(100);
-     curvatureFlowDT->setScale(0.00005);
+     curvatureFlowDT->setRange(1,10000);
+     curvatureFlowDT->setValue(1000);
+     curvatureFlowDT->setScale(0.000005);
 
      velocityScale = new FloatSlider(orientation,this);
      velocityScale->setObjectName("velocity_scale");

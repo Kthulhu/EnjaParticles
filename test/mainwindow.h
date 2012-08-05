@@ -4,6 +4,7 @@
  #include <QMainWindow>
 #include <string.h>
 #include <map>
+#include "../rtpslib/structs.h"
 
  class QAction;
  class QLabel;
@@ -33,10 +34,12 @@ signals:
 void parameterValueChanged(const QString& system, const QString& parameterName, const QString& value);
 void rendererChanged(const QString& system, const QString& renderer);
 void getSystemSettings(const QString& system);
+void addRigidBody(const QString& system, const QString& mesh, float4 pos, float4 vel, float mass);
 
  public slots:
 void initRendererPanel(const QString& renderer, RTPSSettings* settings);
 void initSystemPanel(const QString& systemType, RTPSSettings* settings);
+void addRigidBody(const QString& mesh, float4 pos, float4 vel, float mass);
 
  private slots:
      void about();

@@ -8,6 +8,7 @@ class QSlider;
 class FloatSlider;
 class QComboBox;
 class QLineEdit;
+class QPushButton;
 
 namespace rtps
 {
@@ -21,6 +22,10 @@ namespace rtps
                   QWidget *parent = 0);
     public slots:
      void setValues(RTPSSettings *settings);
+     void meshListUpdated(const std::vector<QString>& meshes);
+     void addRigidBody();
+    signals:
+     void addRigidBody(const QString& mesh, float4 pos, float4 vel, float mass);
 
     private:
      QSlider* subIntervals;
@@ -32,7 +37,12 @@ namespace rtps
      FloatSlider* restitution;
      FloatSlider* timeStep;
      QComboBox* integrator;
+     QPushButton* addRigidBodyButton;
+     QComboBox* meshSelection;
      QLineEdit *gravityX,*gravityY,*gravityZ;
+     QLineEdit *posX,*posY,*posZ;
+     QLineEdit *velX,*velY,*velZ;
+     QLineEdit *mass;
     };
 }
 

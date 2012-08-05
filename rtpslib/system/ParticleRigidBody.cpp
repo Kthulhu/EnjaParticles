@@ -497,7 +497,7 @@ namespace rtps
             dout<<"velocity: "<<comVelEval<<endl;
             dout<<"ang momentum: "<<angMomentum<<endl;
             dout<<"mass: "<<mass<<endl;
-            dout<<"Inertial Tensor: "<<endl;
+            dout<<"Inverse Inertial Tensor: "<<endl;
             for(int i =0;i<16;i++)
                 cout<<i<<": "<<invInertialTensor.m[i]<<" ,";
             cout<<endl;

@@ -69,9 +69,9 @@ namespace rtps
      penetrationFactor->setTickPosition(QSlider::TicksBelow);
      penetrationFactor->setTickInterval(1);
      penetrationFactor->setSingleStep(1);
-     penetrationFactor->setRange(100,200);
-     penetrationFactor->setValue(20);
-     penetrationFactor->setScale(0.00001);
+     penetrationFactor->setRange(1,200);
+     penetrationFactor->setValue(100);
+     penetrationFactor->setScale(0.0001);
 
      restitution = new FloatSlider(orientation,this);
      restitution->setObjectName("restitution");
@@ -104,6 +104,38 @@ namespace rtps
      gravityZ->setMaxLength(5);
      gravityZ->setFixedWidth(50);
 
+     meshSelection = new QComboBox(this);
+
+     posX = new QLineEdit("5.0",this);
+     posX->setObjectName("pos_x");
+     posX->setMaxLength(5);
+     posX->setFixedWidth(50);
+     posY = new QLineEdit("5.0",this);
+     posY->setObjectName("pos_y");
+     posY->setMaxLength(5);
+     posY->setFixedWidth(50);
+     posZ = new QLineEdit("5.0",this);
+     posZ->setObjectName("pos_z");
+     posZ->setMaxLength(5);
+     posZ->setFixedWidth(50);
+
+     velX = new QLineEdit("0.0",this);
+     velX->setObjectName("vel_x");
+     velX->setMaxLength(5);
+     velX->setFixedWidth(50);
+     velY = new QLineEdit("-9.8",this);
+     velY->setObjectName("vel_y");
+     velY->setMaxLength(5);
+     velY->setFixedWidth(50);
+     velZ = new QLineEdit("0.0",this);
+     velZ->setObjectName("vel_z");
+     velZ->setMaxLength(5);
+     velZ->setFixedWidth(50);
+
+     mass = new QLineEdit("0.01",this);
+
+     addRigidBodyButton = new QPushButton("&Add Rigid Body", this);
+
      connect(timeStep,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(restitution,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(penetrationFactor,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
@@ -112,6 +144,7 @@ namespace rtps
      connect(frictionDynamic,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(velocityLimit,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(subIntervals,SIGNAL(valueChanged(int)),this,SLOT(triggerValue(int)));
+     connect(addRigidBodyButton,SIGNAL(clicked()),this,SLOT(addRigidBody()));
      connect(gravityX,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
      connect(gravityY,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
      connect(gravityZ,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));
@@ -134,10 +167,43 @@ namespace rtps
      slidersLayout->addWidget(new QLabel("Sub-intervals:"),7,0);
      slidersLayout->addWidget(subIntervals,7,1,1,2);
      slidersLayout->addWidget(createVectorInput("Gravity",gravityX,gravityY,gravityZ),8,0,1,3);
+     slidersLayout->addWidget(addRigidBodyButton,9,0,1,3);
+     slidersLayout->addWidget(meshSelection,10,0,1,3);
+     slidersLayout->addWidget(createVectorInput("Initial Position",posX,posY,posZ),11,0,1,3);
+     slidersLayout->addWidget(createVectorInput("Velocity Position",velX,velY,velZ),12,0,1,3);
+     slidersLayout->addWidget(new QLabel("Mass:"),13,0);
+     slidersLayout->addWidget(mass,13,1,1,3);
      setLayout(slidersLayout);
 
  }
 
+void RigidbodyParameterGroup::addRigidBody()
+{
+    float4 pos;
+    float4 vel;
+    float fMass;
+    pos.x = posX->displayText().toFloat();
+    pos.y = posY->displayText().toFloat();
+    pos.z = posZ->displayText().toFloat();
+    pos.w = 0.0f;
+    vel.x = velX->displayText().toFloat();
+    vel.y = velY->displayText().toFloat();
+    vel.z = velZ->displayText().toFloat();
+    vel.w = 0.0f;
+    fMass = mass->displayText().toFloat();
+    emit addRigidBody(meshSelection->currentText(),pos,vel,fMass);
+}
+
+void RigidbodyParameterGroup::meshListUpdated(const std::vector<QString>& meshes)
+{
+    meshSelection->blockSignals(true);
+    meshSelection->clear();
+    for(std::vector<QString>::const_iterator i = meshes.begin(); i!=meshes.end(); i++)
+    {
+        meshSelection->addItem(*i);
+    }
+    meshSelection->blockSignals(false);
+}
 
 void RigidbodyParameterGroup::setValues(RTPSSettings *settings)
 {
@@ -150,8 +216,8 @@ void RigidbodyParameterGroup::setValues(RTPSSettings *settings)
     velocityLimit->blockSignals(true);
     subIntervals->blockSignals(true);
     timeStep->setValue(settings->GetSettingAs<float>("time_step","0.003"));
-    restitution->setValue(settings->GetSettingAs<float>("restitution","0.01"));
-    penetrationFactor->setValue(settings->GetSettingAs<float>("penetration_factor","0.605"));
+    restitution->setValue(settings->GetSettingAs<float>("restitution","0.605"));
+    penetrationFactor->setValue(settings->GetSettingAs<float>("penetration_factor","0.01"));
     frictionStaticThreshold->setValue(settings->GetSettingAs<float>("friction_static_threshold","0.0001"));
     frictionStatic->setValue(settings->GetSettingAs<float>("friction_static","0.01"));
     frictionDynamic->setValue(settings->GetSettingAs<float>("friction_dynamic","0.02"));
@@ -175,8 +241,6 @@ void RigidbodyParameterGroup::setValues(RTPSSettings *settings)
     gravityX->blockSignals(false);
     gravityY->blockSignals(false);
     gravityZ->blockSignals(false);
-    gravityX->blockSignals(false);
-    gravityY->blockSignals(false);
-    gravityZ->blockSignals(false);
+
 }
 }

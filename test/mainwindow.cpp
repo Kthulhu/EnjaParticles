@@ -11,6 +11,7 @@
 #include "flockingparametergroup.h"
 #include "particleeffectparametergroup.h"
 
+
 namespace rtps
 {
  MainWindow::MainWindow(std::string path)
@@ -60,6 +61,9 @@ namespace rtps
      ssEffectParams = new ParticleEffectParameterGroup(Qt::Horizontal, "Screen Space Parameters",this);
      connect(ssEffectParams, SIGNAL(valueChanged(const QString&,const QString&)), this, SLOT(valueChanged(const QString&, const QString&)));
 
+     connect(glWidget,SIGNAL(meshListUpdated(const std::vector<QString>&)),rbParams,SLOT(meshListUpdated(const std::vector<QString>&)));
+     connect(rbParams,SIGNAL(addRigidBody(QString,float4,float4,float)),this,SLOT(addRigidBody(QString,float4,float4,float)));
+     connect(this,SIGNAL(addRigidBody(QString,QString,float4,float4,float)),glWidget,SLOT(addRigidBody(QString,QString,float4,float4,float)));
      systemParamPanels = new QStackedWidget(this);
      systemParamPanels->addWidget(sphParams);
      systemParamPanels->addWidget(rbParams);
@@ -209,6 +213,11 @@ void MainWindow::setRenderer(const QString& renderer)
 void MainWindow::setSystem(const QString& system)
 {
     emit getSystemSettings(system);
+}
+
+void MainWindow::addRigidBody(const QString& mesh, float4 pos, float4 vel, float mass)
+{
+    emit addRigidBody(systemSelector->currentText(),mesh,pos,vel,mass);
 }
 
 void MainWindow::initRendererPanel(const QString& renderer, RTPSSettings* settings)

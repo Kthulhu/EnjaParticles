@@ -120,8 +120,10 @@ namespace rtps
             }
             case CURVATURE_FLOW:
             {
-                int numberIterations=settings->GetSettingAs<int>("curvature_flow_iterations","20");
+                //int numberIterations=settings->GetSettingAs<int>("curvature_flow_iterations","20");
                 smoothingProgram= m_shaderLibrary->shaders["curvatureFlowShader"].getProgram();
+                glUseProgram(smoothingProgram);
+                int numberIterations=settings->GetSettingAs<int>("curvature_flow_iterations","1");
                 glUniform1i(glGetUniformLocation(smoothingProgram,"depthTex"),0);
                 //glUniform1f(glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER],"width"),(float)window_width);
                 //glUniform1f(glGetUniformLocation(glsl_program[CURVATURE_FLOW_SHADER],"height"),(float)window_height);
@@ -134,11 +136,9 @@ namespace rtps
                 //glUniform1f( glGetUniformLocation(smoothingProgram, "dt"),1.0f/numberIterations);
                 glUniform1f( glGetUniformLocation(smoothingProgram, "dt"),settings->GetSettingAs<float>("curvature_flow_dt","0.005"));
                 //glUniform1f( glGetUniformLocation(smoothingProgram, "distance_threshold"), falloff);
-                glUseProgram(smoothingProgram);
                 string curReadBuffer;
                 for(unsigned int i = 0; i<numberIterations; i++)
                 {
-                    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                     RenderUtils::fullscreenQuad();
 
                     if(i%2==0)
@@ -153,9 +153,10 @@ namespace rtps
                     }
                     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
                     glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[curReadBuffer]);
+                    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                     //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
                 }
-                currentDepthBuffer=curReadBuffer;
+                //currentDepthBuffer=curReadBuffer;
                 glUseProgram(0);
                 return;
             }

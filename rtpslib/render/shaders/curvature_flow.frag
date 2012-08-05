@@ -2,17 +2,13 @@
 uniform mat4 projectionMatrix;
 //uniform mat4 inverseProjectionMatrix;
 
+const float maxDepth = 0.9999999f;
 uniform sampler2D depthTex; 
-//uniform float width;
-//uniform float height;
 uniform float del_x;
 uniform float del_y;
-//uniform float h_x;
-//uniform float h_y;
 uniform float dt;
-//uniform float distance_threshold;
+uniform float depthThreshold;
 in vec2 texCoord;
-const float maxDepth = 0.9999999f;
 out vec4 colorOut;
 /*vec3 uvToEye(vec2 texCoordinate,float z)
 {
@@ -53,15 +49,13 @@ void main()
     float depth=texture2D(depthTex, texCoord.st).x;
     if(depth>maxDepth)
         discard;
-    //vec2 dx_texCoord = texCoord.st+vec2(del_x,0.0);
-    //vec2 dy_texCoord = texCoord.st+vec2(0.0,del_y);
-    float Cx = del_x*(2./projectionMatrix[0][0]);//2.0/(width*focal_x);
-    float Cy = del_y*(2./projectionMatrix[1][1]);//2.0/(height*focal_y);
+    float Cx = del_x*(-2.f/projectionMatrix[0][0]);//2.0/(width*focal_x);
+    float Cy = del_y*(-2.f/projectionMatrix[1][1]);//2.0/(height*focal_y);
     float Cx2 = Cx*Cx;
     float Cy2 = Cy*Cy;
-    float dx = centerDifference(texCoord.st,vec2(del_x,0.0),1.0f);//,h_x);
+    float dx = centerDifference(texCoord.st,vec2(del_x,0.0f),1.0f);//,h_x);
     float ddx = secondOrderCenterDifference(texCoord.st,depth,vec2(del_x,0.0),1.0f);//,h_x);
-    float dy = centerDifference(texCoord.st,vec2(0.0,del_y),1.0f);//,h_y);
+    float dy = centerDifference(texCoord.st,vec2(0.0f,del_y),1.0f);//,h_y);
     float ddy = secondOrderCenterDifference(texCoord.st,depth,vec2(0.0,del_y),1.0f);//,h_y);
     float D = (Cy2*dx*dx)+(Cx2*dy*dy)+(Cy2*Cx2*depth*depth);
     //float depthX = texture2D(depthTex, dx_texCoord).x;
@@ -70,13 +64,13 @@ void main()
     //float depthY = texture2D(depthTex, dy_texCoord).x;
     //float dxdy = centerDifference(dy_texCoord,vec2(del_x,0.0),1.0f);//,h_x);
     //float dydy = centerDifference(dy_texCoord,vec2(0.0,del_y),1.0f);//,h_y);
-    float Dx=2.*((Cy2*dx*ddx)+(Cx2*dy*dydx)+(Cy2*Cx2*depth*dx));
-    float Dy=2.*((Cy2*dx*dydx)+(Cx2*dy*ddy)+(Cy2*Cx2*depth*dy));
+    float Dx=2.f*((Cy2*dx*ddx)+(Cx2*dy*dydx)+(Cy2*Cx2*depth*dx));
+    float Dy=2.f*((Cy2*dx*dydx)+(Cx2*dy*ddy)+(Cy2*Cx2*depth*dy));
     //float dDx = forwardDifference(Dx,D,1.0f);//,h_x);
     //float dDy = forwardDifference(Dy,D,1.0f);//,h_y);
-    float Ex = 0.5*dx*Dx-ddx*D;
-    float Ey = 0.5*dy*Dy-ddy*D;
-    float H = (Cy*Ex+Cx*Ey)/(pow(D,1.5)*2.);
+    float Ex = 0.5f*dx*Dx-ddx*D;
+    float Ey = 0.5f*dy*Dy-ddy*D;
+    float H = (Cy*Ex+Cx*Ey)/(2.f*D*sqrt(D));
     float newDepth = depth + dt*H;
     colorOut = vec4(newDepth,newDepth,newDepth,1.0f);
     gl_FragDepth = newDepth;
