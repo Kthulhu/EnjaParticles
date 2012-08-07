@@ -34,7 +34,7 @@ using namespace EB;
 
 
 // Must initialize in cpp file to avoid multiple definitions
-std::vector<EB::Timer*> EB::Timer::timeList;
+//std::vector<EB::Timer*> EB::Timer::timeList;
 
 //----------------------------------------------------------------------
 Timer::Timer()
@@ -195,16 +195,16 @@ void Timer::printReset()
 void Timer::printAll(FILE* fd, int label_width)
 {
 #if 1
-	fprintf(fd, "====================================\n"); 
-	fprintf(fd, "Timers [All times in ms (1/1000 s)]: \n"); 		
-	fprintf(fd, "====================================\n\n");     
+    //fprintf(fd, "====================================\n");
+    //fprintf(fd, "Timers [All times in ms (1/1000 s)]: \n");
+    //fprintf(fd, "====================================\n\n");
 	for (int i=0; i < timeList.size(); i++) {
 		Timer& tim = *(timeList[i]);
 		tim.print(fd, label_width);
 	}
-	fprintf(fd, "\nNOTE: only timers that have called Timer::start() are shown. \n");
-	fprintf(fd, "      [A time of 0.0 may indicate the timer was not stopped.]\n"); 
-	fprintf(fd, "====================================\n"); 
+    //fprintf(fd, "\nNOTE: only timers that have called Timer::start() are shown. \n");
+    //fprintf(fd, "      [A time of 0.0 may indicate the timer was not stopped.]\n");
+    //fprintf(fd, "====================================\n");
 #endif
 }
 //----------------------------------------------------------------------
@@ -222,7 +222,13 @@ void Timer::writeAllToFile(std::string filename)
     }
 
     FILE* fd = fopen(filename.c_str(), "w"); 
+    //fprintf(fd, "====================================\n");
+    //fprintf(fd, "Timers [All times in ms (1/1000 s)]: \n");
+    //fprintf(fd, "====================================\n\n");
     printAll(fd, label_width); 
+    //fprintf(fd, "\nNOTE: only timers that have called Timer::start() are shown. \n");
+    //fprintf(fd, "      [A time of 0.0 may indicate the timer was not stopped.]\n");
+    //fprintf(fd, "====================================\n");
     fclose(fd); 
 #endif
 }

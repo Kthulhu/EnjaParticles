@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <map> 
 #include <string> 
+#include <stdio.h>
 #include "rtps_common.h"
 
 namespace EB {
@@ -50,8 +51,8 @@ namespace EB {
 class RTPS_EXPORT Timer
 {
 public:
-	static std::vector<Timer*> timeList;
-
+    //static std::vector<Timer*> timeList;
+    std::vector<Timer*> timeList;
 private:
 #if 1
 	struct timeval t_start, t_end;
@@ -85,7 +86,8 @@ public:
 
     void set(float t); //add a time from an external timer (GPU)
 
-	static void printAll(FILE* fd=stdout, int label_width=50);
+    //static void printAll(FILE* fd=stdout, int label_width=50);
+    void printAll(FILE* fd=stdout, int label_width=50);
 	void print(FILE* fd=stdout, int label_width=50);
     void writeAllToFile(std::string filename="timer_log"); 
 	void printReset();
@@ -97,10 +99,21 @@ class RTPS_EXPORT TimerList : public std::map<std::string, EB::Timer*>
 {
     public: 
     void writeToFile(std::string filename) {
-        (*(this->begin())).second->writeAllToFile(filename); 
+        for(std::map<std::string,EB::Timer*>::iterator i = this->begin();i!=this->end();i++)
+            i->second->writeAllToFile(filename);
     } 
-    void printAll() {
-        (*(this->begin())).second->printAll(); 
+    void printAll()
+    {
+        fprintf(stdout, "====================================\n");
+        fprintf(stdout, "Timers [All times in ms (1/1000 s)]: \n");
+        fprintf(stdout, "====================================\n\n");
+        for(std::map<std::string,EB::Timer*>::iterator i = this->begin();i!=this->end();i++)
+        {
+            i->second->printAll();
+        }
+        fprintf(stdout, "\nNOTE: only timers that have called Timer::start() are shown. \n");
+        fprintf(stdout, "      [A time of 0.0 may indicate the timer was not stopped.]\n");
+        fprintf(stdout, "====================================\n");
     } 
 };
 

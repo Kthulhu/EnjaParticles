@@ -31,7 +31,9 @@ namespace rtps
 {
     MeshEffect::MeshEffect(ShaderLibrary* lib, GLuint width, GLuint height):
         ParticleEffect(lib,width,height)
-    {}
+    {
+      setupTimers();
+    }
     MeshEffect::~MeshEffect(){}
     void MeshEffect::renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light* light)
     {
@@ -40,6 +42,7 @@ namespace rtps
         //glMatrixMode(GL_MODELVIEW);
         //glPushMatrix();
         //glMultMatrixf((float*)&mesh->modelMat);
+        m_timers["render_mc_mesh"]->start();
         glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         glEnableVertexAttribArray(0);
@@ -113,11 +116,14 @@ namespace rtps
         glPopAttrib();
         glPopClientAttrib();
         //glPopMatrix();
+        glFinish();
+        m_timers["render_mc_mesh"]->stop();
     }
     void MeshEffect::render(Mesh* mesh, Light* light)
     {
         if(!mesh)
             return;
+        m_timers["render_mesh"]->start();
         glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         //glMatrixMode(GL_MODELVIEW);
@@ -201,12 +207,15 @@ namespace rtps
 #endif
         glPopAttrib();
         glPopClientAttrib();
+        glFinish();
+        m_timers["render_mesh"]->stop();
         //glPopMatrix();
     }
     void MeshEffect::renderInstanced(Mesh* mesh, GLuint pos, GLuint quat, unsigned int size,Light* light)
     {
 		if(size<=0)
 			return;
+        m_timers["render_mesh_instanced"]->start();
         glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         glEnableVertexAttribArray(0);
@@ -290,5 +299,22 @@ namespace rtps
 #endif
         glPopAttrib();
         glPopClientAttrib();
+        glFinish();
+        m_timers["render_mesh_instanced"]->stop();
+    }
+    void MeshEffect::setupTimers()
+    {
+        int time_offset = 5;
+        m_timers["render_mesh"] = new EB::Timer("Render Mesh", time_offset);
+        m_timers["render_mesh_instanced"] = new EB::Timer("Render Mesh Instanced",time_offset);
+        m_timers["render_mc_mesh"] = new EB::Timer("Render Marching Cubes",time_offset);
+    }
+    void MeshEffect::printTimers()
+    {
+        cout<<"Mesh Effect Times"<<endl;
+        m_timers.printAll();
+        std::ostringstream oss;
+        oss << "mesh_effects_timer_log";
+        m_timers.writeToFile(oss.str());
     }
 }

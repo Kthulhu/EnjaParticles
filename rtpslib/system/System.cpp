@@ -192,16 +192,7 @@ namespace rtps
     }
 
 	//----------------------------------------------------------------------
-    void System::printTimers()
-    {
-        cout<<"Number of Particles:"<< num<<endl;
-        timers.printAll();
-        std::ostringstream oss;
-        oss << "sph_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num;
-        //printf("oss: %s\n", (oss.str()).c_str());
-        timers.writeToFile(oss.str());
-        //renderer->printTimers();
-    }
+
 
 	//----------------------------------------------------------------------
     void System::prepareSorted()

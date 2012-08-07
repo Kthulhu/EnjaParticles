@@ -26,6 +26,8 @@
 #include <GL/glew.h>
 #include <math.h>
 
+#include <iomanip>
+
 #include "System.h"
 #include "FLOCK.h"
 #include "Domain.h"
@@ -432,6 +434,15 @@ void FLOCK::pushParticles(vector<float4> pos, vector<float4> vels, float4 color,
     {
         cl_rotation_u.release();
         System::releaseGLBuffers();
+    }
+    void FLOCK::printTimers()
+    {
+        cout<<"Flocking Times"<<endl;
+        cout<<"Number of Particles:"<< num<<endl;
+        timers.printAll();
+        std::ostringstream oss;
+        oss << "flock_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num;
+        timers.writeToFile(oss.str());
     }
 
 //----------------------------------------------------------------------

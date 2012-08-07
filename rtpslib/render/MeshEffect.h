@@ -85,6 +85,8 @@ namespace rtps
         void renderFluid(Mesh* mesh, GLuint cubeMap, GLuint sceneTex, Light* light);
         virtual void renderInstanced(Mesh* mesh, GLuint pos, GLuint quat,unsigned int number,  Light* light);
         virtual void render(Mesh* mesh, Light* light);
+        virtual void setupTimers();
+        virtual void printTimers();
     };
 };
 

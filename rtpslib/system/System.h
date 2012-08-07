@@ -150,7 +150,7 @@ namespace rtps
         };
 
 
-        virtual void printTimers();
+        virtual void printTimers(){};
 
         //virtual Render* getRenderer()
         //{

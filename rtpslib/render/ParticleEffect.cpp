@@ -47,6 +47,7 @@ namespace rtps
         //this->settings=settings;
         //this->renderAsSpheres=true;
         m_writeFramebuffers = false;
+        setupTimers();
     }
 
 
@@ -89,6 +90,7 @@ namespace rtps
     {
         if(num==0)
             return;
+        m_timers["render_points"]->start();
         glPushAttrib(GL_POINT_BIT|GL_ENABLE_BIT);
         bool blending=settings->GetSettingAs<bool>("blending","0");
         if(blending)
@@ -112,6 +114,8 @@ namespace rtps
             glDisable(GL_BLEND);
         }
         glPopAttrib();
+        glFinish();
+        m_timers["render_points"]->stop();
     }
 
     void ParticleEffect::writeBuffersToDisk()
@@ -143,10 +147,27 @@ namespace rtps
     {
         if(num==0)
             return;
+        m_timers["render_vector"]->start();
         glUseProgram(m_shaderLibrary->shaders["vectorShader"].getProgram());
         glUniform1f(glGetUniformLocation(m_shaderLibrary->shaders["vectorShader"].getProgram(), "scale"),scale);
         drawArrays(posVBO,vecVBO,num);
         glUseProgram(0);
+        glFinish();
+        m_timers["render_vector"]->stop();
+    }
+    void ParticleEffect::setupTimers()
+    {
+        int time_offset = 5;
+        m_timers["render_vector"] = new EB::Timer("Render Vectors", time_offset);
+        m_timers["render_points"] = new EB::Timer("Render Points", time_offset);
+    }
+    void ParticleEffect::printTimers()
+    {
+        cout<<"ParticleEffect Times"<<endl;
+        m_timers.printAll();
+        std::ostringstream oss;
+        oss << "particle_effects_timer_log";
+        m_timers.writeToFile(oss.str());
     }
 }
 

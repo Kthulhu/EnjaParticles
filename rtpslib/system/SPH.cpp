@@ -660,6 +660,15 @@ namespace rtps
                 timers["force_rigidbody"]->stop();
             }
     }
+    void SPH::printTimers()
+    {
+        cout<<"SPH Times"<<endl;
+        cout<<"Number of Particles:"<< num<<endl;
+        timers.printAll();
+        std::ostringstream oss;
+        oss << "sph_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num;
+        timers.writeToFile(oss.str());
+    }
     void SPH::acquireGLBuffers()
     {
         /*if(settings->GetSettingAs<bool>("use_color_field","0"))

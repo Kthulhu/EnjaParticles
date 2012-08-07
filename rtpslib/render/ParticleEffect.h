@@ -90,6 +90,8 @@ namespace rtps
         //virtual void setBlending(bool blending){this->blending=blending;}
         //virtual bool getBlending(){return blending;}
         virtual void writeBuffersToDisk();
+        virtual void printTimers();
+
 
     protected:
         void renderPointsAsSpheres(GLuint program, GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light = NULL,const Material* material = NULL, float scale =1.0f);
@@ -97,8 +99,7 @@ namespace rtps
         virtual void deleteFramebufferTextures(){}
         virtual void createFramebufferTextures(){}
         void writeFramebufferTextures(){RenderUtils::writeTextures(m_glFramebufferTexs);}
-        //virtual int setupTimers();
-        //virtual void printTimers();
+        virtual void setupTimers();
 
         ShaderLibrary* m_shaderLibrary;
         std::map<std::string,GLuint> m_glFramebufferTexs;

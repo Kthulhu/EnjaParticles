@@ -137,8 +137,6 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         float4 norm = r/rlen;
         float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
         float stiff=(rbParams.s0*massnorm);
-        //FIXME: I am arbitraily scaling the rigid body mass by .1 to reduce the stiffness
-        //between fluid and rigidbody.
         float4 springForce = -stiff*(2.*sphp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel =  vel_j[index_j]-vel[index_i];
@@ -149,19 +147,21 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         //vel[index_i]=dot(vel[index_i],norm)*norm+vel_j[index_j]-dot(vel_j[index_j],norm)*norm;
         
         float4 tanVel = vel[index_i]+normVel;
-        float4 tanForce = -(mass[index_i]*tanVel)/0.003;
-        /*relvel.w=0.0;
+        //float4 tanForce = -(mass[index_i]*tanVel)/0.003;
+        relvel.w=0.0;
         normalForce.w=0.0;
         //Use Gram Schmidt process to find tangential velocity to the particle
         float4 tangVel=relvel-normVel;
         float4 frictionalForce=0.0f;
-        if(length(tangVel)>rbParams.s2)
-            frictionalForce = -rbParams.s3*length(normalForce)*(normalize(tangVel));
-        else
-            frictionalForce = -rbParams.s4*tangVel;
+        //if(length(tangVel)>rbParams.s2)
+        //    frictionalForce =-rbParams.s3*length(normalForce)*(normalize(tangVel));
+        //    frictionalForce = -rbParams.s3*length(normalForce)*(normalize(tangVel));
+        //else
+        //    frictionalForce = -rbParams.s4*tangVel;
         pt[0].force += (normalForce+frictionalForce);
-        */
-        pt[0].force += normalForce;
+        //pt[0].vel
+        
+        //pt[0].force += normalForce;
     }
 }
 
