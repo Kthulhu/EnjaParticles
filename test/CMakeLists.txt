@@ -160,5 +160,10 @@ TARGET_LINK_LIBRARIES (test_qt.x
 install (TARGETS test_marching_cubes.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS test_qt.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES MathFunctions.h DESTINATION include)
+set(BENCHMARKS true)
+if(BENCHMARKS)
+ADD_SUBDIRECTORY (./benchmarks/)
+endif(BENCHMARKS)
+
 
 #ENDIF(WIN32)

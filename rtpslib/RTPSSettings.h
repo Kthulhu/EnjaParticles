@@ -85,7 +85,7 @@ namespace rtps
         }
 
 		//----------------------------------------------------------------------
-        bool Exists(std::string key);
+	bool Exists(std::string key) { if(settings.find(key) == settings.end()) { return false; } else { return true; } }
 
     private:
         std::map<std::string, std::string> settings;

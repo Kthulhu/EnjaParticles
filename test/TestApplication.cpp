@@ -111,7 +111,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
                            0.f,0.f,1.f,
                            1.f,0.f,1.f,
                            1.f,0.f,0.f};
-    TestApplication::TestApplication(istream& is, string path,GLuint w,GLuint h)
+    TestApplication::TestApplication( string path,GLuint w,GLuint h)
     {
 	binaryPath=path;
 	mass=0.01f;
@@ -136,6 +136,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 	cli = new CL();
 	glViewport(0, 0, w, h);
 
+	stereoscopic = false;
 	//view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,100.0,width(),height());
 	 view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,500.0,w,h);
 	//view = new Camera(float3(0.0f,0.0f,0.0f),65.0f,0.3f,100.0f,width(),height());
@@ -155,74 +156,100 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 	glBindBuffer(GL_ARRAY_BUFFER,skyboxTexVBO);
 	glBufferData(GL_ARRAY_BUFFER,24*3*sizeof(float),skyBoxTex, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER,0);
+    glGenFramebuffersEXT(1,&sceneFBO);
+    glEnable(GL_TEXTURE_2D);
+    createSceneTextures();
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,sceneFBO);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,sceneTex[0],0);
+
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,sceneTex[1],0);
+
+    dout<<"sceneFBO = "<<sceneFBO<<" status complete? "<<((glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE)?"yes":"no")<<" "<<glCheckFramebufferStatus(GL_FRAMEBUFFER)<<endl;
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
+    glDisable(GL_TEXTURE_2D);
+
+	
 
 
-	 light = new Light();
-	light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
-	light->ambient.x=1.0;light->ambient.y=1.0;light->ambient.z=1.0;
-	light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
-	//light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
-	light->pos.x=5.0f; light->pos.y=5.0f; light->pos.z=5.0f;
+	light = new Light();
+        light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
+        light->ambient.x=0.2;light->ambient.y=0.2;light->ambient.z=0.2;
+        light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
+        //light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
+        //light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
+        light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
 
 	environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
 
 	lib = new ShaderLibrary();
-	lib->initializeShaders(binaryPath+"/shaders");
-	//effects["Points"]=new ParticleEffect(lib,width(),height(),5.0f,false);
-	effects["Points"]=new ParticleEffect(lib,width(),height(),0.75f,false);
-	effects["Screen Space"]=new SSEffect(lib,GAUSSIAN_BLUR,width(),height(),.75f,true);
-	//effects["Screen Space"]=new SSEffect(lib,NO_SMOOTHING,width(),height(),2.f,false);
-	effects["Mesh Renderer"]= new MeshEffect(lib,width(),height(),.75f,false);
+        lib->initializeShaders(binaryPath+"/shaders");
+        effects["Points"]=new ParticleEffect(lib,width(),height());
+        effects["Screen Space"]=new SSEffect(lib,width(),height());
+        //FIXME: Need to find an elegant solution to handling mesh effects
+        meshRenderer= new MeshEffect(lib,width(),height());
+        effects["Mesh Renderer"]= meshRenderer;
 
 	//FIXME: Need to find an elegant solution to handling mesh effects
 	meshRenderer= (MeshEffect*)effects["Mesh Renderer"];//new MeshEffect(lib,width(),height(),20.0f,false);
+    }
 
-
-	readParamFile(is,path);
+void TestApplication::initParams(istream& is)
+{
+	readParamFile(is,binaryPath);
+}
+void TestApplication::initScenes()
+{
 	loadScene(binaryPath+"/demo_scene1.obj");
 	loadMeshScene(binaryPath+"/demo_mesh_scene.obj");
-    }
+}
 void TestApplication::initGL()
     {
 
-	glClearColor(0.9f,0.9f,0.9f,1.0f);
-	//set the projection and view matricies for all shaders.
+	glClearColor(0.6f,0.6f,0.6f,1.0f);
 	for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
-	{
-	glUseProgram(i->second.getProgram());
-	GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
-	if(location!=-1)
-	    glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
-	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
-	//dout<<i->first<<" viewMatrixLocation = "<<location<<endl;
-	location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
-	if(location!=-1)
-	    //glUniformMatrix4fv(location,1,GL_FALSE,projectionMatrix.m);
-	    glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
-	//dout<<i->first<<" projectionMatrixLocation = "<<location<<endl;
-	location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
-	if(location!=-1)
-	    glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
-	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
-	//dout<<i->first<<" inverseViewMatrixLocation = "<<location<<endl;
-	location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
-	if(location!=-1)
-	    glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
-	//dout<<i->first<<" inverseProjectionMatrixLocation = "<<location<<endl;
-	location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
-	if(location!=-1)
-	    //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
-	    glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
-	glUseProgram(0);
-	}
-	GLuint program = lib->shaders["sphereShader"].getProgram();
-	glUseProgram(program);
-	glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
-	dout<<"Pointscale = "<<((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180))<<endl;
-	program = lib->shaders["skybox"].getProgram();
-	glUseProgram(program);
-	glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);
-	glUseProgram(0);
+    {
+        glUseProgram(i->second.getProgram());
+        GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+        //dout<<i->first<<" viewMatrixLocation = "<<location<<endl;
+        location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
+        if(location!=-1)
+            //glUniformMatrix4fv(location,1,GL_FALSE,projectionMatrix.m);
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
+        //dout<<i->first<<" projectionMatrixLocation = "<<location<<endl;
+        location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+        //dout<<i->first<<" inverseViewMatrixLocation = "<<location<<endl;
+        location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
+        //dout<<i->first<<" inverseProjectionMatrixLocation = "<<location<<endl;
+        location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
+        if(location!=-1)
+            //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
+            glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
+        location = glGetUniformLocation(i->second.getProgram(),"near");
+        if(location!=-1)
+            glUniform1f(location,view->getNearClip());
+        location = glGetUniformLocation(i->second.getProgram(),"far");
+        if(location!=-1)
+            glUniform1f(location,view->getFarClip());
+    }
+    //cout<<"near clip = "<<view->getNearClip()<<" far clip = "<<view->getFarClip()<<endl;
+    GLuint program = lib->shaders["sphereShader"].getProgram();
+    glUseProgram(program);
+    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+    program = lib->shaders["sphereThicknessShader"].getProgram();
+    glUseProgram(program);
+    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+    program = lib->shaders["skybox"].getProgram();
+    glUseProgram(program);
+    glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);
+    glUseProgram(0);
     }
 
 void TestApplication::ResizeWindowCallback(int width, int height)
@@ -252,10 +279,7 @@ void TestApplication::ResizeWindowCallback(int width, int height)
 	 if(location!=-1)
 	     glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
 	}
-	GLuint program = lib->shaders["sphereShader"].getProgram();
-	glUseProgram(program);
-	glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width) / tanf(view->getFOV()* (0.5f * PIOVER180)));
-	dout<<"Pointscale = "<<((float)width) / tanf(view->getFOV()* (0.5f * PIOVER180))<<endl;
+        createSceneTextures();
         glutPostRedisplay();
     }
    void TestApplication::RenderCallback()
@@ -270,11 +294,19 @@ void TestApplication::ResizeWindowCallback(int width, int height)
         }
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+
+#if 0 
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,sceneFBO);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,sceneTex[0],0);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,sceneTex[1],0);
+#endif
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
+
 #if 1
-        renderSkyBox();
         glEnable(GL_DEPTH_TEST);
 
         glEnable(GL_MULTISAMPLE_EXT);
@@ -291,11 +323,25 @@ void TestApplication::ResizeWindowCallback(int width, int height)
 #endif
         for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
-            if(renderVelocity)
+            RTPSSettings* settings = i->second->getSettings();
+            if(settings->GetSettingAs<bool>("render_velocity","0"))
             {
-                effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum());
+                effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum(),settings->GetSettingAs<float>("velocity_scale","1.0"));
             }
-            effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),light,NULL,i->second->getSpacing());
+            if(systemRenderType[i->first]!="Mesh Renderer")
+            {
+                effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[0],sceneTex[1], sceneFBO);
+		dout<<"-------renderer = "<<systemRenderType[i->first]<<endl;
+            }
+            else
+            {
+		dout<<"-------renderer = "<<systemRenderType[i->first]<<endl;
+                ParticleRigidBody* rbsys = reinterpret_cast<ParticleRigidBody*>(systems[i->first]);
+                if(rbsys)
+                {
+                    meshRenderer->renderInstanced(dynamicMeshes[currentMesh],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
+                }
+            }
         }
         //display static transparent objects
         display(true);
@@ -310,6 +356,17 @@ void TestApplication::ResizeWindowCallback(int width, int height)
 #endif
         //glDisable(GL_DEPTH_TEST);
         //glDisable(GL_MULTISAMPLE_EXT);
+#if 0 
+	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,sceneFBO);
+	glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+        glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
+        glDrawBuffer(GL_BACK);
+
+        glBlitFramebufferEXT( 0, 0, width() , height(),
+                                          0, 0, width() , height(),
+                                          GL_COLOR_BUFFER_BIT, GL_LINEAR );
+#endif
+
         glPopAttrib();
         glPopClientAttrib();
         if(renderMovie)
@@ -629,8 +686,11 @@ ParamParser p;
         //for rigid bodies to work well with sph.
         if(sysSettings[i]->GetSettingAs<string>("system")!="sph")
         {
-            sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
-            sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
+	    if(!sysSettings[i]->Exists("smoothing_distance") ||  !sysSettings[i]->Exists("simulation_scale"))
+            {
+		    sysSettings[i]->SetSetting("smoothing_distance",systems["water"]->getSettings()->GetSettingAs<float>("smoothing_distance"));
+		    sysSettings[i]->SetSetting("simulation_scale",systems["water"]->getSettings()->GetSettingAs<float>("simulation_scale"));
+	    }
         }
         systems[names[i]]=RTPS::generateSystemInstance(sysSettings[i],cli);
         systemRenderType[names[i]] = "Points";
@@ -732,28 +792,22 @@ ParticleShape* TestApplication::createParticleShape(const std::string& system, M
 
 void TestApplication::cameraChanged()
 {
-
-    //view->getViewMatrix().print("myViewMatrix");
-    //float16 viewMatrix;
-    //glGetFloatv(GL_MODELVIEW_MATRIX,viewMatrix.m);
-    //viewMatrix.print("viewMatrix");
-    //update the view matricies for all shaders.
+  //update the view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
         glUseProgram(i->second.getProgram());
         GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
-            //glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseViewMatrix().m);
         location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
         if(location!=-1)
-            //glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
             glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
 
     }
+    glUseProgram(0);
 }
 
     void TestApplication::TimerCallback(int ms)
@@ -932,25 +986,25 @@ void TestApplication::renderSkyBox()
 
     void TestApplication::display(bool blend)
     {
-        glEnable(GL_NORMALIZE);
-        glEnable(GL_CULL_FACE);
-        //glDisable(GL_LIGHTING);
         if(blend)
         {
+            glEnable(GL_CULL_FACE);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         }
         for(map<std::string,Mesh*>::iterator i = meshes.begin(); i!=meshes.end(); i++)
         {
             if((!blend&&i->second->material.opacity==1.0f) || (blend &&i->second->material.opacity<1.0f))
+	    {
                 meshRenderer->render(i->second,light);
+	        dout<<" display mesh = "<<i->first<<endl;
+	    }
         }
         if(blend)
         {
+            glDisable(GL_CULL_FACE);
             glDisable(GL_BLEND);
         }
-        glDisable(GL_NORMALIZE);
-        glDisable(GL_CULL_FACE);
     }
     void TestApplication::loadMeshScene(const string& filename)
     {
@@ -961,6 +1015,7 @@ void TestApplication::renderSkyBox()
 	  ParticleShape* shape = createParticleShape("rb1",i->second);
 	  pShapes[i->first]=shape;
 	}
+	currentMesh = dynamicMeshes.begin()->first;
     }
     void TestApplication::loadScene(const string& filename)
     {
@@ -1003,6 +1058,76 @@ void TestApplication::renderSkyBox()
 		pShapes[i->first]=shape;
 	}
     }
+void TestApplication::addRigidBody(const std::string& system, const std::string& mesh, float4 pos, float4 vel, float mass)
+{
+    currentMesh=mesh;
+    ParticleShape* shape = pShapes[mesh];
+    //float trans = (shape->getMaxDim()+shape->getMinDim())/2.0f;
+    //float16 mat=i->second->modelMat;
+    //FIXME: rotation should not be needed here. This is hackish
+    float16 mat;
+    mat.loadIdentity();
+    mat[5]=-1.0f;
+    mat[10]=-1.0f;
+    //mat.transpose();
+    float16 mat2;
+    mat2.loadIdentity();
+    mat2[0]=0.0f;
+    mat2[1]=-1.f;
+    mat2[4]=1.f;
+    mat2[5]=0.0f;
+    mat=mat2*mat;
+
+    //memcpy(&mat,&i->second->modelMat,sizeof(float16));
+    //mat.print("mat before");
+    mat[3]+=pos.x;
+    mat[7]+=pos.y;
+    mat[11]+=pos.z;
+    systems[system]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),vel,float4(0.0f,0.0f,0.0f,1.0f),mass);
+
+}
+void TestApplication::createSceneTextures()
+{
+    int num = 2;
+    if(stereoscopic)
+        num=4;
+    if(sceneTex[0])
+        glDeleteTextures(num,sceneTex);
+    glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(num, sceneTex);
+    glBindTexture(GL_TEXTURE_2D, sceneTex[1]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,width(),height(),0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+    glBindTexture(GL_TEXTURE_2D, sceneTex[0]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width(),height(),0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+    if(stereoscopic)
+    {
+        glBindTexture(GL_TEXTURE_2D, sceneTex[3]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32,width(),height(),0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+        glBindTexture(GL_TEXTURE_2D, sceneTex[2]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width(),height(),0,GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+    }
+    glDisable(GL_TEXTURE_2D);
+    glPopAttrib();
+
+}
+
 
     void TestApplication::setWindowHeight(GLuint windowHeight) {
         this->windowHeight = windowHeight;
