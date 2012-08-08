@@ -91,6 +91,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         
 
         float kern = dWijdr * (Pi + Pj) * idj;
+        //float kern = dWijdr * (Pj - Pi) * idj * idj;
         //float kern = -.5 * dWijdr * (Pi + Pj) * sphp[0].wspiky_d_coef * idi * idj;
         //float kern = -.5 * dWijdr * (Pi + Pj) * sphp[0].wspiky_d_coef * idj * idj;
         //float kern = -1.0f * dWijdr * (Pi * idi * idi + Pj * idj * idj) * sphp[0].wspiky_d_coef;
@@ -170,6 +171,9 @@ __kernel void force_update(
 
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
+    //force[index] = (sphp[0].mass * (1.0/density[index]))* 
+    //               (sphp[0].viscosity * sphp[0].wvisc_dd_coef * pt.viscosity) ; 
+    //force[index]-=     (sphp[0].mass * sphp[0].wspiky_d_coef * pt.force); 
     force[index] = (sphp[0].mass * (1.0/density[index]))*
             ((-0.5 * sphp[0].wspiky_d_coef * pt.force) +
                    (sphp[0].viscosity * sphp[0].wvisc_dd_coef * pt.viscosity)) ; 

@@ -90,8 +90,9 @@ namespace rtps
         //float boundary_distance =  smoothing_distance;
 
         settings->SetSetting("boundary_distance", boundary_distance);
-        //float spacing = (rest_distance / simulation_scale);
-        float spacing = smoothing_distance / simulation_scale;
+        float spacing = (rest_distance / simulation_scale);
+        //float spacing = smoothing_distance / simulation_scale;
+        //float spacing = smoothing_distance / simulation_scale;
         settings->SetSetting("spacing", spacing);
 
         dout<<"rho0 = "<<rho0<<endl;

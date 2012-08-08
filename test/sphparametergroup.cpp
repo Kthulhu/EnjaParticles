@@ -93,12 +93,15 @@ namespace rtps
      connect(xSPHSlider,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(xSPHSlider,SIGNAL(valueChanged(float)),this,SLOT(setXSPHValue(float)));
      connect(xSPHLineEdit,SIGNAL(textChanged(const QString&)),this,SLOT(setXSPHValue(const QString&)));
+     connect(xSPHLineEdit,SIGNAL(textChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
      connect(gasConstantSlider,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(gasConstantSlider,SIGNAL(valueChanged(float)),this,SLOT(setGasConstantValue(float)));
      connect(gasConstantLineEdit,SIGNAL(textChanged(const QString&)),this,SLOT(setGasConstantValue(const QString&)));
+     connect(gasConstantLineEdit,SIGNAL(textChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
      connect(viscositySlider,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(viscositySlider,SIGNAL(valueChanged(float)),this,SLOT(setViscosityValue(float)));
      connect(viscosityLineEdit,SIGNAL(textChanged(const QString&)),this,SLOT(setViscosityValue(const QString&)));
+     connect(viscosityLineEdit,SIGNAL(textChanged(const QString&)),this,SLOT(triggerValue(const QString&)));
      connect(timeStep,SIGNAL(valueChanged(float)),this,SLOT(triggerValue(float)));
      connect(subIntervals,SIGNAL(valueChanged(int)),this,SLOT(triggerValue(int)));
      connect(gravityX,SIGNAL(textChanged(const QString&)),this,SLOT(triggerVectorValue(const QString&)));

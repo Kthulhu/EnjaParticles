@@ -158,7 +158,8 @@ namespace rtps
             shaders[name].setShader(GL_TESS_CONTROL_SHADER,tessCont);
             shaders[name].setShader(GL_TESS_EVALUATION_SHADER,tessEval);
 #endif
-            dout<<"Name = "<<name<<" Program = "<<shaders[name].compileProgram()<<std::endl;
+	    GLuint program = shaders[name].compileProgram();
+            dout<<"Name = "<<name<<" Program = "<<program<<std::endl;
         }
 }
 

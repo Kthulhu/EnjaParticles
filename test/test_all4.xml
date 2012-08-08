@@ -7,7 +7,10 @@
             <param name="domain_max" >10.0 10.0 10.0 0.0</param>
             <param name="rest_density" >1000.0</param>
             <!--<param name="max_num_particles" >65536</param>-->
-            <param name="max_num_particles" >262144</param>
+            <!--<param name="max_num_particles" >131072</param>-->
+            <!--<param name="max_num_particles" >262144</param>-->
+            <param name="max_num_particles" >524288</param>
+            <!--<param name="max_num_particles" >1048576</param>-->
             <!--<param name="gravity_alphas">0.05 0.10</param>-->
             <param name="gravity_alphas">0.00 0.00</param>
             <param name="gravity_mass">1.0 1.5</param>
@@ -37,7 +40,8 @@
             <param name="sub_intervals">1</param>
             <param name="domain_min" >0.0 0.0 0.0 0.0</param>
             <param name="domain_max" >10.0 10.0 10.0 0.0</param>
-            <param name="max_num_particles" >65536</param>
+            <!--<param name="max_num_particles" >65536</param>-->
+            <param name="max_num_particles" >131072</param>
             <!--<param name="max_num_particles" >262144</param>-->
             <!--<param name="max_gravity_sources">5</param>-->
             <param name="gravity_alphas">0.00 0.00</param>
@@ -65,7 +69,8 @@
             <param name="sub_intervals">1</param>
             <param name="domain_min" >0.0 0.0 0.0 0.0</param>
             <param name="domain_max" >10.0 10.0 10.0 0.0</param>
-            <param name="max_num_particles" >65536</param>
+            <param name="max_num_particles" >8192</param>
+            <!--<param name="max_num_particles" >65536</param>-->
             <!--<param name="max_num_particles" >262144</param>-->
             <!--<param name="max_gravity_sources">5</param>-->
             <param name="gravity_alphas">0.00 0.00</param>
@@ -87,7 +92,7 @@
             <param name="target" >0.0 0.0 0.0 0.0</param>
             <!--<param name="integrator" >euler</param>-->
             <param name="integrator" >euler</param>
-            <param name="time_step" >0.004</param>
+            <param name="time_step" >0.003</param>
         </parameters>
         <parameters type="render">
             <param name="render_type" >default</param>

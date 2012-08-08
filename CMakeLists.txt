@@ -6,6 +6,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 project(rtpsuite)
 
 SET(CMAKE_BUILD_TYPE "Debug")
+#SET(CMAKE_BUILD_TYPE "Release")
 ADD_DEFINITIONS(-D_DEBUG)
 
 #need to include FindOPENCL.cmake to

@@ -592,7 +592,7 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
                 float4 center = float4(1.25f, 4.5f,5.f,1.0f);
                 //float4 velocity(-1.25f, -1.25f, -3.0f, 0);
                 float4 velocity(3.0f, 0.0f, 3.0f, 0);
-                float radius= 1.f;
+                float radius= 2.f;
                 //sph sets spacing and multiplies by radius value
                 systems["water"]->addHose(10000, center, velocity,radius, col1);
                 return;

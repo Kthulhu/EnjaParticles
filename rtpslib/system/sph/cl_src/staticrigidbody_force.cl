@@ -84,7 +84,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         
         float4 tanVel = vel[index_i]-normVel;
         //Fixme: we need to stop the particles tangential velocity. How should I accomplish this?
-        float4 tanForce = -(mass[index_i]*tanVel)/0.003;
+        float4 tanForce = -(mass[index_i]*tanVel);
         /*
         relvel.w=0.0;
         normalForce.w=0.0;
@@ -97,6 +97,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
             frictionalForce = -rbParams.s4*tangVel;
         pt[0].force += (normalForce+frictionalForce);*/
         pt[0].force+=normalForce;
+	//pt[0].force+=normalForce-tanForce;
     }
 }
 
