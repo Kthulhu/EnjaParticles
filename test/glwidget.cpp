@@ -541,10 +541,14 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
                 return;
             }
             case 'p': //print timers
-                cout<<"SPH timers:"<<endl;
-                systems["water"]->printTimers();
-                cout<<"RB timers:"<<endl;
-                systems["rb1"]->printTimers();
+                for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+                {
+                    i->second->printTimers();
+                }
+                for(map<QString,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+                {
+                    i->second->printTimers();
+                }
                 return;
             case '\033': // escape quits
             case '\015': // Enter quits

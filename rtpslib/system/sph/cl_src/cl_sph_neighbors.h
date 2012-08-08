@@ -38,6 +38,7 @@ void zeroPoint(PointData* pt)
     pt[0].color_lapl = 0.;
     pt[0].xsph = (float4)(0.,0.,0.,0.);
     pt[0].viscosity = (float4)(0.,0.,0.,0.);
+    //pt[0].velocity = (float4)(0.,0.,0.,0.);
     //	pt[0].center_of_mass = (float4)(0.,0.,0.,0.);
     //pt[0].num_neighbors = 0;
 }

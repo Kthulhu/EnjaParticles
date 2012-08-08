@@ -815,6 +815,15 @@ namespace rtps
             timers["permute"]->stop();
            cli->queue.finish();
     }
+    void ParticleRigidBody::printTimers()
+    {
+        cout<<"PRB Times"<<endl;
+        cout<<"Number of Particles:"<< num<<endl;
+        timers.printAll();
+        std::ostringstream oss;
+        oss << "prb_timer_log_" << std::setw( 7 ) << std::setfill( '0' ) <<  num;
+        timers.writeToFile(oss.str());
+    }
     void ParticleRigidBody::acquireGLBuffers()
     {
         cl_comPos.acquire();

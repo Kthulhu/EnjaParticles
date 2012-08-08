@@ -55,6 +55,7 @@ namespace rtps
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
 
         glDisable(GL_TEXTURE_2D);
+        setupTimers();
     }
     void SSEffect::smoothDepth( RTPSSettings* settings)
     {
@@ -193,6 +194,7 @@ namespace rtps
         //Render Thickness buffer.
         if(thickness)
         {
+            m_timers["render_thickness"]->start();
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
             glDisable(GL_DEPTH_TEST);
@@ -204,7 +206,10 @@ namespace rtps
             glClear(GL_COLOR_BUFFER_BIT);
             renderPointsAsSpheres( m_shaderLibrary->shaders["sphereThicknessShader"].getProgram(),posVBO, colVBO, num,settings, light,material,scale);
             //renderPointsAsSpheres( m_shaderLibrary->shaders["sphereShader"].getProgram(),posVBO, colVBO, num,settings, light,material,scale);
+            glFinish();
+            m_timers["render_thickness"]->stop();
 
+            m_timers["blur_thickness"]->start();
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["thickness2"],0);
             GLuint program= m_shaderLibrary->shaders["fixedWidthGaussianShader"].getProgram();
             glEnable(GL_TEXTURE_2D);
@@ -226,10 +231,12 @@ namespace rtps
             glEnable(GL_DEPTH_TEST);
             glDepthMask(GL_TRUE);
             glDisable(GL_TEXTURE_2D);
+            glFinish();
+            m_timers["blur_thickness"]->stop();
         }
         //glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,framebuffer);
 
-
+        m_timers["render_spheres"]->start();
         //Render Color and depth buffer of spheres.
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth"],0);
@@ -240,15 +247,18 @@ namespace rtps
         glUniform1i(glGetUniformLocation(sphereProgram,"sceneDepth"),0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderPointsAsSpheres(sphereProgram,posVBO, colVBO, num,settings, light,material,scale);
-
+        glFinish();
+        m_timers["render_spheres"]->stop();
         //Smooth the depth texture to emulate a surface.
+        m_timers["smooth_depth"]->start();
         //glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["depth2"],0);
         glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs["depth"]);
         currentDepthBuffer="depth2";
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         smoothDepth(settings);
-
+        glFinish();
+        m_timers["smooth_depth"]->stop();
 
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
         //Switch to the buffer that was written to in the smoothing step
@@ -271,6 +281,7 @@ namespace rtps
         //}
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["normalColor"],0);
 
+        m_timers["calculate_normals"]->start();
         //Now we use the depth to normal shader which converts screenspace depth into
         //world coordinates and then computes lighting.
         glClear(GL_COLOR_BUFFER_BIT);
@@ -280,8 +291,10 @@ namespace rtps
         glUniform1f( glGetUniformLocation(normalProgram, "del_x"),1.0/((float)width));
         glUniform1f( glGetUniformLocation(normalProgram, "del_y"),1.0/((float)height));
         RenderUtils::fullscreenQuad();
+        glFinish();
+        m_timers["calculate_normals"]->stop();
 
-
+        m_timers["render_composite"]->start();
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,m_glFramebufferTexs["Color"],0);
         GLuint compositeProgram = m_shaderLibrary->shaders["compositeFluidShader"].getProgram();
         glUseProgram(compositeProgram);
@@ -344,6 +357,8 @@ namespace rtps
             glUniform3fv(glGetUniformLocation(compositeProgram,"light.position"),1,&defaultLight.pos.x);
         }
         RenderUtils::fullscreenQuad();
+        glFinish();
+        m_timers["render_composite"]->stop();
         glDepthMask(GL_TRUE);
         glEnable(GL_DEPTH_TEST);
         glActiveTexture(GL_TEXTURE2);
@@ -354,6 +369,7 @@ namespace rtps
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,framebuffer);
 
 
+        m_timers["copy_to_fbo"]->start();
         glDrawBuffer(buffer);
         glActiveTexture(GL_TEXTURE0);
         GLuint copyProgram = m_shaderLibrary->shaders["copyShader"].getProgram();
@@ -403,7 +419,8 @@ namespace rtps
 
         glUniform1i( glGetUniformLocation(copyProgram, "depthTex"),1);
         RenderUtils::fullscreenQuad();
-
+        glFinish();
+        m_timers["copy_to_fbo"]->stop();
         glUseProgram(0);
         glBindTexture(GL_TEXTURE_2D,0);
         glActiveTexture(GL_TEXTURE0);
@@ -515,7 +532,25 @@ namespace rtps
         glBindTexture(GL_TEXTURE_2D,0);
         glPopAttrib();
     }
-
+    void SSEffect::setupTimers()
+    {
+        int time_offset = 5;
+        m_timers["render_thickness"] = new EB::Timer("Render thickness", time_offset);
+        m_timers["blur_thickness"] = new EB::Timer("Blur Thickness",time_offset);
+        m_timers["render_spheres"] = new EB::Timer("Render Spheres",time_offset);
+        m_timers["smooth_depth"] = new EB::Timer("Smooth Depth",time_offset);
+        m_timers["calculate_normals"] = new EB::Timer("Calculate Normals",time_offset);
+        m_timers["render_composite"] = new EB::Timer("Render Composite",time_offset);
+        m_timers["copy_to_fbo"] = new EB::Timer("Copy To FBO",time_offset);
+    }
+    void SSEffect::printTimers()
+    {
+        cout<<"Screen-Space Effect Times"<<endl;
+        m_timers.printAll();
+        std::ostringstream oss;
+        oss << "ss_effects_timer_log";
+        m_timers.writeToFile(oss.str());
+    }
     void SSEffect::setWindowDimensions(GLuint width, GLuint height)
     {
         deleteFramebufferTextures();

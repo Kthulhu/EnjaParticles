@@ -46,6 +46,8 @@ namespace rtps
         void smoothDepth(RTPSSettings* settings);
         virtual void render(GLuint posVBO, GLuint colVBO, unsigned int num, RTPSSettings* settings, const Light* light = NULL,const Material* material = NULL, float scale =1.0f, GLuint sceneTex=0,GLuint sceneDepthTex =0, GLuint framebuffer= 0);
         virtual void setWindowDimensions(GLuint width, GLuint height);
+        virtual void setupTimers();
+        virtual void printTimers();
         //virtual void setSmoothingFilter(SmoothingFilter filter){this->smoothing=filter;}
         //virtual SmoothingFilter getSmoothingFilter(){return smoothing;}
         //virtual void setRenderThickness(bool thickness){this->thickness = thickness;}

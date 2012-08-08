@@ -73,6 +73,7 @@ public:
         return rotationVBO;
     }
     int setupTimers();
+    void printTimers();
 
     void pushParticles(vector<float4> pos, vector<float4> velo, float4 color=float4(1.0, 0.0, 0.0, 1.0), float mass = 0.0f);
     virtual void acquireGLBuffers();
