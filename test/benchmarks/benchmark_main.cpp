@@ -114,10 +114,10 @@ int main(int argc, char** argv)
     dout<<paramFile<<endl;
     //ifstream is(paramFile.c_str(),ifstream::in);
 	ifstream is(paramFile.c_str(),ifstream::in);
-    //app=new RB_Benchmark(is,filepath,800,600);
-    app=new TestApplication(filepath,800,600);
-    app->initParams(is);
-    app->initScenes();
+    app=new RB_Benchmark(is,filepath,800,600);
+    //app=new TestApplication(filepath,800,600);
+    //app->initParams(is);
+    //app->initScenes();
     atexit(cleanUp);
     glutMainLoop();
     return 0;

@@ -45,9 +45,9 @@
 #endif
 
 using namespace std;
-#define NUM_X 3
-#define NUM_Y 3
-#define NUM_Z 3
+#define NUM_X 10
+#define NUM_Y 10
+#define NUM_Z 10
 namespace rtps
 {
     RB_Benchmark::RB_Benchmark(istream& is, string path,GLuint w,GLuint h):TestApplication(path,w,h)
@@ -60,12 +60,15 @@ namespace rtps
 	ParticleShape* shape = pShapes[name];
 	currentMesh = name;
 	float delta = shape->getMaxDim()-shape->getMinDim();
-	float4 pos = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	float4 start = gridMin+float4(1.0f, 2.0f, 1.0f, 0.0f);
+	float4 pos = start;
 	float4 vel = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	for(int i = 0; i<NUM_X; i++)
 	{
+	    pos.y=start.y;
 	    for(int j = 0; j<NUM_Y; j++)
 	    {
+		pos.z=start.z;
 	        for(int k = 0; k<NUM_Z; k++)
 	        {
 		    addRigidBody("rb1",name,pos,vel,mass);
@@ -75,6 +78,7 @@ namespace rtps
             }
             pos.x+=delta;
 	}
+	view->move(0.0f,0.0f,-10.0f);
     }
     RB_Benchmark::~RB_Benchmark()
     {
@@ -87,12 +91,26 @@ namespace rtps
     }
    void RB_Benchmark::MouseCallback(int button, int state, int x, int y)
     {
+	//TestApplication::MouseCallback(button,state,x,y);
     }
     void RB_Benchmark::MouseMotionCallback(int x, int y)
     {
+	//TestApplication::MouseMotionCallback(x,y);
     }
     void RB_Benchmark::KeyboardCallback(unsigned char key, int x, int y)
     {
+	//TestApplication::KeyboardCallback(key,x,y);
+	if(key=='p')
+	{
+		for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+                {
+                    i->second->printTimers();
+                }
+                for(map<std::string,ParticleEffect*>::iterator i = effects.begin(); i!=effects.end(); i++)
+                {
+                    i->second->printTimers();
+                }
+	}
     }
     void RB_Benchmark::readParamFile(istream& is, string path)
     {
@@ -109,7 +127,7 @@ namespace rtps
         //#endif
 		sysSettings[i]->SetSetting("rtps_path",binaryPath);
         systems[names[i]]=RTPS::generateSystemInstance(sysSettings[i],cli);
-        systemRenderType[names[i]] = "Mesh Renderer";
+        systemRenderType[names[i]] = "Points";//"Mesh Renderer";
     }
     gridMin = systems["rb1"]->getSettings()->GetSettingAs<float4>("domain_min");
     gridMax = systems["rb1"]->getSettings()->GetSettingAs<float4>("domain_max");

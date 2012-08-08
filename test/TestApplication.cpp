@@ -280,6 +280,7 @@ void TestApplication::ResizeWindowCallback(int width, int height)
 	     glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
 	}
         createSceneTextures();
+	view->rotate(0.000001f,0.000001f);
         glutPostRedisplay();
     }
    void TestApplication::RenderCallback()
@@ -295,7 +296,7 @@ void TestApplication::ResizeWindowCallback(int width, int height)
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 
-#if 0 
+#if 1 
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,sceneFBO);
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,sceneTex[0],0);
@@ -318,7 +319,7 @@ void TestApplication::ResizeWindowCallback(int width, int height)
         {
             //for debugging only!!
             ParticleRigidBody* rbsys = (ParticleRigidBody*)systems[std::string("rb1")];
-            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),light,NULL,0.05f);
+            effects["Points"]->render(rbsys->getStaticVBO(),rbsys->getColVBO(),rbsys->getStaticNum(),rbsys->getSettings(),light,NULL,rbsys->getSpacing(),sceneTex[0],sceneTex[1], sceneFBO);
         }
 #endif
         for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
@@ -331,11 +332,9 @@ void TestApplication::ResizeWindowCallback(int width, int height)
             if(systemRenderType[i->first]!="Mesh Renderer")
             {
                 effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[0],sceneTex[1], sceneFBO);
-		dout<<"-------renderer = "<<systemRenderType[i->first]<<endl;
             }
             else
             {
-		dout<<"-------renderer = "<<systemRenderType[i->first]<<endl;
                 ParticleRigidBody* rbsys = reinterpret_cast<ParticleRigidBody*>(systems[i->first]);
                 if(rbsys)
                 {
@@ -356,7 +355,7 @@ void TestApplication::ResizeWindowCallback(int width, int height)
 #endif
         //glDisable(GL_DEPTH_TEST);
         //glDisable(GL_MULTISAMPLE_EXT);
-#if 0 
+#if 1 
 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,sceneFBO);
 	glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
@@ -762,9 +761,12 @@ ParticleShape* TestApplication::createParticleShape(const std::string& system, M
     }
     minCoord.print("minCoord");
     maxCoord.print("maxCoord");
+    float space = systems[system]->getSpacing();
+    float halfspace = (space/2.0f);
+    minCoord = minCoord-float3(halfspace,halfspace,halfspace);
+    maxCoord = maxCoord+float3(halfspace,halfspace,halfspace);
 	delete[] pos;
 	pos =0;
-    float space = systems[system]->getSpacing();
     ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
 
 
@@ -997,7 +999,6 @@ void TestApplication::renderSkyBox()
             if((!blend&&i->second->material.opacity==1.0f) || (blend &&i->second->material.opacity<1.0f))
 	    {
                 meshRenderer->render(i->second,light);
-	        dout<<" display mesh = "<<i->first<<endl;
 	    }
         }
         if(blend)
@@ -1041,10 +1042,7 @@ void TestApplication::renderSkyBox()
 		mat2[1]=-1.f;
 		mat2[4]=1.f;
 		mat2[5]=0.0f;
-		mat.print("mat before");
-		mat2.print("mat2");
 		mat=mat2*mat;
-		mat.print("mat after");
 
 		//memcpy(&mat,&i->second->modelMat,sizeof(float16));
 		//mat.print("mat before");
@@ -1054,7 +1052,7 @@ void TestApplication::renderSkyBox()
 		//mat=mat2*mat;
 		//mat = mat*view->getViewMatrix();
 		//mat.print("mat after");
-		systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(0.0f,0.0f,0.0f,1.0f),0.0f);
+		systems["rb1"]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),float4(0.0f,0.0f,0.0f,0.0f),float4(1.0f,0.5f,0.0f,1.0f),0.0f);
 		pShapes[i->first]=shape;
 	}
     }
@@ -1083,7 +1081,7 @@ void TestApplication::addRigidBody(const std::string& system, const std::string&
     mat[3]+=pos.x;
     mat[7]+=pos.y;
     mat[11]+=pos.z;
-    systems[system]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),vel,float4(0.0f,0.0f,0.0f,1.0f),mass);
+    systems[system]->addParticleShape(shape->getVoxelTexture(),shape->getMinDim(),shape->getMaxDim(),mat,shape->getVoxelResolution(),vel,float4(1.0f,0.5f,0.0f,1.0f),mass);
 
 }
 void TestApplication::createSceneTextures()
