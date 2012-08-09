@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<main>
+    <system type="sph" name="water">
+        <parameters type="system">
+            <param name="sub_intervals">1</param>
+            <param name="domain_min" >0.0 0.0 0.0 0.0</param>
+            <param name="domain_max" >20.0 20.0 20.0 0.0</param>
+            <param name="rest_density" >1000.0</param>
+            <!--<param name="max_num_particles" >65536</param>-->
+            <!--<param name="max_num_particles" >131072</param>-->
+            <param name="max_num_particles" >262144</param>
+            <!--<param name="max_num_particles" >524288</param>-->
+            <!--<param name="max_num_particles" >1048576</param>-->
+            <!--<param name="gravity_alphas">0.05 0.10</param>-->
+            <param name="gravity_alphas">0.00 0.00</param>
+            <param name="gravity_mass">1.0 1.5</param>
+            <param name="gravity_sources">2.5 2.5 2.5 1.0 7.5 7.5 7.5 1.0</param>
+            <param name="gravity" >0.0 -9.8 0.0 0.0</param>
+            <param name="gas_constant" >3.5</param>
+            <param name="viscosity" >1.</param>
+            <param name="velocity_limit" >300.0</param>
+            <param name="xsph_factor" >0.20</param>
+            <param name="friction_kinetic" >0.2</param>
+            <param name="friction static" >0.0</param>
+            <param name="boundary_stiffness" >20000.0</param>
+            <param name="boundary_dampening" >256.0</param>
+            <param name="integrator" >leapfrog</param>
+            <param name="time_step" >0.003</param>
+            <param name="use_color_field">0</param>
+            <param name="color_field_res">32</param>
+        </parameters>
+        <parameters type="render">
+            <param name="render_type" >default</param>
+            <param name="render_velocities" >false</param>
+            <param name="render_blending" >true</param>
+        </parameters>
+    </system>
+    <system type="rigidbody" name="rb1">
+        <parameters type="system">
+            <param name="sub_intervals">1</param>
+            <param name="domain_min" >0.0 0.0 0.0 0.0</param>
+            <param name="domain_max" >20.0 20.0 20.0 0.0</param>
+            <!--<param name="max_num_particles" >65536</param>-->
+	    <!--<param name="smoothing_distance" >0.0755692</param>-->
+	    <!--<param name="simulation_scale" >0.441228</param>-->
+            <param name="max_num_particles" >131072</param>
+	    <!--<param name="smoothing_distance" >0.0377846</param>-->
+	    <!--<param name="simulation_scale" >0.220614</param>-->
+            <!--<param name="max_num_particles" >262144</param>>-->
+	    <!--<param name="smoothing_distance" >0.0377846</param>-->
+	    <!--<param name="simulation_scale" >0.220614</param>-->
+            <!--<param name="max_num_particles" >262144</param>>-->
+	    <!--<param name="smoothing_distance" >0.0188923</param>-->
+	    <!--<param name="simulation_scale" >0.110307</param>-->
+            <!--<param name="max_gravity_sources">5</param>-->
+            <param name="gravity_alphas">0.00 0.00</param>
+            <param name="gravity_mass">1.0 1.5</param>
+            <param name="gravity_sources">2.5 2.5 2.5 1.0 7.5 7.5 7.5 1.0</param>
+            <param name="gravity" >0.0 -9.8 0.0 0.0</param>
+            <param name="velocity_limit" >300.0</param>
+            <param name="friction_dynamic" >0.0</param>
+            <param name="friction_static" >0.00</param>
+            <param name="friction_static_threshold" >0.0001</param>
+            <param name="penetration_factor" >.01</param>
+            <param name="restitution" >.20</param>
+            <!--<param name="integrator" >euler</param>-->
+            <param name="integrator" >leapfrog</param>
+            <param name="time_step" >0.003</param>
+            <param name="render_type" >Mesh Renderer</param>
+            <param name="render_velocities" >false</param>
+            <param name="render_blending" >false</param>
+        </parameters>
+    </system>
+</main>

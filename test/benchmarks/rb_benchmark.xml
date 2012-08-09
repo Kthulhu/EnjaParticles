@@ -2,7 +2,7 @@
 <main>
     <system type="rigidbody" name="rb1">
         <parameters type="system">
-            <param name="sub_intervals">20</param>
+            <param name="sub_intervals">1</param>
             <param name="domain_min" >0.0 0.0 0.0 0.0</param>
             <param name="domain_max" >20.0 20.0 20.0 0.0</param>
             <!--<param name="max_num_particles" >65536</param>-->
@@ -26,13 +26,11 @@
             <param name="friction_dynamic" >0.0</param>
             <param name="friction_static" >0.00</param>
             <param name="friction_static_threshold" >0.0001</param>
-            <param name="penetration_factor" >.01</param>
-            <param name="restitution" >.605</param>
+            <param name="penetration_factor" >.10</param>
+            <param name="restitution" >.25</param>
             <!--<param name="integrator" >euler</param>-->
             <param name="integrator" >leapfrog</param>
             <param name="time_step" >0.003</param>
-        </parameters>
-        <parameters type="render">
             <param name="render_type" >Mesh Renderer</param>
             <param name="render_velocities" >false</param>
             <param name="render_blending" >false</param>

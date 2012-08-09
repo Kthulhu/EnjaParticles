@@ -26,7 +26,7 @@ FIND_PACKAGE (OpenGL)
 FIND_PACKAGE (OPENCL)
 FIND_PACKAGE (GLEW)
 
-set (rb_benchmark_INCLUDES
+set (benchmark_INCLUDES
     ${RTPS_DIR}
     ${GLUT_INCLUDE_PATH}
     ${OPENGL_INCLUDE_DIR}
@@ -35,16 +35,15 @@ set (rb_benchmark_INCLUDES
     ${BASE_DIR}/test
 )
 
-set (rb_benchmark_SOURCES
+set (benchmark_SOURCES
     ../ParamParser
     ../aiwrapper
     ../TestApplication
-    rb_benchmark
-    benchmark_main.cpp
     )
 
-INCLUDE_DIRECTORIES(${rb_benchmark_INCLUDES})
-ADD_EXECUTABLE(rb_benchmark.x ${rb_benchmark_SOURCES})
+INCLUDE_DIRECTORIES(${benchmark_INCLUDES})
+ADD_EXECUTABLE(rb_benchmark.x benchmark_main.cpp rb_benchmark  ${benchmark_SOURCES})
+ADD_EXECUTABLE(rb_sph_benchmark.x rb_sph_benchmark_main.cpp rb_sph_benchmark  ${benchmark_SOURCES})
 
 LINK_DIRECTORIES(${rtpsuite_BINARY_DIR}/rtpslib)
 
@@ -61,10 +60,18 @@ message(RTPS_EXPORTS "${rtps_EXPORTS}")
 TARGET_LINK_LIBRARIES (rb_benchmark.x
     ${LINK_LIBS}
 )
+TARGET_LINK_LIBRARIES (rb_sph_benchmark.x
+    ${LINK_LIBS}
+)
 install (TARGETS rb_benchmark.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+install (FILES rb_benchmark.xml DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (FILES ../demo_mesh_scene.obj DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (FILES ../demo_mesh_scene.mtl DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (FILES ../demo_scene_plane.obj DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (FILES ../demo_scene_plane.mtl DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (FILES rb_benchmark.xml DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+
+install (TARGETS rb_sph_benchmark.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+install (FILES rb_sph_benchmark.xml DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+install (FILES ../demo_scene_big_box.obj DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+install (FILES ../demo_scene_big_box.mtl DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #ENDIF(WIN32)

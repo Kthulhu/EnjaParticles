@@ -114,7 +114,6 @@ namespace rtps
 	//----------------------------------------------------------------------
     void ParticleRigidBody::updateGPU()
     {
-        timers["update"]->start();
         if (settings->hasChanged()) updateParams();
 
         //settings->printSettings();
@@ -126,6 +125,7 @@ namespace rtps
         //this does end up acquire/release everytime sprayHoses calls pushparticles
         //should just do try/except?
 
+        timers["update"]->start();
         for (int i=0; i < sub_intervals; i++)
         {
             hash_and_sort();
@@ -257,7 +257,6 @@ namespace rtps
         }
 
 
-        timers["update"]->stop();
     }
 
     void ParticleRigidBody::integrate()
@@ -307,9 +306,6 @@ namespace rtps
                 cli_debug);
 
         }
-
-		static int count=0;
-
     	timers["integrate"]->stop();
     }
 
@@ -331,6 +327,7 @@ namespace rtps
 	//----------------------------------------------------------------------
     int ParticleRigidBody::setupTimers()
     {
+	//System::setupTimers();
         int time_offset = 5;
         timers["force_fluid"] = new EB::Timer("Force Fluid function", time_offset);
         timers["force_fluid_gpu"] = new EB::Timer("Force Fluid GPU kernel execution", time_offset);
@@ -350,13 +347,14 @@ namespace rtps
     void ParticleRigidBody::prepareSorted()
     {
         vector<float4> f4Vec(max_num);
-        //FIXME: We are assuming that the maximum number of rigid bodies are max_num/4
-        //That means that we assume that each rigidbody is represented by no less than 4 particles
-        rbParticleIndex.resize(max_num/4);
-        vector<float4> rbf4Vec(max_num/4);
-        vector<float16> rbf16Vec(max_num/4);
-        vector<float4> rotf4Vec(max_num/4);
-        vector<float> rbfVec(max_num/4);
+        vector<float4> fstaticVec(max_num/2);
+        //FIXME: We are assuming that the maximum number of rigid bodies are max_num/16
+        //That means that we assume that each rigidbody is represented by no less than 16 particles
+        rbParticleIndex.resize(max_num/16);
+        vector<float4> rbf4Vec(max_num/16);
+        vector<float16> rbf16Vec(max_num/16);
+        vector<float4> rotf4Vec(max_num/16);
+        vector<float> rbfVec(max_num/16);
 
         fill(f4Vec.begin(), f4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
         fill(rbf4Vec.begin(), rbf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 0.0f));
@@ -367,11 +365,11 @@ namespace rtps
         fill(rotf4Vec.begin(), rotf4Vec.end(), float4(0.0f, 0.0f, 0.0f, 1.0f));
         fill(rbfVec.begin(), rbfVec.end(),0.0f);
         fill(rbParticleIndex.begin(),rbParticleIndex.end(),int2(0,0));
-        staticVBO = createVBO(&f4Vec[0], f4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+        staticVBO = createVBO(&fstaticVec[0], fstaticVec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         comPosVBO = createVBO(&rbf4Vec[0], rbf4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         comRotationVBO = createVBO(&rotf4Vec[0], rotf4Vec.size()*sizeof(float4), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
         cl_static_position_u=Buffer<float4>(cli,staticVBO);
-        cl_static_position_s=Buffer<float4>(cli,f4Vec);
+        cl_static_position_s=Buffer<float4>(cli,fstaticVec);
         cl_position_l = Buffer<float4>(cli, f4Vec);
         cl_veleval_u = Buffer<float4>(cli, f4Vec);
         cl_veleval_s = Buffer<float4>(cli, f4Vec);
@@ -493,14 +491,14 @@ namespace rtps
             float4 comAngVelEval=float4(0.0f,0.0f,0.0f,0.0f);;
             comAngVelEval=invInertialTensor*angMomentum;
 
-            dout<<"position: "<<com<<endl;
-            dout<<"velocity: "<<comVelEval<<endl;
-            dout<<"ang momentum: "<<angMomentum<<endl;
-            dout<<"mass: "<<mass<<endl;
-            dout<<"Inverse Inertial Tensor: "<<endl;
-            for(int i =0;i<16;i++)
-                cout<<i<<": "<<invInertialTensor.m[i]<<" ,";
-            cout<<endl;
+            //dout<<"position: "<<com<<endl;
+            //dout<<"velocity: "<<comVelEval<<endl;
+            //dout<<"ang momentum: "<<angMomentum<<endl;
+            //dout<<"mass: "<<mass<<endl;
+            //dout<<"Inverse Inertial Tensor: "<<endl;
+            //for(int i =0;i<16;i++)
+            //    cout<<i<<": "<<invInertialTensor.m[i]<<" ,";
+            //cout<<endl;
             vector<unsigned int> index(nn);
             std::fill(index.begin(), index.end(), curRigidbodyID);
             curRigidbodyID++;
@@ -551,7 +549,7 @@ namespace rtps
             cl_velocity_u.release();
     #endif
             num += nn;  //keep track of number of particles we use
-            dout<<"num = "<<num<<endl;
+            //dout<<"num = "<<num<<endl;
         }
         else
         {
@@ -621,10 +619,10 @@ namespace rtps
         prbp.num = settings->GetSettingAs<int>("num_particles");
         prbp.max_num = settings->GetSettingAs<int>("max_num_particles");
 
-        dout<<"smooth : "<<prbp.smoothing_distance<<endl;
-        dout<<"scale : "<<prbp.simulation_scale<<endl;
-        dout<<"gravity : "<<prbp.gravity<<endl;
-        dout<<"dampening : "<<prbp.dampening<<endl;
+        //dout<<"smooth : "<<prbp.smoothing_distance<<endl;
+        //dout<<"scale : "<<prbp.simulation_scale<<endl;
+        //dout<<"gravity : "<<prbp.gravity<<endl;
+        //dout<<"dampening : "<<prbp.dampening<<endl;
         //update the OpenCL buffer
         //std::vector<SPHParams> vparams();
         //vparams.push_back(prbp);
@@ -690,7 +688,8 @@ namespace rtps
                     //debug params
                     clf_debug,
                     cli_debug);
-            timers["update_particles"]->start();
+            timers["update_particles"]->stop();
+            timers["update"]->stop();
     }
     float16 ParticleRigidBody::calculateInvInertialTensor(vector<float4>& pos, float mass)
     {
@@ -792,7 +791,7 @@ namespace rtps
             cout<<"ERROR(bitonic sort): "<< er.what()<<"("<< CL::oclErrorString(er.err())<<")"<<endl;
         }
 
-             timers["cellindices"]->start();
+             //timers["cellindices"]->start();
             int nc = cellindices.execute(static_num,
                 cl_sort_static_hashes,
                 cl_sort_static_indices,
@@ -802,17 +801,17 @@ namespace rtps
                 grid_params.nb_cells,
                 clf_debug,
                 cli_debug);
-            timers["cellindices"]->stop();
+            //timers["cellindices"]->stop();
 
 			//-----------------
-            timers["permute"]->start();
+            //timers["permute"]->start();
             permute.execute(static_num,
                 cl_static_position_u,
                 cl_static_position_s,
                 cl_sort_static_indices,
                 clf_debug,
                 cli_debug);
-            timers["permute"]->stop();
+            //timers["permute"]->stop();
            cli->queue.finish();
     }
     void ParticleRigidBody::printTimers()

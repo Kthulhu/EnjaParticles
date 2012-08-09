@@ -31,7 +31,7 @@
 //OpenCL stuff
 #endif
 
-#include "rb_benchmark.h"
+#include "rb_sph_benchmark.h"
 #include "../../rtpslib/util.h"
 using namespace rtps;
 using namespace std;
@@ -77,7 +77,7 @@ void timerCB(int ms)
 //----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-    string paramFile="rb_benchmark.xml";
+    string paramFile="rb_sph_benchmark.xml";
     //initialize glut
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA //| GLUT_ALPHA| GLUT_INDEX
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     dout<<paramFile<<endl;
     //ifstream is(paramFile.c_str(),ifstream::in);
 	ifstream is(paramFile.c_str(),ifstream::in);
-    app=new RB_Benchmark(is,filepath,800,600);
+    app=new RBSPHBenchmark(is,filepath,800,600);
     //app=new TestApplication(filepath,800,600);
     //app->initParams(is);
     //app->initScenes();

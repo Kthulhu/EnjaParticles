@@ -73,9 +73,18 @@ namespace rtps
         k_euler.setArg(iargs++, prbp.getDevicePtr());
         k_euler.setArg(iargs++, clf_debug.getDevicePtr());
         k_euler.setArg(iargs++, cli_debug.getDevicePtr());
+	try
+        {
+            float gputime = k_euler.execute(numRBs);//, local_size);
+            if(gputime > 0)
+                timer->set(gputime);
 
+        }
+        catch (cl::Error er)
+        {
+            printf("ERROR(force ): %s(%s)\n", er.what(), CL::oclErrorString(er.err()));
+        }
         //int local_size = 128;
-        k_euler.execute(numRBs);//, local_size);
 
 #if 0 //printouts
         //DEBUGING
