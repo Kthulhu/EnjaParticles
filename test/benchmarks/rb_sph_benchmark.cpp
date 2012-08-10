@@ -21,7 +21,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 ****************************************************************************************/
 #include <GL/glew.h>
-#include "rb_benchmark.h"
+#include "rb_sph_benchmark.h"
 #include "../ParamParser.h"
 #include "../../rtpslib/RTPS.h"
 #include "../../rtpslib/render/SSEffect.h"
@@ -46,109 +46,104 @@
 #endif
 
 using namespace std;
-#define NUM_X 20
-#define NUM_Y 30
-#define NUM_Z 20
-#define SCALE 0.5
+#define NUM 20 
+//#define SCALE 0.4
 namespace rtps
 {
-    RB_Benchmark::RB_Benchmark(istream& is, string path,GLuint w,GLuint h, unsigned int maxIterations):TestApplication(path,w,h)
+    RBSPHBenchmark::RBSPHBenchmark(istream& is, string path,GLuint w,GLuint h, unsigned int maxIterations):TestApplication(path,w,h)
     {
-	mass=5.0f;
+	//mass=0.5f;
+	mass=1.0f;
 	initParams(is);
 	initScenes();
 	this->maxIterations=maxIterations;
 	iterations=0;
 
+	systemRenderType["rb1"]="Mesh Renderer";
+	unsigned int nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles");
+	float4 col1 = float4(0.05f, 0.15f, .8f, 0.1f);
+	systems["water"]->addBox(nn, gridMin+float4(1.5f,1.5f,1.5f,1.0f), gridMax-float4(1.5f,0.5*gridMax.y+1.5f,1.5f,1.0f), false,col1);
+
+	dout<<"rb spacing "<<systems["rb1"]->getSpacing()<<endl;
 	std::string name = dynamicMeshes.begin()->first;
-	dout<<"origshape minDim = "<<pShapes[name]->getMinDim()<<" origshape maxDim = "<<pShapes[name]->getMaxDim()<<endl;
-	ParticleShape* shape = createParticleShape("rb1",dynamicMeshes[name],SCALE);
+	float scale = pShapes[name]->getMaxDim()-pShapes[name]->getMinDim();
+	float4 start = gridMin+float4(2.0f, 10.0f, 2.0f, 0.0f);
+	float4 distance = gridMax-start;
+	float m = std::min(distance.x,distance.y);
+	m = std::min(m,distance.z);
+	//scale =(m/NUM)/scale;
+	scale = .7;
+	float4 pos = start;
+	//dout<<"origshape minDim = "<<pShapes[name]->getMinDim()<<" origshape maxDim = "<<pShapes[name]->getMaxDim()<<endl;
+	ParticleShape* shape = createParticleShape("rb1",dynamicMeshes[name],scale);
 	dout<<"shape minDim = "<<shape->getMinDim()<<" shape maxDim = "<<shape->getMaxDim()<<endl;
 	stringstream s;
-	s<<name<<SCALE;
+	s<<name<<scale;
 	Mesh* scaledMesh=new Mesh(*dynamicMeshes[name]);
-	scaledMesh->modelMat[0]*=SCALE;
-	scaledMesh->modelMat[5]*=SCALE;
-	scaledMesh->modelMat[10]*=SCALE;
+	scaledMesh->modelMat[0]*=scale;
+	scaledMesh->modelMat[5]*=scale;
+	scaledMesh->modelMat[10]*=scale;
 	name = s.str();
 	pShapes[name]=shape;
 	dynamicMeshes[name]=scaledMesh;
 	currentMesh = name;
 	float delta = shape->getMaxDim()-shape->getMinDim();
-	float4 start = gridMin+float4(2.0f, 2.0f, 2.0f, 0.0f);
-	float4 pos = start;
 	float4 vel = float4(0.0f, 0.0f, 0.0f, 0.0f);
-	for(int i = 0; i<NUM_X; i++)
+	for(int i = 0; i<NUM; i++)
 	{
 	    pos.y=start.y;
-	    for(int j = 0; j<NUM_Y; j++)
+	    for(int j = 0; j<NUM; j++)
 	    {
 		pos.z=start.z;
-	        for(int k = 0; k<NUM_Z; k++)
+	        for(int k = 0; k<NUM; k++)
 	        {
 		    addRigidBody("rb1",name,pos,vel,mass);
 		    pos.z+=delta;
+		    if(pos.z>gridMax.z)
+		    {
+			dout<<"z num = "<<k<<endl;
+			break;
+		    }
 	        }
 		pos.y+=delta;
+	        if(pos.y>gridMax.y)
+		{
+		   dout<<"y num = "<<j<<endl;
+		   break;
+		}
             }
             pos.x+=delta;
+	    if(pos.x>gridMax.x)
+	    {
+	       dout<<"x num = "<<i<<endl;
+	       break;
+	    }
 	}
-	view->move(-5.0f,0.0f,-10.0f);
+	view->move(-5.0f,0.0f,-15.0f);
+
     }
-    RB_Benchmark::~RB_Benchmark()
+    RBSPHBenchmark::~RBSPHBenchmark()
     {
     }
 
-    void RB_Benchmark::initScenes()
+    void RBSPHBenchmark::initScenes()
     {
-	//loadScene(binaryPath+"/demo_scene_plane.obj");
 	loadScene(binaryPath+"/demo_scene_big_box.obj");
 	loadMeshScene(binaryPath+"/demo_mesh_scene.obj");
     }
-   void RB_Benchmark::MouseCallback(int button, int state, int x, int y)
+   void RBSPHBenchmark::MouseCallback(int button, int state, int x, int y)
     {
 	//TestApplication::MouseCallback(button,state,x,y);
     }
-    void RB_Benchmark::MouseMotionCallback(int x, int y)
+    void RBSPHBenchmark::MouseMotionCallback(int x, int y)
     {
 	//TestApplication::MouseMotionCallback(x,y);
     }
-    void RB_Benchmark::KeyboardCallback(unsigned char key, int x, int y)
+    void RBSPHBenchmark::KeyboardCallback(unsigned char key, int x, int y)
     {
 	//TestApplication::KeyboardCallback(key,x,y);
     }
-    void RB_Benchmark::readParamFile(istream& is, string path)
-    {
-    ParamParser p;
-    vector<RTPSSettings*> sysSettings;
-    vector<string> names;
-    p.readParameterFile(is,sysSettings ,names );
-    for(unsigned int i = 0; i<sysSettings.size(); i++)
-    {
-        //#ifdef WIN32
-        //    sysSettings[i]->SetSetting("rtps_path",".");
-        //#else
-        //    sysSettings[i]->SetSetting("rtps_path","./bin");
-        //#endif
-		sysSettings[i]->SetSetting("rtps_path",binaryPath);
-        systems[names[i]]=RTPS::generateSystemInstance(sysSettings[i],cli);
-        systemRenderType[names[i]] = "Points";//"Mesh Renderer";
-        //systemRenderType[names[i]] = "Mesh Renderer";
-    }
-    gridMin = systems["rb1"]->getSettings()->GetSettingAs<float4>("domain_min");
-    gridMax = systems["rb1"]->getSettings()->GetSettingAs<float4>("domain_max");
-    for(map<std::string,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
-    {
-        for(map<std::string,System*>::iterator j = systems.begin(); j!=systems.end(); j++)
-        {
-            if(i==j)
-                continue;
-            i->second->addInteractionSystem(j->second);
-        }
-    }
-}
-
-    void RB_Benchmark::TimerCallback(int ms)
+    void RBSPHBenchmark::TimerCallback(int ms)
     {
             if(!paused)
 	    {

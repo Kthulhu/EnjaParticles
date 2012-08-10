@@ -39,16 +39,16 @@ namespace rtps
         this->min=min*scale;
         this->max=max*scale;
         this->scale=scale;
-        maxDim = max.x;
-        if(maxDim<max.y)
-            maxDim=max.y;
-        if(maxDim<max.z)
-            maxDim=max.z;
-        minDim = min.x;
-        if(minDim>min.y)
-            minDim=min.y;
-        if(minDim>min.z)
-            minDim=min.z;
+        maxDim = this->max.x;
+        if(maxDim<this->max.y)
+            maxDim=this->max.y;
+        if(maxDim<this->max.z)
+            maxDim=this->max.z;
+        minDim = this->min.x;
+        if(minDim>this->min.y)
+            minDim=this->min.y;
+        if(minDim>this->min.z)
+            minDim=this->min.z;
 
         delz=diameter;
         voxelResolution = ceil((maxDim-minDim)/diameter);

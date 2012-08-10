@@ -735,7 +735,7 @@ ParamParser p;
         delete[] image;
         return 0;
     }
-ParticleShape* TestApplication::createParticleShape(const std::string& system, Mesh* mesh)
+ParticleShape* TestApplication::createParticleShape(const std::string& system, Mesh* mesh, float scale)
 {
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
     float* pos = new float[mesh->vboSize*3];
@@ -767,7 +767,7 @@ ParticleShape* TestApplication::createParticleShape(const std::string& system, M
     maxCoord = maxCoord+float3(halfspace,halfspace,halfspace);
 	delete[] pos;
 	pos =0;
-    ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
+    ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space,scale);
 
 
     shape->voxelizeMesh(mesh->vbo,mesh->ibo,mesh->iboSize);

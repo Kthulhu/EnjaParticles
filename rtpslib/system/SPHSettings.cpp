@@ -64,13 +64,14 @@ namespace rtps
         //printf("dmax: %f %f %f\n", dmax.x, dmax.y, dmax.z);
         //FIXME: 4 should be a parameter. The simulation should be forced to scale 1-to-1 with
         //the domain. Otherwise the only way to reduce the spacing is to increase the number of points.
-        float domain_vol = ((dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z))/2;
+        float domain_vol = ((dmax.x - dmin.x) * (dmax.y - dmin.y) * (dmax.z - dmin.z))/4;
 
         //printf("domain volume: %f\n", domain_vol);
 
 
         //ratio between particle radius in simulation coords and world coords
         //float simulation_scale = pow(1./ domain_vol,1.f/3.f);
+        //float simulation_scale = pow(.5f * VP * max_num/ domain_vol, 1.f/3.f);
         float simulation_scale = pow(.5f * VP * max_num/ domain_vol, 1.f/3.f);
         //float simulation_scale = pow(.5f*Vol/ domain_vol, 1.f/3.f);
         //float simulation_scale = pow(VP * 16000/ domain_vol, 1.f/3.f);

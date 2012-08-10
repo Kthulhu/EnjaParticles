@@ -46,7 +46,7 @@ namespace rtps
 	    virtual void initParams(std::istream& is);
 	    virtual void initScenes();
 	    virtual void cameraChanged();
-	    ParticleShape* createParticleShape(const std::string& system, Mesh* mesh);
+	    ParticleShape* createParticleShape(const std::string& system, Mesh* mesh, float scale =1.0f);
             //FIXME: These following methods are used for assimp to import modules. They should
             //probably be better. Currently they are almost verbatim from a loading example.
             virtual void display(bool blend);
