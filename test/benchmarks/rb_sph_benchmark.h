@@ -10,12 +10,13 @@ namespace rtps
     class RBSPHBenchmark : public TestApplication
     {
         public:
-            RBSPHBenchmark(std::istream& is,std::string path,GLuint w, GLuint h, unsigned int maxIterations=1000);
+            RBSPHBenchmark(std::istream& is,std::string path,GLuint w, GLuint h, unsigned int maxIterations=3000);
             ~RBSPHBenchmark();
             void KeyboardCallback(unsigned char key, int x, int y);
             void MouseCallback(int button, int state, int x, int y);
             void MouseMotionCallback(int x, int y);
             void TimerCallback(int ms);
+	    void dropRigidBodies();
             //void readParamFile(std::istream& is, std::string path);
 	    virtual void initScenes();
 	protected:

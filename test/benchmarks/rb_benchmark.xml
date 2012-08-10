@@ -2,7 +2,7 @@
 <main>
     <system type="rigidbody" name="rb1">
         <parameters type="system">
-            <param name="sub_intervals">1</param>
+            <param name="sub_intervals">10</param>
             <param name="domain_min" >0.0 0.0 0.0 0.0</param>
             <param name="domain_max" >20.0 20.0 20.0 0.0</param>
             <!--<param name="max_num_particles" >65536</param>-->
@@ -12,8 +12,8 @@
 	    <!--<param name="smoothing_distance" >0.0377846</param>-->
 	    <!--<param name="simulation_scale" >0.220614</param>-->
             <param name="max_num_particles" >262144</param>>
-	    <param name="smoothing_distance" >0.0377846</param>
-	    <param name="simulation_scale" >0.220614</param>
+	    <param name="smoothing_distance" >0.075</param>
+	    <param name="simulation_scale" >0.25</param>
             <!--<param name="max_num_particles" >262144</param>>-->
 	    <!--<param name="smoothing_distance" >0.0188923</param>-->
 	    <!--<param name="simulation_scale" >0.110307</param>-->
@@ -22,15 +22,15 @@
             <param name="gravity_mass">1.0 1.5</param>
             <param name="gravity_sources">2.5 2.5 2.5 1.0 7.5 7.5 7.5 1.0</param>
             <param name="gravity" >0.0 -9.8 0.0 0.0</param>
-            <param name="velocity_limit" >300.0</param>
-            <param name="friction_dynamic" >0.0</param>
+            <param name="velocity_limit" >600.0</param>
+            <param name="friction_dynamic" >0.001</param>
             <param name="friction_static" >0.00</param>
             <param name="friction_static_threshold" >0.0001</param>
-            <param name="penetration_factor" >.10</param>
-            <param name="restitution" >.25</param>
+            <param name="penetration_factor" >0.1</param>
+            <param name="restitution" >.81</param>
             <!--<param name="integrator" >euler</param>-->
             <param name="integrator" >leapfrog</param>
-            <param name="time_step" >0.003</param>
+            <param name="time_step" >0.0003</param>
             <param name="render_type" >Mesh Renderer</param>
             <param name="render_velocities" >false</param>
             <param name="render_blending" >false</param>

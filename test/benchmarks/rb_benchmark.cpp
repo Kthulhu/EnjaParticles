@@ -46,19 +46,20 @@
 #endif
 
 using namespace std;
-#define NUM_X 20
-#define NUM_Y 30
-#define NUM_Z 20
-#define SCALE 0.4
+#define NUM_X 15
+#define NUM_Y 25
+#define NUM_Z 15
+#define SCALE .5
 namespace rtps
 {
     RB_Benchmark::RB_Benchmark(istream& is, string path,GLuint w,GLuint h, unsigned int maxIterations):TestApplication(path,w,h)
     {
-	mass=5.0f;
+	mass=.1f;
 	initParams(is);
 	initScenes();
 	this->maxIterations=maxIterations;
 	iterations=0;
+	systemRenderType["rb1"]="Mesh Renderer";
 
 	std::string name = dynamicMeshes.begin()->first;
 	dout<<"origshape minDim = "<<pShapes[name]->getMinDim()<<" origshape maxDim = "<<pShapes[name]->getMaxDim()<<endl;
@@ -74,10 +75,12 @@ namespace rtps
 	pShapes[name]=shape;
 	dynamicMeshes[name]=scaledMesh;
 	currentMesh = name;
-	float delta = shape->getMaxDim()-shape->getMinDim();
-	float4 start = gridMin+float4(1.0f, 2.0f, 1.0f, 0.0f);
+	float delta = (shape->getMaxDim()-shape->getMinDim())*1.5;
+	float4 start = gridMin+float4(2.0f, 3.0f, 2.0f, 0.0f);
 	float4 pos = start;
 	float4 vel = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	light->pos.z=25.0f;
+	unsigned int count =0;
 	for(int i = 0; i<NUM_X; i++)
 	{
 	    pos.y=start.y;
@@ -87,12 +90,14 @@ namespace rtps
 	        for(int k = 0; k<NUM_Z; k++)
 	        {
 		    addRigidBody("rb1",name,pos,vel,mass);
+		    count++;
 		    pos.z+=delta;
 	        }
 		pos.y+=delta;
             }
             pos.x+=delta;
 	}
+	dout<<"Count = "<<count<<endl;
 	view->move(-5.0f,0.0f,-10.0f);
     }
     RB_Benchmark::~RB_Benchmark()
@@ -101,7 +106,7 @@ namespace rtps
 
     void RB_Benchmark::initScenes()
     {
-	loadScene(binaryPath+"/demo_scene_plane.obj");
+	loadScene(binaryPath+"/demo_scene_big_box.obj");
 	loadMeshScene(binaryPath+"/demo_mesh_scene.obj");
     }
    void RB_Benchmark::MouseCallback(int button, int state, int x, int y)
