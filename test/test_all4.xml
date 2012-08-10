@@ -7,9 +7,9 @@
             <param name="domain_max" >10.0 10.0 10.0 0.0</param>
             <param name="rest_density" >1000.0</param>
             <!--<param name="max_num_particles" >65536</param>-->
-            <!--<param name="max_num_particles" >131072</param>-->
+            <param name="max_num_particles" >131072</param>
             <!--<param name="max_num_particles" >262144</param>-->
-            <param name="max_num_particles" >524288</param>
+            <!--<param name="max_num_particles" >524288</param>-->
             <!--<param name="max_num_particles" >1048576</param>-->
             <!--<param name="gravity_alphas">0.05 0.10</param>-->
             <param name="gravity_alphas">0.00 0.00</param>

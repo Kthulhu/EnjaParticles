@@ -92,7 +92,8 @@ int main(int argc, char** argv)
     glutWindowHandle = glutCreateWindow(ss.str().c_str());
 
     glutDisplayFunc(appRender); //main rendering function
-    glutTimerFunc(30, timerCB, 30); //determin a minimum time between frames
+    //glutTimerFunc(30, timerCB, 30); //determin a minimum time between frames
+    glutTimerFunc(0, timerCB, 0); //determin a minimum time between frames
     glutKeyboardFunc(appKeyboard);
     glutMouseFunc(appMouse);
     glutMotionFunc(appMotion);

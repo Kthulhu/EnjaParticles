@@ -45,9 +45,9 @@
 #endif
 
 using namespace std;
-#define NUM_X 10
-#define NUM_Y 10
-#define NUM_Z 10
+#define NUM_X 3
+#define NUM_Y 3
+#define NUM_Z 3
 namespace rtps
 {
     RB_Benchmark::RB_Benchmark(istream& is, string path,GLuint w,GLuint h):TestApplication(path,w,h)

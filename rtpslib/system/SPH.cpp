@@ -297,9 +297,6 @@ namespace rtps
            // collision();
 
         }
-
-
-        timers["update"]->stop();
     }
 
 	//----------------------------------------------------------------------
@@ -385,6 +382,7 @@ namespace rtps
         {
             mcMesh=NULL;
         }
+        timers["update"]->stop();
     }
 	//----------------------------------------------------------------------
 
@@ -463,6 +461,7 @@ namespace rtps
     {
         int time_offset = 5;
         timers["force_rigidbody"] = new EB::Timer("Force Rigid Body function", time_offset);
+        timers["force_rigidbody_static"] = new EB::Timer("Force Rigid Body Static function", time_offset);
         timers["force_rigidbody_gpu"] = new EB::Timer("Force Rigid Body GPU kernel execution", time_offset);
         timers["density"] = new EB::Timer("Density function", time_offset);
         timers["density_gpu"] = new EB::Timer("Density GPU kernel execution", time_offset);
@@ -638,7 +637,7 @@ namespace rtps
                     cli_debug);
                 timers["force_rigidbody"]->stop();
                 //FIXME: Need to handle static rigid body interactions better.
-                timers["force_rigidbody"]->start();
+                timers["force_rigidbody_static"]->start();
                 ParticleRigidBody* prb = (ParticleRigidBody*)interactionSystem[j];
                 forceRB.execute(   num,
                     cl_position_s,
@@ -657,7 +656,7 @@ namespace rtps
                     prb->getSettings()->GetSettingAs<float>("friction_static_threshold"),
                     clf_debug,
                     cli_debug);
-                timers["force_rigidbody"]->stop();
+                timers["force_rigidbody_static"]->stop();
             }
     }
     void SPH::printTimers()
