@@ -221,7 +221,7 @@ void Timer::writeAllToFile(std::string filename)
         }
     }
 
-    FILE* fd = fopen(filename.c_str(), "w"); 
+    FILE* fd = fopen(filename.c_str(), "a"); 
     //fprintf(fd, "====================================\n");
     //fprintf(fd, "Timers [All times in ms (1/1000 s)]: \n");
     //fprintf(fd, "====================================\n\n");
