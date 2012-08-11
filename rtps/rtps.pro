@@ -38,7 +38,8 @@ HEADERS += \
     ../rtpslib/system/boids.h \
     ../test/rtpsparametergroup.h \
     ../test/rigidbodyparametergroup.h \
-    ../test/flockingparametergroup.h
+    ../test/flockingparametergroup.h \
+    ../rtpslib/system/common/Hose.h
 
 SOURCES += \
     ../test/sphparametergroup.cpp \
@@ -76,7 +77,8 @@ SOURCES += \
     ../rtpslib/render/ShaderLibrary.cpp \
     ../test/rtpsparametergroup.cpp \
     ../test/rigidbodyparametergroup.cpp \
-    ../test/flockingparametergroup.cpp
+    ../test/flockingparametergroup.cpp \
+    ../rtpslib/system/common/Hose.cpp
 
 FORMS += \
     ../test/mainwindow.ui
