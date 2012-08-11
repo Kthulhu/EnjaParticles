@@ -66,18 +66,23 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         rlen = max(rlen, prbp[0].EPSILON);
         float4 norm = r/rlen;
         float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
-        float stiff = (prbp[0].spring*massnorm);
+        //float stiff = (prbp[0].spring*massnorm);
+        float stiff = (prbp[0].spring*mass[index_i]);
         float4 springForce = -stiff*(2.*prbp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel = vel[index_j]-vel[index_i];
+        //Use Gram Schmidt process to find tangential velocity to the particle
+	float4 normVel=dot(relvel,norm)*norm;
+        float4 tangVel=relvel-normVel;
 
-        float4 dampeningForce = prbp[0].dampening*sqrt(stiff*massnorm)*(relvel);
-        float4 normalForce=(springForce+dot(dampeningForce,norm)*norm); 
+        //float4 dampeningForce = prbp[0].dampening*sqrt(stiff*massnorm)*(relvel);
+        //float4 dampeningForce = prbp[0].dampening*sqrt(stiff*massnorm)*(tangVel);
+        float4 dampeningForce = prbp[0].dampening*sqrt(stiff*massnorm)*(normVel);
+        //float4 normalForce=(springForce+dot(dampeningForce,norm)*norm); 
+        float4 normalForce=springForce+dampeningForce;//+dot(dampeningForce,norm)*norm); 
         
         relvel.w=0.0;
         normalForce.w=0.0;
-        //Use Gram Schmidt process to find tangential velocity to the particle
-        float4 tangVel=relvel-dot(relvel,norm)*norm;
         float4 frictionalForce=0.0f;
         if(length(tangVel)>prbp[0].friction_static_threshold)
             frictionalForce = -prbp[0].friction_dynamic*length(normalForce)*(fast_normalize(tangVel));
@@ -85,7 +90,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         else
             frictionalForce = -prbp[0].friction_static*tangVel;
         
-        pt[0].linear_force += (springForce+dampeningForce+frictionalForce);
+        //pt[0].linear_force += (springForce+dampeningForce+frictionalForce);
+        pt[0].linear_force += (normalForce+frictionalForce);
     }
 }
 
@@ -124,6 +130,7 @@ __kernel void force_update(
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ prbp DEBUG_ARGV);
     
     linear_force[sort_indices[index]] = pt.linear_force; 
+    //linear_force[sort_indices[index]] += pt.linear_force; 
     //clf[sort_indices[index]] = pt.torque_force;
 }
 

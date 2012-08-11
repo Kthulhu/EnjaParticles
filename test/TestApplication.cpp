@@ -119,7 +119,6 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 
     windowWidth=w;
     windowHeight=h;
-    cout<<"width = "<<w<<" height = "<<h<<endl;
 	//renderVelocity=true;
 	renderVelocity=false;
 	paused=false;
@@ -156,7 +155,28 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 	glBindBuffer(GL_ARRAY_BUFFER,skyboxTexVBO);
 	glBufferData(GL_ARRAY_BUFFER,24*3*sizeof(float),skyBoxTex, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER,0);
-    glGenFramebuffersEXT(1,&sceneFBO);
+    
+
+
+	light = new Light();
+        light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
+        light->ambient.x=0.2;light->ambient.y=0.2;light->ambient.z=0.2;
+        light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
+        //light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
+        //light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
+        light->pos.x=10.0f; light->pos.y=15.0f; light->pos.z=-10.0f;
+
+	environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
+
+	    cout<<"width = "<<width()<<" height = "<<height()<<endl;
+	lib = new ShaderLibrary();
+        lib->initializeShaders(binaryPath+"/shaders");
+        effects["Points"]=new ParticleEffect(lib,width(),height());
+        effects["Screen Space"]=new SSEffect(lib,width(),height());
+        //FIXME: Need to find an elegant solution to handling mesh effects
+        meshRenderer= new MeshEffect(lib,width(),height());
+        effects["Mesh Renderer"]= meshRenderer;
+        glGenFramebuffersEXT(1,&sceneFBO);
     glEnable(GL_TEXTURE_2D);
     createSceneTextures();
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,sceneFBO);
@@ -169,26 +189,6 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     glDisable(GL_TEXTURE_2D);
 
 	
-
-
-	light = new Light();
-        light->diffuse.x=1.0;light->diffuse.y=1.0;light->diffuse.z=1.0;
-        light->ambient.x=0.2;light->ambient.y=0.2;light->ambient.z=0.2;
-        light->specular.x=1.0;light->specular.y=1.0;light->specular.z=1.0;
-        //light->pos.x=-0.5f; light->pos.y=1.5f; light->pos.z=5.0f;
-        //light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
-        light->pos.x=5.0f; light->pos.y=10.0f; light->pos.z=-5.0f;
-
-	environTex = RenderUtils::loadCubemapTexture(binaryPath+"/cubemaps/");
-
-	lib = new ShaderLibrary();
-        lib->initializeShaders(binaryPath+"/shaders");
-        effects["Points"]=new ParticleEffect(lib,width(),height());
-        effects["Screen Space"]=new SSEffect(lib,width(),height());
-        //FIXME: Need to find an elegant solution to handling mesh effects
-        meshRenderer= new MeshEffect(lib,width(),height());
-        effects["Mesh Renderer"]= meshRenderer;
-
 	//FIXME: Need to find an elegant solution to handling mesh effects
 	meshRenderer= (MeshEffect*)effects["Mesh Renderer"];//new MeshEffect(lib,width(),height(),20.0f,false);
     }
@@ -205,7 +205,6 @@ void TestApplication::initScenes()
 void TestApplication::initGL()
     {
 
-	glClearColor(0.6f,0.6f,0.6f,1.0f);
 	for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
         glUseProgram(i->second.getProgram());
@@ -303,6 +302,7 @@ void TestApplication::ResizeWindowCallback(int width, int height)
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,sceneTex[1],0);
 #endif
 
+	glClearColor(0.6f,0.6f,0.6f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -359,11 +359,11 @@ void TestApplication::ResizeWindowCallback(int width, int height)
 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,sceneFBO);
 	glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
-        glDrawBuffer(GL_BACK);
+        glDrawBuffer(GL_BACK_LEFT);
 
         glBlitFramebufferEXT( 0, 0, width() , height(),
                                           0, 0, width() , height(),
-                                          GL_COLOR_BUFFER_BIT, GL_LINEAR );
+                                          GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT, GL_LINEAR );
 #endif
 
         glPopAttrib();

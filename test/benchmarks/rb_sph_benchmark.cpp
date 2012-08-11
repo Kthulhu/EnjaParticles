@@ -46,7 +46,7 @@
 #endif
 
 using namespace std;
-#define NUM 20 
+#define NUM 10 
 //#define SCALE 0.4
 namespace rtps
 {
@@ -60,15 +60,24 @@ namespace rtps
 	iterations=0;
 
 	systemRenderType["rb1"]="Mesh Renderer";
+	//systemRenderType["water"]="Screen Space";
 	unsigned int nn = systems["water"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles");
 	float4 col1 = float4(0.05f, 0.15f, .8f, 0.1f);
-	systems["water"]->addBox(nn, gridMin+float4(1.5f,1.5f,1.5f,1.0f), gridMax-float4(1.5f,0.5*gridMax.y+1.5f,1.5f,1.0f), false,col1);
+	systems["water"]->addBox(nn, gridMin+float4(2.5f,2.5f,2.5f,1.0f), gridMax-float4(2.5f,0.25*gridMax.y+2.5f,2.5f,1.0f), false,col1);
 
+	view->move(-5.0f,5.0f,-15.0f);
+	view->rotate(30.0f,0.0f);
+
+    }
+
+    void RBSPHBenchmark::dropRigidBodies()
+    {
 	dout<<"rb spacing "<<systems["rb1"]->getSpacing()<<endl;
 	std::string name = dynamicMeshes.begin()->first;
 	float scale = pShapes[name]->getMaxDim()-pShapes[name]->getMinDim();
 	float4 start = gridMin+float4(2.0f, 10.0f, 2.0f, 0.0f);
 	float4 distance = gridMax-start;
+	distance.y+=50.0f;
 	float m = std::min(distance.x,distance.y);
 	m = std::min(m,distance.z);
 	//scale =(m/NUM)/scale;
@@ -87,8 +96,9 @@ namespace rtps
 	pShapes[name]=shape;
 	dynamicMeshes[name]=scaledMesh;
 	currentMesh = name;
-	float delta = shape->getMaxDim()-shape->getMinDim();
+	float delta = (shape->getMaxDim()-shape->getMinDim())*1.2;
 	float4 vel = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	unsigned int count = 0;
 	for(int i = 0; i<NUM; i++)
 	{
 	    pos.y=start.y;
@@ -98,19 +108,24 @@ namespace rtps
 	        for(int k = 0; k<NUM; k++)
 	        {
 		    addRigidBody("rb1",name,pos,vel,mass);
+		    count++;
 		    pos.z+=delta;
 		    if(pos.z>gridMax.z)
 		    {
 			dout<<"z num = "<<k<<endl;
 			break;
 		    }
+		    else if(systems["rb1"]->getNum()>(unsigned int)(systems["rb1"]->getSettings()->GetSettingAs<unsigned int>("max_num_particles")*0.98))
+		    {
+			i=NUM;j=NUM;k=NUM;break;
+		    }
 	        }
 		pos.y+=delta;
-	        if(pos.y>gridMax.y)
-		{
-		   dout<<"y num = "<<j<<endl;
-		   break;
-		}
+	        //if(pos.y>gridMax.y+50.0f)
+		//{
+		//   dout<<"y num = "<<j<<endl;
+		//   break;
+		//}
             }
             pos.x+=delta;
 	    if(pos.x>gridMax.x)
@@ -119,7 +134,7 @@ namespace rtps
 	       break;
 	    }
 	}
-	view->move(-5.0f,0.0f,-15.0f);
+	dout<<"count = "<<count<<endl;
 
     }
     RBSPHBenchmark::~RBSPHBenchmark()
@@ -176,5 +191,9 @@ namespace rtps
 		cout<<"Max iterations reached "<<endl;
 		exit(0);
 	}
+    if(iterations==300)// || iterations==400|| iterations==500|| iterations==600)
+    {
+	dropRigidBodies();
+    }
     }
 };

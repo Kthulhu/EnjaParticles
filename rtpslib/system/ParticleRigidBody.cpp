@@ -347,7 +347,7 @@ namespace rtps
     void ParticleRigidBody::prepareSorted()
     {
         vector<float4> f4Vec(max_num);
-        vector<float4> fstaticVec(max_num/2);
+        vector<float4> fstaticVec(max_num);
         //FIXME: We are assuming that the maximum number of rigid bodies are max_num/16
         //That means that we assume that each rigidbody is represented by no less than 16 particles
         rbParticleIndex.resize(max_num/16);
@@ -596,9 +596,11 @@ namespace rtps
         //update all the members of the prbp struct
         prbp.smoothing_distance = settings->GetSettingAs<float>("smoothing_distance");
         prbp.simulation_scale = settings->GetSettingAs<float>("simulation_scale");
-        settings->SetSetting("spring",(settings->GetSettingAs<float>("penetration_factor")*settings->GetSettingAs<float>("velocity_limit"))/(settings->GetSettingAs<float>("smoothing_distance")*settings->GetSettingAs<float>("smoothing_distance")));
+        settings->SetSetting("spring",(settings->GetSettingAs<float>("penetration_factor")*settings->GetSettingAs<float>("velocity_limit"))/(4.*settings->GetSettingAs<float>("smoothing_distance")*settings->GetSettingAs<float>("smoothing_distance")));
         float ln_res =log(settings->GetSettingAs<float>("restitution"));
-        settings->SetSetting("dampening",(2*-(ln_res))/sqrt((ln_res*ln_res)+(M_PI*M_PI)));
+        settings->SetSetting("dampening",(-2.*(ln_res))/sqrt((ln_res*ln_res)+(M_PI*M_PI)));
+	dout<<"spring = "<<settings->GetSettingAs<float>("spring")<<endl;
+	dout<<"dampening = "<<settings->GetSettingAs<float>("dampening")<<endl;
 
         //dynamic params
         prbp.gravity = settings->GetSettingAs<float4>("gravity"); // -9.8 m/sec^2
