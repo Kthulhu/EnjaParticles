@@ -146,14 +146,14 @@ void FLOCK::updateGPU()
     //sub-intervals
     int sub_intervals = settings->GetSettingAs<float>("sub_intervals");  //should be a setting
 
-    for (int i=0; i < sub_intervals; i++)
-    {
+    //for (int i=0; i < sub_intervals; i++)
+    //{
         sprayHoses();
-    }
+    //}
 
 
-    for(int i=0; i < sub_intervals; i++)
-    {
+    //for(int i=0; i < sub_intervals; i++)
+    //{
         hash_and_sort();
 
         timers["cellindices"]->start();
@@ -235,7 +235,7 @@ void FLOCK::updateGPU()
         timers["rules"]->stop();
 
 
-    }
+    //}
 
 
     timers["update"]->stop();

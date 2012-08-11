@@ -874,17 +874,33 @@ void GLWidget::update()
     if(!paused)
     {
         glFinish();
+
+
+        unsigned int max_subintervals=0;
         for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
             i->second->acquireGLBuffers();
-            i->second->update();
-            i->second->interact();
+            max_subintervals = std::max(max_subintervals,i->second->getSettings()->GetSettingAs<unsigned int>("sub_intervals","1"));
         }
-
+        for(unsigned int sub_interval=0;sub_interval<max_subintervals;sub_interval++)
+        {
+            for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            {
+                if(sub_interval>=i->second->getSettings()->GetSettingAs<unsigned int>("sub_intervals","1"))
+                    continue;
+                i->second->update();
+                i->second->interact();
+            }
+            for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+            {
+                if(sub_interval>=i->second->getSettings()->GetSettingAs<unsigned int>("sub_intervals","1"))
+                    continue;
+                i->second->integrate();
+                i->second->postProcess();
+            }
+        }
         for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
         {
-            i->second->integrate();
-            i->second->postProcess();
             if(i->second->getSettings()->GetSettingAs<bool>("render_streamlines","0"))
             {
                 streamlineRenderer->addStreamLine(i->second->getPositionBuffer(),i->second->getVelocityBuffer(),i->second->getNum());

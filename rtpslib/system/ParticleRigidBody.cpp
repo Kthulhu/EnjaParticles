@@ -126,8 +126,8 @@ namespace rtps
         //should just do try/except?
 
         timers["update"]->start();
-        for (int i=0; i < sub_intervals; i++)
-        {
+        //for (int i=0; i < sub_intervals; i++)
+        //{
             hash_and_sort();
 
 			//------------------
@@ -254,7 +254,7 @@ namespace rtps
                     cl_mass_s,
                     cl_force_s,
                     prbp.simulation_scale);
-        }
+        //}
 
 
     }

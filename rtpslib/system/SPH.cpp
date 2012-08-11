@@ -156,18 +156,18 @@ namespace rtps
         //settings->printSettings();
 
         //int sub_intervals = 3;  //should be a setting
-        int sub_intervals =  settings->GetSettingAs<float>("sub_intervals");
+        //int sub_intervals =  settings->GetSettingAs<float>("sub_intervals");
         //this should go in the loop but avoiding acquiring and releasing each sub
         //interval for all the other calls.
         //this does end up acquire/release everytime sprayHoses calls pushparticles
         //should just do try/except?
-        for (int i=0; i < sub_intervals; i++)
-        {
+        //for (int i=0; i < sub_intervals; i++)
+        //{
             sprayHoses();
-        }
+        //}
 
-        for (int i=0; i < sub_intervals; i++)
-        {
+        //for (int i=0; i < sub_intervals; i++)
+        //{
             //if(num >0) printf("before hash and sort\n");
             hash_and_sort();
 
