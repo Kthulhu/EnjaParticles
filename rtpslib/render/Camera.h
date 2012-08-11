@@ -90,8 +90,8 @@ protected:
     void rotateX(float radiansX);
     void rotateY(float radiansY);
     void move(float3 delta);
-    void updateProjectionMatrix();
-    void updateViewMatrix();
+    virtual void updateProjectionMatrix();
+    virtual void updateViewMatrix();
     void setProjectionMatrixPerspective(double l, double r, double b, double t, double n,
                                          double f);
     void setProjectionMatrixOrthographic(double l, double r, double b, double t, double n,

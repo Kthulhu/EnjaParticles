@@ -140,6 +140,7 @@ namespace rtps
                 string curReadBuffer;
                 for(unsigned int i = 0; i<numberIterations; i++)
                 {
+                    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                     RenderUtils::fullscreenQuad();
 
                     if(i%2==0)
@@ -154,7 +155,6 @@ namespace rtps
                     }
                     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
                     glBindTexture(GL_TEXTURE_2D,m_glFramebufferTexs[curReadBuffer]);
-                    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                     //glFramebufferTexture2DEXT(GL_DRAW_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,m_glFramebufferTexs[currentDepthBuffer],0);
                 }
                 //currentDepthBuffer=curReadBuffer;

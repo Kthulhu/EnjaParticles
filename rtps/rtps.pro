@@ -39,7 +39,8 @@ HEADERS += \
     ../test/rtpsparametergroup.h \
     ../test/rigidbodyparametergroup.h \
     ../test/flockingparametergroup.h \
-    ../rtpslib/system/common/Hose.h
+    ../rtpslib/system/common/Hose.h \
+    ../rtpslib/render/StereoCamera.h
 
 SOURCES += \
     ../test/sphparametergroup.cpp \
@@ -78,7 +79,8 @@ SOURCES += \
     ../test/rtpsparametergroup.cpp \
     ../test/rigidbodyparametergroup.cpp \
     ../test/flockingparametergroup.cpp \
-    ../rtpslib/system/common/Hose.cpp
+    ../rtpslib/system/common/Hose.cpp \
+    ../rtpslib/render/StereoCamera.cpp
 
 FORMS += \
     ../test/mainwindow.ui

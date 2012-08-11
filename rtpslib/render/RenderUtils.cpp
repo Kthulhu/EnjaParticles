@@ -80,6 +80,7 @@ namespace rtps
         glGetTexLevelParameteriv(GL_TEXTURE_2D , 0 , GL_TEXTURE_WIDTH , &width);
         glGetTexLevelParameteriv(GL_TEXTURE_2D , 0 , GL_TEXTURE_HEIGHT , &height);
         glGetTexLevelParameteriv(GL_TEXTURE_2D , 0 , GL_TEXTURE_INTERNAL_FORMAT, &fmt);
+        int components=4;
         if(width==0||height==0)
         {
             cout<<"invalid height and width!"<<endl;
@@ -87,22 +88,36 @@ namespace rtps
             glPopAttrib();
             return -1;
         }
-        GLubyte* image = new GLubyte[width*height*4];
+        GLubyte* image = NULL;
         //dout<<"width = "<<width<<"height = "<<height<<endl;
         if(fmt==GL_DEPTH_COMPONENT32||fmt==GL_DEPTH_COMPONENT24 ||fmt==GL_DEPTH_COMPONENT)
         {
             //dout<<"Here"<<endl;
             GLfloat* fimg = new GLfloat[width*height];
             glGetTexImage(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT,GL_FLOAT,fimg);
+            image =  new GLubyte[width*height*components];
             convertDepthToRGB(fimg,width*height,image);
             dout<<"Here"<<endl;
             delete[] fimg;
         }
+        else if(fmt==GL_RGB32F)
+        {
+            components=3;
+            image =  new GLubyte[width*height*components];
+            GLfloat* fimg = new GLfloat[width*height*components];
+            glGetTexImage(GL_TEXTURE_2D,0,fmt,GL_FLOAT,image);
+            for(int i = 0; i < width*height*components;i++)
+            {
+                image[i]=(unsigned char)(fimg[i]*255);
+            }
+            delete[] fimg;
+        }
         else
         {
+            image =  new GLubyte[width*height*components];
             glGetTexImage(GL_TEXTURE_2D,0,fmt,GL_UNSIGNED_BYTE,image);
         }
-        if (!stbi_write_png(filename.c_str(),width,height,4,(void*)image,0))
+        if (!stbi_write_png(filename.c_str(),width,height,components,(void*)image,0))
         {
             cout<<"failed to write image "<<filename<<endl;
             //glDisable(GL_TEXTURE_2D);
