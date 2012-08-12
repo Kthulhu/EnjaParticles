@@ -133,7 +133,7 @@ namespace rtps
         //glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
         //GLuint program = m_shaderLibrary->shaders["sphereShader"].getProgram();
-	dout<<"num = "<<num<<" point_radius = "<<settings->GetSettingAs<float>("point_radius","0.75")<<" scale = "<<scale<<endl;
+	//dout<<"num = "<<num<<" point_radius = "<<settings->GetSettingAs<float>("point_radius","0.75")<<" scale = "<<scale<<endl;
         glUseProgram(program);
         glUniform1f( glGetUniformLocation(program, "pointRadius"), settings->GetSettingAs<float>("point_radius","0.75")*scale);
 

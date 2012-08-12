@@ -69,6 +69,8 @@ install (FILES ../demo_mesh_scene.obj DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (FILES ../demo_mesh_scene.mtl DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES ../demo_mesh_box_scene.obj DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES ../demo_mesh_box_scene.mtl DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+#install (FILES ../demo_mesh_sphere_scene.obj DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+#install (FILES ../demo_mesh_sphere_scene.mtl DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (FILES ../demo_scene_plane.obj DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (FILES ../demo_scene_plane.mtl DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 

@@ -46,7 +46,7 @@
 #endif
 
 using namespace std;
-#define NUM 10 
+#define NUM 15 
 //#define SCALE 0.4
 namespace rtps
 {
@@ -81,7 +81,7 @@ namespace rtps
 	float m = std::min(distance.x,distance.y);
 	m = std::min(m,distance.z);
 	//scale =(m/NUM)/scale;
-	scale = .7;
+	scale = 1.5f; 
 	float4 pos = start;
 	//dout<<"origshape minDim = "<<pShapes[name]->getMinDim()<<" origshape maxDim = "<<pShapes[name]->getMaxDim()<<endl;
 	ParticleShape* shape = createParticleShape("rb1",dynamicMeshes[name],scale);
@@ -96,7 +96,7 @@ namespace rtps
 	pShapes[name]=shape;
 	dynamicMeshes[name]=scaledMesh;
 	currentMesh = name;
-	float delta = (shape->getMaxDim()-shape->getMinDim())*1.2;
+	float delta = (shape->getMaxDim()-shape->getMinDim())*1.5;
 	float4 vel = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	unsigned int count = 0;
 	for(int i = 0; i<NUM; i++)
@@ -145,6 +145,7 @@ namespace rtps
     {
 	loadScene(binaryPath+"/demo_scene_big_box.obj");
 	loadMeshScene(binaryPath+"/demo_mesh_scene.obj");
+	//loadMeshScene(binaryPath+"/demo_mesh_sphere_scene.obj");
     }
    void RBSPHBenchmark::MouseCallback(int button, int state, int x, int y)
     {
