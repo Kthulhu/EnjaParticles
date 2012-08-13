@@ -102,13 +102,17 @@ namespace rtps
         }
         else if(fmt==GL_RGB32F)
         {
-            components=3;
+            //components=3;
             image =  new GLubyte[width*height*components];
-            GLfloat* fimg = new GLfloat[width*height*components];
-            glGetTexImage(GL_TEXTURE_2D,0,fmt,GL_FLOAT,image);
-            for(int i = 0; i < width*height*components;i++)
+            GLfloat* fimg = new GLfloat[width*height*3];
+            glGetTexImage(GL_TEXTURE_2D,0,fmt,GL_FLOAT,fimg);
+            for(int i = 0; i < width*height;i++)
             {
-                image[i]=(unsigned char)(fimg[i]*255);
+
+                image[i*4]=(unsigned char)(fimg[i*3]*255);
+                image[i*4+1]=(unsigned char)(fimg[i*3+1]*255);
+                image[i*4+2]=(unsigned char)(fimg[i*3+2]*255);
+                image[i*4+3]=255;
             }
             delete[] fimg;
         }

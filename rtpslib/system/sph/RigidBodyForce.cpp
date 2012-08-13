@@ -53,6 +53,7 @@ namespace rtps
     //----------------------------------------------------------------------
 
     void RigidBodyForce::execute(int num,
+                    Buffer<float>& density,
                     Buffer<float4>& pos_s,
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& force_s,
@@ -75,6 +76,7 @@ namespace rtps
                     Buffer<int4>& cli_debug)
     {
         int iarg = 0;
+        k_rigidbody_force.setArg(iarg++, density.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, pos_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, veleval_s.getDevicePtr());
         k_rigidbody_force.setArg(iarg++, force_s.getDevicePtr());
@@ -144,6 +146,7 @@ namespace rtps
 #endif
     }
     void RigidBodyForce::execute(int num,
+                    Buffer<float>& density,
                     Buffer<float4>& pos_s,
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& force_s,
@@ -164,6 +167,7 @@ namespace rtps
                     Buffer<int4>& cli_debug)
     {
         int iarg = 0;
+        k_staticrigidbody_force.setArg(iarg++, density.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, pos_s.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, veleval_s.getDevicePtr());
         k_staticrigidbody_force.setArg(iarg++, force_s.getDevicePtr());

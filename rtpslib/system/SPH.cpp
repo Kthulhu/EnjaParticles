@@ -53,7 +53,7 @@ namespace rtps
         setupTimers();
 
         cl_sphp = Buffer<SPHParams>(cli, sphp);
-		
+
         //dout<<"Here"<<endl;
         calculate();
         updateParams();
@@ -615,6 +615,7 @@ namespace rtps
                 //Need to come up with a good way to interact.
                 timers["force_rigidbody"]->start();
                 forceRB.execute(   num,
+                    cl_density_s,
                     //cl_vars_sorted,
                     cl_position_s,
                     cl_veleval_s,
@@ -640,6 +641,7 @@ namespace rtps
                 timers["force_rigidbody_static"]->start();
                 ParticleRigidBody* prb = (ParticleRigidBody*)interactionSystem[j];
                 forceRB.execute(   num,
+                    cl_density_s,
                     cl_position_s,
                     cl_veleval_s,
                     cl_force_s,

@@ -37,6 +37,7 @@ namespace rtps
             RigidBodyForce() { cli = NULL; timer = NULL; };
             RigidBodyForce(std::string path, CL* cli, EB::Timer* timer);
             void execute(int num,
+                    Buffer<float>& density,
                     Buffer<float4>& pos_s,
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& force_s,
@@ -58,6 +59,7 @@ namespace rtps
                     Buffer<float4>& clf_debug,
                     Buffer<int4>& cli_debug);
             void execute(int num,
+                    Buffer<float>& density,
                     Buffer<float4>& pos_s,
                     Buffer<float4>& veleval_s,
                     Buffer<float4>& force_s,

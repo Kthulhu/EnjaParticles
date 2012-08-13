@@ -28,8 +28,8 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j,float16 rbParams
-#define ARGV pos, vel, force, mass, pos_j,rbParams
+#define ARGS __global float* density,  __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j,float16 rbParams
+#define ARGV density, pos, vel, force, mass, pos_j,rbParams
 
 
 /*----------------------------------------------------------------------*/
@@ -62,19 +62,14 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
     // is this particle within cutoff?
     if (rlen <= 2* sphp[0].smoothing_distance)
     {
-
-        //iej is 0 when we are looking at same particle
-        //we allow calculations and just multiply force and xsph
-        //by iej to avoid branching
-        int iej = index_i != index_j;
-
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, sphp[0].EPSILON);
         float4 norm = r/rlen;
         //need to have a better way of handling stiffness..
-        float massnorm=((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
+        //float massnorm=((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
+        float massnorm=((sphp[0].mass*sphp[0].mass)/(sphp[0].mass+sphp[0].mass));
         //float stiff = rbParams.s0*massnorm;
-        float stiff = rbParams.s0*mass[index_i];
+        float stiff = rbParams.s0*sphp[0].mass;
         float4 springForce = -stiff*(2.*sphp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel = -vel[index_i];
@@ -85,7 +80,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         float4 normalForce=(springForce+dampeningForce); 
         
         //Fixme: we need to stop the particles tangential velocity. How should I accomplish this?
-        float4 tanForce = -(mass[index_i]*tanVel);
+        //float4 tanForce = -(mass[index_i]*tanVel);
         /*
         relvel.w=0.0;
         normalForce.w=0.0;
@@ -96,6 +91,12 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         else
             frictionalForce = -rbParams.s4*tangVel;
         pt[0].force += (normalForce+frictionalForce);*/
+
+        float dWijlapl = Wvisc_lapl(rlen, sphp[0].smoothing_distance, sphp);
+        //float4 visc = (tanVel) * dWijlapl * 1.0f;
+        float4 visc = (relvel) * dWijlapl * 1.0f;
+        pt[0].viscosity+= visc;//(float)iej;
+
         pt[0].force+=normalForce;
 	//pt[0].force+=normalForce-tanForce;
     }
@@ -138,6 +139,8 @@ __kernel void force_update(
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     force[index] += pt.force/sphp[0].mass;
+    //for the viscosity we square the density under the assumption that the static boundary has equal density as the surrounding fluid.
+    force[index] -= sphp[0].mass * (1.0/(density[index]*density[index]))*(sphp[0].viscosity * sphp[0].wvisc_dd_coef * pt.viscosity); 
     clf[index].xyz = pt.force.xyz;
 }
 

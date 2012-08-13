@@ -28,8 +28,8 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j, float16 rbParams
-#define ARGV pos, vel, force, mass, pos_j, vel_j, mass_j, rbParams
+#define ARGS __global float* density, __global float4* pos, __global float4* vel, __global float4* force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j, float16 rbParams
+#define ARGV density, pos, vel, force, mass, pos_j, vel_j, mass_j, rbParams
 
 /*----------------------------------------------------------------------*/
 
@@ -135,34 +135,24 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         // avoid divide by 0 in Wspiky_dr
         rlen = max(rlen, sphp[0].EPSILON);
         float4 norm = r/rlen;
-        float massnorm=((mass[index_i]*mass[index_j])/(mass[index_i]+mass[index_j]));
+        float massnorm=((sphp[0].mass*mass[index_j])/(sphp[0].mass+mass[index_j]));
         //float stiff=(rbParams.s0*massnorm);
-        float stiff=(rbParams.s0*mass[index_i]);
+        float stiff=(rbParams.s0*mass[index_j]);
         float4 springForce = -stiff*(2.*sphp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel =  vel_j[index_j]-vel[index_i];
 
         float4 normVel = dot(relvel,norm)*norm;
-        float4 tangVel=relvel-normVel;
+        float4 tanVel = relvel-normVel;
         float4 dampeningForce = rbParams.s1*sqrt(stiff*massnorm)*(normVel);
         float4 normalForce=(springForce+dampeningForce); 
-        //vel[index_i]=dot(vel[index_i],norm)*norm+vel_j[index_j]-dot(vel_j[index_j],norm)*norm;
-        
-        //float4 tanVel = vel[index_i]+normVel;
-        //float4 tanForce = -(mass[index_i]*tanVel)/0.003;
         relvel.w=0.0;
         normalForce.w=0.0;
-        //Use Gram Schmidt process to find tangential velocity to the particle
-        float4 frictionalForce=0.0f;
-        //if(length(tangVel)>rbParams.s2)
-        //    frictionalForce =-rbParams.s3*length(normalForce)*(normalize(tangVel));
-        //    frictionalForce = -rbParams.s3*length(normalForce)*(normalize(tangVel));
-        //else
-        //    frictionalForce = -rbParams.s4*tangVel;
-        pt[0].force += (normalForce+frictionalForce);
-        //pt[0].vel
-        
-        //pt[0].force += normalForce;
+        float dWijlapl = Wvisc_lapl(rlen, sphp[0].smoothing_distance, sphp);
+        //should probably precompute density of rigid bodies.
+        float4 visc = (tanVel) * dWijlapl * (mass[index_j]*3.0f)/(4.0f*sphp[0].smoothing_distance*sphp[0].smoothing_distance*sphp[0].smoothing_distance*M_PI_F);
+        pt[0].viscosity+= visc;
+        pt[0].force += normalForce;
     }
 }
 
@@ -203,6 +193,7 @@ __kernel void force_update(
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     force[index] += pt.force/sphp[0].mass; 
+    //force[index] += sphp[0].mass * (1.0f/(density[index]))*(sphp[0].viscosity * sphp[0].wvisc_dd_coef * pt.viscosity); 
     clf[index].xyz = pt.force.xyz;
 }
 

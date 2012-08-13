@@ -40,7 +40,8 @@ HEADERS += \
     ../test/rigidbodyparametergroup.h \
     ../test/flockingparametergroup.h \
     ../rtpslib/system/common/Hose.h \
-    ../rtpslib/render/StereoCamera.h
+    ../rtpslib/render/StereoCamera.h \
+    ../rtpslib/render/util/stb_image_write.h
 
 SOURCES += \
     ../test/sphparametergroup.cpp \

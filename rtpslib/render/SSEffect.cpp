@@ -314,7 +314,6 @@ namespace rtps
 
 
         //dout<<"Here"<<endl;
-        //TODO: should add another shader for performing compositing
         if(material)
         {
             glUniform3fv(glGetUniformLocation(compositeProgram,"material.diffuse"),1,&material->diffuse.x);
