@@ -136,8 +136,10 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         rlen = max(rlen, sphp[0].EPSILON);
         float4 norm = r/rlen;
         float massnorm=((sphp[0].mass*mass[index_j])/(sphp[0].mass+mass[index_j]));
+        //float massnorm=((sphp[0].mass*sphp[0].mass)/(sphp[0].mass+sphp[0].mass));
         //float stiff=(rbParams.s0*massnorm);
-        float stiff=(rbParams.s0*mass[index_j]);
+        //float stiff=(rbParams.s0*mass[index_j]);
+        float stiff=(rbParams.s0*sphp[0].mass);
         float4 springForce = -stiff*(2.*sphp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel =  vel_j[index_j]-vel[index_i];
@@ -150,7 +152,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         normalForce.w=0.0;
         float dWijlapl = Wvisc_lapl(rlen, sphp[0].smoothing_distance, sphp);
         //should probably precompute density of rigid bodies.
-        float4 visc = (tanVel) * dWijlapl * (mass[index_j]*3.0f)/(4.0f*sphp[0].smoothing_distance*sphp[0].smoothing_distance*sphp[0].smoothing_distance*M_PI_F);
+        float4 visc = (tanVel) * dWijlapl;//(mass[index_j]*3.0f)/(4.0f*sphp[0].smoothing_distance*sphp[0].smoothing_distance*sphp[0].smoothing_distance*M_PI_F);
         pt[0].viscosity+= visc;
         pt[0].force += normalForce;
     }
@@ -193,7 +195,7 @@ __kernel void force_update(
     //IterateParticlesInNearbyCells(vars_sorted, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ sphp DEBUG_ARGV);
     force[index] += pt.force/sphp[0].mass; 
-    //force[index] += sphp[0].mass * (1.0f/(density[index]))*(sphp[0].viscosity * sphp[0].wvisc_dd_coef * pt.viscosity); 
+    force[index] += sphp[0].mass * (1.0f/(density[index]*density[index]))*(sphp[0].viscosity * sphp[0].wvisc_dd_coef * pt.viscosity); 
     clf[index].xyz = pt.force.xyz;
 }
 

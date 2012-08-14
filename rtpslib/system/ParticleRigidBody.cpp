@@ -596,6 +596,8 @@ namespace rtps
         //update all the members of the prbp struct
         prbp.smoothing_distance = settings->GetSettingAs<float>("smoothing_distance");
         prbp.simulation_scale = settings->GetSettingAs<float>("simulation_scale");
+        //4 in the denominator comes from the fact that the smoothing distance is the radius
+        //but the formula requires the diameter. 2^2 is 4...
         settings->SetSetting("spring",(settings->GetSettingAs<float>("penetration_factor")*settings->GetSettingAs<float>("velocity_limit"))/(4.*settings->GetSettingAs<float>("smoothing_distance")*settings->GetSettingAs<float>("smoothing_distance")));
         float ln_res =log(settings->GetSettingAs<float>("restitution"));
         settings->SetSetting("dampening",(-2.*(ln_res))/sqrt((ln_res*ln_res)+(M_PI*M_PI)));

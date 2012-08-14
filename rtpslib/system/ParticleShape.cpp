@@ -126,6 +126,9 @@ namespace rtps
         //float col[4];
         //glGetFloatv(GL_COLOR_CLEAR_VALUE,col);
         glClearColor(0.0f,0.0f,0.0f,1.0f);
+        //glEnable(GL_COLOR_LOGIC_OP);
+        //glLogicOp(GL_OR);
+        glDisable(GL_BLEND);
         glEnable(GL_POINT_SMOOTH);
         glEnable(GL_LINE_SMOOTH);
         glEnable(GL_MULTISAMPLE_EXT);
@@ -136,8 +139,9 @@ namespace rtps
         //int v[4];
         //glGetIntegerv(GL_VIEWPORT,v);
         glViewport(0,0,voxelResolution,voxelResolution);
-        glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , surfaceTexture, 0, 0 );
-        glClear(GL_COLOR_BUFFER_BIT);
+        //glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , surfaceTexture, 0, 0 );
+        glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT , volumeTexture, 0, 0 );
+        //glClear(GL_COLOR_BUFFER_BIT);
 
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
@@ -157,8 +161,9 @@ namespace rtps
         glColor4f(1.0f,1.0f,1.0f,1.0f);
         for(int i = 0;i<voxelResolution; i++)
         {
-            glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, surfaceTexture, 0, i );
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+            //glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, surfaceTexture, 0, i );
+            glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, volumeTexture, 0, i );
+            //glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
             // set a 2D orthographic projection
@@ -295,7 +300,7 @@ namespace rtps
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
         glPopAttrib();
         glPopClientAttrib();
-        voxelizeSurface(vbo,ibo,length);
+        //voxelizeSurface(vbo,ibo,length);
         //glEnable(GL_COLOR_LOGIC_OP);
         //glEnable(GL_BLEND);//GL_DRAW_BUFFER0);
         //glLogicOp(GL_OR);

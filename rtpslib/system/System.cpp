@@ -481,6 +481,9 @@ namespace rtps
     void System::addParticleShape(GLuint tex3d,float min,float max,float16 world,int voxelResolution,float4 velo, float4 color,float mass)
     {
 //        glFinish();
+        //TODO: move the particle vector creation to the particle shape class.
+        //This will significantly improve performance of adding a shape to the system.
+        //Currently we must loop through the entire 3D volume texture upon each insert!
         vector<float4> vec;
         glBindTexture(GL_TEXTURE_3D_EXT,tex3d);
         GLubyte* image = new GLubyte[voxelResolution*voxelResolution*voxelResolution*4];
