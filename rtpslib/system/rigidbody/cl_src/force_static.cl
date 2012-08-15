@@ -66,8 +66,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         rlen = max(rlen, prbp[0].EPSILON);
         float4 norm = r/rlen;
         float massnorm = ((mass[index_i]*mass[index_i])/(mass[index_i]+mass[index_i]));
-        //float stiff = (prbp[0].spring*massnorm);
-        float stiff = (prbp[0].spring*mass[index_i]);
+        float stiff = (prbp[0].spring*massnorm);
+        //float stiff = (prbp[0].spring*mass[index_i]);
         float4 springForce = -stiff*(2.*prbp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel = -vel[index_i];
@@ -85,10 +85,10 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         //Use Gram Schmidt process to find tangential velocity to the particle
         float4 frictionalForce=0.0f;
         if(length(tangVel)>prbp[0].friction_static_threshold)
-            frictionalForce = -prbp[0].friction_dynamic*length(normalForce)*(fast_normalize(tangVel));
+            frictionalForce = prbp[0].friction_dynamic*length(normalForce)*(fast_normalize(tangVel));
             //frictionalForce = -prbp[0].friction_dynamic*tangVel;
         else
-            frictionalForce = -prbp[0].friction_static*tangVel;
+            frictionalForce = prbp[0].friction_static*tangVel;
         
         //pt[0].linear_force += (springForce+dampeningForce+frictionalForce);
         pt[0].linear_force += (normalForce+frictionalForce);

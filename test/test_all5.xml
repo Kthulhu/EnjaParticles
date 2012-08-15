@@ -2,15 +2,15 @@
 <main>
     <system type="sph" name="water">
         <parameters type="system">
-            <param name="sub_intervals">4</param>
+            <param name="sub_intervals">5</param>
             <param name="domain_min" >0.0 0.0 0.0 0.0</param>
             <param name="domain_max" >10.0 10.0 10.0 0.0</param>
             <param name="rest_density" >1000.0</param>
             <!--<param name="max_num_particles" >4096</param>-->
             <!--<param name="max_num_particles" >8192</param>-->
             <!--<param name="max_num_particles" >16384</param>-->
-            <param name="max_num_particles" >32768</param>
-            <!--<param name="max_num_particles" >65536</param>-->
+            <!--<param name="max_num_particles" >32768</param>-->
+            <param name="max_num_particles" >65536</param>
             <!--<param name="max_num_particles" >131072</param>-->
             <!--<param name="max_num_particles" >262144</param>-->
             <!--<param name="max_num_particles" >524288</param>-->
@@ -35,14 +35,14 @@
     </system>
     <system type="rigidbody" name="rb1">
         <parameters type="system">
-            <param name="sub_intervals">4</param>
+            <param name="sub_intervals">5</param>
             <param name="domain_min" >0.0 0.0 0.0 0.0</param>
             <param name="domain_max" >10.0 10.0 10.0 0.0</param>
             <!--<param name="max_num_particles" >4096</param>-->
             <!--<param name="max_num_particles" >8192</param>-->
             <!--<param name="max_num_particles" >16384</param>-->
-            <param name="max_num_particles" >32768</param>
-            <!--<param name="max_num_particles" >65536</param>-->
+            <!--<param name="max_num_particles" >32768</param>-->
+            <param name="max_num_particles" >65536</param>
             <!--<param name="max_num_particles" >131072</param>-->
             <!--<param name="max_num_particles" >262144</param>-->
             <!--<param name="max_gravity_sources">5</param>-->
@@ -55,7 +55,7 @@
             <param name="friction_static" >0.00</param>
             <param name="friction_static_threshold" >0.0001</param>
             <param name="penetration_factor" >.01</param>
-            <param name="restitution" >1.0</param>
+            <param name="restitution" >.31</param>
             <!--<param name="integrator" >euler</param>-->
             <param name="integrator" >leapfrog</param>
             <param name="time_step" >0.003</param>

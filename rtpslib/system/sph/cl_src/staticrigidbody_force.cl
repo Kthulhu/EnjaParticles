@@ -74,6 +74,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 
         float4 relvel = -vel[index_i];
 
+	//norm = -norm;
         float4 normVel =dot(relvel,norm)*norm;
         float4 tanVel = relvel-normVel;
         float4 dampeningForce = rbParams.s1*sqrt(stiff*massnorm)*(normVel);
@@ -93,8 +94,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         pt[0].force += (normalForce+frictionalForce);*/
 
         float dWijlapl = Wvisc_lapl(rlen, sphp[0].smoothing_distance, sphp);
-        //float4 visc = (tanVel) * dWijlapl * 1.0f;
-        float4 visc = (relvel) * dWijlapl * 1.0f;
+        float4 visc = (tanVel) * dWijlapl * 1.0f;
+        //float4 visc = (relhel) * dWijlapl;// * 1.0f;
         pt[0].viscosity+= visc;//(float)iej;
 
         pt[0].force+=normalForce;

@@ -40,20 +40,20 @@ namespace rtps
      frictionDynamic = new FloatSlider(orientation,this);
      frictionDynamic->setObjectName("friction_dynamic");
      frictionDynamic->setTickPosition(QSlider::TicksBelow);
-     frictionDynamic->setTickInterval(5);
+     frictionDynamic->setTickInterval(10);
      frictionDynamic->setSingleStep(1);
-     frictionDynamic->setRange(50,150);
-     frictionDynamic->setValue(100);
-     frictionDynamic->setScale(6.0);
+     frictionDynamic->setRange(1,100);
+     frictionDynamic->setValue(15);
+     frictionDynamic->setScale(0.01);
 
      frictionStatic = new FloatSlider(orientation,this);
      frictionStatic->setObjectName("friction_static");
      frictionStatic->setTickPosition(QSlider::TicksBelow);
-     frictionStatic->setTickInterval(5);
+     frictionStatic->setTickInterval(10);
      frictionStatic->setSingleStep(1);
-     frictionStatic->setRange(50,150);
-     frictionStatic->setValue(100);
-     frictionStatic->setScale(6.0);
+     frictionDynamic->setRange(1,100);
+     frictionDynamic->setValue(15);
+     frictionDynamic->setScale(0.01);
 
      frictionStaticThreshold = new FloatSlider(orientation,this);
      frictionStaticThreshold->setObjectName("friction_static_threshold");
