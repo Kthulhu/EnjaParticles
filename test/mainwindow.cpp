@@ -21,7 +21,8 @@ namespace rtps
      //QGLFormat fmt(QGL::AlphaChannel|QGL::DeprecatedFunctions|QGL::SampleBuffers);
      //fmt.setProfile(QGLFormat::CompatibilityProfile);
      //QGLFormat fmt(QGL::AlphaChannel|QGL::SampleBuffers);
-     QGLFormat fmt(QGL::AlphaChannel);
+     //QGLFormat fmt(QGL::AlphaChannel);
+     QGLFormat fmt(QGL::AlphaChannel|QGL::SampleBuffers|QGL::StereoBuffers);
      fmt.setProfile(QGLFormat::CoreProfile);
      QGLContext* ctx = new QGLContext(fmt);
 

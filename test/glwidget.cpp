@@ -42,6 +42,7 @@
 #include "glwidget.h"
 #include "aiwrapper.h"
 #include "../rtpslib/render/util/stb_image_write.h"
+#include "../rtpslib/render/StereoCamera.h"
 
 #include <math.h>
 #include <sstream>
@@ -186,8 +187,10 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
      //not have a valid context otherwise.
      makeCurrent();
      glewInit();
+
+     
      //TODO: Add stereo camera
-     if(!view)
+     if(!view&&!format().stereo())
      {
         //view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,100.0,width(),height());
          view = new Camera(float3(5.0f,5.0f,15.0f),65.0,0.3,500.0,width(),height());
@@ -195,9 +198,13 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         //view = new Camera(float3(-105.0f,-105.0f,-105.0f),65.0f,0.3f,1000.0f,width(),height());
         //the models are all in different coordinate systems...
         //view->rotate(-90.f,0.0f);
-        view->setMoveSpeed(2.f);
-        view->setRotateSpeed(2.f);
      }
+     else if(!view&&format().stereo())
+     {
+         view = new StereoCamera(float3(5.0f,5.0f,15.0f),65.0,0.3,500.0,width(),height());
+     }
+     view->setMoveSpeed(2.f);
+     view->setRotateSpeed(2.f);
      if(skyboxVBO==0)
      {
      glGenBuffers(1,&skyboxVBO);
@@ -241,7 +248,6 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         effects["Mesh Renderer"]= meshRenderer;
         streamlineRenderer = NULL;
         //effects["Streamlines"]=streamlineRenderer;
-
     }
     glGenFramebuffersEXT(1,&sceneFBO);
     glEnable(GL_TEXTURE_2D);
@@ -353,7 +359,6 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-#if 1
         //renderSkyBox();
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE_ARB);
@@ -396,14 +401,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         //display static transparent objects
         display(true);
 #endif
-#else
-        meshRenderer->render(dynamicMeshs["dynamicShape1"],light);
-        glColor4f(0.1f,0.2f,0.4f,1.0f);
-        displayShape(pShapes["dynamicShape1"],float3(5.0f,3.f,1.0f),systems["water"]->getSpacing());
-        displayShape(pShapes["dynamicShape11"],float3(8.0f,3.f,1.0f),systems["water"]->getSpacing()/2.0f);
-        displayShape(pShapes["dynamicShape112"],float3(11.0f,3.f,1.0f),systems["water"]->getSpacing()/4.0f);
-        displayShape(pShapes["dynamicShape1123"],float3(14.0f,3.f,1.0f),systems["water"]->getSpacing()/8.0f);
-#endif
+
         //glDisable(GL_DEPTH_TEST);
         //glDisable(GL_MULTISAMPLE_ARB);
         glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,sceneFBO);
@@ -413,6 +411,54 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         glBlitFramebufferEXT( 0, 0, width() , height(),
                                           0, 0, width() , height(),
                                           GL_COLOR_BUFFER_BIT, GL_LINEAR );
+	if(stereoscopic)
+	{
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,sceneFBO);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,sceneTex[2],0);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_DEPTH_ATTACHMENT_EXT,GL_TEXTURE_2D,sceneTex[3],0);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+        //display static opaque objects
+        display(false);
+        for(map<QString,System*>::iterator i = systems.begin(); i!=systems.end(); i++)
+        {
+            RTPSSettings* settings = i->second->getSettings();
+            if(i->second->getSettings()->GetSettingAs<bool>("render_streamlines","0"))
+            {
+                streamlineRenderer->render();
+            }
+            if(settings->GetSettingAs<bool>("render_velocity","0"))
+            {
+                effects[systemRenderType[i->first]]->renderVector(i->second->getPosVBO(),i->second->getVelocityVBO(),i->second->getNum(),settings->GetSettingAs<float>("velocity_scale","1.0"));
+            }
+            if(systemRenderType[i->first]!="Mesh Renderer")
+            {
+                effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[0],sceneTex[1], sceneFBO);
+            }
+            else
+            {
+                ParticleRigidBody* rbsys = reinterpret_cast<ParticleRigidBody*>(systems[i->first]);
+                if(rbsys)
+                {
+                    meshRenderer->renderInstanced(dynamicMeshes[currentMesh],rbsys->getComPosVBO(),rbsys->getComRotationVBO(),rbsys->getNum(),light);
+                }
+            }
+        }
+        //display static transparent objects
+        display(true);
+
+	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT,sceneFBO);
+        glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT,0);
+        glDrawBuffer(GL_BACK_RIGHT);
+
+        glBlitFramebufferEXT( 0, 0, width() , height(),
+                                          0, 0, width() , height(),
+                                          GL_COLOR_BUFFER_BIT, GL_LINEAR );
+
+	}
         glPopAttrib();
         glPopClientAttrib();
         if(renderMovie)

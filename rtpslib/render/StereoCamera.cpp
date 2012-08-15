@@ -19,7 +19,7 @@ void StereoCamera::updateProjectionMatrix()
         double tangent = tanf(fov *0.5 * PIOVER180); // tangent of half fovY
         double h = nearClip * tangent;         // half height of near plane
         double w = h * aspectRatio;          // half width of near plane
-        double frustumshift = (IOD/2)*nearZ/screenZ;
+        double frustumshift = (IOD/2.0)*nearZ/screenZ;
 
         //create right eye
         setProjectionMatrixPerspective(-w-frustumshift, w-frustumshift, -h, h, nearClip, farClip);

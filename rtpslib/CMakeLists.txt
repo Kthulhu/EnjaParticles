@@ -83,6 +83,7 @@ set (rtpslib_SOURCES
     #${rtpslib_SOURCE_DIR}/render/Sphere3DRender
     ${rtpslib_SOURCE_DIR}/render/Shader
     ${rtpslib_SOURCE_DIR}/render/Camera
+    ${rtpslib_SOURCE_DIR}/render/StereoCamera
     ${rtpslib_SOURCE_DIR}/render/Quaternion
     ${rtpslib_SOURCE_DIR}/render/MeshEffect
     ${rtpslib_SOURCE_DIR}/render/ParticleEffect
