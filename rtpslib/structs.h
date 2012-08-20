@@ -93,6 +93,16 @@ namespace rtps
             float3 c = float3(a.x-b.x, a.y-b.y, a.z-b.z);
             return c;
         }
+        friend float3 operator-(const float3& a,const float b)
+        {
+            float3 c = float3(a.x-b, a.y-b, a.z-b);
+            return c;
+        }
+	friend float3 operator+(const float3& a,const float b)
+        {
+            float3 c = float3(a.x-b, a.y-b, a.z-b);
+            return c;
+        }
         void print(const char* msg=0)
         {
             printf("%s: %f, %f, %f\n", msg, x, y, z);

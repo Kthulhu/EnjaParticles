@@ -181,6 +181,8 @@ namespace rtps
         //printf("extensions: \n %s \n", s);
         int t = devices.front().getInfo<CL_DEVICE_TYPE>();
         dout<<"device type: "<< t<<" GPU Type: " << CL_DEVICE_TYPE_GPU<<endl;
+	if(devices.size()>1)
+		devices.resize(1);
 
         //assume sharing for now, at some point we should implement a check
         //to make sure the devices can do context sharing
@@ -240,7 +242,8 @@ namespace rtps
         try
         {
             dout<<"cur context = "<<props[1]<<" cur display = "<<props[3]<<" platform = "<< props[5]<<endl;
-            context = cl::Context(CL_DEVICE_TYPE_GPU, props);
+            //context = cl::Context(CL_DEVICE_TYPE_GPU, props);
+            context = cl::Context(devices, props);
         }
         catch (cl::Error er)
         {

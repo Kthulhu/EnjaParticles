@@ -413,6 +413,11 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
                                           GL_COLOR_BUFFER_BIT, GL_LINEAR );
 	if(stereoscopic)
 	{
+
+	StereoCamera * rightCam = reinterpret_cast<StereoCamera*>(view);
+	if(rightCam)
+	{
+	cameraChanged(true);
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,sceneFBO);
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,GL_COLOR_ATTACHMENT0_EXT,GL_TEXTURE_2D,sceneTex[2],0);
@@ -458,6 +463,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
                                           0, 0, width() , height(),
                                           GL_COLOR_BUFFER_BIT, GL_LINEAR );
 
+	}
 	}
         glPopAttrib();
         glPopClientAttrib();
@@ -524,8 +530,10 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     updateGL();
 }
 
-void GLWidget::cameraChanged()
+void GLWidget::cameraChanged(bool right)
 {
+    if(!right)
+    {
     //update the view matricies for all shaders.
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
@@ -540,6 +548,25 @@ void GLWidget::cameraChanged()
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_TRUE,view->getInverseViewMatrix().m);
 
+    }
+    }
+    else
+    {
+    StereoCamera * rightCam = reinterpret_cast<StereoCamera*>(view);
+    //update the view matricies for all shaders.
+    for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
+    {
+        glUseProgram(i->second.getProgram());
+        GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,rightCam->getViewMatrixRight().m);
+        location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,rightCam->getInverseViewMatrixRight().m);
+        location = glGetUniformLocation(i->second.getProgram(),"normalMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_TRUE,rightCam->getInverseViewMatrixRight().m);
+    }
     }
     glUseProgram(0);
 }
@@ -1048,10 +1075,20 @@ void GLWidget::ResetSimulations()
 void GLWidget::createSceneTextures()
 {
     int num = 2;
+    if(sceneTex[0])
+    {
+        glDeleteTextures(num,sceneTex);
+        sceneTex[0]=0;
+        sceneTex[3]=0;
+    }
+    if(sceneTex[2])
+    {
+        glDeleteTextures(num,sceneTex+2);//delete stereo buffers if they exists
+        sceneTex[2]=0;
+        sceneTex[3]=0;
+    } 
     if(stereoscopic)
         num=4;
-    if(sceneTex[0])
-        glDeleteTextures(num,sceneTex);
     glPushAttrib(GL_ENABLE_BIT|GL_TEXTURE_BIT);
     glEnable(GL_TEXTURE_2D);
     glGenTextures(num, sceneTex);
@@ -1097,5 +1134,12 @@ void GLWidget::getSystemSettings(const QString& system)
 {
     RTPSSettings* settings = systems[system]->getSettings();
     emit initSystemPanel(QString(settings->GetSettingAs<std::string>("system").c_str()),settings);
+}
+void GLWidget::toggleStereo()
+{
+	stereoscopic=!stereoscopic;
+	//only toggle stereo if supported
+	stereoscopic&=format().stereo();
+	createSceneTextures();
 }
 }

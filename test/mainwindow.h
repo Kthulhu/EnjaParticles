@@ -43,6 +43,7 @@ void addRigidBody(const QString& mesh, float4 pos, float4 vel, float mass);
 
  private slots:
      void about();
+     void stereo();
      void loadParameters();
      void loadScene();
      void loadDynamicMeshes();
@@ -79,6 +80,7 @@ void addRigidBody(const QString& mesh, float4 pos, float4 vel, float mass);
      QAction *loadParametersAct;
      QAction *loadSceneAct;
      QAction *loadDynamicMeshesAct;
+     QAction *stereoAct;
      QAction *exitAct;
      QAction *aboutAct;
      QAction *aboutQtAct;

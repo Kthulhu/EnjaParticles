@@ -42,6 +42,7 @@ namespace rtps
     public:
         GLWidget(QGLContext* ctx,std::string bpath, QWidget *parent = 0);
         ~GLWidget();
+	void toggleStereo();
 
 
     public slots:
@@ -64,7 +65,7 @@ namespace rtps
 
     protected:
         void renderSkyBox();
-        void cameraChanged();
+        void cameraChanged(bool right = false);
         void initializeGL();
         void paintGL();
         void resizeGL(int width, int height);

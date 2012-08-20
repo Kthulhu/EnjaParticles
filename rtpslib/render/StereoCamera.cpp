@@ -19,7 +19,7 @@ void StereoCamera::updateProjectionMatrix()
         double tangent = tanf(fov *0.5 * PIOVER180); // tangent of half fovY
         double h = nearClip * tangent;         // half height of near plane
         double w = h * aspectRatio;          // half width of near plane
-        double frustumshift = (IOD/2.0)*nearZ/screenZ;
+        double frustumshift = (IOD/2.0)*nearClip/screenZ;
 
         //create right eye
         setProjectionMatrixPerspective(-w-frustumshift, w-frustumshift, -h, h, nearClip, farClip);
@@ -72,13 +72,13 @@ void StereoCamera::updateViewMatrix()
     //viewMatrix[13]=-left.y*pos.x-up.y*pos.y+forward.y*pos.z;
     //viewMatrix[14]=-left.z*pos.x-up.z*pos.y+forward.z*pos.z;
     float3 posLeft = pos;
-    posLeft-=IOD/2.;
+    posLeft= posLeft-IOD/2.;
     viewMatrix[12]=-viewMatrix[0]*posLeft.x-viewMatrix[4]*posLeft.y-viewMatrix[8]*posLeft.z;
     viewMatrix[13]=-viewMatrix[1]*posLeft.x-viewMatrix[5]*posLeft.y-viewMatrix[9]*posLeft.z;
     viewMatrix[14]=-viewMatrix[2]*posLeft.x-viewMatrix[6]*posLeft.y-viewMatrix[10]*posLeft.z;
 
     float3 posRight = pos;
-    posRight+=IOD/2.;
+    posRight= posRight + IOD/2.;
     viewMatrixRight[12]=-viewMatrixRight[0]*posRight.x-viewMatrixRight[4]*posRight.y-viewMatrixRight[8]*posRight.z;
     viewMatrixRight[13]=-viewMatrixRight[1]*posRight.x-viewMatrixRight[5]*posRight.y-viewMatrixRight[9]*posRight.z;
     viewMatrixRight[14]=-viewMatrixRight[2]*posRight.x-viewMatrixRight[6]*posRight.y-viewMatrixRight[10]*posRight.z;

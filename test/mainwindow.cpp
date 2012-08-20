@@ -149,6 +149,11 @@ namespace rtps
     loadDynamicMeshesAct->setShortcut(tr("Ctrl+M"));
     connect(loadDynamicMeshesAct, SIGNAL(triggered()),
                                 this, SLOT(loadDynamicMeshes()));
+
+    stereoAct = new QAction(tr("Stereo"),this);
+    connect(stereoAct, SIGNAL(triggered()),
+                                this, SLOT(stereo()));
+
     exitAct = new QAction(tr("E&xit"), this);
     exitAct->setShortcuts(QKeySequence::Quit);
     connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
@@ -180,6 +185,10 @@ namespace rtps
     if(!fileName.isEmpty())
         glWidget->loadMeshScene(fileName);
  }
+void MainWindow::stereo()
+{
+	glWidget->toggleStereo();
+}
 
  void MainWindow::createMenus()
  {
@@ -187,6 +196,7 @@ namespace rtps
      fileMenu->addAction(loadParametersAct);
      fileMenu->addAction(loadSceneAct);
      fileMenu->addAction(loadDynamicMeshesAct);
+     fileMenu->addAction(stereoAct);
      fileMenu->addSeparator();
      fileMenu->addAction(exitAct);
 
