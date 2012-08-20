@@ -411,7 +411,17 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
         glBlitFramebufferEXT( 0, 0, width() , height(),
                                           0, 0, width() , height(),
                                           GL_COLOR_BUFFER_BIT, GL_LINEAR );
-	if(stereoscopic)
+	if(format().stereo()&&!stereoscopic)
+	{
+		//if stereo buffers exists but stereo isn't enabled the copy left to right
+		glDrawBuffer(GL_BACK_RIGHT);
+
+		glBlitFramebufferEXT( 0, 0, width() , height(),
+                                          0, 0, width() , height(),
+                                          GL_COLOR_BUFFER_BIT, GL_LINEAR );
+
+	}
+	else if(stereoscopic)
 	{
 
 	StereoCamera * rightCam = reinterpret_cast<StereoCamera*>(view);
@@ -441,7 +451,7 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
             }
             if(systemRenderType[i->first]!="Mesh Renderer")
             {
-                effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[0],sceneTex[1], sceneFBO);
+                effects[systemRenderType[i->first]]->render(i->second->getPosVBO(),i->second->getColVBO(),i->second->getNum(),settings,light,NULL,i->second->getSpacing(),sceneTex[2],sceneTex[3], sceneFBO);
             }
             else
             {
@@ -538,7 +548,13 @@ void GLWidget::cameraChanged(bool right)
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
         glUseProgram(i->second.getProgram());
-        GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
+        GLint location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getProjectionMatrix().m);
+        location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,view->getInverseProjectionMatrix().m);
+        location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,view->getViewMatrix().m);
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
@@ -557,7 +573,13 @@ void GLWidget::cameraChanged(bool right)
     for(std::map<std::string,Shader>::iterator i = lib->shaders.begin(); i!=lib->shaders.end(); i++)
     {
         glUseProgram(i->second.getProgram());
-        GLint location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
+        GLint location = glGetUniformLocation(i->second.getProgram(),"projectionMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,rightCam->getProjectionMatrixRight().m);
+        location = glGetUniformLocation(i->second.getProgram(),"inverseProjectionMatrix");
+        if(location!=-1)
+            glUniformMatrix4fv(location,1,GL_FALSE,rightCam->getInverseProjectionMatrixRight().m);
+        location = glGetUniformLocation(i->second.getProgram(),"viewMatrix");
         if(location!=-1)
             glUniformMatrix4fv(location,1,GL_FALSE,rightCam->getViewMatrixRight().m);
         location = glGetUniformLocation(i->second.getProgram(),"inverseViewMatrix");
