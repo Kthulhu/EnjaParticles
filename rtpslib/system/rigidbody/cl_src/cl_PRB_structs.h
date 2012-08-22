@@ -45,6 +45,7 @@ typedef struct ParticleRigidBodyParams
     float dampening;
     //constants
     float EPSILON;
+    float velocity_limit;
 
     //CL parameters
     int num;

@@ -271,6 +271,7 @@ namespace rtps
                 cl_comTorqueForce,
                 cl_comVelEval,
                 cl_comAngVelEval,
+                cl_comAngMomentum,
                 cl_comPos,
                 cl_comRot,
                 cl_invInertialTensor,
@@ -293,6 +294,7 @@ namespace rtps
                 cl_comTorqueForce,
                 cl_comVel,
                 cl_comAngVel,
+                cl_comAngMomentum,
                 cl_comVelEval,
                 cl_comAngVelEval,
                 cl_comPos,
@@ -379,6 +381,7 @@ namespace rtps
         cl_comPos = Buffer<float4>(cli,comPosVBO);
         cl_comRot = Buffer<float4>(cli,comRotationVBO);
         cl_comVel = Buffer<float4>(cli,rbf4Vec);
+        cl_comAngMomentum = Buffer<float4>(cli,rbf4Vec);
         cl_comAngVel = Buffer<float4>(cli,rbf4Vec);
         cl_comVelEval = Buffer<float4>(cli,rbf4Vec);
         cl_comAngVelEval = Buffer<float4>(cli,rbf4Vec);
@@ -521,6 +524,7 @@ namespace rtps
             cl_mass_u.copyToDevice(mass_p, num);
             cl_comVel.copyToDevice(comVelEval, rbParticleIndex.size()-1);
             cl_comVelEval.copyToDevice(comVelEval, rbParticleIndex.size()-1);
+            cl_comAngMomentum.copyToDevice(angMomentum, rbParticleIndex.size()-1);
             cl_comAngVel.copyToDevice(comAngVelEval, rbParticleIndex.size()-1);
             cl_comAngVelEval.copyToDevice(comAngVelEval, rbParticleIndex.size()-1);
             cl_objectIndex_u.copyToDevice(index, num);
@@ -618,6 +622,7 @@ namespace rtps
 
         //constants
         prbp.EPSILON = settings->GetSettingAs<float>("epsilon");
+        prbp.velocity_limit=settings->GetSettingAs<float>("velocity_limit");
 
         //CL parameters
         prbp.num = settings->GetSettingAs<int>("num_particles");
@@ -687,7 +692,7 @@ namespace rtps
                     cl_comPos,
                     cl_comRot,
                     cl_comVelEval,
-                    cl_comAngVelEval,
+                    cl_comAngVel,
                     cl_prbp,
                     //debug params
                     clf_debug,

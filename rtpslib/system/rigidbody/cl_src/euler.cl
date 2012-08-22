@@ -36,6 +36,7 @@ __kernel void euler(
                    __global float4* comTorqueForce,
                    __global float4* comVel,
                    __global float4* comAngVel,
+                   __global float4* comAngMomentum,
                    __global float4* comPos,
                    __global float4* comRot, 
                    __global float16* inertialTensor, 
@@ -50,6 +51,7 @@ __kernel void euler(
     float4 p = comPos[i]*prbp[0].simulation_scale ;
     float4 v = comVel[i];
     float4 lf = comLinearForce[i];
+    float4 L = comAngMomentum[i]; 
     Quaternion q = comRot[i];
     float4 w = comAngVel[i];
     float4 tf = comTorqueForce[i];
@@ -60,9 +62,9 @@ __kernel void euler(
 
     float4 a = (lf/rbMass[i]);
     float speed = magnitude(a);
-    if (speed > 600.0f) //velocity limit, need to pass in as struct
+    if (speed > prbp[0].velocity_limit) //velocity limit, need to pass in as struct
     {
-        a *= 600.0f/speed;
+        a *= prbp[0].velocity_limit/speed;
     }
      
 
@@ -70,26 +72,18 @@ __kernel void euler(
     p += dt*v;
     p.xyz/=prbp[0].simulation_scale;
     p.w = 1.0f; //just in case
-//need to fix torque scaling.
-    float4 L = dt*(tf);
+    L += dt*(tf);
     L.w = 0.0f;
-    w.x+= dot(inertialTensor[i].s0123,L);
-    w.y+= dot(inertialTensor[i].s4567,L);
-    w.z+= dot(inertialTensor[i].s89ab,L);
+    w.x= dot(inertialTensor[i].s0123,L);
+    w.y= dot(inertialTensor[i].s4567,L);
+    w.z= dot(inertialTensor[i].s89ab,L);
     w.w = 0.0f;
-    //float wMag = length(w.xyz);
-    //float wDt= length(w.xyz*dt);
-    //prevents nan error from divide-by-zero
-    //float3 a = wMag==0.0?(float3)(0.0,0.0,0.0):(w.xyz/wMag)*sin(wDt/2.0);
-    //float4 dq = (float4)(cos(wDt/2.0),a.x,a.y,a.z);
     Quaternion dq = qtSet(w,sqrt(dot(dt*w,dt*w)));
     q = qtMul(dq,q);
-    //FIXME: quaternion multiplication is not the cross product. Need to fix this.
-    //q = cross(dq,q);
-    //q = q
     comVel[i] = v;
     comPos[i] = p;
     comAngVel[i] = w;
+    comAngMomentum[i] = L;
     comRot[i] = q;
     
     clf[i] = tf;

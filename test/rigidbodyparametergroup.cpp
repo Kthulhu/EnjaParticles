@@ -42,18 +42,18 @@ namespace rtps
      frictionDynamic->setTickPosition(QSlider::TicksBelow);
      frictionDynamic->setTickInterval(5);
      frictionDynamic->setSingleStep(1);
-     frictionDynamic->setRange(50,150);
+     frictionDynamic->setRange(1,1000);
      frictionDynamic->setValue(100);
-     frictionDynamic->setScale(6.0);
+     frictionDynamic->setScale(0.001);
 
      frictionStatic = new FloatSlider(orientation,this);
      frictionStatic->setObjectName("friction_static");
      frictionStatic->setTickPosition(QSlider::TicksBelow);
      frictionStatic->setTickInterval(5);
      frictionStatic->setSingleStep(1);
-     frictionStatic->setRange(50,150);
+     frictionStatic->setRange(1,1000);
      frictionStatic->setValue(100);
-     frictionStatic->setScale(6.0);
+     frictionStatic->setScale(0.001);
 
      frictionStaticThreshold = new FloatSlider(orientation,this);
      frictionStaticThreshold->setObjectName("friction_static_threshold");
@@ -110,7 +110,7 @@ namespace rtps
      posX->setObjectName("pos_x");
      posX->setMaxLength(5);
      posX->setFixedWidth(50);
-     posY = new QLineEdit("5.0",this);
+     posY = new QLineEdit("10.0",this);
      posY->setObjectName("pos_y");
      posY->setMaxLength(5);
      posY->setFixedWidth(50);
@@ -123,7 +123,7 @@ namespace rtps
      velX->setObjectName("vel_x");
      velX->setMaxLength(5);
      velX->setFixedWidth(50);
-     velY = new QLineEdit("-9.8",this);
+     velY = new QLineEdit("-0.01",this);
      velY->setObjectName("vel_y");
      velY->setMaxLength(5);
      velY->setFixedWidth(50);

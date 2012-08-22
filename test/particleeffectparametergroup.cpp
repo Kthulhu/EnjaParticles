@@ -35,8 +35,8 @@ namespace rtps
      bilateralRange->setTickInterval(10);
      bilateralRange->setSingleStep(1);
      bilateralRange->setRange(1,1000);
-     bilateralRange->setValue(100);
-     bilateralRange->setScale(0.001);
+     bilateralRange->setValue(10);
+     bilateralRange->setScale(0.0001);
 
      thicknessGamma = new FloatSlider(orientation,this);
      thicknessGamma->setObjectName("thickness_gamma");

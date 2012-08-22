@@ -20,7 +20,7 @@ void main(void)
    float sum = 0.0;
    float denom = 1./(2.*sig*sig);
    float gauss = (1./(2.*pi*sig*sig));
-   int width = int(2.*sig)+1;
+   int width = int(6.*sig)+1;
    for(int i=-width; i<width; i++ )
    {
            for(int j=-width; j<width; j++ )

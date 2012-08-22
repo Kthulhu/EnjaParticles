@@ -22,7 +22,7 @@ void main(void)
     float denom2 = (1.f/(2.f*sig_range*sig_range));
     float gauss_s =(1./(sqrt(2.*pi)*sig));
     float gauss_r =(1./(sqrt(2.*pi)*sig_range));
-    int width = int(2.f*sig)+1;
+    int width = int(6.f*sig)+1;
 
     for(int x=-width; x<=width; x++)
     {

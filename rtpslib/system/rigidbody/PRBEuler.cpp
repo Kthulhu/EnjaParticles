@@ -47,6 +47,7 @@ namespace rtps
                     Buffer<float4>& comTorqueForce,
                     Buffer<float4>& comVel,
                     Buffer<float4>& comAngVel,
+                    Buffer<float4>& comAngMomentum,
                     Buffer<float4>& comPos,
                     Buffer<float4>& comRot,
                     Buffer<float16>& inertialTensor,
@@ -64,6 +65,7 @@ namespace rtps
         k_euler.setArg(iargs++,comTorqueForce.getDevicePtr());
         k_euler.setArg(iargs++,comVel.getDevicePtr());
         k_euler.setArg(iargs++,comAngVel.getDevicePtr());
+        k_euler.setArg(iargs++,comAngMomentum.getDevicePtr());
         k_euler.setArg(iargs++,comPos.getDevicePtr());
         k_euler.setArg(iargs++,comRot.getDevicePtr());
         k_euler.setArg(iargs++,inertialTensor.getDevicePtr());

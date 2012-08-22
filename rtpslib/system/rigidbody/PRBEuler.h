@@ -54,6 +54,7 @@ namespace rtps
                     Buffer<float4>& comTorqueForce,
                     Buffer<float4>& comVel,
                     Buffer<float4>& comAngVel,
+                    Buffer<float4>& comAngMomentum,
                     Buffer<float4>& comPos,
                     Buffer<float4>& comRot,
                     Buffer<float16>& inertialTensor,

@@ -54,6 +54,7 @@ namespace rtps
         float dampening;
         //constants
         float EPSILON;
+        float velocity_limit;
 
         //CL parameters
         int num;

@@ -293,10 +293,10 @@ const GLfloat skyBoxTex[] = { 1.f, 0.f,0.f,// 1.f,0.f,0.f,
     //cout<<"near clip = "<<view->getNearClip()<<" far clip = "<<view->getFarClip()<<endl;
     GLuint program = lib->shaders["sphereShader"].getProgram();
     glUseProgram(program);
-    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)height()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
     program = lib->shaders["sphereThicknessShader"].getProgram();
     glUseProgram(program);
-    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)width()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
+    glUniform1f( glGetUniformLocation(program, "pointScale"), ((float)height()) / tanf(view->getFOV()* (0.5f * PIOVER180)));
     program = lib->shaders["skybox"].getProgram();
     glUseProgram(program);
     glUniform1i(glGetUniformLocation(program, "skyboxCubeSampler"), 0);

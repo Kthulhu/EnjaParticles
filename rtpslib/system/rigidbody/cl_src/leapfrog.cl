@@ -32,6 +32,7 @@ __kernel void leapfrog(
                    __global float4* comTorqueForce,
                    __global float4* comVel,
                    __global float4* comAngVel,
+                   __global float4* comAngMomentum,
                    __global float4* comVelEval,
                    __global float4* comAngVelEval,
                    __global float4* comPos,
@@ -49,15 +50,16 @@ __kernel void leapfrog(
     Quaternion q = comRot[i];
     float4 w = comAngVel[i];
     float4 tf = comTorqueForce[i];
+    float4 L = comAngMomentum[i];
 
     lf+=rbMass[i]*prbp[0].gravity;
 
     float4 a = lf/rbMass[i];
     a.w=0.0f;
     float speed = length(a);
-    if (speed > 600.0f) //velocity limit, need to pass in as struct
+    if (speed >prbp[0].velocity_limit ) //velocity limit, need to pass in as struct
     {
-        a *= 600.0f/speed;
+        a *= prbp[0].velocity_limit/speed;
     }
 
     float4 vnext = v + dt*a;
@@ -67,21 +69,26 @@ __kernel void leapfrog(
     p.xyz/=prbp[0].simulation_scale;
     p.w = 1.0f; //just in case
     //need to fix torque scaling.
-    float4 L = dt*(tf);
-    L.w = 0.0f;
-    float4 wnext = w; 
-    wnext.x+= dot(inertialTensor[i].s0123,L);
-    wnext.y+= dot(inertialTensor[i].s4567,L);
-    wnext.z+= dot(inertialTensor[i].s89ab,L);
-    wnext.w = 0.0f;
-    float4 weval=0.5f*(w+wnext);
-    Quaternion dq = qtSet(wnext,sqrt(dot(dt*wnext,dt*wnext)));
+
+    float4 Lnext = L+dt*(tf);
+    L = 0.5*(L+Lnext);
+    //float4 wnext = w; 
+    //wnext.x+= dot(inertialTensor[i].s0123,L);
+    //wnext.y+= dot(inertialTensor[i].s4567,L);
+    //wnext.z+= dot(inertialTensor[i].s89ab,L);
+    w.x= dot(inertialTensor[i].s0123,Lnext);
+    w.y= dot(inertialTensor[i].s4567,Lnext);
+    w.z= dot(inertialTensor[i].s89ab,Lnext);
+    w.w = 0.0f;
+    Quaternion dq = qtSet(w,sqrt(dot(dt*w,dt*w)));
+    //Quaternion dq = qtSet(wnext,sqrt(dot(dt*wnext,dt*wnext)));
     q = qtMul(dq,q);
     comVel[i] = vnext;
     comVelEval[i] = veval;
     comPos[i] = p;
-    comAngVel[i] = wnext;
-    comAngVelEval[i] = weval;
+    comAngVel[i] = w;
+    comAngMomentum[i] = L;
+    //comAngVelEval[i] = weval;
     comRot[i] = q;
     //clf[i]=a;
     //clf[i]=vnext;

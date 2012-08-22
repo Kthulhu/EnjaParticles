@@ -17,7 +17,7 @@ void main(void)
     }
     float gauss = (1./(sqrt(2.*pi)*sig));
     float denom = 1./(2.*sig*sig);
-    int width = int(2.*sig)+1;
+    int width = int(6.*sig)+1;
     float sum = 0.0;
     for(int i=-width; i<width; i++ )
     {

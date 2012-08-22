@@ -41,6 +41,7 @@ namespace rtps
                     Buffer<float4>& comTorqueForce,
                     Buffer<float4>& comVel,
                     Buffer<float4>& comAngVel,
+                    Buffer<float4>& comAngMomentum,
                     Buffer<float4>& comVelEval,
                     Buffer<float4>& comAngVelEval,
                     Buffer<float4>& comPos,
@@ -59,6 +60,7 @@ namespace rtps
         k_leapfrog.setArg(iargs++, comTorqueForce.getDevicePtr());
         k_leapfrog.setArg(iargs++, comVel.getDevicePtr());
         k_leapfrog.setArg(iargs++, comAngVel.getDevicePtr());
+        k_leapfrog.setArg(iargs++, comAngMomentum.getDevicePtr());
         k_leapfrog.setArg(iargs++, comVelEval.getDevicePtr());
         k_leapfrog.setArg(iargs++, comAngVelEval.getDevicePtr());
         k_leapfrog.setArg(iargs++, comPos.getDevicePtr());

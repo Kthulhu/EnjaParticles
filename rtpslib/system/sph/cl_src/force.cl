@@ -81,9 +81,13 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
 
         //form simple SPH in Krog's thesis
 
-//shouldn't this include rest pressure???
         float Pi = sphp[0].K*(di - sphp[0].rest_density);//+sphp[0].rest_density;
         float Pj = sphp[0].K*(dj - sphp[0].rest_density);//+sphp[0].rest_density;
+
+        //need to precalculate B
+        //float B=(sphp[0].rest_density*sphp[0].velocity_limit*sphp[0].velocity_limit)/7.0f;
+        //float Pi = B*(pow((di/sphp[0].rest_density),7.0f)-1);//+sphp[0].rest_density;
+        //float Pj = B*(pow((dj/sphp[0].rest_density),7.0f)-1);//+sphp[0].rest_density;
 
         //playing with quartic kernel
         //dWijdr = 2.0f/3.0f  - 9.0f * q*q / 8.0f + 19.0f * q*q*q / 24.0f - 5.0f * q*q*q*q / 32.0f; (need derivative of this)
