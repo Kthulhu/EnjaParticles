@@ -122,7 +122,6 @@ LINK_DIRECTORIES(${rtpsuite_BINARY_DIR}/rtpslib)
 SET(LINK_LIBS
     #${BASE_DIR}/rtps/build/rtpslib/librtps.so
     rtps
-    ${GLUT_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${OPENCL_LIBRARIES}
     ${GLEW_LIBRARY}
@@ -145,6 +144,7 @@ message(RTPS_EXPORTS "${rtps_EXPORTS}")
 #    ${LINK_LIBS}
 #)
 TARGET_LINK_LIBRARIES (test_marching_cubes.x
+    ${GLUT_LIBRARIES}
     ${LINK_LIBS}
 )
 TARGET_LINK_LIBRARIES (test_qt.x

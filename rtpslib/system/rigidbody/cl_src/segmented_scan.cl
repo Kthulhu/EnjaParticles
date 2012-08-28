@@ -28,7 +28,12 @@
 #include "cl_PRB_macros.h"
 #include "cl_PRB_structs.h"
 #include "Quaternion.h"
-
+float4 rotate(float4 v, Quaternion q)
+{
+    float4 vtemp = qtMul(q,v);
+    q.xyz = -q.xyz;
+    return qtMul(vtemp,q);
+}
 __kernel void sum(
                     __global float4* pos_l,
                     __global int2* particleIndex,
@@ -36,6 +41,7 @@ __kernel void sum(
                     __global float4* comLinearForce,
                     __global float4* comTorqueForce,
                     __global float4* comPos,
+                    __global float4* comRot,
                     __constant struct ParticleRigidBodyParams* prbp
                        DEBUG_ARGS
                        )
@@ -44,12 +50,12 @@ __kernel void sum(
     int i = particleIndex[index].x;
     int end = particleIndex[index].y;
     comLinearForce[index]=linear_force_s[i];
-    comTorqueForce[index].xyz=cross3F4(pos_l[i],linear_force_s[i]).xyz;
+    comTorqueForce[index].xyz=cross3F4(rotate(pos_l[i],comRot[i]),linear_force_s[i]).xyz;
     i++;
     for(;i<end;i++)
     {
         comLinearForce[index]+=linear_force_s[i];
-	    comTorqueForce[index].xyz+=cross3F4(pos_l[i],linear_force_s[i]).xyz;
+	    comTorqueForce[index].xyz+=cross3F4(rotate(pos_l[i],comRot[i]),linear_force_s[i]).xyz;
         //clf[i].xyz=pos_u[i].xyz;
         //clf[i].xyz=(pos_u[i]-comPos[index]).xyz;
     }

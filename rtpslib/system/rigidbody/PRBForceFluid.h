@@ -47,6 +47,7 @@ namespace rtps
                     Buffer<float4>& fluid_pos_s,
                     Buffer<float4>& fluid_velocity_s,
                     Buffer<float>& fluid_mass_s,
+                    Buffer<float>& fluid_density_s,
                     Buffer<unsigned int>& indices,
                     Buffer<unsigned int>& ci_start,
                     Buffer<unsigned int>& ci_end,

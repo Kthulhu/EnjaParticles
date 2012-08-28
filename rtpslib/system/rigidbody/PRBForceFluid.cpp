@@ -76,6 +76,7 @@ namespace rtps
         k_force_fluid.setArg(iarg++, fluid_pos_s.getDevicePtr());
         k_force_fluid.setArg(iarg++, fluid_velocity_s.getDevicePtr());
         k_force_fluid.setArg(iarg++, fluid_mass_s.getDevicePtr());
+        k_force_fluid.setArg(iarg++, fluid_density_s.getDevicePtr());
         //k_force_fluid.setArg(iarg++, torque_force_s.getDevicePtr());
         k_force_fluid.setArg(iarg++, indices.getDevicePtr());
         k_force_fluid.setArg(iarg++, ci_start.getDevicePtr());

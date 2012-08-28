@@ -85,5 +85,7 @@ float16 qtGetRotationMatrix(const Quaternion quat)
 	return out;
 }
 
+
+
 #endif	/* QUATERNION_H */
 

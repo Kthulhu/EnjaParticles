@@ -847,13 +847,13 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
     minCoord.print("minCoord");
     maxCoord.print("maxCoord");
 	delete[] pos;
-	pos =0;
-    float space = systems[system]->getSpacing();
+	pos = 0;
+    float space = 2.0f*systems[system]->getSpacing();
     ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
 
 
     shape->voxelizeMesh(mesh->vbo,mesh->ibo,mesh->iboSize);
-    //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
+    RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
     //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
     //s<<"surface";
     //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());

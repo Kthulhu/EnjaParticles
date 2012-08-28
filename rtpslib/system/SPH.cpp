@@ -692,4 +692,8 @@ namespace rtps
         }*/
         System::releaseGLBuffers();
     }
+    Buffer<float>& SPH::getDensityBuffer()
+    {
+        return cl_density_s;
+    }
 }; //end namespace

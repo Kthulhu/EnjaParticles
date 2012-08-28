@@ -28,9 +28,9 @@
 
 //These are passed along through cl_neighbors.h
 //only used inside ForNeighbor defined in this file
-#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j
+#define ARGS __global float4* pos, __global float4* vel, __global float4* linear_force, __global float* mass, __global float4* pos_j, __global float4* vel_j, __global float* mass_j, __global float* density
 //, __global float4* torque_force
-#define ARGV pos, vel, linear_force, mass, pos_j, vel_j, mass_j
+#define ARGV pos, vel, linear_force, mass, pos_j, vel_j, mass_j, density
 
 /*----------------------------------------------------------------------*/
 
@@ -66,7 +66,8 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         rlen = max(rlen, prbp[0].EPSILON);
         float4 norm = r/rlen;
         float massnorm=((mass[index_i]*mass_j[index_j])/(mass[index_i]+mass_j[index_j]));
-        float stiff = (prbp[0].spring*massnorm);
+        //float stiff = (prbp[0].spring*massnorm);
+        float stiff = (prbp[0].spring*mass_j);
         float4 springForce = -stiff*(2.*prbp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel = vel[index_j]-vel[index_i];
@@ -126,6 +127,7 @@ __kernel void force_update(
     IterateParticlesInNearbyCells(ARGV, &pt, num, index, position_i, cell_indexes_start, cell_indexes_end, gp,/* fp,*/ prbp DEBUG_ARGV);
     
     linear_force[sort_indices[index]] += pt.linear_force; 
+    //force[index] += mass_j[j] * (1.0f/(density[j]*density[j]))*(sphp[0].viscosity * sphp[0].wvisc_dd_coef * pt.viscosity); 
     clf[sort_indices[index]].xyz = pt.linear_force.xyz;
 }
 

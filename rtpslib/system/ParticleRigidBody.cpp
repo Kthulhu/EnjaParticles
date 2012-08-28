@@ -33,6 +33,7 @@
 #include "ParticleRigidBody.h"
 #include "Domain.h"
 #include "IV.h"
+#include "SPH.h"
 
 //for random
 #include<time.h>
@@ -655,6 +656,7 @@ namespace rtps
                     interactionSystem[j]->getPositionBuffer(),
                     interactionSystem[j]->getVelocityBuffer(),
                     interactionSystem[j]->getMassBuffer(),
+                    (reinterpret_cast<SPH*>(interactionSystem[j]))->getDensityBuffer(),
                     cl_sort_indices,
                     interactionSystem[j]->getCellStartBuffer(),
                     interactionSystem[j]->getCellEndBuffer(),
@@ -674,6 +676,7 @@ namespace rtps
                     cl_comLinearForce,
                     cl_comTorqueForce,
                     cl_comPos,
+                    cl_comRot,
                     rbParticleIndex.size(),
                     cl_prbp,
                     //debug params

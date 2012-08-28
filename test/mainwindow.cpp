@@ -175,7 +175,7 @@ namespace rtps
 
  void MainWindow::loadDynamicMeshes()
  {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),".",tr("Wavefront (*.obj)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),"../test",tr("Wavefront (*.obj)"));
     if(!fileName.isEmpty())
         glWidget->loadMeshScene(fileName);
  }
