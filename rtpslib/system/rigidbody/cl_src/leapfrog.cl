@@ -26,21 +26,34 @@
 #include "cl_PRB_macros.h"
 #include "cl_PRB_structs.h"
 #include "Quaternion.h"
-
-float16 MultiplyMatrix3x3(const float16& A,const float16& B)
+__inline float16 transpose3x3(float16 A)
+{
+    float tmp=A.s1;
+    A.s1=A.s4;
+    A.s4=tmp;
+    tmp=A.s2;
+    A.s2=A.s8;
+    A.s8=tmp;
+    tmp=A.s6;
+    A.s6=A.s9;
+    A.s9=tmp;
+    return A;
+}
+__inline
+float16 MultiplyMatrix3x3(float16 A, float16 B)
 {
     float16 ret;
-    ret.s0=dot(A.s012,B.s048);
-    ret.s1=dot(A.s012,B.s159);
-    ret.s2=dot(A.s012,B.s26a);
+    ret.s0=dot(A.s0123,B.s048c);
+    ret.s1=dot(A.s0123,B.s159d);
+    ret.s2=dot(A.s0123,B.s26ae);
     ret.s3=0.0f;
-    ret.s4=dot(A.s456,B.s048);
-    ret.s5=dot(A.s456,B.s159);
-    ret.s6=dot(A.s456,B.s26a);
+    ret.s4=dot(A.s4567,B.s048c);
+    ret.s5=dot(A.s4567,B.s159d);
+    ret.s6=dot(A.s4567,B.s26ae);
     ret.s7=0.0f;
-    ret.s8=dot(A.s89a,B.s048);
-    ret.s9=dot(A.s89a,B.s159);
-    ret.sa=dot(A.s89a,B.s26a);
+    ret.s8=dot(A.s89ab,B.s048c);
+    ret.s9=dot(A.s89ab,B.s159d);
+    ret.sa=dot(A.s89ab,B.s26ae);
     ret.sb=0.0f;
     ret.sc=0.0f;
     ret.sd=0.0f;
@@ -94,12 +107,9 @@ __kernel void leapfrog(
     float4 Lnext = L+dt*(tf);
     L = 0.5*(L+Lnext);
     //float4 wnext = w; 
-    //wnext.x+= dot(inertialTensor[i].s0123,L);
-    //wnext.y+= dot(inertialTensor[i].s4567,L);
-    //wnext.z+= dot(inertialTensor[i].s89ab,L);
-    w.x= dot(inertialTensor[i].s012,Lnext);
-    w.y= dot(inertialTensor[i].s456,Lnext);
-    w.z= dot(inertialTensor[i].s89a,Lnext);
+    w.x= dot(inertialTensor[i].s0123,Lnext);
+    w.y= dot(inertialTensor[i].s4567,Lnext);
+    w.z= dot(inertialTensor[i].s89ab,Lnext);
     w.w = 0.0f;
     Quaternion dq = qtSet(w,sqrt(dot(dt*w,dt*w)));
     //Quaternion dq = qtSet(wnext,sqrt(dot(dt*wnext,dt*wnext)));
@@ -115,6 +125,6 @@ __kernel void leapfrog(
     
     //now we need to update the inverse inertial tensor.
     float16 rotMatrix = qtGetRotationMatrix(q);
-    float16 rotMatrixT = transpose(rotMatrix);
+    float16 rotMatrixT = transpose3x3(rotMatrix);
     inertialTensor[i] = MultiplyMatrix3x3(rotMatrix,MultiplyMatrix3x3(inertialTensor[i],rotMatrixT));
 }

@@ -106,8 +106,8 @@ set (test_qt_SOURCES
 #INCLUDE_DIRECTORIES(${test_INCLUDES})
 #ADD_EXECUTABLE(test.x ${test_SOURCES})
 
-INCLUDE_DIRECTORIES(${test_mc_INCLUDES})
-ADD_EXECUTABLE(test_marching_cubes.x ${test_mc_SOURCES})
+#INCLUDE_DIRECTORIES(${test_mc_INCLUDES})
+#ADD_EXECUTABLE(test_marching_cubes.x ${test_mc_SOURCES})
 
 #add_definitions(-DQT_BUILD)
 INCLUDE_DIRECTORIES(${test_qt_INCLUDES} ${QT_INCLUDE_DIR} ${QT_QTOPENGL_INCLUDE_DIR})
@@ -143,10 +143,10 @@ message(RTPS_EXPORTS "${rtps_EXPORTS}")
 #TARGET_LINK_LIBRARIES (test.x
 #    ${LINK_LIBS}
 #)
-TARGET_LINK_LIBRARIES (test_marching_cubes.x
-    ${GLUT_LIBRARIES}
-    ${LINK_LIBS}
-)
+#TARGET_LINK_LIBRARIES (test_marching_cubes.x
+#   ${GLUT_LIBRARIES}
+#   ${LINK_LIBS}
+#)
 TARGET_LINK_LIBRARIES (test_qt.x
     ${LINK_LIBS}
     ${QT_LIBRARIES}
@@ -157,10 +157,11 @@ TARGET_LINK_LIBRARIES (test_qt.x
 #install (TARGETS torusTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (TARGETS torusRBTest.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (TARGETS test.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
-install (TARGETS test_marching_cubes.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
+#install (TARGETS test_marching_cubes.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 install (TARGETS test_qt.x DESTINATION ${rtpsuite_BINARY_DIR}/bin)
 #install (FILES MathFunctions.h DESTINATION include)
-set(BENCHMARKS true)
+#set(BENCHMARKS true)
+set(BENCHMARKS false)
 if(BENCHMARKS)
 ADD_SUBDIRECTORY (./benchmarks/)
 endif(BENCHMARKS)

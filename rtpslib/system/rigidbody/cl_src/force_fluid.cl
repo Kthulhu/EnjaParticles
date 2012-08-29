@@ -67,7 +67,7 @@ inline void ForNeighbor(//__global float4*  vars_sorted,
         float4 norm = r/rlen;
         float massnorm=((mass[index_i]*mass_j[index_j])/(mass[index_i]+mass_j[index_j]));
         //float stiff = (prbp[0].spring*massnorm);
-        float stiff = (prbp[0].spring*mass_j);
+        float stiff = (prbp[0].spring*mass_j[index_j]);
         float4 springForce = -stiff*(2.*prbp[0].smoothing_distance-rlen)*(norm);
 
         float4 relvel = vel[index_j]-vel[index_i];

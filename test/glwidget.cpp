@@ -848,12 +848,16 @@ ParticleShape* GLWidget::createParticleShape(const QString& system, Mesh* mesh)
     maxCoord.print("maxCoord");
 	delete[] pos;
 	pos = 0;
-    float space = 2.0f*systems[system]->getSpacing();
+    float space = systems[system]->getSpacing();
+    //experimenting with rigid body spacing
+    //float space = systems[system]->getSpacing()/2.0;
+    minCoord = minCoord-float3(space,space,space);
+    maxCoord = maxCoord+float3(space,space,space);
     ParticleShape* shape = new ParticleShape(minCoord,maxCoord,space);
 
 
     shape->voxelizeMesh(mesh->vbo,mesh->ibo,mesh->iboSize);
-    RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
+    //RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),s.str().c_str());
     //shape->voxelizeSurface(me->vbo,me->ibo,me->iboSize);
     //s<<"surface";
     //RenderUtils::write3DTextureToDisc(shape->getSurfaceTexture(),shape->getVoxelResolution(),s.str().c_str());
@@ -983,6 +987,7 @@ void GLWidget::loadMeshScene(const QString& filename)
      for(map<std::string,Mesh*>::iterator i = dynamicMeshes.begin(); i!=dynamicMeshes.end(); i++)
      {
           ParticleShape* shape = createParticleShape("rb1",i->second);
+          RenderUtils::write3DTextureToDisc(shape->getVoxelTexture(),shape->getVoxelResolution(),i->first.c_str());
           pShapes[QString(i->first.c_str())]=shape;
           meshNames.push_back(QString(i->first.c_str()));
      }

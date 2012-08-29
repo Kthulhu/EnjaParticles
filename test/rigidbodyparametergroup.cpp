@@ -69,8 +69,8 @@ namespace rtps
      penetrationFactor->setTickPosition(QSlider::TicksBelow);
      penetrationFactor->setTickInterval(1);
      penetrationFactor->setSingleStep(1);
-     penetrationFactor->setRange(1,200);
-     penetrationFactor->setValue(100);
+     penetrationFactor->setRange(100,300);
+     penetrationFactor->setValue(200);
      penetrationFactor->setScale(0.0001);
 
      restitution = new FloatSlider(orientation,this);
@@ -132,7 +132,7 @@ namespace rtps
      velZ->setMaxLength(5);
      velZ->setFixedWidth(50);
 
-     mass = new QLineEdit("0.01",this);
+     mass = new QLineEdit("0.1",this);
 
      addRigidBodyButton = new QPushButton("&Add Rigid Body", this);
 
