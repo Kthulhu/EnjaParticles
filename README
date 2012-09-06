@@ -19,25 +19,38 @@ rtpslib/
     OpenCL
     OpenGL
     GLEW
+    assimp 2.0
+    Qt 4.8
+    Boost 1.4
 
+    Obtaining dependencies.
+    assimp library:
+        For Ubuntu 12.04:
+            sudo apt-get install libassimp-dev
+        Other linux distributions:
+            see website for installation instructions - http://assimp.sourceforge.net/
+    Qt 4.8:
+        For Ubuntu 12.04:
+            sudo apt-get install qt4-dev-tools
+        Other linux distributions:
+            see website for installation instructions - http://qt.nokia.com/downloads
+    boost:
+        Most linux distributions:
+            sudo apt-get install libboost-dev
 
     Usage:
 
     You can execute the test program like:
-    cd bin
-        ./bin/sph.x
-        ./bin/flock.x
-        ./bin/multi.x
+        ./bin/test_qt.x
 
     The test program has simple mouse interaction:
         Left-Click and drag to rotate the view
-        Right-Click and drag to zoom in and out
     and keyboard:
-        r - add particles
+        g - add particles
         h - add hose of particles
+        j - add hose of particles for pipe scene
         p - print timings of various functions
         w, a, s, d - move around like FPS controls
-        t - add in some triangles to collide against
 
 
     hit Q or ESC to exit (right now clicking the x on the window will not properly clean up GPU memory...)
@@ -47,12 +60,3 @@ cmake/
     cmake modules to help find necessary libraries
 
 
-*******************************************************************
-    ### EnjaParticles on the Android using the NDK and OpenGL
-
-android/
-    the C code is in the jni folder
-    read the README in this folder for more info
-
-
-*******************************************************************
