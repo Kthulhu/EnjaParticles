@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <math.h>
-#include <boost/tokenizer.hpp>
+#include <vector>
 #include "debug.h"
 
 
@@ -396,7 +396,7 @@ namespace rtps
         }
     } float16;
 #ifdef WIN32
-#pragma pack(push,16)
+//__declspec(align(16))
 #endif
 
     // IJ
@@ -578,7 +578,6 @@ namespace rtps
 	__attribute__((aligned(16)));
 #else
 		;
-        #pragma pack(pop)
 #endif
 
     // size: 4*4 = 16 floats

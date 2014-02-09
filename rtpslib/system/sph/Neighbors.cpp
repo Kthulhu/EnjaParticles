@@ -22,7 +22,7 @@
 ****************************************************************************************/
 
 
-#include "SPH.h"
+#include "../SPH.h"
 
 #include <string>
 using namespace std;

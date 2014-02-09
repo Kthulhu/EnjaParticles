@@ -12,12 +12,13 @@ IF (WIN32)
         ${GLEW_ROOT_DIR}/include
         DOC "The directory where GL/glew.h resides")
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(GLEWNAMES glew GLEW glew64 glew64s)
+        set(GLEWNAMES glew GLEW glew64 glew64s glew32 glew32s)
         FIND_LIBRARY( GLEW_LIBRARY
           NAMES ${GLEWNAMES}
 	      PATHS
           ${GLEW_ROOT_DIR}/bin/x86_64
           ${GLEW_ROOT_DIR}/lib/x86_64
+	  ${GLEW_ROOT_DIR}/lib/Release/x64
           DOC "The GLEW library")
     else ()
         set(GLEWNAMES glew GLEW glew32 glew32s)

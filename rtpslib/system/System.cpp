@@ -32,9 +32,9 @@
 
 #include "System.h"
 //#include "../domain/UniformGrid.h"
-#include "Domain.h"
-#include "IV.h"
-#include "util.h"
+#include "../domain/Domain.h"
+#include "../domain/IV.h"
+#include "../util.h"
 #include "common/Hose.h"
 
 //for random

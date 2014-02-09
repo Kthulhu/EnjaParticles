@@ -28,7 +28,7 @@
 #include <time.h>
 #include <windows.h>
 #include <iostream>
-#include "../rtps_common.h"
+#include "rtps_common.h"
 //using namespace System;
 using namespace std;
  

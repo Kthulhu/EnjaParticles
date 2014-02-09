@@ -30,8 +30,8 @@
 
 #include "System.h"
 #include "FLOCK.h"
-#include "Domain.h"
-#include "IV.h"
+#include "../domain/Domain.h"
+#include "../domain/IV.h"
 
 #include "common/Hose.h"
 

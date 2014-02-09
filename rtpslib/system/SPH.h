@@ -139,9 +139,9 @@ namespace rtps
         Lifetime lifetime;
 
 
-        float Wpoly6(float4 r, float h);
-        float Wspiky(float4 r, float h);
-        float Wviscosity(float4 r, float h);
+        //float Wpoly6(float4 r, float h);
+        //float Wspiky(float4 r, float h);
+        //float Wviscosity(float4 r, float h);
 
         //OpenCL helper functions, should probably be part of the OpenCL classes
         //void loadScopy();

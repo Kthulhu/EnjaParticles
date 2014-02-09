@@ -27,11 +27,11 @@
 
 #include <string>
 
-#include "RTPS.h"
+#include "../RTPS.h"
 #include "System.h"
 #include "ForceField.h"
-#include "Kernel.h"
-#include "Buffer.h"
+#include "../opencl/Kernel.h"
+#include "../opencl/Buffer.h"
 
 #ifdef WIN32
     #if defined(rtps_EXPORTS)

@@ -22,8 +22,8 @@
 ****************************************************************************************/
 
 
-#include <FLOCK.h>
-#include<math.h>
+#include "../FLOCK.h"
+#include <math.h>
 
 #include<time.h>
 

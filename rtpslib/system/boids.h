@@ -24,7 +24,7 @@
 
 
 #include <vector>
-#include "structs.h"
+#include "../structs.h"
 using namespace std;
 using namespace rtps;
 

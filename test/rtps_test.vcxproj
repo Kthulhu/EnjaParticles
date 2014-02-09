@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2EA32765-9527-45E2-B968-44815F58CB0D}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>rtps_test</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="aiwrapper.cpp" />
+    <ClCompile Include="benchmarks\benchmark_main.cpp" />
+    <ClCompile Include="benchmarks\rb_benchmark.cpp" />
+    <ClCompile Include="benchmarks\rb_sph_benchmark.cpp" />
+    <ClCompile Include="benchmarks\rb_sph_benchmark_main.cpp" />
+    <ClCompile Include="floatslider.cpp" />
+    <ClCompile Include="flockingparametergroup.cpp" />
+    <ClCompile Include="glwidget.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="mainqt.cpp" />
+    <ClCompile Include="mainwindow.cpp" />
+    <ClCompile Include="main_flock.cpp" />
+    <ClCompile Include="main_multi.cpp" />
+    <ClCompile Include="main_rb_sph.cpp" />
+    <ClCompile Include="main_rigidbody.cpp" />
+    <ClCompile Include="main_simple.cpp" />
+    <ClCompile Include="main_test.cpp" />
+    <ClCompile Include="ParamParser.cpp" />
+    <ClCompile Include="particleeffectparametergroup.cpp" />
+    <ClCompile Include="rigidbodyparametergroup.cpp" />
+    <ClCompile Include="rtpsparametergroup.cpp" />
+    <ClCompile Include="sphparametergroup.cpp" />
+    <ClCompile Include="TestApplication.cpp" />
+    <ClCompile Include="test_marching_cubes.cpp" />
+    <ClCompile Include="test_rb_sph_mass.cpp" />
+    <ClCompile Include="test_render.cpp" />
+    <ClCompile Include="torusRBTest.cpp" />
+    <ClCompile Include="torusTest.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="aiwrapper.h" />
+    <ClInclude Include="benchmarks\rb_benchmark.h" />
+    <ClInclude Include="benchmarks\rb_sph_benchmark.h" />
+    <ClInclude Include="BunnyMesh.h" />
+    <ClInclude Include="floatslider.h" />
+    <ClInclude Include="flockingparametergroup.h" />
+    <ClInclude Include="glwidget.h" />
+    <ClInclude Include="mainwindow.h" />
+    <ClInclude Include="ParamParser.h" />
+    <ClInclude Include="particleeffectparametergroup.h" />
+    <ClInclude Include="rigidbodyparametergroup.h" />
+    <ClInclude Include="rtpsparametergroup.h" />
+    <ClInclude Include="sphparametergroup.h" />
+    <ClInclude Include="TestApplication.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="benchmarks\CMakeLists.txt" />
+    <None Include="benchmarks\rb_benchmark.xml" />
+    <None Include="benchmarks\rb_sph_benchmark.xml" />
+    <None Include="CMakeLists.txt" />
+    <None Include="mainwindow.ui" />
+    <None Include="test1.xml" />
+    <None Include="test_all.xml" />
+    <None Include="test_all2.xml" />
+    <None Include="test_all3.xml" />
+    <None Include="test_all4.xml" />
+    <None Include="test_all5.xml" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

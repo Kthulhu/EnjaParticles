@@ -23,7 +23,7 @@
 
 
 //#include <SPHSettings.h>
-#include <SPH.h>
+#include "SPH.h"
 
 namespace rtps
 {

@@ -32,10 +32,10 @@
 #include "System.h"
 #include "SPH.h"
 #include "ParticleRigidBody.h"
-#include "../rtpslib/opencl/CLL.h"
+#include "../opencl/CLL.h"
 //#include "../domain/UniformGrid.h"
-#include "Domain.h"
-#include "IV.h"
+#include "../domain/Domain.h"
+#include "../domain/IV.h"
 
 #include "common/Hose.h"
 

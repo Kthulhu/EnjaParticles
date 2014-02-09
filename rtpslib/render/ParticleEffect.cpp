@@ -30,7 +30,7 @@
 
 #include "ParticleEffect.h"
 #include "Shader.h"
-#include "util.h"
+#include "../util.h"
 #include "ShaderLibrary.h"
 
 using namespace std;

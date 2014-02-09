@@ -31,8 +31,8 @@
 #include <limits.h>
 
 #include "ParticleRigidBody.h"
-#include "Domain.h"
-#include "IV.h"
+#include "../domain/Domain.h"
+#include "../domain/IV.h"
 #include "SPH.h"
 
 //for random

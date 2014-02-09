@@ -1,0 +1,258 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2D6E286F-F06D-4FB3-B9B8-B185464342A0}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>rtpslib</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(GLEW_ROOT_DIR)\include;$(AMDAPPSDKROOT)\include</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="debug.h" />
+    <ClInclude Include="domain\domain.h" />
+    <ClInclude Include="domain\IV.h" />
+    <ClInclude Include="domain\UniformGrid.h" />
+    <ClInclude Include="gtod_windows.h" />
+    <ClInclude Include="materials_lights.h" />
+    <ClInclude Include="opencl\buffer.h" />
+    <ClInclude Include="opencl\cll.h" />
+    <ClInclude Include="opencl\kernel.h" />
+    <ClInclude Include="opencl\Program.h" />
+    <ClInclude Include="render\camera.h" />
+    <ClInclude Include="render\mesheffect.h" />
+    <ClInclude Include="render\particleeffect.h" />
+    <ClInclude Include="render\Quaternion.h" />
+    <ClInclude Include="render\Render.h" />
+    <ClInclude Include="render\RenderSettings.h" />
+    <ClInclude Include="render\renderutils.h" />
+    <ClInclude Include="render\shader.h" />
+    <ClInclude Include="render\shaderlibrary.h" />
+    <ClInclude Include="render\Sphere3DRender.h" />
+    <ClInclude Include="render\SpriteRender.h" />
+    <ClInclude Include="render\SSEffect.h" />
+    <ClInclude Include="render\SSFRender.h" />
+    <ClInclude Include="render\StereoCamera.h" />
+    <ClInclude Include="render\StreamlineEffect.h" />
+    <ClInclude Include="render\util\stb_image.h" />
+    <ClInclude Include="render\util\stb_image_write.h" />
+    <ClInclude Include="RTPS.h" />
+    <ClInclude Include="RTPSSettings.h" />
+    <ClInclude Include="rtps_common.h" />
+    <ClInclude Include="structs.h" />
+    <ClInclude Include="system\boids.h" />
+    <ClInclude Include="system\common\bitonicsort.h" />
+    <ClInclude Include="system\common\cellindices.h" />
+    <ClInclude Include="system\common\cl_src\cl_hash.h" />
+    <ClInclude Include="system\common\cl_src\cl_macros.h" />
+    <ClInclude Include="system\common\cl_src\cl_structs.h" />
+    <ClInclude Include="system\common\cl_src\indexmap.h" />
+    <ClInclude Include="system\common\gravity.h" />
+    <ClInclude Include="system\common\hash.h" />
+    <ClInclude Include="system\common\Hose.h" />
+    <ClInclude Include="system\common\marchingcubes.h" />
+    <ClInclude Include="system\common\meshtoparticles.h" />
+    <ClInclude Include="system\common\permute.h" />
+    <ClInclude Include="system\common\radix.h" />
+    <ClInclude Include="system\common\Sample.h" />
+    <ClInclude Include="system\FLOCK.h" />
+    <ClInclude Include="system\flock\cl_src\cl_Flock_macros.h" />
+    <ClInclude Include="system\flock\cl_src\cl_Flock_neighbors.h" />
+    <ClInclude Include="system\flock\cl_src\cl_Flock_structs.h" />
+    <ClInclude Include="system\flock\cl_src\cl_hash.h" />
+    <ClInclude Include="system\flock\EulerIntegration.h" />
+    <ClInclude Include="system\flock\Rules.h" />
+    <ClInclude Include="system\forcefield.h" />
+    <ClInclude Include="system\ParticleRigidBody.h" />
+    <ClInclude Include="system\ParticleRigidBodyParams.h" />
+    <ClInclude Include="system\ParticleShape.h" />
+    <ClInclude Include="system\rigidbody\cl_src\cl_collision.h" />
+    <ClInclude Include="system\rigidbody\cl_src\cl_force.h" />
+    <ClInclude Include="system\rigidbody\cl_src\cl_hash.h" />
+    <ClInclude Include="system\rigidbody\cl_src\cl_PRB_macros.h" />
+    <ClInclude Include="system\rigidbody\cl_src\cl_PRB_neighbors.h" />
+    <ClInclude Include="system\rigidbody\cl_src\cl_PRB_structs.h" />
+    <ClInclude Include="system\rigidbody\cl_src\Quaternion.h" />
+    <ClInclude Include="system\rigidbody\PRBEuler.h" />
+    <ClInclude Include="system\rigidbody\PRBForce.h" />
+    <ClInclude Include="system\rigidbody\PRBForceFluid.h" />
+    <ClInclude Include="system\rigidbody\PRBForceStatic.h" />
+    <ClInclude Include="system\rigidbody\PRBLeapFrog.h" />
+    <ClInclude Include="system\rigidbody\PRBSegmentedScan.h" />
+    <ClInclude Include="system\rigidbody\PRBUpdateParticles.h" />
+    <ClInclude Include="system\SPH.h" />
+    <ClInclude Include="system\sph\cl_src\cl_hash.h" />
+    <ClInclude Include="system\sph\cl_src\cl_sph_collision.h" />
+    <ClInclude Include="system\sph\cl_src\cl_sph_density.h" />
+    <ClInclude Include="system\sph\cl_src\cl_sph_force.h" />
+    <ClInclude Include="system\sph\cl_src\cl_sph_kernels.h" />
+    <ClInclude Include="system\sph\cl_src\cl_sph_macros.h" />
+    <ClInclude Include="system\sph\cl_src\cl_sph_neighbors.h" />
+    <ClInclude Include="system\sph\cl_src\cl_sph_structs.h" />
+    <ClInclude Include="system\sph\cl_src\cl_surface_extraction.h" />
+    <ClInclude Include="system\sph\cl_src\cl_surface_tension.h" />
+    <ClInclude Include="system\sph\Collision_triangle.h" />
+    <ClInclude Include="system\sph\Collision_wall.h" />
+    <ClInclude Include="system\sph\ColorField.h" />
+    <ClInclude Include="system\sph\Density.h" />
+    <ClInclude Include="system\sph\Euler.h" />
+    <ClInclude Include="system\sph\Force.h" />
+    <ClInclude Include="system\sph\LeapFrog.h" />
+    <ClInclude Include="system\sph\Lifetime.h" />
+    <ClInclude Include="system\sph\RigidBodyForce.h" />
+    <ClInclude Include="system\system.h" />
+    <ClInclude Include="timege.h" />
+    <ClInclude Include="timer_eb.h" />
+    <ClInclude Include="util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="domain\Domain.cpp" />
+    <ClCompile Include="domain\IV.cpp" />
+    <ClCompile Include="domain\UniformGrid.cpp" />
+    <ClCompile Include="gtod_windows.cpp" />
+    <ClCompile Include="opencl\CLL.cpp" />
+    <ClCompile Include="opencl\Kernel.cpp" />
+    <ClCompile Include="opencl\Program.cpp" />
+    <ClCompile Include="render\Camera.cpp" />
+    <ClCompile Include="render\MeshEffect.cpp" />
+    <ClCompile Include="render\ParticleEffect.cpp" />
+    <ClCompile Include="render\Quaternion.cpp" />
+    <ClCompile Include="render\Render.cpp" />
+    <ClCompile Include="render\RenderUtils.cpp" />
+    <ClCompile Include="render\Shader.cpp" />
+    <ClCompile Include="render\ShaderLibrary.cpp" />
+    <ClCompile Include="render\shaders.cpp" />
+    <ClCompile Include="render\Sphere3DRender.cpp" />
+    <ClCompile Include="render\SpriteRender.cpp" />
+    <ClCompile Include="render\SSEffect.cpp" />
+    <ClCompile Include="render\SSFRender.cpp" />
+    <ClCompile Include="render\StereoCamera.cpp" />
+    <ClCompile Include="render\StreamlineEffect.cpp" />
+    <ClCompile Include="render\util\stb_image.c" />
+    <ClCompile Include="RTPS.cpp" />
+    <ClCompile Include="RTPSSettings.cpp" />
+    <ClCompile Include="structs.cpp" />
+    <ClCompile Include="system\boids.cpp" />
+    <ClCompile Include="system\common\CellIndices.cpp" />
+    <ClCompile Include="system\common\Gravity.cpp" />
+    <ClCompile Include="system\common\Hash.cpp" />
+    <ClCompile Include="system\common\Hose.cpp" />
+    <ClCompile Include="system\common\MarchingCubes.cpp" />
+    <ClCompile Include="system\common\MeshToParticles.cpp" />
+    <ClCompile Include="system\common\Permute.cpp" />
+    <ClCompile Include="system\common\Sample.cpp" />
+    <ClCompile Include="system\FLOCK.cpp" />
+    <ClCompile Include="system\flock\EulerIntegration.cpp" />
+    <ClCompile Include="system\flock\Rules.cpp" />
+    <ClCompile Include="system\ParticleRigidBody.cpp" />
+    <ClCompile Include="system\ParticleShape.cpp" />
+    <ClCompile Include="system\rigidbody\PRBEuler.cpp" />
+    <ClCompile Include="system\rigidbody\PRBForce.cpp" />
+    <ClCompile Include="system\rigidbody\PRBForceFluid.cpp" />
+    <ClCompile Include="system\rigidbody\PRBForceStatic.cpp" />
+    <ClCompile Include="system\rigidbody\PRBLeapFrog.cpp" />
+    <ClCompile Include="system\rigidbody\PRBSegmentedScan.cpp" />
+    <ClCompile Include="system\rigidbody\PRBUpdateParticles.cpp" />
+    <ClCompile Include="system\SPH.cpp" />
+    <ClCompile Include="system\sph\Collision_triangle.cpp" />
+    <ClCompile Include="system\sph\Collision_wall.cpp" />
+    <ClCompile Include="system\sph\ColorField.cpp" />
+    <ClCompile Include="system\sph\Density.cpp" />
+    <ClCompile Include="system\sph\Euler.cpp" />
+    <ClCompile Include="system\sph\Force.cpp" />
+    <ClCompile Include="system\sph\LeapFrog.cpp" />
+    <ClCompile Include="system\sph\Lifetime.cpp" />
+    <ClCompile Include="system\sph\Neighbors.cpp" />
+    <ClCompile Include="system\sph\RigidBodyForce.cpp" />
+    <ClCompile Include="system\System.cpp" />
+    <ClCompile Include="timege.cpp" />
+    <ClCompile Include="timer_eb.cpp" />
+    <ClCompile Include="util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="README" />
+    <None Include="system\sph\cl_src\collision_tri.cl" />
+    <None Include="system\sph\cl_src\collision_wall.cl" />
+    <None Include="system\sph\cl_src\colorfield.cl" />
+    <None Include="system\sph\cl_src\density.cl" />
+    <None Include="system\sph\cl_src\euler.cl" />
+    <None Include="system\sph\cl_src\force.cl" />
+    <None Include="system\sph\cl_src\leapfrog.cl" />
+    <None Include="system\sph\cl_src\lifetime.cl" />
+    <None Include="system\sph\cl_src\lifetime_smoke.cl" />
+    <None Include="system\sph\cl_src\prep.cl" />
+    <None Include="system\sph\cl_src\rigidbody_force.cl" />
+    <None Include="system\sph\cl_src\scopy.cl" />
+    <None Include="system\sph\cl_src\staticrigidbody_force.cl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
